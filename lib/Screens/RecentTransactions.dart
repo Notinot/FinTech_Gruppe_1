@@ -1,0 +1,55 @@
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+
+class RecentTransactions extends StatelessWidget {
+  final List<Transaction> transactions;
+
+  RecentTransactions({required this.transactions});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: <Widget>[
+        Text(
+          'Recent Transactions:',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        SizedBox(height: 8),
+        ListView.builder(
+          shrinkWrap: true,
+          itemCount: transactions.length,
+          itemBuilder: (context, index) {
+            return TransactionItem(transaction: transactions[index]);
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class TransactionItem extends StatelessWidget {
+  final Transaction transaction;
+
+  TransactionItem({required this.transaction});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: EdgeInsets.symmetric(vertical: 4, horizontal: 10),
+      child: ListTile(
+        title: Text(transaction.type),
+        subtitle: Text(
+          'Amount: \$${transaction.amount.toStringAsFixed(2)}\n${transaction.name}',
+        ),
+      ),
+    );
+  }
+}
+
+class Transaction {
+  final String type;
+  final String name;
+  final double amount;
+
+  Transaction({required this.type, required this.name, required this.amount});
+}

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/Screens/send_money_screen.dart';
 import 'package:http/http.dart' as http;
 
 class QuickActions extends StatelessWidget {
@@ -11,7 +12,10 @@ class QuickActions extends StatelessWidget {
           icon: Icons.attach_money,
           label: 'Send Money',
           onTap: () {
-            // Implement the action for sending money
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => SendMoneyScreen()),
+            );
           },
         ),
         QuickActionButton(

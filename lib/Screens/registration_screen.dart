@@ -48,12 +48,42 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       setState(() {
         passwordError = 'Password fields cannot be empty';
       });
+      showSnackBar(isError: true, message: 'Please complete all fields');
+      return;
+    }
+
+    if (password.length < 12) {
+      setState(() {
+        passwordError = 'Password must have at least 12 characters';
+      });
+      showSnackBar(
+          isError: true, message: 'Password should be at least 12 characters');
+      return;
+    }
+
+    if (!password.contains(RegExp(r'[0-9]'))) {
+      setState(() {
+        passwordError = 'Password must contain at least one number';
+      });
+      showSnackBar(isError: true, message: 'Password must include a number');
+      return;
+    }
+
+    if (!password.contains(RegExp(r'[#&@~!@?}\[%!?]'))) {
+      setState(() {
+        passwordError =
+            'Password must contain at least one special character (#&@~!@?}[%!?)';
+      });
+      showSnackBar(
+          isError: true, message: 'Password must include a special character');
+      return;
     }
 
     if (password != confirmPassword) {
       setState(() {
         passwordError = 'Passwords do not match';
       });
+      showSnackBar(isError: true, message: 'Passwords do not match');
       return;
     }
 
@@ -61,6 +91,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       setState(() {
         emailError = 'Email must contain "@" symbol';
       });
+      showSnackBar(isError: true, message: 'Invalid email format');
       return;
     }
 
@@ -77,10 +108,21 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     //if (response.statusCode == 200) {
     // Registration successful
     // You can navigate the user to the next screen or show a success message
+    // showSnackBar(message: 'Registration successful');
     //} else {
     // Registration failed
     // You can handle errors, such as displaying an error message
+    // showSnackBar(isError: true, message: 'Registration failed');
     // }
+  }
+
+  void showSnackBar({bool isError = false, required String message}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isError ? Colors.red : Colors.green,
+      ),
+    );
   }
 
   @override

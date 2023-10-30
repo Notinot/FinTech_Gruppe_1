@@ -10,11 +10,11 @@ import 'package:http/http.dart' as http;
 class DashboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    String username = "User123";
+    String username = "Lukas";
     double balance = 1000.00;
     List<Transaction> recentTransactions = [
       Transaction(amount: 25.00, name: 'Dennis', type: 'Payment'),
-      Transaction(type: 'Payment', amount: 10.00, name: 'Lukas'),
+      Transaction(type: 'Payment', amount: 10.00, name: 'Labi'),
       Transaction(amount: 45.00, name: 'Vito', type: 'Received'),
       Transaction(type: 'Payment', amount: 10.00, name: 'Lukas'),
       Transaction(amount: 25.00, name: 'Labi', type: 'Received'),

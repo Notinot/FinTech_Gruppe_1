@@ -20,11 +20,11 @@ class Notifications extends StatelessWidget {
           SizedBox(height: 8),
           NotificationItem(
             icon: Icons.info,
-            text: 'Your payment to John Doe was successful.',
+            text: 'Your payment to Dennis Kammos was successful.',
           ),
           NotificationItem(
             icon: Icons.warning,
-            text: 'You received a payment from Alice Smith.',
+            text: 'You received a payment from Max Mustermann.',
           ),
           // Add more notification items as needed
         ],

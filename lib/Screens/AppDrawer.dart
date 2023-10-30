@@ -9,9 +9,10 @@ class AppDrawer extends StatelessWidget {
         padding: EdgeInsets.zero,
         children: <Widget>[
           UserAccountsDrawerHeader(
-            accountName: Text('John Doe'), // Replace with actual user data
+            accountName:
+                Text('Lukas Meinberg'), // Replace with actual user data
             accountEmail:
-                Text('johndoe@example.com'), // Replace with actual user data
+                Text('lukas@gmail.com'), // Replace with actual user data
             currentAccountPicture: CircleAvatar(
               backgroundImage: AssetImage(
                   'lib/assets/profile_img.png'), // Replace with the user's profile picture

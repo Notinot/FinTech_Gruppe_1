@@ -72,6 +72,16 @@ List<Transaction> fetchTransactions() {
         name: 'Max Mustermann',
         amount: 200.0,
         date: DateTime.now()),
+    Transaction(
+        type: 'Received',
+        name: 'Peter Meyer',
+        amount: 10.0,
+        date: DateTime.now()),
+    Transaction(
+        type: 'Payment',
+        name: 'Max Mustermann',
+        amount: 100.0,
+        date: DateTime.now()),
     // Add more transactions here
   ];
 }

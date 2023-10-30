@@ -10,7 +10,7 @@ class PayfriendzApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: PayfriendzScreen(),
+      home: LoginScreen(), // Set the LoginScreen as the initial route
     );
   }
 }

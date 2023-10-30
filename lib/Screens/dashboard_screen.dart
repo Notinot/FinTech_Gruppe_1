@@ -3,7 +3,7 @@ import 'account_summary.dart';
 import 'user_profile_section.dart';
 import 'Notifications.dart';
 import 'QuickActions.dart';
-import 'recent_transactions.dart';
+//import 'upcoming_events.dart';
 import 'AppDrawer.dart';
 import 'package:http/http.dart' as http;
 
@@ -12,18 +12,6 @@ class DashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     String username = "Lukas";
     double balance = 1000.00;
-
-    List<Transaction> recentTransactions = [
-      Transaction(amount: 25.00, name: 'Dennis', type: 'Payment'),
-      Transaction(amount: 45.00, name: 'Vito', type: 'Received'),
-      Transaction(type: 'Payment', amount: 10.00, name: 'Lukas'),
-      Transaction(amount: 25.00, name: 'Labi', type: 'Received'),
-      Transaction(type: 'Payment', amount: 10.00, name: 'Lukas'),
-      Transaction(amount: 25.00, name: 'Lukas', type: 'Payment'),
-      Transaction(type: 'Payment', amount: 10.00, name: 'Lukas'),
-      Transaction(type: 'Payment', amount: 10.00, name: 'Labi'),
-    ];
-
     // Example list of upcoming events
     List<Event> upcomingEvents = [
       Event(title: 'Meeting', date: '2023-11-01'),
@@ -45,7 +33,6 @@ class DashboardScreen extends StatelessWidget {
               QuickActions(),
               Notifications(),
               UpcomingEvents(events: upcomingEvents),
-              RecentTransactions(transactions: recentTransactions),
             ],
           ),
         ),

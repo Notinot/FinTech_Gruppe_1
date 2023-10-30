@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/Screens/login_screen.dart';
 import 'transaction_history_screen.dart';
 
 class AppDrawer extends StatelessWidget {
@@ -74,8 +75,10 @@ class AppDrawer extends StatelessWidget {
             leading: Icon(Icons.exit_to_app),
             title: Text('Sign Out'),
             onTap: () {
-              // Handle sign out logic, such as clearing user session
-              // Implement the sign-out functionality
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => LoginScreen()),
+              );
             },
           ),
         ],

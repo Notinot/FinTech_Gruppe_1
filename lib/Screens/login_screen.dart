@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'registration_screen.dart';
 //import 'dashboard_screen.dart'; // Import the HomeScreen class
-import 'dashboard_screen copy.dart';
+import 'dashboard_screen.dart';
 
 class LoginScreen extends StatelessWidget {
   @override

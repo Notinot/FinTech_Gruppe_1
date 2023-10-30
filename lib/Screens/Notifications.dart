@@ -24,7 +24,7 @@ class Notifications extends StatelessWidget {
           ),
           NotificationItem(
             icon: Icons.warning,
-            text: 'You received a payment from Max Mustermann.',
+            text: "You received a payment from Vito D'Elia .",
           ),
           // Add more notification items as needed
         ],

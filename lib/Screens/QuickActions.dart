@@ -15,7 +15,7 @@ class QuickActions extends StatelessWidget {
           },
         ),
         QuickActionButton(
-          icon: Icons.money_off,
+          icon: Icons.request_page,
           label: 'Request Payment',
           onTap: () {
             // Implement the action for requesting payment
@@ -49,10 +49,19 @@ class QuickActionButton extends StatelessWidget {
       },
       child: Column(
         children: <Widget>[
-          Icon(
-            icon,
-            size: 48,
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.blue,
+              shape: BoxShape.circle,
+            ),
+            padding: EdgeInsets.all(16),
+            child: Icon(
+              icon,
+              size: 48,
+              color: Colors.white,
+            ),
           ),
+          SizedBox(height: 8),
           Text(
             label,
             style: TextStyle(fontSize: 16),

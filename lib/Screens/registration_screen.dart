@@ -1,45 +1,86 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 
-class RegistrationScreen extends StatelessWidget {
-  final TextEditingController firstNameController = TextEditingController();
-  final TextEditingController lastNameController = TextEditingController();
+class RegistrationScreen extends StatefulWidget {
+  @override
+  _RegistrationScreenState createState() => _RegistrationScreenState();
+}
+
+class _RegistrationScreenState extends State<RegistrationScreen> {
+  final TextEditingController usernameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController =
       TextEditingController();
 
+  String? passwordError;
+  String? emailError;
+  String? usernameError;
+
+  void clearErrors() {
+    setState(() {
+      passwordError = null;
+      emailError = null;
+      usernameError = null;
+    });
+  }
+
   Future<void> registerUser() async {
-    final String firstName = firstNameController.text;
-    final String lastName = lastNameController.text;
+    clearErrors();
+
+    final String username = usernameController.text;
     final String email = emailController.text;
     final String password = passwordController.text;
     final String confirmPassword = confirmPasswordController.text;
 
+    if (username.isEmpty) {
+      setState(() {
+        usernameError = 'Username cannot be empty';
+      });
+    }
+
+    if (email.isEmpty) {
+      setState(() {
+        emailError = 'Email cannot be empty';
+      });
+    }
+
+    if (password.isEmpty || confirmPassword.isEmpty) {
+      setState(() {
+        passwordError = 'Password fields cannot be empty';
+      });
+    }
+
     if (password != confirmPassword) {
-      // Passwords do not match, show an error message
-      // You can display an error message or other UI feedback to the user
+      setState(() {
+        passwordError = 'Passwords do not match';
+      });
+      return;
+    }
+
+    if (!email.contains('@')) {
+      setState(() {
+        emailError = 'Email must contain "@" symbol';
+      });
       return;
     }
 
     // Make an HTTP POST request to your backend API
-    final response = await http.post(
-      Uri.parse('YOUR_BACKEND_API_URL_HERE'), // Replace with your API URL
-      body: {
-        'firstName': firstName,
-        'lastName': lastName,
-        'email': email,
-        'password': password,
-      },
-    );
+    //final response = await http.post(
+    //  Uri.parse('YOUR_BACKEND_API_URL_HERE'), // Replace with your API URL
+    //  body: {
+    //    'username': username,
+    //    'email': email,
+    //    'password': password,
+    //  },
+    //);
 
-    if (response.statusCode == 200) {
-      // Registration successful
-      // You can navigate the user to the next screen or show a success message
-    } else {
-      // Registration failed
-      // You can handle errors, such as displaying an error message
-    }
+    //if (response.statusCode == 200) {
+    // Registration successful
+    // You can navigate the user to the next screen or show a success message
+    //} else {
+    // Registration failed
+    // You can handle errors, such as displaying an error message
+    // }
   }
 
   @override
@@ -54,18 +95,11 @@ class RegistrationScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             TextField(
-              controller: firstNameController,
+              controller: usernameController,
               decoration: InputDecoration(
-                labelText: 'First Name',
+                labelText: 'Username',
                 border: OutlineInputBorder(),
-              ),
-            ),
-            SizedBox(height: 16.0),
-            TextField(
-              controller: lastNameController,
-              decoration: InputDecoration(
-                labelText: 'Last Name',
-                border: OutlineInputBorder(),
+                errorText: usernameError,
               ),
             ),
             SizedBox(height: 16.0),
@@ -74,6 +108,7 @@ class RegistrationScreen extends StatelessWidget {
               decoration: InputDecoration(
                 labelText: 'Email',
                 border: OutlineInputBorder(),
+                errorText: emailError,
               ),
             ),
             SizedBox(height: 16.0),
@@ -83,6 +118,7 @@ class RegistrationScreen extends StatelessWidget {
               decoration: InputDecoration(
                 labelText: 'Password',
                 border: OutlineInputBorder(),
+                errorText: passwordError,
               ),
             ),
             SizedBox(height: 16.0),
@@ -92,6 +128,7 @@ class RegistrationScreen extends StatelessWidget {
               decoration: InputDecoration(
                 labelText: 'Confirm Password',
                 border: OutlineInputBorder(),
+                errorText: passwordError,
               ),
             ),
             SizedBox(height: 16.0),

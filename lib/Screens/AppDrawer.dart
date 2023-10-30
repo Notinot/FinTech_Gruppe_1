@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'transaction_history_screen.dart';
 
 class AppDrawer extends StatelessWidget {
   @override
@@ -38,8 +38,11 @@ class AppDrawer extends StatelessWidget {
             leading: Icon(Icons.history),
             title: Text('History'),
             onTap: () {
-              // Navigate to the transfer history section
-              // Implement the navigation as needed
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => TransactionHistoryScreen()),
+              );
             },
           ),
           ListTile(
@@ -72,7 +75,7 @@ class AppDrawer extends StatelessWidget {
             title: Text('Sign Out'),
             onTap: () {
               // Handle sign out logic, such as clearing user session
-              // Implement the sign out functionality
+              // Implement the sign-out functionality
             },
           ),
         ],

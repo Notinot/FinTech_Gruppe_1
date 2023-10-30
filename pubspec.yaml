@@ -30,6 +30,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  intl: ^0.17.0
   http: ^0.13.3  # For making HTTP requests
   dio: ^4.0.0  # An alternative to http
   sqflite: ^2.0.0+3  # For local SQLite database (if needed)

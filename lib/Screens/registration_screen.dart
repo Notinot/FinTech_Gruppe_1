@@ -107,7 +107,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
 // Make an HTTP POST request to your backend API
     final response = await http.post(
-      Uri.parse('http://localhost:3001/register'),
+      Uri.parse('http://localhost:3000/register'),
       headers: {
         'Content-Type': 'application/json', // Set the content type
       },

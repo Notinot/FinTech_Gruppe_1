@@ -1,21 +1,19 @@
 const express = require('express');
-const mysql = require('mysql2/promise'); // Import mysql2
+const mysql = require('mysql2/promise');
 const bcrypt = require('bcrypt');
-const cors = require('cors'); // Import the CORS middleware
+const cors = require('cors');
 
 const app = express();
-const port = 3001; // Update the port number
+const port = 3000;
 
-// Parse JSON request bodies
 app.use(express.json());
 
-// Allow requests from your Flutter app (Change the origin to the correct URL)
+// Allow requests from any origin and restrict to POST requests
 app.use(cors({
-  origin: 'http://localhost:3000', // Change this to the URL of your Flutter app
+  origin: '*', 
   methods: 'POST',
 }));
 
-// Configure the database connection
 const db = mysql.createPool({
   host: 'btxppofwkgo3xl10tfwy-mysql.services.clever-cloud.com',
   user: 'ud86jc8auniwbfsm',
@@ -24,36 +22,54 @@ const db = mysql.createPool({
 });
 
 app.post('/register', async (req, res) => {
-    const { username, email, password } = req.body;
-  
-    // Check if the email and username are unique in the database
-    const [existingUser] = await db.query(
-      'SELECT * FROM User WHERE email = ? OR username = ?',
-      [email, username]
-    );
-  
-    if (existingUser.length > 0) {
-      return res.status(400).json({ message: 'Email or username already in use' });
-    }
-  
-    try {
-      // Hash the user's password securely
-      const hashedPassword = await bcrypt.hash(password, 10);
-  
-      // Insert the new user into the User table
-      await db.query('INSERT INTO User (username, email, password_hash, created_at) VALUES (?, ?, ?, NOW())', [
-        username,
-        email,
-        hashedPassword,
-      ]);
-  
-      res.json({ message: 'Registration successful' });
-    } catch (error) {
-      console.error('Error hashing password:', error);
-      res.status(500).json({ message: 'Internal server error' });
-    }
-  });
-  
+  const { username, email, password } = req.body;
+
+  const [existingUser] = await db.query(
+    'SELECT * FROM User WHERE email = ? OR username = ?',
+    [email, username]
+  );
+
+  if (existingUser.length > 0) {
+    return res.status(400).json({ message: 'Email or username already in use' });
+  }
+
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    await db.query('INSERT INTO User (username, email, password_hash, created_at) VALUES (?, ?, ?, NOW())', [
+      username,
+      email,
+      hashedPassword,
+    ]);
+
+    res.json({ message: 'Registration successful' });
+  } catch (error) {
+    console.error('Error hashing password:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  // Check if the user with the provided email exists
+  const [user] = await db.query('SELECT * FROM User WHERE email = ?', [email]);
+
+  if (user.length === 0) {
+    return res.status(401).json({ message: 'Invalid email or password' });
+  }
+
+  const hashedPassword = user[0].password_hash;
+
+  // Compare the provided password with the hashed password
+  const passwordMatch = await bcrypt.compare(password, hashedPassword);
+
+  if (passwordMatch) {
+    res.json({ message: 'Login successful' });
+  } else {
+    res.status(401).json({ message: 'Invalid email or password' });
+  }
+});
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);

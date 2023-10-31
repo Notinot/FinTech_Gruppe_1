@@ -1,8 +1,47 @@
-import 'package:flutter/material.dart';
-import 'registration_screen.dart';
-import 'dashboard_screen.dart';
+import 'dart:convert';
 
-class LoginScreen extends StatelessWidget {
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dashboard_screen.dart';
+import 'registration_screen.dart';
+
+class LoginScreen extends StatefulWidget {
+  @override
+  _LoginScreenState createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+
+  void handleLogin() async {
+    final String email = emailController.text;
+    final String password = passwordController.text;
+
+    final response = await http.post(
+      Uri.parse(
+          'http://localhost:3000/login'), // Create an API endpoint for login
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({'email': email, 'password': password}),
+    );
+
+    if (response.statusCode == 200) {
+      // Login successful, navigate to the dashboard.
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => DashboardScreen()),
+      );
+    } else {
+      // Handle unsuccessful login, show an error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Invalid email or password. Please try again.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -15,6 +54,7 @@ class LoginScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             TextField(
+              controller: emailController,
               decoration: InputDecoration(
                 labelText: 'Email',
                 border: OutlineInputBorder(),
@@ -22,6 +62,7 @@ class LoginScreen extends StatelessWidget {
             ),
             SizedBox(height: 16.0),
             TextField(
+              controller: passwordController,
               obscureText: true,
               decoration: InputDecoration(
                 labelText: 'Password',
@@ -30,21 +71,7 @@ class LoginScreen extends StatelessWidget {
             ),
             SizedBox(height: 24.0),
             ElevatedButton(
-              onPressed: () {
-                String enteredUsername = "test"; // Replace with user input
-                String enteredPassword = "test"; // Replace with user input
-
-                if (enteredUsername == "test" && enteredPassword == "test") {
-                  // Successful login, navigate to the dashboard screen
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => DashboardScreen()),
-                  );
-                } else {
-                  // Handle unsuccessful login, show an error message
-                  // You can display an error message or other UI feedback to the user
-                }
-              },
+              onPressed: handleLogin,
               child: Text(
                 'Login',
                 style: TextStyle(fontSize: 18.0),

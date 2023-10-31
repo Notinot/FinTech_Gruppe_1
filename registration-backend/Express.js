@@ -25,34 +25,35 @@ const db = mysql.createPool({
 
 app.post('/register', async (req, res) => {
     const { username, email, password } = req.body;
-
+  
     // Check if the email and username are unique in the database
     const [existingUser] = await db.query(
-      'SELECT * FROM users WHERE email = ? OR username = ?',
+      'SELECT * FROM User WHERE email = ? OR username = ?',
       [email, username]
     );
-
+  
     if (existingUser.length > 0) {
       return res.status(400).json({ message: 'Email or username already in use' });
     }
-
+  
     try {
       // Hash the user's password securely
       const hashedPassword = await bcrypt.hash(password, 10);
-
-      // Insert the new user into the database
-      await db.query('INSERT INTO users (username, email, password) VALUES (?, ?, ?)', [
+  
+      // Insert the new user into the User table
+      await db.query('INSERT INTO User (username, email, password_hash, created_at) VALUES (?, ?, ?, NOW())', [
         username,
         email,
         hashedPassword,
       ]);
-
+  
       res.json({ message: 'Registration successful' });
     } catch (error) {
       console.error('Error hashing password:', error);
       res.status(500).json({ message: 'Internal server error' });
     }
-});
+  });
+  
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);

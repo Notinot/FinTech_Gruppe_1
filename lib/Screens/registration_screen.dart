@@ -105,7 +105,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       'password': password,
     };
 
-    // Make an HTTP POST request to your backend API
+// Make an HTTP POST request to your backend API
     final response = await http.post(
       Uri.parse('http://localhost:3001/register'),
       headers: {

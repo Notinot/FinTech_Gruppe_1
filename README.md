@@ -1,3 +1,13 @@
+# ------------------- #
+## Start Client
+lib -> main.dart
+
+## Start Server
+Terminal: navigate to \FinTech_Gruppe_1\registration-backend\node_modules\mysql2\lib 
+Enter the command: node server.js
+# ------------------- #
+
+
 # flutter_application_1
 
 A new Flutter project.

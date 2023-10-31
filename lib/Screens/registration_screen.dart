@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -96,20 +98,27 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       return;
     }
 
+    // Create a JSON payload to send to the API
+    final Map<String, dynamic> requestBody = {
+      'username': username,
+      'email': email,
+      'password': password,
+    };
+
     // Make an HTTP POST request to your backend API
     final response = await http.post(
-      Uri.parse(
-          'https://btxppofwkgo3xl10tfwy-mysql.services.clever-cloud.com'), // Replace 'http' with your actual protocol
-      body: {
-        'username': username,
-        'email': email,
-        'password': password,
+      Uri.parse('http://localhost:3001/register'),
+      headers: {
+        'Content-Type': 'application/json', // Set the content type
       },
+      body: json.encode(requestBody), // Encode the request body as JSON
     );
 
     if (response.statusCode == 200) {
+      // Registration successful, handle accordingly
       showSnackBar(message: 'Registration successful');
     } else {
+      // Registration failed, handle accordingly
       showSnackBar(isError: true, message: 'Registration failed');
     }
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 class RegistrationScreen extends StatefulWidget {
   @override
@@ -96,24 +97,21 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     }
 
     // Make an HTTP POST request to your backend API
-    //final response = await http.post(
-    //  Uri.parse('YOUR_BACKEND_API_URL_HERE'), // Replace with your API URL
-    //  body: {
-    //    'username': username,
-    //    'email': email,
-    //    'password': password,
-    //  },
-    //);
+    final response = await http.post(
+      Uri.parse(
+          'https://btxppofwkgo3xl10tfwy-mysql.services.clever-cloud.com'), // Replace 'http' with your actual protocol
+      body: {
+        'username': username,
+        'email': email,
+        'password': password,
+      },
+    );
 
-    //if (response.statusCode == 200) {
-    // Registration successful
-    // You can navigate the user to the next screen or show a success message
-    // showSnackBar(message: 'Registration successful');
-    //} else {
-    // Registration failed
-    // You can handle errors, such as displaying an error message
-    // showSnackBar(isError: true, message: 'Registration failed');
-    // }
+    if (response.statusCode == 200) {
+      showSnackBar(message: 'Registration successful');
+    } else {
+      showSnackBar(isError: true, message: 'Registration failed');
+    }
   }
 
   void showSnackBar({bool isError = false, required String message}) {

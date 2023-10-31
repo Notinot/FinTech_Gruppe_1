@@ -5,6 +5,11 @@ lib -> main.dart
 ## Start Server
 Terminal: navigate to \FinTech_Gruppe_1\registration-backend\node_modules\mysql2\lib 
 Enter the command: node server.js
+
+or
+Terminal: navigate to \FinTech_Gruppe_1\registration-backend\
+Enter the command: npm start
+
 # ------------------- #
 
 

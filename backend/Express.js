@@ -8,6 +8,7 @@ const port = 3000;
 
 app.use(express.json());
 
+
 // Allow requests from any origin and restrict to POST requests
 app.use(cors({
   origin: '*', 
@@ -20,6 +21,8 @@ const db = mysql.createPool({
   password: 'ER0nIAbQy5qyAeSd4ZCV',
   database: 'btxppofwkgo3xl10tfwy',
 });
+
+let server; // Define the server variable at a higher scope
 
 app.post('/register', async (req, res) => {
   const { username, email, password } = req.body;
@@ -71,6 +74,20 @@ app.post('/login', async (req, res) => {
   }
 });
 
-app.listen(port, () => {
+app.get('/health', (req, res) => {
+  res.sendStatus(200); // Send a 200 OK response when the server is healthy
+});
+
+
+server = app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
+});
+
+// Gracefully shut down the server when SIGINT signal is received (e.g., Ctrl+C)
+process.on('SIGINT', () => {
+  console.log('Shutting down the server...');
+  server.close(() => {
+    console.log('Server has been shut down.');
+    process.exit(0); // Exit the process gracefully
+  });
 });

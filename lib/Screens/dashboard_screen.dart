@@ -3,9 +3,7 @@ import 'account_summary.dart';
 import 'user_profile_section.dart';
 import 'Notifications.dart';
 import 'QuickActions.dart';
-//import 'upcoming_events.dart';
 import 'AppDrawer.dart';
-import 'package:http/http.dart' as http;
 
 class DashboardScreen extends StatelessWidget {
   @override

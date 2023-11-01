@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 
 class UserProfileSection extends StatelessWidget {
   final String username; // Replace with actual user data

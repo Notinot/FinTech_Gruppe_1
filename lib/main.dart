@@ -45,8 +45,7 @@ class ServerUnavailableScreen extends StatelessWidget {
             Text('The server is currently unavailable.'),
             ElevatedButton(
               onPressed: () {
-                // Implement a retry mechanism here
-                // You can attempt to reconnect to the server.
+                // Implement a retry mechanism
               },
               child: Text('Retry'),
             ),

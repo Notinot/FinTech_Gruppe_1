@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Screens/send_money_screen.dart';
-import 'package:http/http.dart' as http;
 
 class QuickActions extends StatelessWidget {
   @override

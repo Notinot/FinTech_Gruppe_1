@@ -4,48 +4,54 @@ import 'Screens/login_screen.dart'; // Import the LoginScreen class
 import 'Screens/dashboard_screen.dart'; // Import the HomeScreen class
 import 'package:http/http.dart' as http;
 
-void main() => runApp(PayfriendzApp());
+void main() async {
+  // Check server availability
+  final serverUrl = 'http://localhost:3000';
+  final response = await http.get(Uri.parse('$serverUrl/health'));
+
+  // Create the Flutter app
+  runApp(PayfriendzApp(serverAvailable: response.statusCode == 200));
+}
 
 class PayfriendzApp extends StatelessWidget {
+  final bool serverAvailable;
+
+  PayfriendzApp({required this.serverAvailable});
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: LoginScreen(), // Set the LoginScreen as the initial route
-    );
+    if (serverAvailable) {
+      return MaterialApp(
+        home: LoginScreen(), // Set the LoginScreen as the initial route
+      );
+    } else {
+      return MaterialApp(
+        home:
+            ServerUnavailableScreen(), // Server is unavailable, show an error screen
+      );
+    }
   }
 }
 
-class PayfriendzScreen extends StatelessWidget {
+class ServerUnavailableScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Payfriendz'),
+        title: Text('Server Unavailable'),
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text('Welcome to Payfriendz'),
+          children: [
+            Text('The server is currently unavailable.'),
             ElevatedButton(
               onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => LoginScreen()),
-                );
+                // Implement a retry mechanism here
+                // You can attempt to reconnect to the server.
               },
-              child: Text('Login'),
+              child: Text('Retry'),
             ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => RegistrationScreen()),
-                );
-              },
-              child: Text('Register'),
-            ),
-            // Add other UI elements as needed
           ],
         ),
       ),

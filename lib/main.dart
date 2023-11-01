@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
-import 'Screens/registration_screen.dart'; // Import the RegistrationScreen class
-import 'Screens/login_screen.dart'; // Import the LoginScreen class
-import 'Screens/dashboard_screen.dart'; // Import the HomeScreen class
+import 'Screens/login_screen.dart';
 import 'package:http/http.dart' as http;
 
 void main() async {
   // Check server availability
-  final serverUrl = 'http://localhost:3000';
+  const serverUrl = 'http://localhost:3000';
   final response = await http.get(Uri.parse('$serverUrl/health'));
 
   // Create the Flutter app

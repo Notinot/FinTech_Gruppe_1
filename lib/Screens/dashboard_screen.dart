@@ -11,8 +11,10 @@ class DashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Extract user details
     String username = user['username'];
     double balance = user['balance'].toDouble();
+
     // Example list of upcoming events
     List<Event> upcomingEvents = [
       Event(title: 'Meeting', date: '2023-11-01'),
@@ -29,15 +31,21 @@ class DashboardScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
+              // Display user's profile information
               UserProfileSection(username),
+              // Display user's account summary
               AccountSummary(balance),
+              // Provide quick access actions
               QuickActions(),
+              // Show user notifications
               Notifications(),
+              // Display upcoming events
               UpcomingEvents(events: upcomingEvents),
             ],
           ),
         ),
       ),
+      // Add the AppDrawer to the dashboard screen
       drawer: AppDrawer(user: user),
     );
   }

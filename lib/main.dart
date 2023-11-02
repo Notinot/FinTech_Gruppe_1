@@ -19,13 +19,14 @@ class PayfriendzApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (serverAvailable) {
+      // If the server is available, show the LoginScreen as the initial route
       return MaterialApp(
-        home: LoginScreen(), // Set the LoginScreen as the initial route
+        home: LoginScreen(),
       );
     } else {
+      // If the server is unavailable, show an error screen
       return MaterialApp(
-        home:
-            ServerUnavailableScreen(), // Server is unavailable, show an error screen
+        home: ServerUnavailableScreen(),
       );
     }
   }
@@ -42,10 +43,12 @@ class ServerUnavailableScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            // Display a message for server unavailability
             Text('The server is currently unavailable.'),
             ElevatedButton(
               onPressed: () {
                 // Implement a retry mechanism
+                // You can add logic to retry connecting to the server here.
               },
               child: Text('Retry'),
             ),

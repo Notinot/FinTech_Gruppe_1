@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dashboard_screen.dart';
@@ -16,26 +15,29 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController passwordController = TextEditingController();
 
   void handleLogin() async {
+    // Get user input for email and password
     final String email = emailController.text;
     final String password = passwordController.text;
 
+    // Make an HTTP POST request to the login API
     final response = await http.post(
       Uri.parse(
-          'http://localhost:3000/login'), // Create an API endpoint for login
+          'http://localhost:3000/login'), // Replace with your API endpoint
       headers: {'Content-Type': 'application/json'},
       body: json.encode({'email': email, 'password': password}),
     );
 
     if (response.statusCode == 200) {
+      // Successful login response
       final Map<String, dynamic> data = json.decode(response.body);
       final token = data['token'];
       final user = data['user'];
 
-      // Store the token securely
+      // Store the user's token securely
       final storage = FlutterSecureStorage();
       await storage.write(key: 'token', value: token);
 
-      // Pass the user data to the DashboardScreen
+      // Navigate to the DashboardScreen and pass the user data
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -64,6 +66,7 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+            // Input field for email
             TextField(
               controller: emailController,
               decoration: InputDecoration(
@@ -72,6 +75,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
             SizedBox(height: 16.0),
+            // Input field for password (masked)
             TextField(
               controller: passwordController,
               obscureText: true,
@@ -81,6 +85,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
             SizedBox(height: 24.0),
+            // Login button
             ElevatedButton(
               onPressed: handleLogin,
               child: Text(
@@ -89,6 +94,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
             SizedBox(height: 12.0),
+            // Button to navigate to registration screen
             TextButton(
               onPressed: () {
                 // Navigate to the registration screen

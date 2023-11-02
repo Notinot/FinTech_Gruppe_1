@@ -14,17 +14,30 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController =
       TextEditingController();
+  final TextEditingController firstnameController = TextEditingController();
+  final TextEditingController lastnameController = TextEditingController();
 
   String? passwordError;
   String? emailError;
   String? usernameError;
+  String? firstnameError;
+  String? lastnameError;
 
   void clearErrors() {
     setState(() {
       passwordError = null;
       emailError = null;
       usernameError = null;
+      firstnameError = null;
+      lastnameError = null;
     });
+  }
+
+  bool EmailValid(String email) {
+    final emailPattern = RegExp(
+      r'^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$',
+    );
+    return emailPattern.hasMatch(email);
   }
 
   Future<void> registerUser() async {
@@ -32,6 +45,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
     final String username = usernameController.text;
     final String email = emailController.text;
+    final String firstname = firstnameController.text;
+    final String lastname = lastnameController.text;
     final String password = passwordController.text;
     final String confirmPassword = confirmPasswordController.text;
 
@@ -44,6 +59,30 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     if (email.isEmpty) {
       setState(() {
         emailError = 'Email cannot be empty';
+      });
+    }
+
+    if (firstname.isEmpty) {
+      setState(() {
+        firstnameError = 'First name cannot be empty';
+      });
+    }
+
+    if (firstname.length < 2) {
+      setState(() {
+        firstnameError = 'First name must be at least two characters long';
+      });
+    }
+
+    if (lastname.isEmpty) {
+      setState(() {
+        lastnameError = 'Last name cannot be empty';
+      });
+    }
+
+    if (lastname.length < 2) {
+      setState(() {
+        firstnameError = 'Last name must be at least two characters long';
       });
     }
 
@@ -90,9 +129,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       return;
     }
 
-    if (!email.contains('@')) {
+    if (!EmailValid(email)) {
       setState(() {
-        emailError = 'Email must contain "@" symbol';
+        emailError = 'Invalid email format';
       });
       showSnackBar(isError: true, message: 'Invalid email format');
       return;
@@ -102,6 +141,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     final Map<String, dynamic> requestBody = {
       'username': username,
       'email': email,
+      'firstname': firstname,
+      'lastname': lastname,
       'password': password,
     };
 
@@ -158,6 +199,24 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 labelText: 'Email',
                 border: OutlineInputBorder(),
                 errorText: emailError,
+              ),
+            ),
+            SizedBox(height: 16.0),
+            TextField(
+              controller: firstnameController,
+              decoration: InputDecoration(
+                labelText: 'First name',
+                border: OutlineInputBorder(),
+                errorText: firstnameError,
+              ),
+            ),
+            SizedBox(height: 16.0),
+            TextField(
+              controller: lastnameController,
+              decoration: InputDecoration(
+                labelText: 'Last name',
+                border: OutlineInputBorder(),
+                errorText: lastnameError,
               ),
             ),
             SizedBox(height: 16.0),

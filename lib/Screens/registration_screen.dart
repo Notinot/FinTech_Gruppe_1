@@ -25,6 +25,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   String? lastnameError;
 
   void clearErrors() {
+    // Clear any previous error messages
     setState(() {
       passwordError = null;
       emailError = null;
@@ -35,6 +36,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   }
 
   bool EmailValid(String email) {
+    // Validate the email format using a regular expression
     final emailPattern = RegExp(
       r'^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$',
     );
@@ -42,6 +44,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   }
 
   Future<void> registerUser() async {
+    // Clear any previous error messages
     clearErrors();
 
     final String username = usernameController.text;
@@ -52,42 +55,49 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     final String confirmPassword = confirmPasswordController.text;
 
     if (username.isEmpty) {
+      // Check if username is empty
       setState(() {
         usernameError = 'Username cannot be empty';
       });
     }
 
     if (email.isEmpty) {
+      // Check if email is empty
       setState(() {
         emailError = 'Email cannot be empty';
       });
     }
 
     if (firstname.isEmpty) {
+      // Check if first name is empty
       setState(() {
         firstnameError = 'First name cannot be empty';
       });
     }
 
     if (firstname.length < 2) {
+      // Check if first name is at least two characters long
       setState(() {
         firstnameError = 'First name must be at least two characters long';
       });
     }
 
     if (lastname.isEmpty) {
+      // Check if last name is empty
       setState(() {
         lastnameError = 'Last name cannot be empty';
       });
     }
 
     if (lastname.length < 2) {
+      // Check if last name is at least two characters long
       setState(() {
-        firstnameError = 'Last name must be at least two characters long';
+        lastnameError = 'Last name must be at least two characters long';
       });
     }
 
     if (password.isEmpty || confirmPassword.isEmpty) {
+      // Check if password fields are empty
       setState(() {
         passwordError = 'Password fields cannot be empty';
       });
@@ -96,6 +106,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     }
 
     if (password.length < 12) {
+      // Check if password is at least 12 characters long
       setState(() {
         passwordError = 'Password must have at least 12 characters';
       });
@@ -105,6 +116,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     }
 
     if (!password.contains(RegExp(r'[0-9]'))) {
+      // Check if password contains at least one number
       setState(() {
         passwordError = 'Password must contain at least one number';
       });
@@ -113,6 +125,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     }
 
     if (!password.contains(RegExp(r'[#&@~!@?}\[%!?]'))) {
+      // Check if password contains at least one special character
       setState(() {
         passwordError =
             'Password must contain at least one special character (#&@~!@?}[%!?)';
@@ -123,6 +136,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     }
 
     if (password != confirmPassword) {
+      // Check if passwords match
       setState(() {
         passwordError = 'Passwords do not match';
       });
@@ -131,6 +145,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     }
 
     if (!EmailValid(email)) {
+      // Check if email format is valid
       setState(() {
         emailError = 'Invalid email format';
       });
@@ -147,7 +162,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       'password': password,
     };
 
-// Make an HTTP POST request to your backend API
+    // Make an HTTP POST request to your backend API
     final response = await http.post(
       Uri.parse('http://localhost:3000/register'),
       headers: {

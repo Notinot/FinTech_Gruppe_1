@@ -8,7 +8,6 @@ const port = 3000;
 
 app.use(express.json());
 
-
 // Allow requests from any origin and restrict to POST requests
 app.use(cors({
   origin: '*', 
@@ -22,10 +21,21 @@ const db = mysql.createPool({
   database: 'btxppofwkgo3xl10tfwy',
 });
 
-let server; // Define the server variable at a higher scope
+function generateSalt() {
+  const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+{}[]|:;<>,.?/~";
+  let salt = "";
+  const charsetLength = charset.length;
+
+  for (let i = 0; i < 16; i++) {
+    const randomNumber = Math.floor(Math.random() * charsetLength);
+    salt += charset.charAt(randomNumber);
+  }
+
+  return salt;
+}
 
 app.post('/register', async (req, res) => {
-  const { username, email, password } = req.body;
+  const { username, email,firstname,lastname, password } = req.body;
 
   const [existingUser] = await db.query(
     'SELECT * FROM User WHERE email = ? OR username = ?',
@@ -37,12 +47,16 @@ app.post('/register', async (req, res) => {
   }
 
   try {
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const salt = generateSalt()
+    const hashedPassword = await bcrypt.hash(password+salt, 10);
 
-    await db.query('INSERT INTO User (username, email, password_hash, created_at) VALUES (?, ?, ?, NOW())', [
+    await db.query('INSERT INTO User (username, email, first_name, last_name,password_hash, salt, created_at) VALUES (?,?,?,?,?,?,NOW())', [
       username,
       email,
+      firstname,
+      lastname,
       hashedPassword,
+      salt,
     ]);
 
     res.json({ message: 'Registration successful' });
@@ -63,9 +77,10 @@ app.post('/login', async (req, res) => {
   }
 
   const hashedPassword = user[0].password_hash;
+  const salt = user[0].salt;
 
   // Compare the provided password with the hashed password
-  const passwordMatch = await bcrypt.compare(password, hashedPassword);
+  const passwordMatch = await bcrypt.compare(password+salt, hashedPassword);
 
   if (passwordMatch) {
     res.json({ message: 'Login successful' });
@@ -74,20 +89,6 @@ app.post('/login', async (req, res) => {
   }
 });
 
-app.get('/health', (req, res) => {
-  res.sendStatus(200); // Send a 200 OK response when the server is healthy
-});
-
-
-server = app.listen(port, () => {
+app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
-});
-
-// Gracefully shut down the server when SIGINT signal is received (e.g., Ctrl+C)
-process.on('SIGINT', () => {
-  console.log('Shutting down the server...');
-  server.close(() => {
-    console.log('Server has been shut down.');
-    process.exit(0); // Exit the process gracefully
-  });
 });

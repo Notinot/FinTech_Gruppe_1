@@ -7,7 +7,6 @@ import 'AppDrawer.dart';
 
 class DashboardScreen extends StatelessWidget {
   final Map<String, dynamic> user;
-
   DashboardScreen({required this.user});
 
   @override
@@ -39,7 +38,7 @@ class DashboardScreen extends StatelessWidget {
           ),
         ),
       ),
-      drawer: AppDrawer(),
+      drawer: AppDrawer(user: user),
     );
   }
 }

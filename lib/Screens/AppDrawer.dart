@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Screens/login_screen.dart';
 import 'transaction_history_screen.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class AppDrawer extends StatelessWidget {
+  final Map<String, dynamic> user;
+  AppDrawer({required this.user});
+
   @override
   Widget build(BuildContext context) {
     return Drawer(
@@ -10,10 +14,8 @@ class AppDrawer extends StatelessWidget {
         padding: EdgeInsets.zero,
         children: <Widget>[
           UserAccountsDrawerHeader(
-            accountName:
-                Text('Lukas Meinberg'), // Replace with actual user data
-            accountEmail:
-                Text('lukas@gmail.com'), // Replace with actual user data
+            accountName: Text(user['username']),
+            accountEmail: Text(user['email']),
             currentAccountPicture: CircleAvatar(
               backgroundImage: AssetImage(
                   'lib/assets/profile_img.png'), // Replace with the user's profile picture
@@ -75,9 +77,11 @@ class AppDrawer extends StatelessWidget {
             leading: Icon(Icons.exit_to_app),
             title: Text('Sign Out'),
             onTap: () {
-              Navigator.push(
+              logout(context);
+              Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(builder: (context) => LoginScreen()),
+                (route) => false, // This clears the navigation stack
               );
             },
           ),
@@ -85,4 +89,18 @@ class AppDrawer extends StatelessWidget {
       ),
     );
   }
+}
+
+Future<void> logout(BuildContext context) async {
+  final storage = FlutterSecureStorage();
+  final token = await storage.read(key: 'token');
+
+  // Clear the token
+  await storage.delete(key: 'token');
+
+  print('Token deleted: $token'); // Add this line for debugging
+
+  // Navigate to the login screen and remove the ability to go back
+  Navigator.pushReplacement(
+      context, MaterialPageRoute(builder: (context) => LoginScreen()));
 }

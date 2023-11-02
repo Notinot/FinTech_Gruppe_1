@@ -1,3 +1,4 @@
+// Import required dependencies
 const express = require('express');
 const mysql = require('mysql2/promise');
 const bcrypt = require('bcrypt');
@@ -5,19 +6,23 @@ const cors = require('cors');
 const app = express();
 const port = 3000;
 const jwt = require('jsonwebtoken');
-const jwtSecret = 'your-secret-key'; // Replace with your secret key
+const crypto = require('crypto');
+
+// Generate a random secret key for JWT
+const jwtSecret = crypto.randomBytes(64).toString('hex');
 const jwtOptions = {
   expiresIn: '1h', // Token expiration time
 };
 
 app.use(express.json());
 
-// Allow requests from any origin and restrict to POST requests
+// Enable CORS to allow requests from any origin and restrict to POST requests
 app.use(cors({
   origin: '*', 
   methods: 'POST',
 }));
 
+// Create a connection pool to the MySQL database
 const db = mysql.createPool({
   host: 'btxppofwkgo3xl10tfwy-mysql.services.clever-cloud.com',
   user: 'ud86jc8auniwbfsm',
@@ -26,6 +31,7 @@ const db = mysql.createPool({
 });
 let server; // Define the server variable at a higher scope
 
+// Function to generate a random salt
 function generateSalt() {
   const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+{}[]|:;<>,.?/~";
   let salt = "";
@@ -39,9 +45,11 @@ function generateSalt() {
   return salt;
 }
 
+// Route for user registration
 app.post('/register', async (req, res) => {
-  const { username, email,firstname,lastname, password } = req.body;
+  const { username, email, firstname, lastname, password } = req.body;
 
+  // Check if the email or username is already in use
   const [existingUser] = await db.query(
     'SELECT * FROM User WHERE email = ? OR username = ?',
     [email, username]
@@ -52,10 +60,11 @@ app.post('/register', async (req, res) => {
   }
 
   try {
-    const salt = generateSalt()
-    const hashedPassword = await bcrypt.hash(password+salt, 10);
+    // Generate a salt, hash the password, and store the user data in the database
+    const salt = generateSalt();
+    const hashedPassword = await bcrypt.hash(password + salt, 10);
 
-    await db.query('INSERT INTO User (username, email, first_name, last_name,password_hash, salt, created_at) VALUES (?,?,?,?,?,?,NOW())', [
+    await db.query('INSERT INTO User (username, email, first_name, last_name, password_hash, salt, created_at) VALUES (?,?,?,?,?,?,NOW())', [
       username,
       email,
       firstname,
@@ -71,6 +80,7 @@ app.post('/register', async (req, res) => {
   }
 });
 
+// Route for user login
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
@@ -81,13 +91,13 @@ app.post('/login', async (req, res) => {
     return res.status(401).json({ message: 'Invalid email or password' });
   }
 
+  // Compare the provided password with the hashed password
   const hashedPassword = user[0].password_hash;
   const salt = user[0].salt;
-
-  // Compare the provided password with the hashed password
-  const passwordMatch = await bcrypt.compare(password+salt, hashedPassword);
+  const passwordMatch = await bcrypt.compare(password + salt, hashedPassword);
 
   if (passwordMatch) {
+    // Issue a JSON Web Token (JWT) upon successful login
     const token = jwt.sign({ userId: user[0].id }, jwtSecret, jwtOptions);
 
     // Fetch and include the user's data in the response
@@ -99,9 +109,12 @@ app.post('/login', async (req, res) => {
   }
 });
 
+// Route to fetch user profile with JWT authentication
 app.get('/user/profile', authenticateToken, async (req, res) => {
   try {
-    const userId = req.user.userId; // Get the user ID from the authenticated token
+    // Get the user ID from the authenticated token
+    const userId = req.user.userId;
+
     // Fetch the user's profile data from the database based on the user ID
     const [userData] = await db.query('SELECT * FROM User WHERE id = ?', [userId]);
 
@@ -117,19 +130,23 @@ app.get('/user/profile', authenticateToken, async (req, res) => {
   }
 });
 
+// Route for health check
 app.get('/health', (req, res) => {
   res.sendStatus(200); // Send a 200 OK response when the server is healthy
 });
+
+// Start the server and handle graceful shutdown on SIGINT signal
 server = app.listen(port, () => {
-// Gracefully shut down the server when SIGINT signal is received (e.g., Ctrl+C)
-process.on('SIGINT', () => {
-  console.log('Shutting down the server...');
-  server.close(() => {
-    console.log('Server has been shut down.');
-    process.exit(0); // Exit the process gracefully
+  process.on('SIGINT', () => {
+    console.log('Shutting down the server...');
+    server.close(() => {
+      console.log('Server has been shut down.');
+      process.exit(0); // Exit the process gracefully
+    });
   });
 });
-});
+
+// Middleware to authenticate the user token
 function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];

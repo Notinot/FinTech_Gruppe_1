@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -26,10 +27,20 @@ class _LoginScreenState extends State<LoginScreen> {
     );
 
     if (response.statusCode == 200) {
-      // Login successful, navigate to the dashboard.
+      final Map<String, dynamic> data = json.decode(response.body);
+      final token = data['token'];
+      final user = data['user'];
+
+      // Store the token securely
+      final storage = FlutterSecureStorage();
+      await storage.write(key: 'token', value: token);
+
+      // Pass the user data to the DashboardScreen
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => DashboardScreen()),
+        MaterialPageRoute(
+          builder: (context) => DashboardScreen(user: user),
+        ),
       );
     } else {
       // Handle unsuccessful login, show an error message

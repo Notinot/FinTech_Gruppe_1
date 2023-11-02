@@ -6,10 +6,14 @@ import 'QuickActions.dart';
 import 'AppDrawer.dart';
 
 class DashboardScreen extends StatelessWidget {
+  final Map<String, dynamic> user;
+
+  DashboardScreen({required this.user});
+
   @override
   Widget build(BuildContext context) {
-    String username = "Lukas";
-    double balance = 1000.00;
+    String username = user['username'];
+    double balance = user['balance'].toDouble();
     // Example list of upcoming events
     List<Event> upcomingEvents = [
       Event(title: 'Meeting', date: '2023-11-01'),

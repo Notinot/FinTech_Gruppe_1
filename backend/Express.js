@@ -2,9 +2,13 @@ const express = require('express');
 const mysql = require('mysql2/promise');
 const bcrypt = require('bcrypt');
 const cors = require('cors');
-
 const app = express();
 const port = 3000;
+const jwt = require('jsonwebtoken');
+const jwtSecret = 'your-secret-key'; // Replace with your secret key
+const jwtOptions = {
+  expiresIn: '1h', // Token expiration time
+};
 
 app.use(express.json());
 
@@ -84,9 +88,32 @@ app.post('/login', async (req, res) => {
   const passwordMatch = await bcrypt.compare(password+salt, hashedPassword);
 
   if (passwordMatch) {
-    res.json({ message: 'Login successful' });
+    const token = jwt.sign({ userId: user[0].id }, jwtSecret, jwtOptions);
+
+    // Fetch and include the user's data in the response
+    const userData = user[0];
+
+    res.json({ message: 'Login successful', token, user: userData });
   } else {
     res.status(401).json({ message: 'Invalid email or password' });
+  }
+});
+
+app.get('/user/profile', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId; // Get the user ID from the authenticated token
+    // Fetch the user's profile data from the database based on the user ID
+    const [userData] = await db.query('SELECT * FROM User WHERE id = ?', [userId]);
+
+    if (userData.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Send the user's profile data as the response
+    res.json({ user: userData[0] });
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 
@@ -94,7 +121,6 @@ app.get('/health', (req, res) => {
   res.sendStatus(200); // Send a 200 OK response when the server is healthy
 });
 server = app.listen(port, () => {
-
 // Gracefully shut down the server when SIGINT signal is received (e.g., Ctrl+C)
 process.on('SIGINT', () => {
   console.log('Shutting down the server...');
@@ -104,3 +130,19 @@ process.on('SIGINT', () => {
   });
 });
 });
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
+
+  jwt.verify(token, jwtSecret, (err, user) => {
+    if (err) {
+      return res.status(403).json({ message: 'Forbidden' });
+    }
+    req.user = user;
+    next();
+  });
+}

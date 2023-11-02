@@ -158,6 +158,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     if (response.statusCode == 200) {
       // Registration successful, handle accordingly
       showSnackBar(message: 'Registration successful');
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => LoginScreen()),
+      );
     } else {
       // Registration failed, handle accordingly
       showSnackBar(isError: true, message: 'Registration failed');

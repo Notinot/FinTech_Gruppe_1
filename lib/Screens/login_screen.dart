@@ -48,7 +48,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (verificationCode.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Verification code is required.'),
+            content: Text('Please enter the Verification code send to you'),
             backgroundColor: Colors.red,
           ),
         );
@@ -155,7 +155,8 @@ class _LoginScreenState extends State<LoginScreen> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const RegistrationScreen()),
+                  MaterialPageRoute(
+                      builder: (context) => const RegistrationScreen()),
                 );
               },
               child: const Text(

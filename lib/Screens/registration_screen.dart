@@ -175,7 +175,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
     if (response.statusCode == 200) {
       // Registration successful, handle accordingly
-      showSnackBar(message: 'Registration successful');
+      showSnackBar(
+          message:
+              ' Registration successfull!  Verification code has been send to $email ');
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => const LoginScreen()),

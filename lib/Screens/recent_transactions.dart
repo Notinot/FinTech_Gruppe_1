@@ -3,17 +3,17 @@ import 'package:flutter/material.dart';
 class RecentTransactions extends StatelessWidget {
   final List<Transaction> transactions;
 
-  RecentTransactions({required this.transactions});
+  const RecentTransactions({super.key, required this.transactions});
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: <Widget>[
-        Text(
+        const Text(
           'Recent Transactions:',
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
         ListView.builder(
           shrinkWrap: true,
           itemCount: transactions.length,
@@ -29,12 +29,12 @@ class RecentTransactions extends StatelessWidget {
 class TransactionItem extends StatelessWidget {
   final Transaction transaction;
 
-  TransactionItem({required this.transaction});
+  const TransactionItem({super.key, required this.transaction});
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: EdgeInsets.symmetric(vertical: 4, horizontal: 10),
+      margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 10),
       child: ListTile(
         title: Text(transaction.type),
         subtitle: Text(

@@ -14,18 +14,18 @@ void main() async {
 class PayfriendzApp extends StatelessWidget {
   final bool serverAvailable;
 
-  PayfriendzApp({required this.serverAvailable});
+  const PayfriendzApp({super.key, required this.serverAvailable});
 
   @override
   Widget build(BuildContext context) {
     if (serverAvailable) {
       // If the server is available, show the LoginScreen as the initial route
-      return MaterialApp(
+      return const MaterialApp(
         home: LoginScreen(),
       );
     } else {
       // If the server is unavailable, show an error screen
-      return MaterialApp(
+      return const MaterialApp(
         home: ServerUnavailableScreen(),
       );
     }
@@ -33,24 +33,26 @@ class PayfriendzApp extends StatelessWidget {
 }
 
 class ServerUnavailableScreen extends StatelessWidget {
+  const ServerUnavailableScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Server Unavailable'),
+        title: const Text('Server Unavailable'),
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // Display a message for server unavailability
-            Text('The server is currently unavailable.'),
+            const Text('The server is currently unavailable.'),
             ElevatedButton(
               onPressed: () {
                 // Implement a retry mechanism
                 // You can add logic to retry connecting to the server here.
               },
-              child: Text('Retry'),
+              child: const Text('Retry'),
             ),
           ],
         ),

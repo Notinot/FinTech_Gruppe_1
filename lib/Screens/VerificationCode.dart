@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'login_screen.dart';
 
 class VerificationCodeScreen extends StatefulWidget {
+  const VerificationCodeScreen({super.key});
+
   @override
   _VerificationCodeScreenState createState() => _VerificationCodeScreenState();
 }
@@ -18,7 +20,7 @@ class _VerificationCodeScreenState extends State<VerificationCodeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Verification Code'),
+        title: const Text('Verification Code'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -27,18 +29,18 @@ class _VerificationCodeScreenState extends State<VerificationCodeScreen> {
           children: <Widget>[
             TextField(
               controller: verificationCodeController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Verification Code',
                 border: OutlineInputBorder(),
               ),
             ),
-            SizedBox(height: 16.0),
+            const SizedBox(height: 16.0),
             ElevatedButton(
               onPressed: () {
                 // Add logic to submit the verification code.
                 submitVerificationCode(verificationCodeController.text);
               },
-              child: Text(
+              child: const Text(
                 'Submit',
                 style: TextStyle(fontSize: 18.0),
               ),
@@ -69,12 +71,12 @@ class _VerificationCodeScreenState extends State<VerificationCodeScreen> {
         context,
         MaterialPageRoute(
             builder: (context) =>
-                LoginScreen()), // Navigate to the login screen or another appropriate screen.
+                const LoginScreen()), // Navigate to the login screen or another appropriate screen.
       );
     } else {
       // Verification failed
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Verification failed'),
           backgroundColor: Colors.red,
         ),

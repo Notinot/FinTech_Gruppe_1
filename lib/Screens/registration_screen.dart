@@ -5,6 +5,8 @@ import 'login_screen.dart';
 import 'package:http/http.dart' as http;
 
 class RegistrationScreen extends StatefulWidget {
+  const RegistrationScreen({super.key});
+
   @override
   _RegistrationScreenState createState() => _RegistrationScreenState();
 }
@@ -176,7 +178,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       showSnackBar(message: 'Registration successful');
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => LoginScreen()),
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
       );
     } else {
       // Registration failed, handle accordingly
@@ -197,7 +199,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Registration'),
+        title: const Text('Registration'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -208,61 +210,61 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               controller: usernameController,
               decoration: InputDecoration(
                 labelText: 'Username',
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
                 errorText: usernameError,
               ),
             ),
-            SizedBox(height: 16.0),
+            const SizedBox(height: 16.0),
             TextField(
               controller: emailController,
               decoration: InputDecoration(
                 labelText: 'Email',
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
                 errorText: emailError,
               ),
             ),
-            SizedBox(height: 16.0),
+            const SizedBox(height: 16.0),
             TextField(
               controller: firstnameController,
               decoration: InputDecoration(
                 labelText: 'First name',
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
                 errorText: firstnameError,
               ),
             ),
-            SizedBox(height: 16.0),
+            const SizedBox(height: 16.0),
             TextField(
               controller: lastnameController,
               decoration: InputDecoration(
                 labelText: 'Last name',
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
                 errorText: lastnameError,
               ),
             ),
-            SizedBox(height: 16.0),
+            const SizedBox(height: 16.0),
             TextField(
               controller: passwordController,
               obscureText: true,
               decoration: InputDecoration(
                 labelText: 'Password',
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
                 errorText: passwordError,
               ),
             ),
-            SizedBox(height: 16.0),
+            const SizedBox(height: 16.0),
             TextField(
               controller: confirmPasswordController,
               obscureText: true,
               decoration: InputDecoration(
                 labelText: 'Confirm Password',
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
                 errorText: passwordError,
               ),
             ),
-            SizedBox(height: 16.0),
+            const SizedBox(height: 16.0),
             ElevatedButton(
               onPressed: registerUser,
-              child: Text(
+              child: const Text(
                 'Register',
                 style: TextStyle(fontSize: 18.0),
               ),

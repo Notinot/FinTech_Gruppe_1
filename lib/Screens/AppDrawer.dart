@@ -5,7 +5,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class AppDrawer extends StatelessWidget {
   final Map<String, dynamic> user;
-  AppDrawer({required this.user});
+  const AppDrawer({super.key, required this.user});
 
   @override
   Widget build(BuildContext context) {
@@ -16,71 +16,71 @@ class AppDrawer extends StatelessWidget {
           UserAccountsDrawerHeader(
             accountName: Text(user['username']),
             accountEmail: Text(user['email']),
-            currentAccountPicture: CircleAvatar(
+            currentAccountPicture: const CircleAvatar(
               backgroundImage: AssetImage(
                   'lib/assets/profile_img.png'), // Replace with the user's profile picture
             ),
           ),
           ListTile(
-            leading: Icon(Icons.dashboard),
-            title: Text('Dashboard'),
+            leading: const Icon(Icons.dashboard),
+            title: const Text('Dashboard'),
             onTap: () {
               // Navigate to the dashboard screen
               // Implement the navigation as needed
             },
           ),
           ListTile(
-            leading: Icon(Icons.attach_money),
-            title: Text('Money Transfer'),
+            leading: const Icon(Icons.attach_money),
+            title: const Text('Money Transfer'),
             onTap: () {
               // Navigate to the money transfer section
               // Implement the navigation as needed
             },
           ),
           ListTile(
-            leading: Icon(Icons.history),
-            title: Text('History'),
+            leading: const Icon(Icons.history),
+            title: const Text('History'),
             onTap: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => TransactionHistoryScreen()),
+                    builder: (context) => const TransactionHistoryScreen()),
               );
             },
           ),
           ListTile(
-            leading: Icon(Icons.event),
-            title: Text('Events'),
+            leading: const Icon(Icons.event),
+            title: const Text('Events'),
             onTap: () {
               // Navigate to the events section
               // Implement the navigation as needed
             },
           ),
           ListTile(
-            leading: Icon(Icons.group),
-            title: Text('Groups'),
+            leading: const Icon(Icons.group),
+            title: const Text('Groups'),
             onTap: () {
               // Navigate to the groups section
               // Implement the navigation as needed
             },
           ),
           ListTile(
-            leading: Icon(Icons.settings),
-            title: Text('Settings'),
+            leading: const Icon(Icons.settings),
+            title: const Text('Settings'),
             onTap: () {
               // Navigate to the settings section
               // Implement the navigation as needed
             },
           ),
-          Divider(), // Add a divider to separate the top items from the bottom items
+          const Divider(), // Add a divider to separate the top items from the bottom items
           ListTile(
-            leading: Icon(Icons.exit_to_app),
-            title: Text('Sign Out'),
+            leading: const Icon(Icons.exit_to_app),
+            title: const Text('Sign Out'),
             onTap: () {
               logout(context);
               Navigator.pushAndRemoveUntil(
                 context,
-                MaterialPageRoute(builder: (context) => LoginScreen()),
+                MaterialPageRoute(builder: (context) => const LoginScreen()),
                 (route) => false, // This clears the navigation stack
               );
             },
@@ -92,7 +92,7 @@ class AppDrawer extends StatelessWidget {
 }
 
 Future<void> logout(BuildContext context) async {
-  final storage = FlutterSecureStorage();
+  const storage = FlutterSecureStorage();
   final token = await storage.read(key: 'token');
 
   // Clear the token
@@ -102,5 +102,5 @@ Future<void> logout(BuildContext context) async {
 
   // Navigate to the login screen and remove the ability to go back
   Navigator.pushReplacement(
-      context, MaterialPageRoute(builder: (context) => LoginScreen()));
+      context, MaterialPageRoute(builder: (context) => const LoginScreen()));
 }

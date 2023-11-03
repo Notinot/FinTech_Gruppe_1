@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 class UserProfileSection extends StatelessWidget {
   final String username; // Replace with actual user data
 
-  UserProfileSection(this.username);
+  const UserProfileSection(this.username, {super.key});
 
   @override
   Widget build(BuildContext context) {
-    AssetImage userImage = AssetImage('lib/assets/profile_img.png');
+    AssetImage userImage = const AssetImage('lib/assets/profile_img.png');
     Image image;
     try {
       image = Image(image: userImage);
@@ -26,10 +26,10 @@ class UserProfileSection extends StatelessWidget {
           radius: 50,
           backgroundColor: Colors.grey, // Fallback background color
         ),
-        SizedBox(height: 16),
+        const SizedBox(height: 16),
         Text(
           'Welcome, $username',
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
           ),

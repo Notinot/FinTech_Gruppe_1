@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 
 class Notifications extends StatelessWidget {
+  const Notifications({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.symmetric(vertical: 16),
-      padding: EdgeInsets.all(16),
+      margin: const EdgeInsets.symmetric(vertical: 16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.grey[200],
         borderRadius: BorderRadius.circular(10),
       ),
-      child: Column(
+      child: const Column(
         children: <Widget>[
           Text(
             'Notifications',
@@ -36,14 +38,14 @@ class NotificationItem extends StatelessWidget {
   final IconData icon;
   final String text;
 
-  NotificationItem({required this.icon, required this.text});
+  const NotificationItem({super.key, required this.icon, required this.text});
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: <Widget>[
         Icon(icon, color: Colors.blue),
-        SizedBox(width: 8),
+        const SizedBox(width: 8),
         Text(text),
       ],
     );

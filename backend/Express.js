@@ -226,10 +226,10 @@ function authenticateToken(req, res, next) {
 const nodemailer = require('nodemailer');
 
 const transporter = nodemailer.createTransport({
-  service: 'Outlook',
+  service: 'Gmail',
   auth: {
-    user: 'payfriendz@outlook.de',
-    pass: 'Frankfurt1!'
+    user: 'payfriendzapp@gmail.com',
+    pass: 'fmvnkjmnpdmuabcd'
   }
 });
 
@@ -239,7 +239,7 @@ function sendVerificationEmail(to, code) {
     from: 'Payfriendz App',
     to: to,
     subject: 'Email Verification Code',
-    text: `Your verification code is: ${code}`,
+    text: `Welcome to Payfriendz! Your verification code is: ${code}`,
   }
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
@@ -249,6 +249,3 @@ function sendVerificationEmail(to, code) {
     }
   });
 }
-
-
-

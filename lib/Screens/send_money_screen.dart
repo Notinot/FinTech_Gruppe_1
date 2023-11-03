@@ -77,7 +77,7 @@ class SendMoneyScreen extends StatelessWidget {
                           .trim()) ??
                       0.0;
 
-                  if (recipient.isEmpty) {
+                  if (recipient.trim().isEmpty) {
                     showErrorSnackBar(context, 'Recipient cannot be empty');
                   } else if (amount <= 0) {
                     showErrorSnackBar(context, 'Enter a valid amount');

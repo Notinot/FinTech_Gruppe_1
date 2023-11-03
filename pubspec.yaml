@@ -36,6 +36,7 @@ dependencies:
   sqflite: ^2.0.0+3  # For local SQLite database (if needed)
   path: ^1.8.0  # For file management
   flutter_secure_storage: ^5.0.3
+  animated_text_kit: ^4.2.1
 
 
 

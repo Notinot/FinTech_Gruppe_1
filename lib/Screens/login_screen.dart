@@ -19,6 +19,7 @@ class _LoginScreenState extends State<LoginScreen> {
       TextEditingController();
 
   bool requiresVerification = false;
+
   Future<void> checkUserActiveStatus(String email) async {
     final response = await http.post(
       Uri.parse('http://localhost:3000/check-active'), // Use the correct route
@@ -48,8 +49,8 @@ class _LoginScreenState extends State<LoginScreen> {
       if (verificationCode.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Please enter the Verification code send to you'),
-            backgroundColor: Colors.green,
+            content: Text('Please enter the Verification code sent to you'),
+            backgroundColor: Colors.red,
           ),
         );
         return;
@@ -109,9 +110,14 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+            Image.asset(
+              'lib/assets/profile_img.png', // Add your logo image path
+              width: 100.0,
+            ),
+            const SizedBox(height: 32.0),
             TextField(
               controller: emailController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Email',
                 border: OutlineInputBorder(),
               ),
@@ -120,7 +126,7 @@ class _LoginScreenState extends State<LoginScreen> {
             TextField(
               controller: passwordController,
               obscureText: true,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Password',
                 border: OutlineInputBorder(),
               ),
@@ -130,7 +136,7 @@ class _LoginScreenState extends State<LoginScreen> {
               TextField(
                 controller: verificationCodeController,
                 obscureText: false,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Verification Code',
                   border: OutlineInputBorder(),
                 ),
@@ -138,9 +144,16 @@ class _LoginScreenState extends State<LoginScreen> {
             const SizedBox(height: 24.0),
             ElevatedButton(
               onPressed: handleLogin,
+              style: ElevatedButton.styleFrom(
+                primary: Colors.blue, // Button background color
+                padding: EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+              ),
               child: const Text(
                 'Login',
-                style: TextStyle(fontSize: 18.0),
+                style: TextStyle(
+                  fontSize: 18.0,
+                  color: Colors.white, // Button text color
+                ),
               ),
             ),
             const SizedBox(height: 12.0),

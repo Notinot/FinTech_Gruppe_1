@@ -170,6 +170,7 @@ app.post('/verify', async (req, res) => {
 
   res.json({ message: 'Account verified successfully' });
 });
+
 // Route to check the user's active status
 app.post('/check-active', async (req, res) => {
   const { email } = req.body;
@@ -221,28 +222,25 @@ function authenticateToken(req, res, next) {
   });
 }
 
+// Import the required nodemailer library
 const nodemailer = require('nodemailer');
 
-// Create a transporter using the default SMTP transport
 const transporter = nodemailer.createTransport({
-  host: 'smtp.protonmail.com',
-  port: 465,
-  secure: true, // use SSL
+  service: 'Outlook',
   auth: {
-    user: 'payfriendz@proton.me',
-    pass: 'Frankfurt1!',
-  },
+    user: 'payfriendz@outlook.de',
+    pass: 'Frankfurt1!'
+  }
 });
 
 // Define your email sending function
 function sendVerificationEmail(to, code) {
   const mailOptions = {
-    from: 'payfriendz@proton.me',
+    from: 'Payfriendz App',
     to: to,
     subject: 'Email Verification Code',
     text: `Your verification code is: ${code}`,
-  };
-
+  }
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
       console.error('Error sending email:', error);
@@ -252,4 +250,5 @@ function sendVerificationEmail(to, code) {
   });
 }
 
-// Use the sendVerificationEmail function to send verification codes
+
+

@@ -31,14 +31,7 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() {
         requiresVerification = isActive == 0;
       });
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('User not found'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
+    } else {}
   }
 
   void handleLogin() async {

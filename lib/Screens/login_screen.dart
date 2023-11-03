@@ -49,7 +49,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Please enter the Verification code send to you'),
-            backgroundColor: Colors.red,
+            backgroundColor: Colors.green,
           ),
         );
         return;
@@ -96,13 +96,6 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       );
     }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    // Check user's active status when the screen is loaded
-    checkUserActiveStatus(emailController.text);
   }
 
   @override

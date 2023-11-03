@@ -60,18 +60,25 @@ app.post('/register', async (req, res) => {
   }
 
   try {
+    // Generate a random verification code
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    
     // Generate a salt, hash the password, and store the user data in the database
     const salt = generateSalt();
     const hashedPassword = await bcrypt.hash(password + salt, 10);
 
-    await db.query('INSERT INTO User (username, email, first_name, last_name, password_hash, salt, created_at) VALUES (?,?,?,?,?,?,NOW())', [
+    await db.query('INSERT INTO User (username, email, first_name, last_name, password_hash, salt, created_at, verification_code) VALUES (?,?,?,?,?,?,NOW(), ?)', [
       username,
       email,
       firstname,
       lastname,
       hashedPassword,
       salt,
+      verificationCode,
     ]);
+
+    // Send the verification code to the user's ProtonMail address
+    sendVerificationEmail(email, verificationCode);
 
     res.json({ message: 'Registration successful' });
   } catch (error) {
@@ -80,15 +87,27 @@ app.post('/register', async (req, res) => {
   }
 });
 
+
 // Route for user login
 app.post('/login', async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, verificationCode } = req.body;
 
   // Check if the user with the provided email exists
   const [user] = await db.query('SELECT * FROM User WHERE email = ?', [email]);
 
   if (user.length === 0) {
     return res.status(401).json({ message: 'Invalid email or password' });
+  }
+
+  // Check if the user's "active" attribute is set to 0
+  if (user[0].active === 0) {
+    // The account is not yet verified; prompt the user to enter the verification code
+    if (verificationCode !== user[0].verification_code) {
+      return res.status(401).json({ message: 'Invalid verification code' });
+    }
+
+    // Verification code is valid; update the "active" attribute to 1
+    await db.query('UPDATE User SET active = 1 WHERE email = ?', [email]);
   }
 
   // Compare the provided password with the hashed password
@@ -108,6 +127,7 @@ app.post('/login', async (req, res) => {
     res.status(401).json({ message: 'Invalid email or password' });
   }
 });
+
 
 // Route to fetch user profile with JWT authentication
 app.get('/user/profile', authenticateToken, async (req, res) => {
@@ -129,6 +149,43 @@ app.get('/user/profile', authenticateToken, async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 });
+
+app.post('/verify', async (req, res) => {
+  const { email, verificationCode } = req.body;
+
+  // Check if the user with the provided email and verification code exists
+  const [user] = await db.query('SELECT * FROM User WHERE email = ? AND verification_code = ?', [email, verificationCode]);
+
+  if (user.length === 0) {
+    return res.status(401).json({ message: 'Invalid verification code' });
+  }
+
+  // Check if the user is already active
+  if (user[0].active === 1) {
+    return res.status(400).json({ message: 'Account is already active' });
+  }
+
+  // Update the "active" field to mark the account as verified
+  await db.query('UPDATE User SET active = 1 WHERE email = ?', [email]);
+
+  res.json({ message: 'Account verified successfully' });
+});
+// Route to check the user's active status
+app.post('/check-active', async (req, res) => {
+  const { email } = req.body;
+
+  // Check if the user with the provided email exists
+  const [user] = await db.query('SELECT active FROM User WHERE email = ?', [email]);
+
+  if (user.length === 0) {
+    return res.status(404).json({ message: 'User not found' });
+  }
+
+  const isActive = user[0].active;
+
+  res.json({ active: isActive });
+});
+
 
 // Route for health check
 app.get('/health', (req, res) => {
@@ -163,3 +220,36 @@ function authenticateToken(req, res, next) {
     next();
   });
 }
+
+const nodemailer = require('nodemailer');
+
+// Create a transporter using the default SMTP transport
+const transporter = nodemailer.createTransport({
+  host: 'smtp.protonmail.com',
+  port: 465,
+  secure: true, // use SSL
+  auth: {
+    user: 'payfriendz@proton.me',
+    pass: 'Frankfurt1!',
+  },
+});
+
+// Define your email sending function
+function sendVerificationEmail(to, code) {
+  const mailOptions = {
+    from: 'payfriendz@proton.me',
+    to: to,
+    subject: 'Email Verification Code',
+    text: `Your verification code is: ${code}`,
+  };
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.error('Error sending email:', error);
+    } else {
+      console.log('Email sent:', info.response);
+    }
+  });
+}
+
+// Use the sendVerificationEmail function to send verification codes

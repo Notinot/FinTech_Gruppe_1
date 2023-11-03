@@ -54,21 +54,21 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     final String password = passwordController.text;
     final String confirmPassword = confirmPasswordController.text;
 
-    if (username.isEmpty) {
+    if (username.trim().isEmpty) {
       // Check if username is empty
       setState(() {
         usernameError = 'Username cannot be empty';
       });
     }
 
-    if (email.isEmpty) {
+    if (email.trim().isEmpty) {
       // Check if email is empty
       setState(() {
         emailError = 'Email cannot be empty';
       });
     }
 
-    if (firstname.isEmpty) {
+    if (firstname.trim().isEmpty) {
       // Check if first name is empty
       setState(() {
         firstnameError = 'First name cannot be empty';
@@ -82,7 +82,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       });
     }
 
-    if (lastname.isEmpty) {
+    if (lastname.trim().isEmpty) {
       // Check if last name is empty
       setState(() {
         lastnameError = 'Last name cannot be empty';
@@ -124,11 +124,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       return;
     }
 
-    if (!password.contains(RegExp(r'[#&@~!@?}\[%!?]'))) {
+    if (!password.contains(RegExp(r'[#&@~!@?}\[%!?_]'))) {
       // Check if password contains at least one special character
       setState(() {
         passwordError =
-            'Password must contain at least one special character (#&@~!@?}[%!?)';
+            'Password must contain at least one special character (#&@~!@?}[%!_)';
       });
       showSnackBar(
           isError: true, message: 'Password must include a special character');

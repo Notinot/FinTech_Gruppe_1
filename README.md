@@ -1,5 +1,4 @@
 # ------------------- #
-to install missing dependencies: flutter pub get
 ## Start Client
 lib -> main.dart
 

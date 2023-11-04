@@ -105,6 +105,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+
+    AssetImage payfriendzLogo = AssetImage('lib/assets/payfriendz_logo.png');
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Login'),
@@ -114,6 +117,12 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+          Center(
+            child: Image.asset(
+                'lib/assets/payfriendz_logo.png',
+                width: 300,
+                height: 400),
+          ),
             TextField(
               controller: emailController,
               decoration: InputDecoration(

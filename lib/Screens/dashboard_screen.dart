@@ -9,6 +9,7 @@ class DashboardScreen extends StatelessWidget {
   final Map<String, dynamic> user;
   DashboardScreen({required this.user});
 
+
   @override
   Widget build(BuildContext context) {
     // Extract user details

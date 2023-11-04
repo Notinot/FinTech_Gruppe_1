@@ -73,6 +73,7 @@ flutter:
   assets:
       - 'lib/assets/profile_image.png'
       - 'lib/assets/profile_img.png'
+      - 'lib/assets/payfriendz_logo.png'
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
 

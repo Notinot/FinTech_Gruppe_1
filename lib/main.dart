@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 
 void main() async {
   // Check server availability
-  const serverUrl = 'http://localhost:3000';
+  const serverUrl = 'http://192.168.2.33:3000';
   final response = await http.get(Uri.parse('$serverUrl/health'));
 
   // Create the Flutter app

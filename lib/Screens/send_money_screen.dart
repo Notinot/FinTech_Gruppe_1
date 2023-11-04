@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 class SendMoneyScreen extends StatelessWidget {
   final TextEditingController recipientController = TextEditingController();
   final TextEditingController amountController = TextEditingController();
+  final TextEditingController messageController = TextEditingController();
 
   SendMoneyScreen({super.key});
 
@@ -65,6 +66,20 @@ class SendMoneyScreen extends StatelessWidget {
                 }
               },
             ),
+            const SizedBox(height: 16),
+            const Text(
+              'Message:',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            TextFormField(
+              controller: messageController,
+              decoration: const InputDecoration(
+                hintText: 'Enter a message for the recipient',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.chat),
+              ),
+            ),
             const SizedBox(height: 24),
             Center(
               child: ElevatedButton(
@@ -76,12 +91,13 @@ class SendMoneyScreen extends StatelessWidget {
                           .replaceAll(',', '') // Remove commas
                           .trim()) ??
                       0.0;
+                  final message = messageController.text;
 
                   if (recipient.trim().isEmpty) {
                     showErrorSnackBar(context, 'Recipient cannot be empty');
                   } else if (amount <= 0) {
                     showErrorSnackBar(context, 'Enter a valid amount');
-                  } else {
+                  }else {
                     // Implement the logic to send money
                     // Once money is sent, you can show a success message
                     showSuccessSnackBar(
@@ -90,6 +106,7 @@ class SendMoneyScreen extends StatelessWidget {
                     // Clear the input fields after sending money
                     recipientController.clear();
                     amountController.clear();
+                    messageController.clear();
                   }
                 },
                 style: ElevatedButton.styleFrom(

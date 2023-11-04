@@ -117,7 +117,7 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Image.asset(
                 'lib/assets/payfriendz_logo.png',
                 width: 300,
-                height: 400),
+                height: 100),
           ),
             /*  Profile Picture in Login Screen ?
             Image.asset(

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Screens/send_money_screen.dart';
 
 class QuickActions extends StatelessWidget {
+  const QuickActions({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -41,8 +43,8 @@ class QuickActionButton extends StatelessWidget {
   final String label;
   final Function onTap;
 
-  QuickActionButton(
-      {required this.icon, required this.label, required this.onTap});
+  const QuickActionButton(
+      {super.key, required this.icon, required this.label, required this.onTap});
 
   @override
   Widget build(BuildContext context) {

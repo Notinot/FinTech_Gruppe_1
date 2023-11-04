@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 class TransactionHistoryScreen extends StatelessWidget {
+  const TransactionHistoryScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     // Replace with actual transaction data
@@ -9,7 +11,7 @@ class TransactionHistoryScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Transaction History'),
+        title: const Text('Transaction History'),
       ),
       body: ListView.builder(
         itemCount: transactions.length,
@@ -38,7 +40,7 @@ class Transaction {
 class TransactionItem extends StatelessWidget {
   final Transaction transaction;
 
-  TransactionItem({required this.transaction});
+  const TransactionItem({super.key, required this.transaction});
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +55,7 @@ class TransactionItem extends StatelessWidget {
       ),
       trailing: Text(
         DateFormat('dd/MM/yyyy').format(transaction.date),
-        style: TextStyle(fontSize: 12),
+        style: const TextStyle(fontSize: 12),
       ),
     );
   }

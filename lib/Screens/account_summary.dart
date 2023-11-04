@@ -3,13 +3,13 @@ import 'package:flutter/material.dart';
 class AccountSummary extends StatelessWidget {
   final double balance; // Replace with actual user data
 
-  AccountSummary(this.balance);
+  const AccountSummary(this.balance, {super.key});
 
   @override
   Widget build(BuildContext context) {
     return Card(
       elevation: 5,
-      margin: EdgeInsets.all(10),
+      margin: const EdgeInsets.all(10),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(15.0),
       ),
@@ -18,7 +18,7 @@ class AccountSummary extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Text(
+            const Text(
               'Balance',
               style: TextStyle(
                 fontSize: 18,
@@ -27,7 +27,7 @@ class AccountSummary extends StatelessWidget {
             ),
             Text(
               '\$${balance.toStringAsFixed(2)}',
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
               ),

@@ -6,6 +6,8 @@ import 'dashboard_screen.dart';
 import 'registration_screen.dart';
 
 class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }
@@ -17,6 +19,7 @@ class _LoginScreenState extends State<LoginScreen> {
       TextEditingController();
 
   bool requiresVerification = false;
+
   Future<void> checkUserActiveStatus(String email) async {
     final response = await http.post(
       Uri.parse('http://localhost:3000/check-active'), // Use the correct route
@@ -45,8 +48,8 @@ class _LoginScreenState extends State<LoginScreen> {
       final verificationCode = verificationCodeController.text;
       if (verificationCode.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Verification code is required.'),
+          const SnackBar(
+            content: Text('Please enter the Verification code sent to you'),
             backgroundColor: Colors.red,
           ),
         );
@@ -76,7 +79,7 @@ class _LoginScreenState extends State<LoginScreen> {
       final token = data['token'];
       final user = data['user'];
 
-      final storage = FlutterSecureStorage();
+      const storage = FlutterSecureStorage();
       await storage.write(key: 'token', value: token);
 
       Navigator.pushReplacement(
@@ -87,7 +90,7 @@ class _LoginScreenState extends State<LoginScreen> {
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text(
               'Invalid email, password, or verification code. Please try again.'),
           backgroundColor: Colors.red,
@@ -97,20 +100,13 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    // Check user's active status when the screen is loaded
-    checkUserActiveStatus(emailController.text);
-  }
-
-  @override
   Widget build(BuildContext context) {
 
     AssetImage payfriendzLogo = AssetImage('lib/assets/payfriendz_logo.png');
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Login'),
+        title: const Text('Login'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -123,6 +119,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 width: 300,
                 height: 400),
           ),
+            /*  Profile Picture in Login Screen ?
+            Image.asset(
+              'lib/assets/profile_img.png', // Add your logo image path
+              width: 100.0,
+            ),
+            */
+            const SizedBox(height: 32.0),
             TextField(
               controller: emailController,
               decoration: InputDecoration(
@@ -130,7 +133,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 border: OutlineInputBorder(),
               ),
             ),
-            SizedBox(height: 16.0),
+            const SizedBox(height: 16.0),
             TextField(
               controller: passwordController,
               obscureText: true,
@@ -139,7 +142,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 border: OutlineInputBorder(),
               ),
             ),
-            if (requiresVerification) SizedBox(height: 12.0),
+            if (requiresVerification) const SizedBox(height: 12.0),
             if (requiresVerification)
               TextField(
                 controller: verificationCodeController,
@@ -149,23 +152,31 @@ class _LoginScreenState extends State<LoginScreen> {
                   border: OutlineInputBorder(),
                 ),
               ),
-            SizedBox(height: 24.0),
+            const SizedBox(height: 24.0),
             ElevatedButton(
               onPressed: handleLogin,
-              child: Text(
+              style: ElevatedButton.styleFrom(
+                primary: Colors.blue, // Button background color
+                padding: EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+              ),
+              child: const Text(
                 'Login',
-                style: TextStyle(fontSize: 18.0),
+                style: TextStyle(
+                  fontSize: 18.0,
+                  color: Colors.white, // Button text color
+                ),
               ),
             ),
-            SizedBox(height: 12.0),
+            const SizedBox(height: 12.0),
             TextButton(
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => RegistrationScreen()),
+                  MaterialPageRoute(
+                      builder: (context) => const RegistrationScreen()),
                 );
               },
-              child: Text(
+              child: const Text(
                 "Don't have an account yet? Register here",
                 style: TextStyle(
                   fontSize: 16.0,

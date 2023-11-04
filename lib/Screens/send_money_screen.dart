@@ -5,6 +5,8 @@ class SendMoneyScreen extends StatelessWidget {
   final TextEditingController recipientController = TextEditingController();
   final TextEditingController amountController = TextEditingController();
 
+  SendMoneyScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -42,7 +44,7 @@ class SendMoneyScreen extends StatelessWidget {
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.monetization_on),
               ),
-              keyboardType: TextInputType.numberWithOptions(
+              keyboardType: const TextInputType.numberWithOptions(
                   decimal: true), // Allow decimals
               onChanged: (value) {
                 if (value.isNotEmpty) {
@@ -91,8 +93,7 @@ class SendMoneyScreen extends StatelessWidget {
                   }
                 },
                 style: ElevatedButton.styleFrom(
-                  primary: Colors.blue, // Button background color
-                  onPrimary: Colors.white, // Text color
+                  foregroundColor: Colors.white, backgroundColor: Colors.blue, // Text color
                   padding:
                       const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                 ),

@@ -238,8 +238,78 @@ function sendVerificationEmail(to, code) {
   const mailOptions = {
     from: 'Payfriendz App',
     to: to,
-    subject: 'Email Verification Code',
-    text: `Welcome to Payfriendz! Your verification code is: ${code}`,
+    subject: 'Payfriendz: Verification Code',
+    html: `
+    <html>
+      <head>
+        <style>
+          /* Inline CSS for styling */
+          .container {
+            background-color: #f4f4f4;
+            padding: 20px;
+            border-radius: 5px;
+            font-family: Arial, sans-serif;
+            width: 80%;
+            max-width: 600px;
+            margin: 0 auto;
+          }
+          .header {
+            background-color: #007bff;
+            color: white;
+            padding: 20px;
+            border-top-left-radius: 5px;
+            border-top-right-radius: 5px;
+            text-align: center;
+          }
+          .header h1 {
+            margin: 0;
+          }
+          .verification-box {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+          }
+          .code {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+            text-align: center;
+            margin-top: 20px;
+          }
+          .text-size-14 {
+            font-size: 14px;
+            color: #555;
+            text-align: center;
+          }
+          .copyright {
+            font-size: 10px;
+            color: #777;
+            text-align: center;
+            margin-top: 20px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>Welcome to Payfriendz!</h1>
+          </div>
+          <div class="verification-box">
+            <h2 class="code">Verification Code</h2>
+            <p class="text-size-14">Your verification code is:</p>
+            <p class="code">${code}</p>
+          </div>
+          <p class="copyright">
+            &copy; Payfriendz 2023.  Payfriendz is a registered trademark of Payfriendz.
+          </p>
+        </div>
+      </body>
+    </html>
+  `
+    
+    
   }
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {

@@ -7,7 +7,7 @@ import 'AppDrawer.dart';
 
 class DashboardScreen extends StatelessWidget {
   final Map<String, dynamic> user;
-  DashboardScreen({required this.user});
+  const DashboardScreen({super.key, required this.user});
 
 
   @override
@@ -25,7 +25,7 @@ class DashboardScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Dashboard'),
+        title: const Text('Dashboard'),
       ),
       body: SingleChildScrollView(
         child: Center(
@@ -37,9 +37,9 @@ class DashboardScreen extends StatelessWidget {
               // Display user's account summary
               AccountSummary(balance),
               // Provide quick access actions
-              QuickActions(),
+              const QuickActions(),
               // Show user notifications
-              Notifications(),
+              const Notifications(),
               // Display upcoming events
               UpcomingEvents(events: upcomingEvents),
             ],
@@ -55,17 +55,17 @@ class DashboardScreen extends StatelessWidget {
 class UpcomingEvents extends StatelessWidget {
   final List<Event> events;
 
-  UpcomingEvents({required this.events});
+  const UpcomingEvents({super.key, required this.events});
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: <Widget>[
-        Text(
+        const Text(
           'Upcoming Events:',
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
         ListView.builder(
           shrinkWrap: true,
           itemCount: events.length,
@@ -88,12 +88,12 @@ class Event {
 class EventItem extends StatelessWidget {
   final Event event;
 
-  EventItem({required this.event});
+  const EventItem({super.key, required this.event});
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: EdgeInsets.symmetric(vertical: 4, horizontal: 10),
+      margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 10),
       child: ListTile(
         title: Text(event.title),
         subtitle: Text(

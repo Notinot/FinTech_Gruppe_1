@@ -1,8 +1,17 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'login_screen.dart';
 import 'package:http/http.dart' as http;
+import 'dart:io' as io;
+
+import 'package:flutter/material.dart';
+import 'login_screen.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class RegistrationScreen extends StatefulWidget {
   const RegistrationScreen({super.key});
@@ -37,6 +46,41 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     });
   }
 
+  ImageProvider<Object> _imageProvider =
+      AssetImage('lib/assets/profile_image.png');
+
+  Future<void> _pickImage() async {
+    if (kIsWeb) {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['jpg', 'jpeg', 'png'],
+      );
+
+      if (result != null) {
+        final file = result.files.first;
+        if (file.extension == 'jpg' ||
+            file.extension == 'jpeg' ||
+            file.extension == 'png') {
+          if (file.bytes != null) {
+            setState(() {
+              _imageProvider =
+                  MemoryImage(Uint8List.fromList(file.bytes as List<int>));
+            });
+          }
+        }
+      }
+    } else {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+      if (pickedFile != null) {
+        setState(() {
+          _imageProvider = FileImage(io.File(pickedFile.path));
+        });
+      }
+    }
+  }
+
   bool EmailValid(String email) {
     // Validate the email format using a regular expression
     final emailPattern = RegExp(
@@ -55,6 +99,13 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     final String lastname = lastnameController.text;
     final String password = passwordController.text;
     final String confirmPassword = confirmPasswordController.text;
+
+    Uint8List? profileImageBytes;
+
+    if (_imageProvider is MemoryImage) {
+      final memoryImage = _imageProvider as MemoryImage;
+      profileImageBytes = memoryImage.bytes;
+    }
 
     if (username.trim().isEmpty) {
       // Check if username is empty
@@ -154,6 +205,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       showSnackBar(isError: true, message: 'Invalid email format');
       return;
     }
+    if (_imageProvider == AssetImage('lib/assets/profile_image.png')) {
+      // User did not choose a profile picture, set it to null or handle as needed
+      profileImageBytes =
+          null; // or you can set it to a null value expected by your API
+    }
 
     // Create a JSON payload to send to the API
     final Map<String, dynamic> requestBody = {
@@ -162,6 +218,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       'firstname': firstname,
       'lastname': lastname,
       'password': password,
+      'picture': profileImageBytes != null
+          ? base64Encode(profileImageBytes) // Convert to base64-encoded string
+          : null
     };
 
     // Make an HTTP POST request to your backend API
@@ -208,6 +267,14 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+            ClipOval(
+                child:
+                    CircleAvatar(radius: 80, backgroundImage: _imageProvider)),
+            ElevatedButton(
+              onPressed: _pickImage,
+              child: Text('Choose Profile Picture'),
+            ),
+            const SizedBox(height: 16.0),
             TextField(
               controller: usernameController,
               decoration: InputDecoration(

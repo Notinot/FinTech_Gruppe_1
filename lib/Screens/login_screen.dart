@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter_application_1/Screens/forgot_password.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -112,10 +113,12 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Center(
-              child: Image.asset('lib/assets/payfriendz_logo.png',
-                  width: 300, height: 100),
-            ),
+          Center(
+            child: Image.asset(
+                'lib/assets/payfriendz_logo.png',
+                width: 300,
+                height: 100),
+          ),
             const SizedBox(height: 32.0),
             TextField(
               controller: emailController,
@@ -176,6 +179,23 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ),
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const ForgotPasswordScreen()),
+                );
+              },
+              child: const Text(
+                "Forgot password?",
+                style: TextStyle(
+                  fontSize: 16.0,
+                  color: Colors.blue,
+                  height: 2
+                ),
+              ),
+            )
           ],
         ),
       ),

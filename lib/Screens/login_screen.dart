@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter_application_1/Screens/forgot_password.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -119,12 +120,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 width: 300,
                 height: 100),
           ),
-            /*  Profile Picture in Login Screen ?
-            Image.asset(
-              'lib/assets/profile_img.png', // Add your logo image path
-              width: 100.0,
-            ),
-            */
             const SizedBox(height: 32.0),
             TextField(
               controller: emailController,
@@ -184,6 +179,23 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ),
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const ForgotPasswordScreen()),
+                );
+              },
+              child: const Text(
+                "Forgot password?",
+                style: TextStyle(
+                  fontSize: 16.0,
+                  color: Colors.blue,
+                  height: 2
+                ),
+              ),
+            )
           ],
         ),
       ),

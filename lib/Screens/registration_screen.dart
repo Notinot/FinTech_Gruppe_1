@@ -274,83 +274,86 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       appBar: AppBar(
         title: const Text('Registration'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            ClipOval(
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              ClipOval(
                 child:
-                    CircleAvatar(radius: 80, backgroundImage: _imageProvider)),
-            ElevatedButton(
-              onPressed: _pickImage,
-              child: Text('Choose Profile Picture'),
-            ),
-            const SizedBox(height: 16.0),
-            TextField(
-              controller: usernameController,
-              decoration: InputDecoration(
-                labelText: 'Username',
-                border: const OutlineInputBorder(),
-                errorText: usernameError,
+                    CircleAvatar(radius: 80, backgroundImage: _imageProvider),
               ),
-            ),
-            const SizedBox(height: 16.0),
-            TextField(
-              controller: emailController,
-              decoration: InputDecoration(
-                labelText: 'Email',
-                border: const OutlineInputBorder(),
-                errorText: emailError,
+              ElevatedButton(
+                onPressed: _pickImage,
+                child: Text('Choose Profile Picture'),
               ),
-            ),
-            const SizedBox(height: 16.0),
-            TextField(
-              controller: firstnameController,
-              decoration: InputDecoration(
-                labelText: 'First name',
-                border: const OutlineInputBorder(),
-                errorText: firstnameError,
+              const SizedBox(height: 16.0),
+              TextField(
+                controller: usernameController,
+                decoration: InputDecoration(
+                  labelText: 'Username',
+                  border: const OutlineInputBorder(),
+                  errorText: usernameError,
+                ),
               ),
-            ),
-            const SizedBox(height: 16.0),
-            TextField(
-              controller: lastnameController,
-              decoration: InputDecoration(
-                labelText: 'Last name',
-                border: const OutlineInputBorder(),
-                errorText: lastnameError,
+              const SizedBox(height: 16.0),
+              TextField(
+                controller: emailController,
+                decoration: InputDecoration(
+                  labelText: 'Email',
+                  border: const OutlineInputBorder(),
+                  errorText: emailError,
+                ),
               ),
-            ),
-            const SizedBox(height: 16.0),
-            TextField(
-              controller: passwordController,
-              obscureText: true,
-              decoration: InputDecoration(
-                labelText: 'Password',
-                border: const OutlineInputBorder(),
-                errorText: passwordError,
+              const SizedBox(height: 16.0),
+              TextField(
+                controller: firstnameController,
+                decoration: InputDecoration(
+                  labelText: 'First name',
+                  border: const OutlineInputBorder(),
+                  errorText: firstnameError,
+                ),
               ),
-            ),
-            const SizedBox(height: 16.0),
-            TextField(
-              controller: confirmPasswordController,
-              obscureText: true,
-              decoration: InputDecoration(
-                labelText: 'Confirm Password',
-                border: const OutlineInputBorder(),
-                errorText: passwordError,
+              const SizedBox(height: 16.0),
+              TextField(
+                controller: lastnameController,
+                decoration: InputDecoration(
+                  labelText: 'Last name',
+                  border: const OutlineInputBorder(),
+                  errorText: lastnameError,
+                ),
               ),
-            ),
-            const SizedBox(height: 16.0),
-            ElevatedButton(
-              onPressed: registerUser,
-              child: const Text(
-                'Register',
-                style: TextStyle(fontSize: 18.0),
+              const SizedBox(height: 16.0),
+              TextField(
+                controller: passwordController,
+                obscureText: true,
+                decoration: InputDecoration(
+                  labelText: 'Password',
+                  border: const OutlineInputBorder(),
+                  errorText: passwordError,
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 16.0),
+              TextField(
+                controller: confirmPasswordController,
+                obscureText: true,
+                decoration: InputDecoration(
+                  labelText: 'Confirm Password',
+                  border: const OutlineInputBorder(),
+                  errorText: passwordError,
+                ),
+              ),
+              const SizedBox(height: 16.0),
+              ElevatedButton(
+                onPressed: registerUser,
+                child: const Text(
+                  'Register',
+                  style: TextStyle(fontSize: 18.0),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

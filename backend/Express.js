@@ -49,7 +49,9 @@ function generateSalt() {
 app.post('/register', async (req, res) => {
   const { username, email, firstname, lastname, password,picture } = req.body;
 
-  const pictureData = Buffer.from(picture, 'base64');
+  const pictureData = null;
+  if(picture != null){
+  pictureData = Buffer.from(picture, 'base64');}
 
   // Check if the email or username is already in use
   const [existingUser] = await db.query(
@@ -68,7 +70,7 @@ app.post('/register', async (req, res) => {
     // Generate a salt, hash the password, and store the user data in the database
     const salt = generateSalt();
     const hashedPassword = await bcrypt.hash(password + salt, 10);
-
+    
     await db.query('INSERT INTO User (username, email, first_name, last_name, password_hash, salt, created_at, verification_code,picture) VALUES (?,?,?,?,?,?,NOW(), ?,?)', [
       username,
       email,

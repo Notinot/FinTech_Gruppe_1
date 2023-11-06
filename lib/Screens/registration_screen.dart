@@ -75,7 +75,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
       if (pickedFile != null) {
         setState(() {
-          _imageProvider = FileImage(io.File(pickedFile.path));
+          _imageProvider = MemoryImage(
+              Uint8List.fromList(pickedFile.readAsBytes() as List<int>));
         });
       }
     }
@@ -211,17 +212,29 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           null; // or you can set it to a null value expected by your API
     }
 
+    final Map<String, dynamic> requestBody;
     // Create a JSON payload to send to the API
-    final Map<String, dynamic> requestBody = {
-      'username': username,
-      'email': email,
-      'firstname': firstname,
-      'lastname': lastname,
-      'password': password,
-      'picture': profileImageBytes != null
-          ? base64Encode(profileImageBytes) // Convert to base64-encoded string
-          : null
-    };
+    if (profileImageBytes != null) {
+      requestBody = {
+        'username': username,
+        'email': email,
+        'firstname': firstname,
+        'lastname': lastname,
+        'password': password,
+        'picture': profileImageBytes != null
+            ? base64Encode(
+                profileImageBytes) // Convert to base64-encoded string
+            : null
+      };
+    } else {
+      requestBody = {
+        'username': username,
+        'email': email,
+        'firstname': firstname,
+        'lastname': lastname,
+        'password': password,
+      };
+    }
 
     // Make an HTTP POST request to your backend API
     final response = await http.post(

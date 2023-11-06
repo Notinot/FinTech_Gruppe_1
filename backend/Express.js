@@ -49,7 +49,7 @@ function generateSalt() {
 app.post('/register', async (req, res) => {
   const { username, email, firstname, lastname, password,picture } = req.body;
 
-  const pictureData = null;
+   pictureData = null;
   if(picture != null){
   pictureData = Buffer.from(picture, 'base64');}
 

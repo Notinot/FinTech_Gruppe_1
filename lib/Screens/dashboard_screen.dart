@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'account_summary.dart';
 import 'user_profile_section.dart';
@@ -13,6 +15,7 @@ class DashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     // Extract user details
     String username = user['username'];
+    final Map<String, dynamic> picture = user['picture'];
     double balance = user['balance'].toDouble();
 
     // Example list of upcoming events
@@ -32,7 +35,7 @@ class DashboardScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               // Display user's profile information
-              UserProfileSection(username),
+              UserProfileSection(username, picture),
               // Display user's account summary
               AccountSummary(balance),
               // Provide quick access actions

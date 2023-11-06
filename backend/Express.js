@@ -77,7 +77,7 @@ app.post('/register', async (req, res) => {
       verificationCode,
     ]);
 
-    // Send the verification code to the user's ProtonMail address
+    // Send the verification code to the user's email address
     sendVerificationEmail(email, verificationCode);
 
     res.json({ message: 'Registration successful' });

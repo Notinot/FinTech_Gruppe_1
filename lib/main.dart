@@ -2,30 +2,39 @@ import 'package:flutter/material.dart';
 import 'Screens/login_screen.dart';
 import 'package:http/http.dart' as http;
 
-void main() async {
-  // Check server availability
-  // const serverUrl = 'http://192.168.2.33:3000';
-  const serverUrl = 'http://localhost:3000';
-  final response = await http.get(Uri.parse('$serverUrl/health'));
-
-  // Create the Flutter app
-  runApp(PayfriendzApp(serverAvailable: response.statusCode == 200));
+void main() {
+  runApp(PayfriendzApp());
 }
 
-class PayfriendzApp extends StatelessWidget {
-  final bool serverAvailable;
+class PayfriendzApp extends StatefulWidget {
+  @override
+  _PayfriendzAppState createState() => _PayfriendzAppState();
+}
 
-  const PayfriendzApp({super.key, required this.serverAvailable});
+class _PayfriendzAppState extends State<PayfriendzApp> {
+  bool serverAvailable = false;
+
+  @override
+  void initState() {
+    super.initState();
+    checkServerAvailability();
+  }
+
+  Future<void> checkServerAvailability() async {
+    const serverUrl = 'http://localhost:3000';
+    final response = await http.get(Uri.parse('$serverUrl/health'));
+    setState(() {
+      serverAvailable = response.statusCode == 200;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     if (serverAvailable) {
-      // If the server is available, show the LoginScreen as the initial route
       return const MaterialApp(
         home: LoginScreen(),
       );
     } else {
-      // If the server is unavailable, show an error screen
       return const MaterialApp(
         home: ServerUnavailableScreen(),
       );
@@ -46,7 +55,6 @@ class ServerUnavailableScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Display a message for server unavailability
             const Text('The server is currently unavailable.'),
             ElevatedButton(
               onPressed: () {

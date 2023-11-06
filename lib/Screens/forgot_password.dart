@@ -12,10 +12,43 @@ class ForgotPasswordScreen extends StatefulWidget {
   _ForgotPasswordScreenState createState() => _ForgotPasswordScreenState();
 }
 
-class _ForgotPasswordScreenState {
+class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   final TextEditingController emailController = TextEditingController();
+  final TextEditingController newPasswordController = TextEditingController();
+  final TextEditingController verificationCodeController = TextEditingController();
+
+  String? emailError;
+
+  void handleForgotPassword() async {}
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Forgot password'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            TextField(
+              controller: emailController,
+              decoration: InputDecoration(
+                labelText: 'Email',
+                border: const OutlineInputBorder(),
+                errorText: emailError,
+              ),
+            ),
+            const SizedBox(height: 16.0),
+          ],
+        ),
+      ),
+    );
+  }
 
 }
+
 
 

@@ -1,12 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-class SendMoneyScreen extends StatelessWidget {
+class SendMoneyScreen extends StatefulWidget {
+  SendMoneyScreen({super.key});
+
+  @override
+  _SendMoneyScreenState createState() => _SendMoneyScreenState();
+}
+
+class _SendMoneyScreenState extends State<SendMoneyScreen> {
   final TextEditingController recipientController = TextEditingController();
   final TextEditingController amountController = TextEditingController();
   final TextEditingController messageController = TextEditingController();
 
-  SendMoneyScreen({super.key});
+  Color recipientBorderColor = Colors.grey;
+  Color amountBorderColor = Colors.grey;
 
   @override
   Widget build(BuildContext context) {
@@ -26,10 +34,15 @@ class SendMoneyScreen extends StatelessWidget {
             const SizedBox(height: 8),
             TextFormField(
               controller: recipientController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: 'Enter recipient name or email',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.person),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: recipientBorderColor),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: recipientBorderColor),
+                ),
+                prefixIcon: const Icon(Icons.person),
               ),
             ),
             const SizedBox(height: 16),
@@ -76,7 +89,12 @@ class SendMoneyScreen extends StatelessWidget {
               controller: messageController,
               decoration: const InputDecoration(
                 hintText: 'Enter a message for the recipient',
-                border: OutlineInputBorder(),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.grey),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.grey),
+                ),
                 prefixIcon: Icon(Icons.chat),
               ),
             ),
@@ -94,23 +112,44 @@ class SendMoneyScreen extends StatelessWidget {
                   final message = messageController.text;
 
                   if (recipient.trim().isEmpty) {
+                    setState(() {
+                      recipientBorderColor = Colors.red;
+                    });
                     showErrorSnackBar(context, 'Recipient cannot be empty');
-                  } else if (amount <= 0) {
-                    showErrorSnackBar(context, 'Enter a valid amount');
-                  }else {
-                    // Implement the logic to send money
-                    // Once money is sent, you can show a success message
-                    showSuccessSnackBar(
-                        context, 'Money sent successfully to $recipient');
-
-                    // Clear the input fields after sending money
-                    recipientController.clear();
-                    amountController.clear();
-                    messageController.clear();
+                  } else {
+                    setState(() {
+                      recipientBorderColor = Colors.grey;
+                    });
                   }
+
+                  if (amount <= 0) {
+                    setState(() {
+                      amountBorderColor = Colors.red;
+                    });
+                    showErrorSnackBar(context, 'Enter a valid amount');
+                  } else {
+                    setState(() {
+                      amountBorderColor = Colors.grey;
+                    });
+                  }
+
+                  if (recipient.trim().isEmpty || amount <= 0) {
+                    return;
+                  }
+
+                  // Implement the logic to send money
+                  // Once money is sent, show a success message
+                  showSuccessSnackBar(
+                      context, 'Money sent successfully to $recipient');
+
+                  // Clear the input fields after sending money
+                  recipientController.clear();
+                  amountController.clear();
+                  messageController.clear();
                 },
                 style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.white, backgroundColor: Colors.blue, // Text color
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.blue, // Text color
                   padding:
                       const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                 ),
@@ -139,6 +178,7 @@ class SendMoneyScreen extends StatelessWidget {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
+        backgroundColor: Colors.green,
       ),
     );
   }

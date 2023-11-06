@@ -102,8 +102,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-
-    AssetImage payfriendzLogo = AssetImage('lib/assets/payfriendz_logo.png');
+    // AssetImage payfriendzLogo = AssetImage('lib/assets/payfriendz_logo.png');
 
     return Scaffold(
       appBar: AppBar(
@@ -123,7 +122,7 @@ class _LoginScreenState extends State<LoginScreen> {
             const SizedBox(height: 32.0),
             TextField(
               controller: emailController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Email',
                 border: OutlineInputBorder(),
               ),
@@ -132,7 +131,7 @@ class _LoginScreenState extends State<LoginScreen> {
             TextField(
               controller: passwordController,
               obscureText: true,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Password',
                 border: OutlineInputBorder(),
               ),
@@ -142,7 +141,7 @@ class _LoginScreenState extends State<LoginScreen> {
               TextField(
                 controller: verificationCodeController,
                 obscureText: false,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Verification Code',
                   border: OutlineInputBorder(),
                 ),
@@ -152,7 +151,8 @@ class _LoginScreenState extends State<LoginScreen> {
               onPressed: handleLogin,
               style: ElevatedButton.styleFrom(
                 primary: Colors.blue, // Button background color
-                padding: EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
               ),
               child: const Text(
                 'Login',

@@ -75,7 +75,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
       if (pickedFile != null) {
         setState(() {
-          _imageProvider = FileImage(io.File(pickedFile.path));
+          _imageProvider=MemoryImage(Uint8List.fromList(pickedFile.readAsBytes() as List<int>));
+
         });
       }
     }

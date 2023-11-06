@@ -42,7 +42,7 @@ class _SendMoneyScreenState extends State<SendMoneyScreen> {
                 focusedBorder: OutlineInputBorder(
                   borderSide: BorderSide(color: recipientBorderColor),
                 ),
-                prefixIcon: Icon(Icons.person),
+                prefixIcon: const Icon(Icons.person),
               ),
             ),
             const SizedBox(height: 16),
@@ -87,7 +87,7 @@ class _SendMoneyScreenState extends State<SendMoneyScreen> {
             const SizedBox(height: 8),
             TextFormField(
               controller: messageController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 hintText: 'Enter a message for the recipient',
                 enabledBorder: OutlineInputBorder(
                   borderSide: BorderSide(color: Colors.grey),
@@ -138,7 +138,7 @@ class _SendMoneyScreenState extends State<SendMoneyScreen> {
                   }
 
                   // Implement the logic to send money
-                  // Once money is sent, you can show a success message
+                  // Once money is sent, show a success message
                   showSuccessSnackBar(
                       context, 'Money sent successfully to $recipient');
 

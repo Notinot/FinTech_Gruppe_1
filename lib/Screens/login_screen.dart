@@ -23,7 +23,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> checkUserActiveStatus(String email) async {
     final response = await http.post(
-      Uri.parse('http://localhost:3000/check-active'), // Use the correct route
+      Uri.parse('http://192.168.178.28:3000/check-active'),
+
+      //Uri.parse('http://localhost:3000/check-active'), // Use the correct route
       headers: {'Content-Type': 'application/json'},
       body: json.encode({'email': email}),
     );
@@ -70,7 +72,9 @@ class _LoginScreenState extends State<LoginScreen> {
           };
 
     final response = await http.post(
-      Uri.parse('http://localhost:3000/login'),
+      Uri.parse('http://192.168.178.28:3000/login'),
+
+      // Uri.parse('http://localhost:3000/login'),
       headers: {'Content-Type': 'application/json'},
       body: json.encode(requestData),
     );
@@ -105,100 +109,96 @@ class _LoginScreenState extends State<LoginScreen> {
     // AssetImage payfriendzLogo = AssetImage('lib/assets/payfriendz_logo.png');
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Login'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-          Center(
-            child: Image.asset(
-                'lib/assets/payfriendz_logo.png',
-                width: 300,
-                height: 100),
-          ),
-            const SizedBox(height: 32.0),
-            TextField(
-              controller: emailController,
-              decoration: const InputDecoration(
-                labelText: 'Email',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16.0),
-            TextField(
-              controller: passwordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Password',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            if (requiresVerification) const SizedBox(height: 12.0),
-            if (requiresVerification)
-              TextField(
-                controller: verificationCodeController,
-                obscureText: false,
-                decoration: const InputDecoration(
-                  labelText: 'Verification Code',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-            const SizedBox(height: 24.0),
-            ElevatedButton(
-              onPressed: handleLogin,
-              style: ElevatedButton.styleFrom(
-                primary: Colors.blue, // Button background color
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
-              ),
-              child: const Text(
-                'Login',
-                style: TextStyle(
-                  fontSize: 18.0,
-                  color: Colors.white, // Button text color
-                ),
-              ),
-            ),
-            const SizedBox(height: 12.0),
-            TextButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const RegistrationScreen()),
-                );
-              },
-              child: const Text(
-                "Don't have an account yet? Register here",
-                style: TextStyle(
-                  fontSize: 16.0,
-                  color: Colors.blue,
-                ),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const ForgotPasswordScreen()),
-                );
-              },
-              child: const Text(
-                "Forgot password?",
-                style: TextStyle(
-                  fontSize: 16.0,
-                  color: Colors.blue,
-                  height: 2
-                ),
-              ),
-            )
-          ],
+        appBar: AppBar(
+          title: const Text('Login'),
         ),
-      ),
-    );
+        body: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Center(
+                  child: Image.asset('lib/assets/payfriendz_logo.png',
+                      width: 300, height: 100),
+                ),
+                const SizedBox(height: 32.0),
+                TextField(
+                  controller: emailController,
+                  decoration: const InputDecoration(
+                    labelText: 'Email',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 16.0),
+                TextField(
+                  controller: passwordController,
+                  obscureText: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Password',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                if (requiresVerification) const SizedBox(height: 12.0),
+                if (requiresVerification)
+                  TextField(
+                    controller: verificationCodeController,
+                    obscureText: false,
+                    decoration: const InputDecoration(
+                      labelText: 'Verification Code',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                const SizedBox(height: 24.0),
+                ElevatedButton(
+                  onPressed: handleLogin,
+                  style: ElevatedButton.styleFrom(
+                    primary: Colors.blue, // Button background color
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 40, vertical: 16),
+                  ),
+                  child: const Text(
+                    'Login',
+                    style: TextStyle(
+                      fontSize: 18.0,
+                      color: Colors.white, // Button text color
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12.0),
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const RegistrationScreen()),
+                    );
+                  },
+                  child: const Text(
+                    "Don't have an account yet? Register here",
+                    style: TextStyle(
+                      fontSize: 16.0,
+                      color: Colors.blue,
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const ForgotPasswordScreen()),
+                    );
+                  },
+                  child: const Text(
+                    "Forgot password?",
+                    style: TextStyle(
+                        fontSize: 16.0, color: Colors.blue, height: 2),
+                  ),
+                )
+              ],
+            ),
+          ),
+        ));
   }
 }

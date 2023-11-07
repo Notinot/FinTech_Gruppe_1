@@ -55,7 +55,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         type: FileType.custom,
         allowedExtensions: ['jpg', 'jpeg', 'png'],
       );
-
       if (result != null) {
         final file = result.files.first;
         if (file.extension == 'jpg' ||
@@ -234,6 +233,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         'password': password,
       };
     }
+
     print('Picture data: $requestBody');
     // Make an HTTP POST request to your backend API
     final response = await http.post(

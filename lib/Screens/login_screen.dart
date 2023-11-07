@@ -23,9 +23,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> checkUserActiveStatus(String email) async {
     final response = await http.post(
-      Uri.parse('http://192.168.178.28:3000/check-active'),
-
-      //Uri.parse('http://localhost:3000/check-active'), // Use the correct route
+      // Uri.parse('http://192.168.178.28:3000/check-active'),
+      Uri.parse('http://localhost:3000/check-active'), // Use the correct route
       headers: {'Content-Type': 'application/json'},
       body: json.encode({'email': email}),
     );
@@ -72,9 +71,8 @@ class _LoginScreenState extends State<LoginScreen> {
           };
 
     final response = await http.post(
-      Uri.parse('http://192.168.178.28:3000/login'),
-
-      // Uri.parse('http://localhost:3000/login'),
+      // Uri.parse('http://192.168.178.28:3000/login'),
+      Uri.parse('http://localhost:3000/login'),
       headers: {'Content-Type': 'application/json'},
       body: json.encode(requestData),
     );

@@ -210,7 +210,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       profileImageBytes =
           null; // or you can set it to a null value expected by your API
     }
-
+    print('Picture data: $profileImageBytes');
     final Map<String, dynamic> requestBody;
     // Create a JSON payload to send to the API
     if (profileImageBytes != null) {
@@ -234,9 +234,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         'password': password,
       };
     }
-
+    print('Picture data: $requestBody');
     // Make an HTTP POST request to your backend API
     final response = await http.post(
+      //Uri.parse('http://192.168.178.28:3000/register'),
       Uri.parse('http://localhost:3000/register'),
       headers: {
         'Content-Type': 'application/json', // Set the content type

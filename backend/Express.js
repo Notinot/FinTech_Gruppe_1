@@ -45,6 +45,35 @@ function generateSalt() {
   return salt;
 }
 
+app.post('/forgotpassword', async (req, res) =>{
+    const {email} = req.body;
+
+    // Check if the user with the provided email exists
+    const [user] = await db.query('SELECT * FROM User WHERE email = ?', [email]);
+
+  /*  if (user.length === 0) {
+        return res.status(401).json({ message: 'Invalid email' });
+    }
+*/
+
+
+    try {
+        // Generate a random verification code
+        const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+        // Send verification code
+        sendVerificationEmail(email, verificationCode);
+
+        res.json({ message: 'Verification code sent successfully' });
+    }
+    catch(error){
+
+      console.error('Error sending verification code:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+)
+
 // Route for user registration
 app.post('/register', async (req, res) => {
   const { username, email, firstname, lastname, password,picture } = req.body;

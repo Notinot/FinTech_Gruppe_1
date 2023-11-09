@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/Screens/edit_user_screen.dart';
 import 'package:flutter_application_1/Screens/login_screen.dart';
 import 'transaction_history_screen.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -62,6 +63,16 @@ class AppDrawer extends StatelessWidget {
             onTap: () {
               // Navigate to the groups section
               // Implement the navigation as needed
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.person),
+            title: const Text('Profile information'),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => EditUser(user: user)),
+              );
             },
           ),
           ListTile(

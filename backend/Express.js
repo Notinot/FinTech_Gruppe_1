@@ -176,6 +176,78 @@ app.post('/verify', async (req, res) => {
   res.json({ message: 'Account verified successfully' });
 });
 
+//delete user
+app.post('/delete_user', async (req, res) => {
+  const{userid} = req.body;
+  const [deleteUser] = await db.query('Update User Set active = 0 WHERE user_id = ?', [userid]);});
+
+
+//editing user
+app.post('/edit_user', async (req, res) => {
+  const { username, email, firstname, lastname, password,new_password, userid,pw_change,picture } = req.body;
+
+  let pictureData = null;
+  if (picture != null) {
+    pictureData = Buffer.from(picture, 'base64');
+  }
+
+  // Check if the user exists based on the provided user_id
+   [existingUser] = await db.query('SELECT * FROM User WHERE user_id = ?', [userid]);
+  console.log(existingUser);
+
+  if (existingUser.length === 0) {
+    return res.status(404).json({ message: 'User not found' });
+  }
+
+  
+
+  const [existingInfo] = await db.query(
+    'SELECT * FROM User WHERE email = ? OR username = ?',
+    [email, username]
+  );
+
+  const [existingUsername] = await db.query('SELECT * FROM User WHERE username = ? AND user_id != ?', [username, userid]);
+  if (existingUsername.length > 0) {
+    return res.status(402).json({ message: 'Username already in use' });
+  }
+
+  // Check if the new email is already in use by a different user
+  const [existingEmail] = await db.query('SELECT * FROM User WHERE email = ? AND user_id != ?', [email, userid]);
+  if (existingEmail.length > 0) {
+    return res.status(403).json({ message: 'Email already in use' });
+  }
+
+  try {
+    updateData = [username, email, firstname, lastname,pictureData,userid];
+    query = 'UPDATE User SET username=?, email=?, first_name=?, last_name=?, picture=? WHERE user_id = ? ';
+
+    if(pw_change == true){
+      const passwordMatch = await bcrypt.compare(password + existingInfo[0].salt, existingInfo[0].password_hash);
+      if (passwordMatch) {
+        const salt = generateSalt();
+     const passwordHash = await bcrypt.hash(new_password + salt, 10);
+
+     updateData = [username, email, firstname, lastname, passwordHash,salt, pictureData,userid];
+     query = 'UPDATE User SET username=?, email=?, first_name=?, last_name=?, password_hash=?,salt = ?, picture=? WHERE user_id=?';
+      
+        
+      } else if(!passwordMatch) {
+        return res.status(401).json({ error: 'Current password invalid!' });
+    } 
+  }
+    await db.query(query, updateData);
+    [existingUser] = await db.query('SELECT * FROM User WHERE user_id = ?', [userid]);
+    const token = jwt.sign({ userid : existingUser[0].userid}, jwtSecret, jwtOptions);
+
+    res.json({ message: 'Profile updated successfully',token,user: existingUser[0] });
+  }
+   catch (error) {
+    console.error('Error updating profile:', error);
+    res.status(500).json({ message: 'Internal server error',error: error.message });
+    console.log('Received data:', req.body);
+  }
+});
+
 // Route to check the user's active status
 app.post('/check-active', async (req, res) => {
   const { email } = req.body;

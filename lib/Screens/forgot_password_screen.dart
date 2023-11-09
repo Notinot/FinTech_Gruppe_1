@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/Screens/change_password_screen.dart';
 import 'login_screen.dart';
 import 'registration_screen.dart';
 import 'package:http/http.dart' as http;
@@ -15,9 +16,6 @@ class ForgotPasswordScreen extends StatefulWidget {
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   final TextEditingController emailController = TextEditingController();
-  final TextEditingController newPasswordController = TextEditingController();
-  final TextEditingController verificationCodeController = TextEditingController();
-
   String? emailError;
 
 
@@ -30,12 +28,23 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     );
   }
 
-  void clearErrors() {
+  Future<bool> checkUserActiveStatus(String email) async {
+    final response = await http.post(
 
-    setState(() {
-      emailError = null;
-    });
+      Uri.parse('http://localhost:3000/check-active'), // Use the correct route
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({'email': email}),
+    );
+
+    if (response.statusCode == 200) {
+
+      return true;
+    } else {
+
+      return false;
+    }
   }
+
 
   bool EmailValid(String email) {
     // Validate the email format using a regular expression
@@ -68,32 +77,31 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       'email': email
     };
 
+
+
     final response = await http.post(
-      Uri.parse('http://localhost:3000/forgotpassword'),
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: json.encode(requestBody)
+        Uri.parse('http://localhost:3000/forgotpassword'),
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: json.encode(requestBody)
     );
 
     if (response.statusCode == 200) {
 
-      showSnackBar(
-          message:
-          '  Verification code has been send to $email ');
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
-      );
+       showSnackBar(
+            message:
+            '  Verification code has been send to $email ');
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => ChangePasswordScreen(email)),
+        );
+      }
+      else{
+
+        showSnackBar(isError: true, message: 'This Email does not exist');
+      }
     }
-    else{
-
-      showSnackBar(isError: true, message: 'Failed');
-    }
-
-
-  }
-
 
   @override
   Widget build(BuildContext context) {

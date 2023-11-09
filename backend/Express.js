@@ -46,16 +46,15 @@ function generateSalt() {
 }
 
 app.post('/forgotpassword', async (req, res) =>{
+
     const {email} = req.body;
 
     // Check if the user with the provided email exists
     const [user] = await db.query('SELECT * FROM User WHERE email = ?', [email]);
 
-  /*  if (user.length === 0) {
+    if (user.length === 0) {
         return res.status(401).json({ message: 'Invalid email' });
     }
-*/
-
 
     try {
         // Generate a random verification code
@@ -64,7 +63,9 @@ app.post('/forgotpassword', async (req, res) =>{
         // Send verification code
         sendVerificationEmail(email, verificationCode);
 
-        res.json({ message: 'Verification code sent successfully' });
+        res.json({ message: 'Verification code sent successfully', user: userData });
+        res.json({ message: 'Login successful', token, user: userData });
+
     }
     catch(error){
 
@@ -72,6 +73,28 @@ app.post('/forgotpassword', async (req, res) =>{
       res.status(500).json({ message: 'Internal server error' });
     }
   }
+)
+
+
+app.post('/changepassword', async (req, res) => {
+
+  const{email, newPassword, verificationCode} = req.body;
+
+  const [user] = await db.query('SELECT * FROM User WHERE email = ?', [email]);
+
+  if (verificationCode !== user[0].verification_code) {
+
+      return res.status(401).json({ message: 'Invalid verification code' });
+  }
+
+  const salt = generateSalt();
+  const hashedPassword = await bcrypt.hash(newPassword + salt, 10);
+  
+  await db.query('UPDATE User SET password = ?, salt = ? WHERE email = ?', [hashedPassword, salt, email]);
+
+  res.json({ message: 'Account verified successfully' });
+
+}
 )
 
 // Route for user registration

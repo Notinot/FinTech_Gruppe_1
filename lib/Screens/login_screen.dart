@@ -1,9 +1,9 @@
 import 'dart:convert';
+import 'package:flutter_application_1/Screens/forgot_password_screen.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dashboard_screen.dart';
-import 'forgot_password_screen.dart';
 import 'registration_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -189,7 +189,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     );
                   },
                   child: const Text(
-                    "Forgot password?",
+                    "Forgot your password?",
                     style: TextStyle(
                         fontSize: 16.0, color: Colors.blue, height: 2),
                   ),

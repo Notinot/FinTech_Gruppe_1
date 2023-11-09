@@ -84,14 +84,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => const LoginScreen()),
-
       );
     }
+    else{
 
-    // Open Verification Screen
+      showSnackBar(isError: true, message: 'Failed');
+    }
 
 
-    showSnackBar(isError: true, message: 'Failed');
   }
 
 

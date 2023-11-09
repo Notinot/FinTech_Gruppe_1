@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Screens/edit_user_screen.dart';
 import 'package:flutter_application_1/Screens/login_screen.dart';
@@ -17,9 +19,13 @@ class AppDrawer extends StatelessWidget {
           UserAccountsDrawerHeader(
             accountName: Text(user['username']),
             accountEmail: Text(user['email']),
-            currentAccountPicture: const CircleAvatar(
-              backgroundImage: AssetImage(
-                  'lib/assets/profile_img.png'), // Replace with the user's profile picture
+            currentAccountPicture: CircleAvatar(
+              backgroundImage: user['picture'] != null &&
+                      user['picture'] is Map<String, dynamic> &&
+                      user['picture']['data'] != null
+                  ? MemoryImage(
+                      Uint8List.fromList(user['picture']['data'].cast<int>()))
+                  : AssetImage('lib/assets/profile_img.png') as ImageProvider,
             ),
           ),
           ListTile(

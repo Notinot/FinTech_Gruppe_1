@@ -206,7 +206,7 @@ class _EditUserState extends State<EditUser> {
       return;
     }
 
-    if (!new_password.contains(RegExp(r'[#&@~!@?}\[%!?_]')) &&
+    if (!new_password.contains(RegExp(r'[#&@~!@?}\[%!?_*+-]')) &&
         new_password.isNotEmpty) {
       // Check if password contains at least one special character
       setState(() {
@@ -338,6 +338,10 @@ class _EditUserState extends State<EditUser> {
       showSnackBar(isError: true, message: 'Username is already taken');
     } else if (response.statusCode == 403) {
       showSnackBar(isError: true, message: 'Email is already in  use');
+    } else if (response.statusCode == 406) {
+      showSnackBar(
+          isError: true,
+          message: 'Your new password cannot be your old password');
     } else {
       print(response.statusCode);
       print(response.body);

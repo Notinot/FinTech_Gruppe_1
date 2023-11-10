@@ -287,6 +287,15 @@ app.post('/edit_user', async (req, res) => {
     return res.status(403).json({ message: 'Email already in use' });
   }
 
+  
+  const samePassword = await bcrypt.compare(new_password + existingInfo[0].salt, existingInfo[0].password_hash);
+  if (samePassword) {
+    return res.status(406).json({ message: 'Your new password cannot be your old password' });
+  }
+  console.log(password)
+  console.log(new_password)
+  console.log(samePassword)
+
   try {
     updateData = [username, email, firstname, lastname,pictureData,userid];
     query = 'UPDATE User SET username=?, email=?, first_name=?, last_name=?, picture=? WHERE user_id = ? ';

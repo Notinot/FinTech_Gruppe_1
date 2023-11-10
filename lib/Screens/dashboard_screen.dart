@@ -34,7 +34,7 @@ class DashboardScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               // Display user's profile information
-              UserProfileSection(username),
+              UserProfileSection(user),
               // Display user's account summary
               AccountSummary(balance),
               // Provide quick access actions

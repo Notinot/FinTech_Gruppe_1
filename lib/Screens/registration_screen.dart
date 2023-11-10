@@ -293,6 +293,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               TextField(
                 controller: usernameController,
                 decoration: InputDecoration(
+                  helperText: 'Username can not be changed afterwards',
                   labelText: 'Username',
                   border: const OutlineInputBorder(),
                   errorText: usernameError,

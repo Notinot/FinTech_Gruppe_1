@@ -247,7 +247,7 @@ app.post('/delete_user', async (req, res) => {
 
 //editing user
 app.post('/edit_user', async (req, res) => {
-  const { username, email, firstname, lastname, password,new_password, userid,pw_change,picture } = req.body;
+  const { email, firstname, lastname, password,new_password, userid,pw_change,picture } = req.body;
 
   let pictureData = null;
   if (picture != null) {
@@ -265,15 +265,15 @@ app.post('/edit_user', async (req, res) => {
   
 
   const [existingInfo] = await db.query(
-    'SELECT * FROM User WHERE email = ? OR username = ?',
-    [email, username]
+    'SELECT * FROM User WHERE email = ?',
+    [email]
   );
 
-  const [existingUsername] = await db.query('SELECT * FROM User WHERE username = ? AND user_id != ?', [username, userid]);
+  /*const [existingUsername] = await db.query('SELECT * FROM User WHERE username = ? AND user_id != ?', [username, userid]);
   if (existingUsername.length > 0) {
     return res.status(402).json({ message: 'Username already in use' });
   }
-
+*/
   // Check if the new email is already in use by a different user
   const [existingEmail] = await db.query('SELECT * FROM User WHERE email = ? AND user_id != ?', [email, userid]);
   if (existingEmail.length > 0) {
@@ -290,8 +290,8 @@ app.post('/edit_user', async (req, res) => {
   console.log(samePassword)
 
   try {
-    updateData = [username, email, firstname, lastname,pictureData,userid];
-    query = 'UPDATE User SET username=?, email=?, first_name=?, last_name=?, picture=? WHERE user_id = ? ';
+    updateData = [email, firstname, lastname,pictureData,userid];
+    query = 'UPDATE User SET email=?, first_name=?, last_name=?, picture=? WHERE user_id = ? ';
 
     if(pw_change == true){
       const passwordMatch = await bcrypt.compare(password + existingInfo[0].salt, existingInfo[0].password_hash);
@@ -300,7 +300,7 @@ app.post('/edit_user', async (req, res) => {
      const passwordHash = await bcrypt.hash(new_password + salt, 10);
 
      updateData = [username, email, firstname, lastname, passwordHash,salt, pictureData,userid];
-     query = 'UPDATE User SET username=?, email=?, first_name=?, last_name=?, password_hash=?,salt = ?, picture=? WHERE user_id=?';
+     query = 'UPDATE User SET email=?, first_name=?, last_name=?, password_hash=?,salt = ?, picture=? WHERE user_id=?';
       
         
       } else if(!passwordMatch) {

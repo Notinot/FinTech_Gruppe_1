@@ -24,15 +24,19 @@ class EditUser extends StatefulWidget {
 class _EditUserState extends State<EditUser> {
   bool isEditing = false;
 
-  final TextEditingController usernameController = TextEditingController();
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController currentPasswordController =
+  late TextEditingController usernameController =
+      TextEditingController(text: widget.user['username']);
+  late TextEditingController emailController =
+      TextEditingController(text: widget.user['email']);
+  late TextEditingController currentPasswordController =
       TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController =
+  late TextEditingController passwordController = TextEditingController();
+  late TextEditingController confirmPasswordController =
       TextEditingController();
-  final TextEditingController firstnameController = TextEditingController();
-  final TextEditingController lastnameController = TextEditingController();
+  late TextEditingController firstnameController =
+      TextEditingController(text: widget.user['first_name']);
+  late TextEditingController lastnameController =
+      TextEditingController(text: widget.user['last_name']);
 
   String? passwordError;
   String? emailError;
@@ -132,7 +136,7 @@ class _EditUserState extends State<EditUser> {
       profileImageBytes = memoryImage.bytes;
     }
 
-    if (username.trim().isEmpty) {
+    /*if (username.trim().isEmpty) {
       // Check if username is empty
       setState(() {
         username = widget.user['username'];
@@ -143,7 +147,7 @@ class _EditUserState extends State<EditUser> {
       setState(() {
         usernameError = 'Username must be at least two characters long';
       });
-    }
+    } */
 
     if (email.trim().isEmpty) {
       // Check if email is empty
@@ -187,7 +191,7 @@ class _EditUserState extends State<EditUser> {
       });
     }
 
-    if (new_password.length < 12 && current_password.isNotEmpty) {
+    if (new_password.length < 12 && new_password.isNotEmpty) {
       // Check if password is at least 12 characters long
       setState(() {
         passwordError = 'Password must have at least 12 characters';
@@ -232,27 +236,19 @@ class _EditUserState extends State<EditUser> {
       pw_change = true;
     }
 
-    if (new_password.isNotEmpty && current_password.isEmpty) {
+    if (new_password.isNotEmpty && current_password.isEmpty ||
+        current_password.isEmpty && email.isNotEmpty ||
+        current_password.isEmpty && email.isNotEmpty ||
+        current_password.isEmpty && firstname.isNotEmpty ||
+        current_password.isEmpty && lastname.isNotEmpty) {
       setState(() {
         currentPasswordError =
-            'You have to enter your current password, to change it!';
+            'You have to enter your current password to make any changes!';
       });
       showSnackBar(
           isError: true,
           message:
-              'Current password not entered while trying to change password');
-      return;
-    }
-
-    if (new_password.isEmpty && current_password.isNotEmpty) {
-      setState(() {
-        currentPasswordError =
-            'You only have to enter your current password if you want to choose a new password!';
-      });
-      showSnackBar(
-          isError: true,
-          message:
-              'Current password not entered while trying to change password');
+              'Current password not entered while trying to update Account Information');
       return;
     }
 
@@ -279,7 +275,7 @@ class _EditUserState extends State<EditUser> {
     // Create a JSON payload to send to the API
     if (profileImageBytes != null) {
       requestBody = {
-        'username': username,
+        //'username': username,
         'email': email,
         'firstname': firstname,
         'lastname': lastname,
@@ -294,7 +290,7 @@ class _EditUserState extends State<EditUser> {
       };
     } else {
       requestBody = {
-        'username': username,
+        //'username': username,
         'email': email,
         'firstname': firstname,
         'lastname': lastname,
@@ -334,9 +330,10 @@ class _EditUserState extends State<EditUser> {
           MaterialPageRoute(builder: (context) => EditUser(user: userT)));
     } else if (response.statusCode == 401) {
       showSnackBar(isError: true, message: 'Current password is invalid!');
-    } else if (response.statusCode == 402) {
+    } /*else if (response.statusCode == 402) {
       showSnackBar(isError: true, message: 'Username is already taken');
-    } else if (response.statusCode == 403) {
+    }*/
+    else if (response.statusCode == 403) {
       showSnackBar(isError: true, message: 'Email is already in  use');
     } else if (response.statusCode == 406) {
       showSnackBar(
@@ -401,47 +398,84 @@ class _EditUserState extends State<EditUser> {
                     child: Text('Change Profile Picture'),
                   )),
               const SizedBox(height: 16.0),
-              buildEditableField('Username', username, usernameController,
-                  usernameError, username,
-                  obscureText: false),
+              TextField(
+                controller: usernameController,
+                decoration: InputDecoration(
+                  labelText: 'Username',
+                  enabled: false,
+                  border: const OutlineInputBorder(),
+                  errorText: usernameError,
+                ),
+              ),
               const SizedBox(height: 16.0),
-              buildEditableField(
-                  'Email:', email, emailController, emailError, email,
-                  obscureText: false),
+              TextField(
+                controller: emailController,
+                decoration: InputDecoration(
+                  labelText: 'Email',
+                  enabled: isEditing,
+                  border: const OutlineInputBorder(),
+                  errorText: emailError,
+                ),
+              ),
               const SizedBox(height: 16.0),
-              buildEditableField('First name :', firstname, firstnameController,
-                  firstnameError, firstname,
-                  obscureText: false),
+              TextField(
+                controller: firstnameController,
+                decoration: InputDecoration(
+                  labelText: 'First name',
+                  enabled: isEditing,
+                  border: const OutlineInputBorder(),
+                  errorText: firstnameError,
+                ),
+              ),
               const SizedBox(height: 16.0),
-              buildEditableField('Last name :', lastname, lastnameController,
-                  lastnameError, lastname,
-                  obscureText: false),
-              const SizedBox(height: 16.0),
-              buildEditableField(
-                  'current Password : ',
-                  '********',
-                  currentPasswordController,
-                  currentPasswordError,
-                  'current Password',
-                  obscureText: true),
-              const SizedBox(height: 16.0),
-              Visibility(
-                visible: isEditing,
-                child: buildEditableField('Password : ', '********',
-                    passwordController, passwordError, 'new Password',
-                    obscureText: true),
+              TextField(
+                controller: lastnameController,
+                decoration: InputDecoration(
+                  labelText: 'Last name',
+                  enabled: isEditing,
+                  border: const OutlineInputBorder(),
+                  errorText: lastnameError,
+                ),
               ),
               const SizedBox(height: 16.0),
               Visibility(
-                visible: isEditing,
-                child: buildEditableField(
-                    'Confirm Password',
-                    'Confirm Password',
-                    confirmPasswordController,
-                    confirmPasswordError,
-                    'Confirm Password',
-                    obscureText: true),
-              ),
+                  visible: isEditing,
+                  child: TextField(
+                    controller: currentPasswordController,
+                    obscureText: true,
+                    decoration: InputDecoration(
+                      labelText: 'Current password',
+                      enabled: isEditing,
+                      border: const OutlineInputBorder(),
+                      errorText: currentPasswordError,
+                    ),
+                  )),
+              const SizedBox(height: 16.0),
+              Visibility(
+                  visible: isEditing,
+                  child: TextField(
+                    controller: passwordController,
+                    obscureText: true,
+                    decoration: InputDecoration(
+                      labelText: 'New password',
+                      enabled: isEditing,
+                      border: const OutlineInputBorder(),
+                      errorText: passwordError,
+                    ),
+                  )),
+              const SizedBox(height: 16.0),
+              Visibility(
+                  visible: isEditing,
+                  child: TextField(
+                    controller: confirmPasswordController,
+                    obscureText: true,
+                    decoration: InputDecoration(
+                      labelText: 'Confirm password',
+                      enabled: isEditing,
+                      border: const OutlineInputBorder(),
+                      errorText: usernameError,
+                    ),
+                  )),
               const SizedBox(height: 16.0),
               ElevatedButton(
                 child: Icon(isEditing ? Icons.save : Icons.edit),
@@ -455,38 +489,6 @@ class _EditUserState extends State<EditUser> {
         ),
       ),
     );
-  }
-
-  Widget buildEditableField(String label, String value,
-      TextEditingController controller, String? error, String hintText,
-      {required bool obscureText}) {
-    if (isEditing) {
-      return Visibility(
-          visible: isEditing,
-          child: TextField(
-            controller: controller,
-            obscureText: obscureText,
-            decoration: InputDecoration(
-              labelText: label,
-              hintText: hintText,
-              border: const OutlineInputBorder(),
-              errorText: error,
-            ),
-          ));
-    } else {
-      return Row(
-        children: <Widget>[
-          Text('$label$value'),
-          if (isEditing)
-            ElevatedButton(
-              onPressed: () {
-                controller.text = value;
-              },
-              child: Text('Edit'),
-            ),
-        ],
-      );
-    }
   }
 
   void toggleEditMode() {

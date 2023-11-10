@@ -45,6 +45,7 @@ function generateSalt() {
   return salt;
 }
 
+// Forgot Password
 app.post('/forgotpassword', async (req, res) =>{
 
     const {email} = req.body;
@@ -92,8 +93,9 @@ app.post('/changepassword', async (req, res) => {
   const hashedPassword = await bcrypt.hash(newPassword + salt, 10);
   
   try{
-// Throws out trying to execute query
-    await db.query('UPDATE User SET password = ?, salt = ? WHERE email = ?', [hashedPassword, salt, email]);
+
+    // Password wird nicht geändert
+    await db.query('UPDATE User SET password_hash = ?, salt = ? WHERE email = ?', [hashedPassword, salt, email]);
     return res.json({ message: 'Account verified successfully' });
 
   }catch{

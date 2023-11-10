@@ -124,7 +124,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     final Map<String, String> requestBody;
     requestBody = {
       'email': email,
-      'password': newPassword,
+      'newPassword': newPassword,
       'verificationCode': code ?? ''
     };
 
@@ -146,10 +146,17 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         MaterialPageRoute(builder: (context) => LoginScreen()),
       );
     }
+    else if(response.statusCode == 400) {
+
+      showSnackBar(isError: true, message: 'The new password can not be the old password');
+    }
+    else if(response.statusCode == 401) {
+
+      showSnackBar(isError: true, message: 'Verification code is not correct');
+    }
     else{
 
-      print(code);
-      showSnackBar(isError: true, message: 'Verification code is not correct');
+      showSnackBar(isError: true, message: 'Something went wrong');
     }
 
   }

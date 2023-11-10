@@ -118,7 +118,6 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       return;
     }
 
-
     // Enter request
     // Code var needs to be fixed!!!
     final Map<String, String> requestBody;
@@ -191,6 +190,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 numberOfFields: 6,
                 borderColor: Color(0xFF512DA8),
                 showFieldAsBox: true,
+                keyboardType: TextInputType.number,
                 focusedBorderColor: Colors.blue,
                 autoFocus: true,
                 onSubmit: (String verifcationCode) {

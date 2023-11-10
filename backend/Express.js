@@ -84,18 +84,25 @@ app.post('/changepassword', async (req, res) => {
   const [user] = await db.query('SELECT * FROM User WHERE email = ?', [email]);
 
 
+  // Hash new Password
+  const salt = generateSalt();
+  const hashedPassword = await bcrypt.hash(newPassword + salt, 10)
+
+  // Compare
+  const passwordMatch = await bcrypt.compare(newPassword + user[0].salt, user[0].password_hash);
+
   if (verificationCode != user[0].verification_code) {
 
       return res.status(401).json({ message: 'Invalid verification code' });
   }
+  else if (passwordMatch){
 
-  // Hash new Password
-  const salt = generateSalt();
-  const hashedPassword = await bcrypt.hash(newPassword + salt, 10);
+        return res.status(400).json({ message: 'Old password can not be new password' });
+  }
   
   try{
 
-    await db.query('UPDATE User SET password_hash = ?, salt = ? WHERE email = ?', [hashedPassword, salt, email]);
+    await db.query('UPDATE User SET password_hash = ?, salt = ?, verification_code = NULL WHERE email = ?', [hashedPassword, salt, email]);
     return res.json({ message: 'Account verified successfully' });
 
   }catch{
@@ -174,7 +181,7 @@ app.post('/login', async (req, res) => {
     }
 
     // Verification code is valid; update the "active" attribute to 1
-    await db.query('UPDATE User SET active = 1 WHERE email = ?', [email]);
+    await db.query('UPDATE User SET active = 1, verification_code = NULL WHERE email = ?', [email]);
   }
 
   // Compare the provided password with the hashed password

@@ -176,7 +176,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       return;
     }
 
-    if (!password.contains(RegExp(r'[#&@~!@?}\[%!?_]'))) {
+    if (!password.contains(RegExp(r'[#&@~!@?}\[%!?_*+-]'))) {
       // Check if password contains at least one special character
       setState(() {
         passwordError =

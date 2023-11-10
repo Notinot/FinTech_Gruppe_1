@@ -98,14 +98,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       clearErrors();
 
       final Map<String, dynamic> data = json.decode(response.body);
-      final user = data['user'];
 
       showSnackBar(
             message:
             '  Verification code has been send to $email ');
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => ChangePasswordScreen(user: user)),
+        MaterialPageRoute(builder: (context) => ChangePasswordScreen(email: email)),
       );
     }
     else{

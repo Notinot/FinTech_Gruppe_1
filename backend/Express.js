@@ -60,16 +60,16 @@ app.post('/forgotpassword', async (req, res) =>{
         // Generate a random verification code
         const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
 
+        await db.query('UPDATE User SET verification_code = ? WHERE email = ?', [verificationCode, email])
+
         // Send verification code
         sendVerificationEmail(email, verificationCode);
 
-        res.json({ message: 'Verification code sent successfully', user: userData });
-        res.json({ message: 'Login successful', token, user: userData });
-
+        res.json({ message: 'Verification code sent successfully', email });
     }
-    catch(error){
+    catch{
 
-      console.error('Error sending verification code:', error);
+      console.error('Error sending verification code');
       res.status(500).json({ message: 'Internal server error' });
     }
   }
@@ -82,7 +82,8 @@ app.post('/changepassword', async (req, res) => {
 
   const [user] = await db.query('SELECT * FROM User WHERE email = ?', [email]);
 
-  if (verificationCode !== user[0].verification_code) {
+
+  if (verificationCode != user[0].verification_code) {
 
       return res.status(401).json({ message: 'Invalid verification code' });
   }
@@ -90,10 +91,17 @@ app.post('/changepassword', async (req, res) => {
   const salt = generateSalt();
   const hashedPassword = await bcrypt.hash(newPassword + salt, 10);
   
-  await db.query('UPDATE User SET password = ?, salt = ? WHERE email = ?', [hashedPassword, salt, email]);
+  try{
+// Throws out trying to execute query
+    await db.query('UPDATE User SET password = ?, salt = ? WHERE email = ?', [hashedPassword, salt, email]);
+    return res.json({ message: 'Account verified successfully' });
 
-  res.json({ message: 'Account verified successfully' });
+  }catch{
 
+    console.error('Error in verification process');
+    res.status(500).json({ message: 'Internal server error' });
+  }
+  
 }
 )
 

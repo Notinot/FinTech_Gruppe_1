@@ -3,27 +3,25 @@ import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_application_1/Screens/login_screen.dart';
 import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
 import 'package:http/http.dart' as http;
 
 
 class ChangePasswordScreen extends StatefulWidget {
 
-  // Email over parameter
-  final Map<String, dynamic> user;
-  const ChangePasswordScreen({super.key, required this.user});
-  
+  final String email;
+  const ChangePasswordScreen({super.key,  required this.email});
 
   @override
-  _ChangePasswordScreenState createState() => _ChangePasswordScreenState();
+  _ChangePasswordScreenState createState() => _ChangePasswordScreenState(email: email);
 
 }
 
-// GET USER DATA
-
-
 class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 
+  final String email;
+  _ChangePasswordScreenState({required this.email});
 
   final TextEditingController newPasswordController = TextEditingController();
   final TextEditingController newPasswordAgainController = TextEditingController();
@@ -31,6 +29,15 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   String? verificationError;
   String? newPasswordError;
   String? newPasswordAgainError;
+
+  void clearErrors() {
+    // Clear any previous error messages
+    setState(() {
+      newPasswordError = null;
+      newPasswordAgainError = null;
+      verificationError = null;
+    });
+  }
 
   void showSnackBar({bool isError = false, required String message}) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -42,6 +49,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   }
 
   void handleChangePassword() async {
+
+    clearErrors();
 
     final newPassword = newPasswordController.text;
     final newPasswordAgain = newPasswordAgainController.text;
@@ -111,26 +120,42 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 
 
     // Enter request
-
+    // Code var needs to be fixed!!!
     final Map<String, String> requestBody;
     requestBody = {
-
+      'email': email,
+      'password': newPassword,
+      'verificationCode': code ?? ''
     };
 
     final response = await http.post(
-        Uri.parse('http://localhost:3000/forgotpassword'),
+        Uri.parse('http://localhost:3000/changepassword'),
         headers: {
           'Content-Type': 'application/json'
         },
         body: json.encode(requestBody)
     );
 
+    if (response.statusCode == 200) {
+
+      showSnackBar(
+          message:
+          '  Changing password was successful ');
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => LoginScreen()),
+      );
+    }
+    else{
+
+      print(code);
+      showSnackBar(isError: true, message: 'Verification code is not correct');
+    }
 
   }
 
     @override
     Widget build(BuildContext context) {
-      
       return Scaffold(
         appBar: AppBar(
           title: const Text('Changing your password'),
@@ -164,7 +189,6 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 onSubmit: (String verifcationCode) {
 
                    if(double.tryParse(verifcationCode) == null){
-
                       showSnackBar(isError: true, message: 'Verification code needs to consist of digits');
                       return;
                   }

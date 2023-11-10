@@ -38,6 +38,7 @@ dependencies:
   flutter_secure_storage: ^5.0.3
   animated_text_kit: ^4.2.1
   file_picker: ^6.1.1
+  flutter_otp_text_field: ^1.1.0+2
 
 
 

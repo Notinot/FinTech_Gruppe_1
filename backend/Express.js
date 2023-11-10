@@ -89,12 +89,12 @@ app.post('/changepassword', async (req, res) => {
       return res.status(401).json({ message: 'Invalid verification code' });
   }
 
+  // Hash new Password
   const salt = generateSalt();
   const hashedPassword = await bcrypt.hash(newPassword + salt, 10);
   
   try{
 
-    // Password wird nicht geändert
     await db.query('UPDATE User SET password_hash = ?, salt = ? WHERE email = ?', [hashedPassword, salt, email]);
     return res.json({ message: 'Account verified successfully' });
 
@@ -104,8 +104,8 @@ app.post('/changepassword', async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
   
-}
-)
+})
+
 
 // Route for user registration
 app.post('/register', async (req, res) => {
@@ -216,6 +216,7 @@ app.get('/user/profile', authenticateToken, async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 });
+
 
 app.post('/verify', async (req, res) => {
   const { email, verificationCode } = req.body;

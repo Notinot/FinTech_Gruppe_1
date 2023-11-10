@@ -153,12 +153,12 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Text(
+            const Text(
               ('Confirming your identity'),
               style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16.0),
-            Text(
+            const Text(
               ('Please enter the verification code'),
               style: TextStyle(
                 fontSize: 18,
@@ -169,6 +169,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               numberOfFields: 6,
               borderColor: Color(0xFF512DA8),
               showFieldAsBox: true,
+              keyboardType: TextInputType.number,
               focusedBorderColor: Colors.blue,
               autoFocus: true,
               onSubmit: (String verifcationCode) {

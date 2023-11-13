@@ -292,6 +292,8 @@ app.post('/delete_user', async (req, res) => {
 app.post('/edit_user', async (req, res) => {
   const { email, firstname, lastname, password,new_password, userid,pw_change,picture } = req.body;
 
+  emailChange = false;
+
   let pictureData = null;
   if (picture != null) {
     pictureData = Buffer.from(picture, 'base64');
@@ -350,6 +352,8 @@ app.post('/edit_user', async (req, res) => {
         return res.status(401).json({ error: 'Current password invalid!' });
     } 
   }
+
+
     await db.query(query, updateData);
     [existingUser] = await db.query('SELECT * FROM User WHERE user_id = ?', [userid]);
     const token = jwt.sign({ userid : existingUser[0].userid}, jwtSecret, jwtOptions);

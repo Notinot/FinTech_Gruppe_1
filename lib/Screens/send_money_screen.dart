@@ -108,13 +108,25 @@ class _SendMoneyScreenState extends State<SendMoneyScreen> {
               child: ElevatedButton(
                 onPressed: () async {
                   final recipient = recipientController.text;
-                  final amount = double.tryParse(amountController.text
-                          .replaceAll('€', '') // Remove euro sign
-                          .replaceAll('.', '') // Remove periods
-                          .replaceAll(',', '') // Remove commas
-                          .trim()) ??
-                      0.0;
+                  final amount = amountController.text;
+                  print(amount);
                   final message = messageController.text;
+
+                  // Remove euro sign, periods and spaces
+                  final cleanedAmountText = amount
+                      .replaceAll('€', '')
+                      .replaceAll(' ', '')
+                      .replaceAll('.', '');
+
+                  // Replace commas with periods
+                  final normalizedAmountText =
+                      cleanedAmountText.replaceAll(',', '.');
+
+                  // Parse the amount
+                  final parsedAmount =
+                      double.tryParse(normalizedAmountText) ?? 0.0;
+
+                  print(parsedAmount);
 
                   if (recipient.trim().isEmpty) {
                     setState(() {
@@ -128,7 +140,7 @@ class _SendMoneyScreenState extends State<SendMoneyScreen> {
                     });
                   }
 
-                  if (amount <= 0) {
+                  if (parsedAmount <= 0) {
                     setState(() {
                       amountBorderColor = Colors.red;
                     });
@@ -140,7 +152,8 @@ class _SendMoneyScreenState extends State<SendMoneyScreen> {
                     });
                   }
                   // Use the sendMoney method
-                  bool success = await sendMoney(recipient, amount, message);
+                  bool success =
+                      await sendMoney(recipient, parsedAmount, message);
 
                   if (success) {
                     // Clear the input fields after sending money

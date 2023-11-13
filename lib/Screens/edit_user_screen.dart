@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Screens/dashboard_screen.dart';
+import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'login_screen.dart';
 import 'package:http/http.dart' as http;
@@ -127,7 +129,10 @@ class _EditUserState extends State<EditUser> {
     String current_password = currentPasswordController.text;
     String confirmPassword = confirmPasswordController.text;
     bool pw_change = false;
+    bool email_change = false;
     final user_id = widget.user['user_id'];
+    String code = '';
+    late http.Response resp = http.Response('null', 500);
 
     Uint8List? profileImageBytes;
 
@@ -275,80 +280,124 @@ class _EditUserState extends State<EditUser> {
       profileImageBytes =
           Uint8List.fromList(widget.user['picture']['data'].cast<int>());
     }
+
+//##############################################################################
+    bool verificationSuccess = true;
+
+    if (email.isNotEmpty && email != widget.user['email']) {
+      email_change = true;
+      Map<String, dynamic> request;
+      request = {'userid': user_id, 'email': email};
+      resp = await http.post(
+        Uri.parse('http://localhost:3000/edit_user/send_code'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: json.encode(request),
+      );
+
+      try {
+        code = await verify();
+        request = {'userid': user_id, 'verificationCode': code};
+        resp = await http.post(
+          Uri.parse('http://localhost:3000/edit_user/verify'),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: json.encode(request),
+        );
+      } catch (error) {
+        verificationSuccess = false;
+      }
+    }
+//##############################################################################
     print('Picture data: $profileImageBytes');
+
     final Map<String, dynamic> requestBody;
     // Create a JSON payload to send to the API
-    if (profileImageBytes != null) {
-      requestBody = {
-        //'username': username,
-        'email': email,
-        'firstname': firstname,
-        'lastname': lastname,
-        'password': current_password,
-        'new_password': new_password,
-        'userid': user_id,
-        'pw_change': pw_change,
-        'picture': profileImageBytes != null
-            ? base64Encode(
-                profileImageBytes) // Convert to base64-encoded string
-            : null
-      };
-    } else {
-      requestBody = {
-        //'username': username,
-        'email': email,
-        'firstname': firstname,
-        'lastname': lastname,
-        'password': current_password,
-        'new_password': new_password,
-        'userid': user_id,
-        'pw_change': pw_change
-      };
-    }
-    if (pw_change == false) {
-      requestBody.remove('password');
-    }
 
-    print('Picture data: $requestBody');
-    // Make an HTTP POST request to your backend API
-    final response = await http.post(
-      Uri.parse('http://localhost:3000/edit_user'),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: json.encode(requestBody),
-    );
+    if (verificationSuccess || resp.body == 'null') {
+      if (profileImageBytes != null) {
+        requestBody = {
+          //'username': username,
+          'email': email,
+          'old_email': widget.user['email'],
+          'firstname': firstname,
+          'lastname': lastname,
+          'password': current_password,
+          'new_password': new_password,
+          'userid': user_id,
+          'pw_change': pw_change,
+          'email_change': email_change,
+          'code': code,
+          'picture': profileImageBytes != null
+              ? base64Encode(
+                  profileImageBytes) // Convert to base64-encoded string
+              : null
+        };
+      } else {
+        requestBody = {
+          //'username': username,
+          'email': email,
+          'firstname': firstname,
+          'lastname': lastname,
+          'password': current_password,
+          'new_password': new_password,
+          'userid': user_id,
+          'email_change': email_change,
+          'code': code,
+          'pw_change': pw_change
+        };
+      }
+      if (pw_change == false) {
+        requestBody.remove('password');
+      }
 
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> data = json.decode(response.body);
-      final token = data['token'];
-      final userT = data['user'];
+      print('Picture data: $requestBody');
+      // Make an HTTP POST request to your backend API
+      final response = await http.post(
+        Uri.parse('http://localhost:3000/edit_user'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: json.encode(requestBody),
+      );
 
-      const storage = FlutterSecureStorage();
-      await storage.write(key: 'token', value: token);
-      widget.user = userT;
-      showSnackBar(
-          message:
-              ' Profile update successful!  Verification code has been sent to $email ');
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        final token = data['token'];
+        final userT = data['user'];
 
-      Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => EditUser(user: userT)));
-    } else if (response.statusCode == 401) {
-      showSnackBar(isError: true, message: 'Current password is invalid!');
-    } /*else if (response.statusCode == 402) {
+        const storage = FlutterSecureStorage();
+        await storage.write(key: 'token', value: token);
+        widget.user = userT;
+        showSnackBar(
+            message:
+                ' Profile update successful!  Verification code has been sent to $email ');
+
+        Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => EditUser(user: userT)));
+      } else if (response.statusCode == 401) {
+        showSnackBar(isError: true, message: 'Current password is invalid!');
+      } /*else if (response.statusCode == 402) {
       showSnackBar(isError: true, message: 'Username is already taken');
     }*/
-    else if (response.statusCode == 403) {
-      showSnackBar(isError: true, message: 'Email is already in  use');
-    } else if (response.statusCode == 406) {
-      showSnackBar(
-          isError: true,
-          message: 'Your new password cannot be your old password');
-    } else {
-      print(response.statusCode);
-      print(response.body);
-      showSnackBar(isError: true, message: 'Editing profile failed');
-    }
+      else if (response.statusCode == 403) {
+        showSnackBar(isError: true, message: 'Email is already in  use');
+      } else if (response.statusCode == 406) {
+        showSnackBar(
+            isError: true,
+            message: 'Your new password cannot be your old password');
+      } else if (response.statusCode == 409) {
+        showSnackBar(
+            isError: true,
+            message: 'Your entered verification Code is incorrect');
+      } else {
+        print(response.statusCode);
+        print(response.body);
+        showSnackBar(isError: true, message: 'Editing profile failed');
+      }
+    } else {}
   }
 
   void showSnackBar({bool isError = false, required String message}) {
@@ -500,5 +549,53 @@ class _EditUserState extends State<EditUser> {
     setState(() {
       isEditing = !isEditing;
     });
+  }
+
+  Future<String> verify() async {
+    Completer<String> completer = Completer<String>();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Enter verification code'),
+          content: OtpTextField(
+            numberOfFields: 6,
+            borderColor: Color(0xFF512DA8),
+            showFieldAsBox: true,
+            keyboardType: TextInputType.number,
+            focusedBorderColor: Colors.blue,
+            autoFocus: true,
+            onSubmit: (String verificationCode) {
+              if (double.tryParse(verificationCode) == null) {
+                showSnackBar(
+                    isError: true,
+                    message: 'Verification code needs to consist of digits');
+                return;
+              }
+              Navigator.of(context).pop(); // Close the AlertDialog
+              completer.complete(
+                  verificationCode); // Complete the Future with the entered code
+            },
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                completer.completeError(
+                    'User cancelled'); // Complete the Future with an error
+              },
+              child: Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
+
+    try {
+      return await completer.future; // Wait for the Future to complete
+    } catch (error) {
+      return ''; // Handle error or return a default value
+    }
   }
 }

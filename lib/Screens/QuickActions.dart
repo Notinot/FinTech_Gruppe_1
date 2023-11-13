@@ -15,8 +15,7 @@ class QuickActions extends StatelessWidget {
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(
-                  builder: (context) => SendMoneyScreen(user: user)),
+              MaterialPageRoute(builder: (context) => SendMoneyScreen()),
             );
           },
         ),

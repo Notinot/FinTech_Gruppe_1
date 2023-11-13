@@ -237,10 +237,15 @@ class _EditUserState extends State<EditUser> {
     }
 
     if (new_password.isNotEmpty && current_password.isEmpty ||
-        current_password.isEmpty && email.isNotEmpty ||
-        current_password.isEmpty && email.isNotEmpty ||
-        current_password.isEmpty && firstname.isNotEmpty ||
-        current_password.isEmpty && lastname.isNotEmpty) {
+        current_password.isEmpty &&
+            email.isNotEmpty &&
+            email != widget.user['email'] ||
+        current_password.isEmpty &&
+            firstname.isNotEmpty &&
+            firstname != widget.user['first_name'] ||
+        current_password.isEmpty &&
+            lastname.isNotEmpty &&
+            lastname != widget.user['last_name']) {
       setState(() {
         currentPasswordError =
             'You have to enter your current password to make any changes!';

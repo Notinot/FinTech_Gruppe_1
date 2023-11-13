@@ -14,10 +14,8 @@ class ForgotPasswordScreen extends StatefulWidget {
 }
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
-
   final TextEditingController emailController = TextEditingController();
   String? emailError;
-
 
   void showSnackBar({bool isError = false, required String message}) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -37,21 +35,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   Future<bool> checkUserActiveStatus(String email) async {
     final response = await http.post(
-
       Uri.parse('http://localhost:3000/check-active'), // Use the correct route
       headers: {'Content-Type': 'application/json'},
       body: json.encode({'email': email}),
     );
 
     if (response.statusCode == 200) {
-
       return true;
     } else {
-
       return false;
     }
   }
-
 
   bool EmailValid(String email) {
     // Validate the email format using a regular expression
@@ -62,53 +56,40 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
 
   void handleForgotPassword() async {
-
     final String email = emailController.text;
 
-    if(email.trim().isEmpty){
-
+    if (email.trim().isEmpty) {
       setState(() {
         emailError = 'Email cannot be empty';
       });
     }
 
-    if(!EmailValid(email)){
-
+    if (!EmailValid(email)) {
       setState(() {
         emailError = 'Invalid email format';
       });
     }
 
     final Map<String, String> requestBody;
-    requestBody = {
-      'email': email
-    };
-
+    requestBody = {'email': email};
 
     final response = await http.post(
         Uri.parse('http://localhost:3000/forgotpassword'),
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: json.encode(requestBody)
-    );
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(requestBody));
 
     if (response.statusCode == 200) {
-
       clearErrors();
 
       final Map<String, dynamic> data = json.decode(response.body);
 
-      showSnackBar(
-            message:
-            '  Verification code has been send to $email ');
+      showSnackBar(message: '  Verification code has been send to $email ');
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => ChangePasswordScreen(email: email)),
+        MaterialPageRoute(
+            builder: (context) => ChangePasswordScreen(email: email)),
       );
-    }
-    else{
-
+    } else {
       setState(() {
         emailError = 'This Email does not exist';
       });
@@ -129,17 +110,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Text(
-                ('Confirming your identity'),
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold
-                ),
+              ('Confirming your identity'),
+              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16.0),
             Text(
               ('You will receive an verification code'),
               style: TextStyle(
-                  fontSize: 18,
+                fontSize: 18,
               ),
             ),
             const SizedBox(height: 32.0),
@@ -157,8 +135,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               onPressed: handleForgotPassword,
               style: ElevatedButton.styleFrom(
                 primary: Colors.blue, // Button background color
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 40, vertical: 16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
               ),
               child: const Text(
                 'Send',
@@ -173,8 +151,4 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       ),
     );
   }
-
 }
-
-
-

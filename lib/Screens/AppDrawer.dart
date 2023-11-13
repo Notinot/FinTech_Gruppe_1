@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/Screens/FriendsScreen.dart';
 import 'package:flutter_application_1/Screens/edit_user_screen.dart';
 import 'package:flutter_application_1/Screens/login_screen.dart';
 import 'transaction_history_screen.dart';
@@ -38,7 +39,7 @@ class AppDrawer extends StatelessWidget {
           ),
           ListTile(
             leading: const Icon(Icons.attach_money),
-            title: const Text('Money Transfer'),
+            title: const Text('Transaction History'),
             onTap: () {
               // Navigate to the money transfer section
               // Implement the navigation as needed
@@ -64,11 +65,15 @@ class AppDrawer extends StatelessWidget {
             },
           ),
           ListTile(
-            leading: const Icon(Icons.group),
-            title: const Text('Groups'),
+            leading: const Icon(Icons.groups_rounded),
+            title: const Text('Friends'),
             onTap: () {
-              // Navigate to the groups section
-              // Implement the navigation as needed
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => FriendsScreen(user: user)),
+                //builder: (context) => FriendsScreen()),
+              );
             },
           ),
           ListTile(
@@ -81,14 +86,7 @@ class AppDrawer extends StatelessWidget {
               );
             },
           ),
-          ListTile(
-            leading: const Icon(Icons.settings),
-            title: const Text('Settings'),
-            onTap: () {
-              // Navigate to the settings section
-              // Implement the navigation as needed
-            },
-          ),
+
           const Divider(), // Add a divider to separate the top items from the bottom items
           ListTile(
             leading: const Icon(Icons.exit_to_app),

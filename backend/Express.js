@@ -224,6 +224,42 @@ app.get('/user/profile', authenticateToken, async (req, res) => {
   }
 });
 
+//get friends of specific user
+app.get('/friends/:user_id', async(req, res) => {
+  const user_id = req.params.user_id;  
+const query =
+`SELECT
+CASE
+    WHEN f.requester_id = ? THEN u_addressee.username
+    WHEN f.addressee_id = ? THEN u_requester.username
+END AS friend_username,
+CASE
+    WHEN f.requester_id = ? THEN u_addressee.first_name
+    WHEN f.addressee_id = ? THEN u_requester.first_name
+END AS friend_first_name,
+CASE
+    WHEN f.requester_id = ? THEN u_addressee.last_name
+    WHEN f.addressee_id = ? THEN u_requester.last_name
+END AS friend_last_name,
+CASE
+    WHEN f.requester_id = ? THEN u_addressee.picture
+    WHEN f.addressee_id = ? THEN u_requester.picture
+END AS friend_picture
+FROM
+Friendship f
+JOIN
+User u_requester ON f.requester_id = u_requester.user_id
+JOIN
+User u_addressee ON f.addressee_id = u_addressee.user_id
+WHERE
+f.status = 'accepted'
+AND (f.requester_id = ? OR f.addressee_id = ?);
+`;
+const [friends] = await db.query(query, [user_id, user_id, user_id, user_id, user_id, user_id, user_id, user_id,user_id, user_id]);
+  res.json({friends}); //Example of JSON: {friends: [{friend_username: user1, friend_first_name: Hund, friend_last_name: ert}]}
+});
+
+
 
 app.post('/verify', async (req, res) => {
   const { email, verificationCode } = req.body;
@@ -409,6 +445,94 @@ server = app.listen(port, () => {
     });
   });
 });
+app.use(authenticateToken);
+//Route for send money process
+app.post('/send-money', async (req, res) => {
+  const { recipient, amount, message } = req.body;
+
+  try {
+    // Validate input
+    if (!recipient || !amount || amount <= 0) {
+      return res.status(400).json({ message: 'Invalid input' });
+    }
+
+    // Fetch sender ID based on the authenticated user
+    const senderId = req.user.userId;
+
+    // Fetch recipient ID based on the recipient username or email
+    const [recipientData] = await db.query('SELECT user_id FROM User WHERE username = ? OR email = ?', [recipient]);
+
+    if (recipientData.length === 0) {
+      return res.status(404).json({ message: 'Recipient not found' });
+    }
+
+    const recipientId = recipientData[0].user_id;
+
+    // Insert transaction with message
+    await db.query('INSERT INTO Transaction (sender_id, receiver_id, amount, transaction_type, created_at, message) VALUES (?, ?, ?, ?, NOW(), ?)', [
+      senderId,
+      recipientId,
+      amount,
+      'Payment',
+      message,
+    ]);
+
+    // Update sender and recipient balances
+    const senderBalance = await getBalance(senderId);
+
+
+    if (senderBalance < amount) {
+      return res.status(400).json({ message: 'Insufficient funds' });
+    }
+    const recipientBalance = await getBalance(recipientId);
+
+    // Update balances in the database
+    await updateBalance(senderId, -amount);
+    await updateBalance(recipientId, +amount);
+
+    res.json({ message: 'Money transfer successful' });
+  } catch (error) {
+    console.error('Error transferring money:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Function to update user balance
+async function updateBalance(userId, amount) {
+  try {
+    // Fetch the existing balance
+    const [userData] = await db.query('SELECT balance FROM User WHERE user_id = ?', [userId]);
+    const currentBalance = parseFloat(userData[0].balance);
+
+    // Update the balance
+    const newBalance = currentBalance + amount;
+    await db.query('UPDATE User SET balance = ? WHERE user_id = ?', [newBalance, userId]);
+
+    return true; // Successfully updated balance
+  } catch (error) {
+    console.error('Error updating balance:', error);
+    return false; // Failed to update balance
+  }
+}
+
+// Function to get user balance
+async function getBalance(userId) {
+  try {
+    // Fetch the user's balance
+    const [userData] = await db.query('SELECT balance FROM User WHERE user_id = ?', [userId]);
+    const balance = parseFloat(userData[0].balance);
+
+    return balance;
+  } catch (error) {
+    console.error('Error fetching balance:', error);
+    return 0; // Return 0 in case of an error
+  }
+}
+
+
+
+
+
 
 // Middleware to authenticate the user token
 function authenticateToken(req, res, next) {

@@ -224,6 +224,42 @@ app.get('/user/profile', authenticateToken, async (req, res) => {
   }
 });
 
+//get friends of specific user
+app.get('/friends/:user_id', async(req, res) => {
+  const user_id = req.params.user_id;  
+const query =
+`SELECT
+CASE
+    WHEN f.requester_id = ? THEN u_addressee.username
+    WHEN f.addressee_id = ? THEN u_requester.username
+END AS friend_username,
+CASE
+    WHEN f.requester_id = ? THEN u_addressee.first_name
+    WHEN f.addressee_id = ? THEN u_requester.first_name
+END AS friend_first_name,
+CASE
+    WHEN f.requester_id = ? THEN u_addressee.last_name
+    WHEN f.addressee_id = ? THEN u_requester.last_name
+END AS friend_last_name,
+CASE
+    WHEN f.requester_id = ? THEN u_addressee.picture
+    WHEN f.addressee_id = ? THEN u_requester.picture
+END AS friend_picture
+FROM
+Friendship f
+JOIN
+User u_requester ON f.requester_id = u_requester.user_id
+JOIN
+User u_addressee ON f.addressee_id = u_addressee.user_id
+WHERE
+f.status = 'accepted'
+AND (f.requester_id = ? OR f.addressee_id = ?);
+`;
+const [friends] = await db.query(query, [user_id, user_id, user_id, user_id, user_id, user_id, user_id, user_id,user_id, user_id]);
+  res.json({friends}); //Example of JSON: {friends: [{friend_username: user1, friend_first_name: Hund, friend_last_name: ert}]}
+});
+
+
 
 app.post('/verify', async (req, res) => {
   const { email, verificationCode } = req.body;

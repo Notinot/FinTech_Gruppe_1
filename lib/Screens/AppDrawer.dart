@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/Screens/FriendsScreen.dart';
 import 'package:flutter_application_1/Screens/edit_user_screen.dart';
 import 'package:flutter_application_1/Screens/login_screen.dart';
 import 'transaction_history_screen.dart';
@@ -61,6 +62,18 @@ class AppDrawer extends StatelessWidget {
             onTap: () {
               // Navigate to the events section
               // Implement the navigation as needed
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.groups_rounded),
+            title: const Text('Friends'),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => FriendsScreen(user: user)),
+                //builder: (context) => FriendsScreen()),
+              );
             },
           ),
           ListTile(

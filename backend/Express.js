@@ -254,9 +254,9 @@ app.post('/delete_user', async (req, res) => {
 
 //editing user
 app.post('/edit_user', async (req, res) => {
-  const { email, firstname, lastname, password,new_password, userid,pw_change,picture } = req.body;
+  const { email, firstname, lastname, password,new_password, userid,pw_change,email_change,picture,old_email,code } = req.body;
 
-  emailChange = false;
+
 
   let pictureData = null;
   if (picture != null) {
@@ -270,6 +270,11 @@ app.post('/edit_user', async (req, res) => {
   if (existingUser.length === 0) {
     return res.status(404).json({ message: 'User not found' });
   }
+
+  const [currentInfo] = await db.query(
+    'SELECT * FROM User WHERE email = ?',
+    [old_email]
+  );
 
   
 
@@ -290,7 +295,7 @@ app.post('/edit_user', async (req, res) => {
   }
 
   
-  const samePassword = await bcrypt.compare(new_password + existingInfo[0].salt, existingInfo[0].password_hash);
+  const samePassword = await bcrypt.compare(new_password + currentInfo[0].salt, currentInfo[0].password_hash);
   if (samePassword) {
     return res.status(406).json({ message: 'Your new password cannot be your old password' });
   }
@@ -298,12 +303,18 @@ app.post('/edit_user', async (req, res) => {
   console.log(new_password)
   console.log(samePassword)
 
+  if(email_change === true){
+  
+} 
+
+  if((email_change === true && code == currentInfo[0].verification_code) || email_change === false){
+
   try {
     updateData = [email, firstname, lastname,pictureData,userid];
     query = 'UPDATE User SET email=?, first_name=?, last_name=?, picture=? WHERE user_id = ? ';
 
     if(pw_change == true){
-      const passwordMatch = await bcrypt.compare(password + existingInfo[0].salt, existingInfo[0].password_hash);
+      const passwordMatch = await bcrypt.compare(password + currentInfo[0].salt, currentInfo[0].password_hash);
       if (passwordMatch) {
         const salt = generateSalt();
      const passwordHash = await bcrypt.hash(new_password + salt, 10);
@@ -329,7 +340,42 @@ app.post('/edit_user', async (req, res) => {
     res.status(500).json({ message: 'Internal server error',error: error.message });
     console.log('Received data:', req.body);
   }
+}
+else{ res.status(409).json({ error: 'Your entered verification Code is incorrect'});
+console.log('Received data:', req.body);}
 });
+
+//verifiy user's email change
+app.post('/edit_user/verify', async (req, res) => {
+  const { userid, verificationCode } = req.body;
+  console.log('Received userid:', userid);
+  console.log('Received verificationCode:', verificationCode);
+  
+  
+  const [code] = await db.query('SELECT verification_code FROM User WHERE user_id = ?', [userid]);
+console.log("needed input:",code[0].verification_code);
+
+  if(code[0].verification_code === verificationCode.trim()){
+    res.json({ message: 'Verification succeeded' });
+  }
+  else{
+    res.status(411).json({ message: 'Wrong verification code' })
+  }
+}
+);
+
+//send and set verificationcode in edit user
+app.post('/edit_user/send_code', async (req, res) => {
+  const {userid,email} = req.body;
+   code = Math.floor(100000 + Math.random() * 900000).toString();
+   query = 'UPDATE User SET verification_code = ? WHERE user_id = ? ';
+   updateData = [code,userid];
+   await db.query(query, updateData);
+   sendVerificationEmail(email,code);
+   console.log(code);
+   res.json({ message: 'Email sent' });
+  }
+   );
 
 // Route to check the user's active status
 app.post('/check-active', async (req, res) => {

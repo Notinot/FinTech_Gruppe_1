@@ -7,14 +7,15 @@ const app = express();
 const port = 3000;
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
-
-// Generate a random secret key for JWT
-const jwtSecret = crypto.randomBytes(64).toString('hex');
+const authenticateToken = require('./authenticateToken');
+const config = require('./config');
+const jwtSecret = config.jwtSecret;
 const jwtOptions = {
-  expiresIn: '1h', // Token expiration time
+  expiresIn: '5h', // Token expiration time
 };
 
 app.use(express.json());
+// Middleware to extract and verify JWT
 
 // Enable CORS to allow requests from any origin and restrict to POST requests
 app.use(cors({
@@ -191,7 +192,9 @@ app.post('/login', async (req, res) => {
 
   if (passwordMatch) {
     // Issue a JSON Web Token (JWT) upon successful login
-    const token = jwt.sign({ userId: user[0].id }, jwtSecret, jwtOptions);
+    const token = jwt.sign({ userId: user[0].user_id}, jwtSecret, jwtOptions);
+    console.log('User object:', user);
+    console.log('User ID:', user[0].user_id);
 
     // Fetch and include the user's data in the response
     const userData = user[0];
@@ -207,7 +210,7 @@ app.post('/login', async (req, res) => {
 app.get('/user/profile', authenticateToken, async (req, res) => {
   try {
     // Get the user ID from the authenticated token
-    const userId = req.user.userId;
+    const userId = req.user.user_Id;
 
     // Fetch the user's profile data from the database based on the user ID
     const [userData] = await db.query('SELECT * FROM User WHERE id = ?', [userId]);
@@ -367,6 +370,8 @@ app.post('/edit_user', async (req, res) => {
   }
 });
 
+
+
 // Route to check the user's active status
 app.post('/check-active', async (req, res) => {
   const { email } = req.body;
@@ -384,37 +389,22 @@ app.post('/check-active', async (req, res) => {
 });
 
 
-// Route for health check
-app.get('/health', (req, res) => {
-  res.sendStatus(200); // Send a 200 OK response when the server is healthy
-});
-
-// Start the server and handle graceful shutdown on SIGINT signal
-server = app.listen(port, () => {
-  process.on('SIGINT', () => {
-    console.log('Shutting down the server...');
-    server.close(() => {
-      console.log('Server has been shut down.');
-      process.exit(0); // Exit the process gracefully
-    });
-  });
-});
-app.use(authenticateToken);
-//Route for send money process
-app.post('/send-money', async (req, res) => {
-  const { recipient, amount, message } = req.body;
-
+// Route for sending money with JWT authentication
+app.post('/send-money', authenticateToken, async (req, res) => {
   try {
+    // Extract the authenticated user ID from the request
+    const senderId = req.user.userId;
+    console.log('senderId:', senderId);
+    // Extract other information from the request body
+    const { recipient, amount, message } = req.body;
+
     // Validate input
     if (!recipient || !amount || amount <= 0) {
       return res.status(400).json({ message: 'Invalid input' });
     }
 
-    // Fetch sender ID based on the authenticated user
-    const senderId = req.user.userId;
-
     // Fetch recipient ID based on the recipient username or email
-    const [recipientData] = await db.query('SELECT user_id FROM User WHERE username = ? OR email = ?', [recipient]);
+    const [recipientData] = await db.query('SELECT user_id FROM User WHERE username = ? OR email = ?', [recipient, recipient]);
 
     if (recipientData.length === 0) {
       return res.status(404).json({ message: 'Recipient not found' });
@@ -434,10 +424,10 @@ app.post('/send-money', async (req, res) => {
     // Update sender and recipient balances
     const senderBalance = await getBalance(senderId);
 
-
     if (senderBalance < amount) {
       return res.status(400).json({ message: 'Insufficient funds' });
     }
+
     const recipientBalance = await getBalance(recipientId);
 
     // Update balances in the database
@@ -451,60 +441,28 @@ app.post('/send-money', async (req, res) => {
   }
 });
 
-// Function to update user balance
-async function updateBalance(userId, amount) {
-  try {
-    // Fetch the existing balance
-    const [userData] = await db.query('SELECT balance FROM User WHERE user_id = ?', [userId]);
-    const currentBalance = parseFloat(userData[0].balance);
-
-    // Update the balance
-    const newBalance = currentBalance + amount;
-    await db.query('UPDATE User SET balance = ? WHERE user_id = ?', [newBalance, userId]);
-
-    return true; // Successfully updated balance
-  } catch (error) {
-    console.error('Error updating balance:', error);
-    return false; // Failed to update balance
-  }
-}
-
-// Function to get user balance
-async function getBalance(userId) {
-  try {
-    // Fetch the user's balance
-    const [userData] = await db.query('SELECT balance FROM User WHERE user_id = ?', [userId]);
-    const balance = parseFloat(userData[0].balance);
-
-    return balance;
-  } catch (error) {
-    console.error('Error fetching balance:', error);
-    return 0; // Return 0 in case of an error
-  }
-}
+// Route for health check
+app.get('/health', (req, res) => {
+  res.sendStatus(200); // Send a 200 OK response when the server is healthy
+});
 
 
-
-
-
-
-// Middleware to authenticate the user token
-function authenticateToken(req, res, next) {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-
-  if (!token) {
-    return res.status(401).json({ message: 'Unauthorized' });
-  }
-
-  jwt.verify(token, jwtSecret, (err, user) => {
-    if (err) {
-      return res.status(403).json({ message: 'Forbidden' });
-    }
-    req.user = user;
-    next();
+// Start the server and handle graceful shutdown on SIGINT signal
+server = app.listen(port, () => {
+  process.on('SIGINT', () => {
+    console.log('Shutting down the server...');
+    server.close(() => {
+      console.log('Server has been shut down.');
+      process.exit(0); // Exit the process gracefully
+    });
   });
-}
+});
+
+
+
+
+
+
 
 // Import the required nodemailer library
 const nodemailer = require('nodemailer');
@@ -603,3 +561,45 @@ function sendVerificationEmail(to, code) {
     }
   });
 }
+
+// Function to update user balance
+async function updateBalance(userId, amount) {
+  try {
+    // Fetch the existing balance
+    const [userData] = await db.query('SELECT balance FROM User WHERE user_id = ?', [userId]);
+    const currentBalance = parseFloat(userData[0].balance);
+
+    // Update the balance
+    const newBalance = currentBalance + amount;
+    await db.query('UPDATE User SET balance = ? WHERE user_id = ?', [newBalance, userId]);
+
+    return true; // Successfully updated balance
+  } catch (error) {
+    console.error('Error updating balance:', error);
+    return false; // Failed to update balance
+  }
+}
+// Function to get user balance
+async function getBalance(userId) {
+  try {
+    // Fetch the user's balance
+    const [userData] = await db.query('SELECT balance FROM User WHERE user_id = ?', [userId]);
+    console.log('getBalance:');
+    console.log('userId:', userId);
+    console.log('userData:', userData);
+
+    if (userData.length === 0) {
+      console.log('User not found');
+      return 0; // Return 0 if user not found
+    }
+
+    const balance = parseFloat(userData[0].balance);
+
+    return balance;
+  } catch (error) {
+    console.error('Error fetching balance:', error);
+    return 0; // Return 0 in case of an error
+  }
+}
+
+

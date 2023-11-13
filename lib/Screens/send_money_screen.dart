@@ -1,9 +1,13 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
 
 class SendMoneyScreen extends StatefulWidget {
-  SendMoneyScreen({super.key});
-
+  Map<String, dynamic> user;
+  SendMoneyScreen({Key? key, required this.user}) : super(key: key);
   @override
   _SendMoneyScreenState createState() => _SendMoneyScreenState();
 }
@@ -101,7 +105,7 @@ class _SendMoneyScreenState extends State<SendMoneyScreen> {
             const SizedBox(height: 24),
             Center(
               child: ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
                   final recipient = recipientController.text;
                   final amount = double.tryParse(amountController.text
                           .replaceAll('€', '') // Remove euro sign
@@ -116,6 +120,7 @@ class _SendMoneyScreenState extends State<SendMoneyScreen> {
                       recipientBorderColor = Colors.red;
                     });
                     showErrorSnackBar(context, 'Recipient cannot be empty');
+                    return;
                   } else {
                     setState(() {
                       recipientBorderColor = Colors.grey;
@@ -127,42 +132,76 @@ class _SendMoneyScreenState extends State<SendMoneyScreen> {
                       amountBorderColor = Colors.red;
                     });
                     showErrorSnackBar(context, 'Enter a valid amount');
+                    return;
                   } else {
                     setState(() {
                       amountBorderColor = Colors.grey;
                     });
                   }
+                  // Use the sendMoney method
+                  bool success = await sendMoney(recipient, amount, message);
 
-                  if (recipient.trim().isEmpty || amount <= 0) {
-                    return;
+                  if (success) {
+                    // Clear the input fields after sending money
+                    recipientController.clear();
+                    amountController.clear();
+                    messageController.clear();
+
+                    // Show success snackbar
+                    showSuccessSnackBar(
+                        context, 'Money sent successfully to $recipient');
+                  } else {
+                    // Show error snackbar
+                    showErrorSnackBar(context, 'Failed to send money');
                   }
-
-                  // Implement the logic to send money
-                  // Once money is sent, show a success message
-                  showSuccessSnackBar(
-                      context, 'Money sent successfully to $recipient');
-
-                  // Clear the input fields after sending money
-                  recipientController.clear();
-                  amountController.clear();
-                  messageController.clear();
                 },
-                style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  backgroundColor: Colors.blue, // Text color
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                ),
-                child: const Text(
-                  'Send Money',
-                  style: TextStyle(fontSize: 16),
-                ),
+                child: Text('Send Money'), // Add this line
               ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  Future<bool> sendMoney(
+      String recipient, double amount, String message) async {
+    try {
+      // Retrieve the JWT token from secure storage
+      final storage = FlutterSecureStorage();
+      final String? jwtToken = await storage.read(key: 'token');
+
+      if (jwtToken == null) {
+        print('JWT token not found.');
+        return false;
+      }
+
+      final response = await http.post(
+        Uri.parse('http://localhost:3000/send-money'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $jwtToken',
+        },
+        body: json.encode({
+          'recipient': recipient,
+          'amount': amount,
+          'message': message,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        // Money sent successfully
+        return true;
+      } else {
+        // Money transfer failed, handle accordingly
+        print('Error sending money: ${response.body}');
+        return false;
+      }
+    } catch (e) {
+      // Exception occurred, handle accordingly
+      print('Error sending money: $e');
+      return false;
+    }
   }
 
   void showErrorSnackBar(BuildContext context, String message) {

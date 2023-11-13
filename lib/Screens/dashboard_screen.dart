@@ -38,9 +38,9 @@ class DashboardScreen extends StatelessWidget {
               // Display user's account summary
               AccountSummary(balance),
               // Provide quick access actions
-              const QuickActions(),
+              QuickActions(user: user),
               // Show user notifications
-              const Notifications(),
+              Notifications(),
               // Display upcoming events
               UpcomingEvents(events: upcomingEvents),
             ],

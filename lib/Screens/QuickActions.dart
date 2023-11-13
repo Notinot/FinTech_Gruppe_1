@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Screens/send_money_screen.dart';
 
 class QuickActions extends StatelessWidget {
-  const QuickActions({super.key});
-
+  final Map<String, dynamic> user;
+  const QuickActions({super.key, required this.user});
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -15,7 +15,8 @@ class QuickActions extends StatelessWidget {
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => SendMoneyScreen()),
+              MaterialPageRoute(
+                  builder: (context) => SendMoneyScreen(user: user)),
             );
           },
         ),
@@ -44,7 +45,10 @@ class QuickActionButton extends StatelessWidget {
   final Function onTap;
 
   const QuickActionButton(
-      {super.key, required this.icon, required this.label, required this.onTap});
+      {super.key,
+      required this.icon,
+      required this.label,
+      required this.onTap});
 
   @override
   Widget build(BuildContext context) {

@@ -442,6 +442,23 @@ app.post('/send-money', authenticateToken, async (req, res) => {
   }
 });
 
+// Route to fetch transactions with JWT authentication
+app.get('/transactions', authenticateToken, async (req, res) => {
+  try {
+    // Get the user ID from the authenticated token
+    const userId = req.user.userId;
+    console.log('userId:', userId);
+    // Fetch the user's transaction history from the database based on the user ID
+    const transactions = await db.query('SELECT * FROM Transaction WHERE sender_id = ? OR receiver_id = ?', [userId, userId]);
+    console.log('transactions:', transactions);
+    // Send the user's transaction history as the response
+    res.json(transactions);
+  } catch (error) {
+    console.error('Error fetching transactions:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 // Route for health check
 app.get('/health', (req, res) => {
   res.sendStatus(200); // Send a 200 OK response when the server is healthy

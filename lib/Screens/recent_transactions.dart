@@ -50,5 +50,9 @@ class Transaction {
   final String name;
   final double amount;
 
-  Transaction({required this.type, required this.name, required this.amount});
+  Transaction(
+      {required this.type,
+      required this.name,
+      required this.amount,
+      required DateTime date});
 }

@@ -8,6 +8,7 @@ class TransactionHistoryScreen extends StatefulWidget {
   const TransactionHistoryScreen({Key? key}) : super(key: key);
 
   @override
+  // ignore: library_private_types_in_public_api
   _TransactionHistoryScreenState createState() =>
       _TransactionHistoryScreenState();
 }
@@ -24,7 +25,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
   Future<List<Transaction>> fetchTransactions() async {
     try {
       // Retrieve the token from secure storage
-      final storage = FlutterSecureStorage();
+      const storage = FlutterSecureStorage();
       final token = await storage.read(key: 'token');
 
       if (token == null) {
@@ -56,9 +57,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
             'Error fetching transactions. Status Code: ${response.statusCode}');
       }
     } catch (error) {
-      print('Error fetching transactions: $error');
-      // Handle error
-      throw error;
+      rethrow;
     }
   }
 
@@ -73,13 +72,13 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             // If the Future is still running, show a loading indicator
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
             // If the Future throws an error, display the error message
             return Center(child: Text('Error: ${snapshot.error}'));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
             // If the Future completes successfully but with no data, show a message
-            return Center(child: Text('No transactions found.'));
+            return const Center(child: Text('No transactions found.'));
           } else {
             // If the Future completes successfully with data, display the list
             List<Transaction> transactions = snapshot.data!;
@@ -98,8 +97,8 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
 
 class Transaction {
   int transactionId;
-  int senderId;
-  int receiverId;
+  String senderUsername;
+  String receiverUsername;
   double amount;
   String transactionType;
   DateTime createdAt;
@@ -107,8 +106,8 @@ class Transaction {
 
   Transaction({
     required this.transactionId,
-    required this.senderId,
-    required this.receiverId,
+    required this.senderUsername,
+    required this.receiverUsername,
     required this.amount,
     required this.transactionType,
     required this.createdAt,
@@ -118,8 +117,8 @@ class Transaction {
   factory Transaction.fromJson(Map<String, dynamic> json) {
     return Transaction(
       transactionId: json['transaction_id'],
-      senderId: json['sender_id'],
-      receiverId: json['receiver_id'],
+      senderUsername: json['sender_username'],
+      receiverUsername: json['receiver_username'],
       amount: double.parse(json['amount'].toString()),
       transactionType: json['transaction_type'],
       createdAt: DateTime.parse(json['created_at']),
@@ -142,25 +141,91 @@ class TransactionItem extends StatelessWidget {
       leading: Icon(
         transaction.transactionType == 'Payment'
             ? Icons.payment
-            : Icons.attach_money,
+            : Icons.money_off,
         color: transaction.transactionType == 'Payment'
             ? Colors.red
             : Colors.green,
       ),
-      title: Text(transaction.transactionType),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Amount: \$${transaction.amount.toStringAsFixed(2)}',
-          ),
-          if (transaction.message.isNotEmpty)
-            Text('Message: ${transaction.message}'),
-        ],
+      title: Text('${transaction.transactionType} Transaction'),
+      subtitle: Text(
+        'Amount: \€${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}',
       ),
       trailing: Text(
         DateFormat('dd/MM/yyyy').format(transaction.createdAt),
         style: const TextStyle(fontSize: 12),
+      ),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+                TransactionDetailScreen(transaction: transaction),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class TransactionDetailScreen extends StatelessWidget {
+  final Transaction transaction;
+
+  const TransactionDetailScreen({Key? key, required this.transaction})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Transaction Details'),
+        backgroundColor: Colors.blue,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Card(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15.0),
+          ),
+          elevation: 5,
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('From  : ${transaction.senderUsername}',
+                    style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue)),
+                SizedBox(height: 10),
+                Text('To    : ${transaction.receiverUsername}',
+                    style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue)),
+                SizedBox(height: 10),
+                Text(
+                    'Amount : \€${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}',
+                    style: TextStyle(fontSize: 20)),
+                SizedBox(height: 10),
+                Text('Type  : ${transaction.transactionType}',
+                    style: TextStyle(fontSize: 20)),
+                SizedBox(height: 10),
+                Text(
+                    'Date   : ${DateFormat('dd/MM/yyyy').format(transaction.createdAt)}',
+                    style: TextStyle(fontSize: 20)),
+                SizedBox(height: 10),
+                Text(
+                    'Time: ${DateFormat('HH:mm:ss').format(transaction.createdAt)}',
+                    style: TextStyle(fontSize: 20)),
+                SizedBox(height: 10),
+                if (transaction.message.isNotEmpty)
+                  Text('Message: ${transaction.message}',
+                      style: TextStyle(fontSize: 20)),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

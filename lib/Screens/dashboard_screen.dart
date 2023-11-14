@@ -8,6 +8,7 @@ import 'user_profile_section.dart';
 import 'Notifications.dart';
 import 'QuickActions.dart';
 import 'AppDrawer.dart';
+import 'api_service.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -16,7 +17,7 @@ class DashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return FutureBuilder<Map<String, dynamic>>(
       // Fetch user profile data here
-      future: fetchUserProfile(),
+      future: ApiService.fetchUserProfile(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           // Show loading indicator while fetching data
@@ -63,33 +64,6 @@ class DashboardScreen extends StatelessWidget {
         }
       },
     );
-  }
-
-  Future<Map<String, dynamic>> fetchUserProfile() async {
-    // Retrieve the token from secure storage
-    const storage = FlutterSecureStorage();
-    final token = await storage.read(key: 'token');
-    print(token);
-
-    if (token == null) {
-      // Handle the case where the token is not available
-      throw Exception('Token not found');
-    }
-    final response = await http.get(
-      Uri.parse('http://localhost:3000/user/profile'),
-      headers: {
-        'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': 'Bearer $token',
-      },
-    );
-    print(response);
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> data = json.decode(response.body);
-      return data['user'];
-    } else {
-      // Handle error
-      throw Exception('Failed to load user profile');
-    }
   }
 }
 

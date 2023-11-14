@@ -448,9 +448,25 @@ app.get('/transactions', authenticateToken, async (req, res) => {
     // Get the user ID from the authenticated token
     const userId = req.user.userId;
     console.log('userId:', userId);
+
     // Fetch the user's transaction history from the database based on the user ID
-    const transactions = await db.query('SELECT * FROM Transaction WHERE sender_id = ? OR receiver_id = ?', [userId, userId]);
+    const transactions = await db.query(`
+      SELECT 
+        Transaction.*, 
+        sender.username AS sender_username, 
+        receiver.username AS receiver_username 
+      FROM 
+        Transaction 
+      LEFT JOIN 
+        User AS sender ON Transaction.sender_id = sender.user_id 
+      LEFT JOIN 
+        User AS receiver ON Transaction.receiver_id = receiver.user_id 
+      WHERE 
+        sender_id = ? OR receiver_id = ?
+    `, [userId, userId]);
+
     console.log('transactions:', transactions);
+
     // Send the user's transaction history as the response
     res.json(transactions);
   } catch (error) {
@@ -458,6 +474,7 @@ app.get('/transactions', authenticateToken, async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 });
+
 
 // Route for health check
 app.get('/health', (req, res) => {

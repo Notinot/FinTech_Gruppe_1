@@ -23,7 +23,7 @@ function authenticateToken(req, res, next) {
     }
     // Set the user ID in the request object
     req.user = { userId: decoded.userId }; // Fix the property name
-    console.log('User: ', req.user); // Log the user information
+    console.log('Token Authenticated - User: ', req.user); // Log the user information
     next();
   });
 }

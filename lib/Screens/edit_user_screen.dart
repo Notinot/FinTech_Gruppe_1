@@ -424,7 +424,7 @@ class _EditUserState extends State<EditUser> {
           icon: Icon(Icons.arrow_back),
           onPressed: () {
             Navigator.of(context).pushReplacement(MaterialPageRoute(
-                builder: (context) => DashboardScreen(user: widget.user)));
+                builder: (context) => const DashboardScreen()));
           },
         ),
       ),

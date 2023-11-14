@@ -80,15 +80,16 @@ class _LoginScreenState extends State<LoginScreen> {
     if (response.statusCode == 200) {
       final Map<String, dynamic> data = json.decode(response.body);
       final token = data['token'];
-      final user = data['user'];
 
+      // Save the token securely
       const storage = FlutterSecureStorage();
       await storage.write(key: 'token', value: token);
 
+      // Navigate to the dashboard with the obtained token
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => DashboardScreen(user: user),
+          builder: (context) => DashboardScreen(),
         ),
       );
     } else {

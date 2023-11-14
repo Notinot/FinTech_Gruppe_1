@@ -199,7 +199,7 @@ app.post('/login', async (req, res) => {
     // Fetch and include the user's data in the response
     const userData = user[0];
 
-    res.json({ message: 'Login successful', token, user: userData });
+    res.json({ message: 'Login successful', token});
   } else {
     res.status(401).json({ message: 'Invalid email or password' });
   }
@@ -209,16 +209,17 @@ app.post('/login', async (req, res) => {
 // Route to fetch user profile with JWT authentication
 app.get('/user/profile', authenticateToken, async (req, res) => {
   try {
+    console.log('Token:', req.headers['authorization']);
     // Get the user ID from the authenticated token
-    const userId = req.user.user_Id;
-
+    const userId = req.user.userId;
+    console.log('userId:', userId);
     // Fetch the user's profile data from the database based on the user ID
-    const [userData] = await db.query('SELECT * FROM User WHERE id = ?', [userId]);
+    const [userData] = await db.query('SELECT * FROM User WHERE user_id = ?', [userId]);
 
     if (userData.length === 0) {
       return res.status(404).json({ message: 'User not found' });
     }
-
+    console.log('/user/profile userData:', userData);
     // Send the user's profile data as the response
     res.json({ user: userData[0] });
   } catch (error) {

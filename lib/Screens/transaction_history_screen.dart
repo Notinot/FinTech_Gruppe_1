@@ -149,9 +149,10 @@ class TransactionItem extends StatelessWidget {
             ? Colors.red
             : Colors.green,
       ),
-      title: Text('${transaction.transactionType} Transaction'),
+      title: Text(
+          '${transaction.transactionType} to ${transaction.receiverUsername}'),
       subtitle: Text(
-        'Amount: \€${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}',
+        '\€${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}',
       ),
       trailing: Text(
         DateFormat('dd/MM/yyyy').format(transaction.createdAt),
@@ -195,36 +196,51 @@ class TransactionDetailScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('From  : ${transaction.senderUsername}',
-                    style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue)),
-                SizedBox(height: 10),
-                Text('To    : ${transaction.receiverUsername}',
-                    style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue)),
-                SizedBox(height: 10),
-                Text(
-                    'Amount : \€${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}',
-                    style: TextStyle(fontSize: 20)),
-                SizedBox(height: 10),
-                Text('Type  : ${transaction.transactionType}',
-                    style: TextStyle(fontSize: 20)),
-                SizedBox(height: 10),
-                Text(
-                    'Date   : ${DateFormat('dd/MM/yyyy').format(transaction.createdAt)}',
-                    style: TextStyle(fontSize: 20)),
-                SizedBox(height: 10),
-                Text(
-                    'Time: ${DateFormat('HH:mm:ss').format(transaction.createdAt)}',
-                    style: TextStyle(fontSize: 20)),
-                SizedBox(height: 10),
-                if (transaction.message.isNotEmpty)
-                  Text('Message: ${transaction.message}',
+                ListTile(
+                  leading: Icon(Icons.person_outline, color: Colors.blue),
+                  title: Text('From: ${transaction.senderUsername}',
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                ),
+                ListTile(
+                  leading: Icon(Icons.person_pin, color: Colors.blue),
+                  title: Text('To: ${transaction.receiverUsername}',
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                ),
+                ListTile(
+                  leading: Icon(Icons.euro_symbol, color: Colors.blue),
+                  title: Text(
+                      'Amount: \€${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}',
                       style: TextStyle(fontSize: 20)),
+                ),
+                ListTile(
+                  leading: Icon(
+                      transaction.transactionType == 'Payment'
+                          ? Icons.arrow_upward
+                          : Icons.arrow_downward,
+                      color: Colors.blue),
+                  title: Text('Type: ${transaction.transactionType}',
+                      style: TextStyle(fontSize: 20)),
+                ),
+                ListTile(
+                  leading: Icon(Icons.date_range, color: Colors.blue),
+                  title: Text(
+                      'Date: ${DateFormat('dd/MM/yyyy').format(transaction.createdAt)}',
+                      style: TextStyle(fontSize: 20)),
+                ),
+                ListTile(
+                  leading: Icon(Icons.access_time, color: Colors.blue),
+                  title: Text(
+                      'Time: ${DateFormat('HH:mm:ss').format(transaction.createdAt)}',
+                      style: TextStyle(fontSize: 20)),
+                ),
+                if (transaction.message.isNotEmpty)
+                  ListTile(
+                    leading: Icon(Icons.message, color: Colors.blue),
+                    title: Text('Message: ${transaction.message}',
+                        style: TextStyle(fontSize: 20)),
+                  ),
               ],
             ),
           ),

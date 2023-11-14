@@ -46,10 +46,13 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
         final List<dynamic> data = json.decode(response.body);
         print('Response Body: ${response.body}');
         final List<dynamic> transactionsData = data[0]; // Access the inner list
-        final List<Transaction> transactions =
+        List<Transaction> transactions =
             transactionsData.map((transactionData) {
           return Transaction.fromJson(transactionData as Map<String, dynamic>);
         }).toList();
+
+        // Sort the transactions in descending order of the createdAt field
+        transactions.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
         return transactions;
       } else {

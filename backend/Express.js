@@ -355,7 +355,7 @@ app.post('/edit_user', async (req, res) => {
         const salt = generateSalt();
      const passwordHash = await bcrypt.hash(new_password + salt, 10);
 
-     updateData = [username, email, firstname, lastname, passwordHash,salt, pictureData,userid];
+     updateData = [email, firstname, lastname, passwordHash,salt, pictureData,userid];
      query = 'UPDATE User SET email=?, first_name=?, last_name=?, password_hash=?,salt = ?, picture=? WHERE user_id=?';
       
         

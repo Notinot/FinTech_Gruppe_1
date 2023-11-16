@@ -41,8 +41,11 @@ class AppDrawer extends StatelessWidget {
             leading: const Icon(Icons.attach_money),
             title: const Text('Transaction History'),
             onTap: () {
-              // Navigate to the money transfer section
-              // Implement the navigation as needed
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const TransactionHistoryScreen()),
+              );
             },
           ),
           ListTile(

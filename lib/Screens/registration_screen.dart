@@ -1,3 +1,5 @@
+// ignore_for_file: non_constant_identifier_names
+
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -6,10 +8,7 @@ import 'login_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:io' as io;
 
-import 'package:flutter/material.dart';
-import 'login_screen.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:http/http.dart' as http;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
@@ -47,7 +46,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   }
 
   ImageProvider<Object> _imageProvider =
-      AssetImage('lib/assets/profile_image.png');
+      const AssetImage('lib/assets/profile_image.png');
 
   Future<void> _pickImage() async {
     if (kIsWeb) {
@@ -204,7 +203,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       showSnackBar(isError: true, message: 'Invalid email format');
       return;
     }
-    if (_imageProvider == AssetImage('lib/assets/profile_image.png')) {
+    if (_imageProvider == const AssetImage('lib/assets/profile_image.png')) {
       // User did not choose a profile picture, set it to null or handle as needed
       profileImageBytes =
           null; // or you can set it to a null value expected by your API
@@ -287,7 +286,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               ),
               ElevatedButton(
                 onPressed: _pickImage,
-                child: Text('Choose Profile Picture'),
+                child: const Text('Choose Profile Picture'),
               ),
               const SizedBox(height: 16.0),
               TextField(

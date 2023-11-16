@@ -7,14 +7,15 @@ const app = express();
 const port = 3000;
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
-
-// Generate a random secret key for JWT
-const jwtSecret = crypto.randomBytes(64).toString('hex');
+const authenticateToken = require('./authenticateToken');
+const config = require('./config');
+const jwtSecret = config.jwtSecret;
 const jwtOptions = {
-  expiresIn: '1h', // Token expiration time
+  expiresIn: '5h', // Token expiration time
 };
 
 app.use(express.json());
+// Middleware to extract and verify JWT
 
 // Enable CORS to allow requests from any origin and restrict to POST requests
 app.use(cors({
@@ -191,12 +192,14 @@ app.post('/login', async (req, res) => {
 
   if (passwordMatch) {
     // Issue a JSON Web Token (JWT) upon successful login
-    const token = jwt.sign({ userId: user[0].id }, jwtSecret, jwtOptions);
+    const token = jwt.sign({ userId: user[0].user_id}, jwtSecret, jwtOptions);
+    console.log('User object:', user);
+    console.log('User ID:', user[0].user_id);
 
     // Fetch and include the user's data in the response
     const userData = user[0];
 
-    res.json({ message: 'Login successful', token, user: userData });
+    res.json({ message: 'Login successful', token});
   } else {
     res.status(401).json({ message: 'Invalid email or password' });
   }
@@ -206,16 +209,17 @@ app.post('/login', async (req, res) => {
 // Route to fetch user profile with JWT authentication
 app.get('/user/profile', authenticateToken, async (req, res) => {
   try {
+    console.log('Token:', req.headers['authorization']);
     // Get the user ID from the authenticated token
     const userId = req.user.userId;
-
+    console.log('userId:', userId);
     // Fetch the user's profile data from the database based on the user ID
-    const [userData] = await db.query('SELECT * FROM User WHERE id = ?', [userId]);
+    const [userData] = await db.query('SELECT * FROM User WHERE user_id = ?', [userId]);
 
     if (userData.length === 0) {
       return res.status(404).json({ message: 'User not found' });
     }
-
+    console.log('/user/profile userData:', userData);
     // Send the user's profile data as the response
     res.json({ user: userData[0] });
   } catch (error) {
@@ -290,9 +294,9 @@ app.post('/delete_user', async (req, res) => {
 
 //editing user
 app.post('/edit_user', async (req, res) => {
-  const { email, firstname, lastname, password,new_password, userid,pw_change,email_change,picture,old_email,code } = req.body;
+  const { email, firstname, lastname, password,new_password, userid,pw_change,picture } = req.body;
 
-
+  emailChange = false;
 
   let pictureData = null;
   if (picture != null) {
@@ -306,11 +310,6 @@ app.post('/edit_user', async (req, res) => {
   if (existingUser.length === 0) {
     return res.status(404).json({ message: 'User not found' });
   }
-
-  const [currentInfo] = await db.query(
-    'SELECT * FROM User WHERE email = ?',
-    [old_email]
-  );
 
   
 
@@ -331,7 +330,7 @@ app.post('/edit_user', async (req, res) => {
   }
 
   
-  const samePassword = await bcrypt.compare(new_password + currentInfo[0].salt, currentInfo[0].password_hash);
+  const samePassword = await bcrypt.compare(new_password + existingInfo[0].salt, existingInfo[0].password_hash);
   if (samePassword) {
     return res.status(406).json({ message: 'Your new password cannot be your old password' });
   }
@@ -339,18 +338,12 @@ app.post('/edit_user', async (req, res) => {
   console.log(new_password)
   console.log(samePassword)
 
-  if(email_change === true){
-  
-} 
-
-  if((email_change === true && code == currentInfo[0].verification_code) || email_change === false){
-
   try {
     updateData = [email, firstname, lastname,pictureData,userid];
     query = 'UPDATE User SET email=?, first_name=?, last_name=?, picture=? WHERE user_id = ? ';
 
     if(pw_change == true){
-      const passwordMatch = await bcrypt.compare(password + currentInfo[0].salt, currentInfo[0].password_hash);
+      const passwordMatch = await bcrypt.compare(password + existingInfo[0].salt, existingInfo[0].password_hash);
       if (passwordMatch) {
         const salt = generateSalt();
      const passwordHash = await bcrypt.hash(new_password + salt, 10);
@@ -376,42 +369,9 @@ app.post('/edit_user', async (req, res) => {
     res.status(500).json({ message: 'Internal server error',error: error.message });
     console.log('Received data:', req.body);
   }
-}
-else{ res.status(409).json({ error: 'Your entered verification Code is incorrect'});
-console.log('Received data:', req.body);}
 });
 
-//verifiy user's email change
-app.post('/edit_user/verify', async (req, res) => {
-  const { userid, verificationCode } = req.body;
-  console.log('Received userid:', userid);
-  console.log('Received verificationCode:', verificationCode);
-  
-  
-  const [code] = await db.query('SELECT verification_code FROM User WHERE user_id = ?', [userid]);
-console.log("needed input:",code[0].verification_code);
 
-  if(code[0].verification_code === verificationCode.trim()){
-    res.json({ message: 'Verification succeeded' });
-  }
-  else{
-    res.status(411).json({ message: 'Wrong verification code' })
-  }
-}
-);
-
-//send and set verificationcode in edit user
-app.post('/edit_user/send_code', async (req, res) => {
-  const {userid,email} = req.body;
-   code = Math.floor(100000 + Math.random() * 900000).toString();
-   query = 'UPDATE User SET verification_code = ? WHERE user_id = ? ';
-   updateData = [code,userid];
-   await db.query(query, updateData);
-   sendVerificationEmail(email,code);
-   console.log(code);
-   res.json({ message: 'Email sent' });
-  }
-   );
 
 // Route to check the user's active status
 app.post('/check-active', async (req, res) => {
@@ -430,37 +390,22 @@ app.post('/check-active', async (req, res) => {
 });
 
 
-// Route for health check
-app.get('/health', (req, res) => {
-  res.sendStatus(200); // Send a 200 OK response when the server is healthy
-});
-
-// Start the server and handle graceful shutdown on SIGINT signal
-server = app.listen(port, () => {
-  process.on('SIGINT', () => {
-    console.log('Shutting down the server...');
-    server.close(() => {
-      console.log('Server has been shut down.');
-      process.exit(0); // Exit the process gracefully
-    });
-  });
-});
-app.use(authenticateToken);
-//Route for send money process
-app.post('/send-money', async (req, res) => {
-  const { recipient, amount, message } = req.body;
-
+// Route for sending money with JWT authentication
+app.post('/send-money', authenticateToken, async (req, res) => {
   try {
+    // Extract the authenticated user ID from the request
+    const senderId = req.user.userId;
+    console.log('senderId:', senderId);
+    // Extract other information from the request body
+    const { recipient, amount, message } = req.body;
+
     // Validate input
     if (!recipient || !amount || amount <= 0) {
       return res.status(400).json({ message: 'Invalid input' });
     }
 
-    // Fetch sender ID based on the authenticated user
-    const senderId = req.user.userId;
-
     // Fetch recipient ID based on the recipient username or email
-    const [recipientData] = await db.query('SELECT user_id FROM User WHERE username = ? OR email = ?', [recipient]);
+    const [recipientData] = await db.query('SELECT user_id FROM User WHERE username = ? OR email = ?', [recipient, recipient]);
 
     if (recipientData.length === 0) {
       return res.status(404).json({ message: 'Recipient not found' });
@@ -480,10 +425,10 @@ app.post('/send-money', async (req, res) => {
     // Update sender and recipient balances
     const senderBalance = await getBalance(senderId);
 
-
     if (senderBalance < amount) {
       return res.status(400).json({ message: 'Insufficient funds' });
     }
+
     const recipientBalance = await getBalance(recipientId);
 
     // Update balances in the database
@@ -497,60 +442,62 @@ app.post('/send-money', async (req, res) => {
   }
 });
 
-// Function to update user balance
-async function updateBalance(userId, amount) {
+// Route to fetch transactions with JWT authentication
+app.get('/transactions', authenticateToken, async (req, res) => {
   try {
-    // Fetch the existing balance
-    const [userData] = await db.query('SELECT balance FROM User WHERE user_id = ?', [userId]);
-    const currentBalance = parseFloat(userData[0].balance);
+    // Get the user ID from the authenticated token
+    const userId = req.user.userId;
+    console.log('userId:', userId);
 
-    // Update the balance
-    const newBalance = currentBalance + amount;
-    await db.query('UPDATE User SET balance = ? WHERE user_id = ?', [newBalance, userId]);
+    // Fetch the user's transaction history from the database based on the user ID
+    const transactions = await db.query(`
+      SELECT 
+        Transaction.*, 
+        sender.username AS sender_username, 
+        receiver.username AS receiver_username 
+      FROM 
+        Transaction 
+      LEFT JOIN 
+        User AS sender ON Transaction.sender_id = sender.user_id 
+      LEFT JOIN 
+        User AS receiver ON Transaction.receiver_id = receiver.user_id 
+      WHERE 
+        sender_id = ? OR receiver_id = ?
+    `, [userId, userId]);
 
-    return true; // Successfully updated balance
+    console.log('transactions:', transactions);
+
+    // Send the user's transaction history as the response
+    res.json(transactions);
   } catch (error) {
-    console.error('Error updating balance:', error);
-    return false; // Failed to update balance
+    console.error('Error fetching transactions:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
-}
-
-// Function to get user balance
-async function getBalance(userId) {
-  try {
-    // Fetch the user's balance
-    const [userData] = await db.query('SELECT balance FROM User WHERE user_id = ?', [userId]);
-    const balance = parseFloat(userData[0].balance);
-
-    return balance;
-  } catch (error) {
-    console.error('Error fetching balance:', error);
-    return 0; // Return 0 in case of an error
-  }
-}
+});
 
 
+// Route for health check
+app.get('/health', (req, res) => {
+  res.sendStatus(200); // Send a 200 OK response when the server is healthy
+});
 
 
-
-
-// Middleware to authenticate the user token
-function authenticateToken(req, res, next) {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-
-  if (!token) {
-    return res.status(401).json({ message: 'Unauthorized' });
-  }
-
-  jwt.verify(token, jwtSecret, (err, user) => {
-    if (err) {
-      return res.status(403).json({ message: 'Forbidden' });
-    }
-    req.user = user;
-    next();
+// Start the server and handle graceful shutdown on SIGINT signal
+server = app.listen(port, () => {
+  process.on('SIGINT', () => {
+    console.log('Shutting down the server...');
+    server.close(() => {
+      console.log('Server has been shut down.');
+      process.exit(0); // Exit the process gracefully
+    });
   });
-}
+});
+
+
+
+
+
+
 
 // Import the required nodemailer library
 const nodemailer = require('nodemailer');
@@ -649,3 +596,45 @@ function sendVerificationEmail(to, code) {
     }
   });
 }
+
+// Function to update user balance
+async function updateBalance(userId, amount) {
+  try {
+    // Fetch the existing balance
+    const [userData] = await db.query('SELECT balance FROM User WHERE user_id = ?', [userId]);
+    const currentBalance = parseFloat(userData[0].balance);
+
+    // Update the balance
+    const newBalance = currentBalance + amount;
+    await db.query('UPDATE User SET balance = ? WHERE user_id = ?', [newBalance, userId]);
+
+    return true; // Successfully updated balance
+  } catch (error) {
+    console.error('Error updating balance:', error);
+    return false; // Failed to update balance
+  }
+}
+// Function to get user balance
+async function getBalance(userId) {
+  try {
+    // Fetch the user's balance
+    const [userData] = await db.query('SELECT balance FROM User WHERE user_id = ?', [userId]);
+    console.log('getBalance:');
+    console.log('userId:', userId);
+    console.log('userData:', userData);
+
+    if (userData.length === 0) {
+      console.log('User not found');
+      return 0; // Return 0 if user not found
+    }
+
+    const balance = parseFloat(userData[0].balance);
+
+    return balance;
+  } catch (error) {
+    console.error('Error fetching balance:', error);
+    return 0; // Return 0 in case of an error
+  }
+}
+
+

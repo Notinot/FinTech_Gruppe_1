@@ -1,54 +1,68 @@
+import 'dart:convert';
 import 'dart:typed_data';
-
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'account_summary.dart';
 import 'user_profile_section.dart';
 import 'Notifications.dart';
 import 'QuickActions.dart';
 import 'AppDrawer.dart';
+import 'api_service.dart';
 
 class DashboardScreen extends StatelessWidget {
-  final Map<String, dynamic> user;
-  const DashboardScreen({super.key, required this.user});
+  const DashboardScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Extract user details
-    String username = user['username'];
-    double balance = user['balance'].toDouble();
+    return FutureBuilder<Map<String, dynamic>>(
+      // Fetch user profile data here
+      future: ApiService.fetchUserProfile(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          // Show loading indicator while fetching data
+          return CircularProgressIndicator();
+        } else if (snapshot.hasError) {
+          // Handle errors
+          return Text('Error: ${snapshot.error}');
+        } else {
+          // Once data is loaded, display the dashboard
+          final Map<String, dynamic> user = snapshot.data!;
 
-    // Example list of upcoming events
-    List<Event> upcomingEvents = [
-      Event(title: 'Meeting', date: '2023-11-01'),
-      Event(title: 'Workshop', date: '2023-11-05'),
-      Event(title: 'Conference', date: '2023-11-10'),
-    ];
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Dashboard'),
-      ),
-      body: SingleChildScrollView(
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              // Display user's profile information
-              UserProfileSection(user),
-              // Display user's account summary
-              AccountSummary(balance),
-              // Provide quick access actions
-              QuickActions(user: user),
-              // Show user notifications
-              Notifications(),
-              // Display upcoming events
-              UpcomingEvents(events: upcomingEvents),
-            ],
-          ),
-        ),
-      ),
-      // Add the AppDrawer to the dashboard screen
-      drawer: AppDrawer(user: user),
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Dashboard'),
+            ),
+            body: SingleChildScrollView(
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    // Display user's profile information
+                    UserProfileSection(user),
+                    // Display user's account summary
+                    AccountSummary(user['balance'].toDouble()),
+                    // Provide quick access actions
+                    QuickActions(user: user),
+                    // Show user notifications
+                    Notifications(),
+                    // Display upcoming events
+                    UpcomingEvents(
+                      events: [
+                        Event(title: 'Meeting', date: '2023-11-01'),
+                        Event(title: 'Workshop', date: '2023-11-05'),
+                        Event(title: 'Conference', date: '2023-11-10'),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            // Add the AppDrawer to the dashboard screen
+            drawer: AppDrawer(user: user),
+          );
+        }
+      },
     );
   }
 }

@@ -1,13 +1,14 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 
 class SendMoneyScreen extends StatefulWidget {
-  Map<String, dynamic> user;
-  SendMoneyScreen({Key? key, required this.user}) : super(key: key);
+  SendMoneyScreen({super.key});
+
   @override
   _SendMoneyScreenState createState() => _SendMoneyScreenState();
 }
@@ -107,13 +108,25 @@ class _SendMoneyScreenState extends State<SendMoneyScreen> {
               child: ElevatedButton(
                 onPressed: () async {
                   final recipient = recipientController.text;
-                  final amount = double.tryParse(amountController.text
-                          .replaceAll('€', '') // Remove euro sign
-                          .replaceAll('.', '') // Remove periods
-                          .replaceAll(',', '') // Remove commas
-                          .trim()) ??
-                      0.0;
+                  final amount = amountController.text;
+                  print(amount);
                   final message = messageController.text;
+
+                  // Remove euro sign, periods and spaces
+                  final cleanedAmountText = amount
+                      .replaceAll('€', '')
+                      .replaceAll(' ', '')
+                      .replaceAll('.', '');
+
+                  // Replace commas with periods
+                  final normalizedAmountText =
+                      cleanedAmountText.replaceAll(',', '.');
+
+                  // Parse the amount
+                  final parsedAmount =
+                      double.tryParse(normalizedAmountText) ?? 0.0;
+
+                  print(parsedAmount);
 
                   if (recipient.trim().isEmpty) {
                     setState(() {
@@ -127,7 +140,7 @@ class _SendMoneyScreenState extends State<SendMoneyScreen> {
                     });
                   }
 
-                  if (amount <= 0) {
+                  if (parsedAmount <= 0) {
                     setState(() {
                       amountBorderColor = Colors.red;
                     });
@@ -139,7 +152,8 @@ class _SendMoneyScreenState extends State<SendMoneyScreen> {
                     });
                   }
                   // Use the sendMoney method
-                  bool success = await sendMoney(recipient, amount, message);
+                  bool success =
+                      await sendMoney(recipient, parsedAmount, message);
 
                   if (success) {
                     // Clear the input fields after sending money
@@ -168,33 +182,39 @@ class _SendMoneyScreenState extends State<SendMoneyScreen> {
       String recipient, double amount, String message) async {
     try {
       // Retrieve the JWT token from secure storage
-      final storage = FlutterSecureStorage();
-      final String? jwtToken = await storage.read(key: 'token');
+      const storage = FlutterSecureStorage();
+      final token = await storage.read(key: 'token');
 
-      if (jwtToken == null) {
-        print('JWT token not found.');
+      if (token == null) {
+        if (kDebugMode) {
+          print('JWT token not found.');
+        }
         return false;
       }
+      if (kDebugMode) {
+        print('token: $token');
+      }
 
-      final response = await http.post(
+      // Continue with the send money request
+      final sendMoneyResponse = await http.post(
         Uri.parse('http://localhost:3000/send-money'),
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $jwtToken',
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $token',
         },
-        body: json.encode({
+        body: json.encode(<String, dynamic>{
           'recipient': recipient,
           'amount': amount,
           'message': message,
         }),
       );
-
-      if (response.statusCode == 200) {
+      print(sendMoneyResponse);
+      if (sendMoneyResponse.statusCode == 200) {
         // Money sent successfully
         return true;
       } else {
         // Money transfer failed, handle accordingly
-        print('Error sending money: ${response.body}');
+        print('Error sending money: ${sendMoneyResponse.body}');
         return false;
       }
     } catch (e) {

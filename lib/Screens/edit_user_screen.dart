@@ -26,6 +26,9 @@ class _EditUserState extends State<EditUser> {
 
   late Future<Map<String, dynamic>> user = ApiService.fetchUserProfile();
   Map<String, dynamic> userData = {};
+
+  late ImageProvider<Object>? _imageProvider;
+
   late String email_old;
   late String username;
   late String firstname_old;
@@ -86,12 +89,17 @@ class _EditUserState extends State<EditUser> {
         currentPassword = userData['password_hash'];
         profileImage =
             Uint8List.fromList(userData['picture']['data'].cast<int>());
+
+        _imageProvider = (userData['picture'] != null &&
+                    userData['picture'] is Map<String, dynamic> &&
+                    userData['picture']['data'] != null
+                ? MemoryImage(
+                    Uint8List.fromList(userData['picture']['data'].cast<int>()))
+                : AssetImage('lib/assets/profile_image.png'))
+            as ImageProvider<Object>?;
       });
     });
   }
-
-  ImageProvider<Object> _imageProvider =
-      AssetImage('lib/assets/profile_image.png');
 
   Future<void> _pickImage() async {
     if (kIsWeb) {
@@ -448,6 +456,7 @@ class _EditUserState extends State<EditUser> {
         } else {
           // Once data is loaded, display the dashboard
           final Map<String, dynamic> user = snapshot.data!;
+          user['picture'] = _imageProvider;
 
           return Scaffold(
             appBar: AppBar(

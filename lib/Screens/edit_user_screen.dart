@@ -9,15 +9,13 @@ import 'login_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:io' as io;
 
-import 'package:flutter/material.dart';
-import 'login_screen.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'api_service.dart';
 
 class EditUser extends StatefulWidget {
-  Map<String, dynamic> user;
-  EditUser({Key? key, required this.user}) : super(key: key);
+  EditUser({super.key});
 
   @override
   _EditUserState createState() => _EditUserState();
@@ -26,19 +24,23 @@ class EditUser extends StatefulWidget {
 class _EditUserState extends State<EditUser> {
   bool isEditing = false;
 
-  late TextEditingController usernameController =
-      TextEditingController(text: widget.user['username']);
-  late TextEditingController emailController =
-      TextEditingController(text: widget.user['email']);
-  late TextEditingController currentPasswordController =
-      TextEditingController();
-  late TextEditingController passwordController = TextEditingController();
-  late TextEditingController confirmPasswordController =
-      TextEditingController();
-  late TextEditingController firstnameController =
-      TextEditingController(text: widget.user['first_name']);
-  late TextEditingController lastnameController =
-      TextEditingController(text: widget.user['last_name']);
+  late Future<Map<String, dynamic>> user = ApiService.fetchUserProfile();
+  Map<String, dynamic> userData = {};
+  late String email_old;
+  late String username;
+  late String firstname_old;
+  late String lastname_old;
+  late int user_id;
+  late Uint8List? profileImage;
+  late String currentPassword;
+
+  late TextEditingController usernameController;
+  late TextEditingController emailController;
+  late TextEditingController currentPasswordController;
+  late TextEditingController passwordController;
+  late TextEditingController confirmPasswordController;
+  late TextEditingController firstnameController;
+  late TextEditingController lastnameController;
 
   String? passwordError;
   String? emailError;
@@ -59,6 +61,32 @@ class _EditUserState extends State<EditUser> {
       usernameError = null;
       firstnameError = null;
       lastnameError = null;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // Use the user Future's result to initialize the controllers
+    user.then((userData) {
+      setState(() {
+        usernameController = TextEditingController(text: userData['username']);
+        emailController = TextEditingController(text: userData['email']);
+        currentPasswordController = TextEditingController();
+        passwordController = TextEditingController();
+        confirmPasswordController = TextEditingController();
+        firstnameController =
+            TextEditingController(text: userData['first_name']);
+        lastnameController = TextEditingController(text: userData['last_name']);
+        user_id = userData['user_id'];
+        username = userData['username'];
+        email_old = userData['email'];
+        firstname_old = userData['first_name'];
+        lastname_old = userData['last_name'];
+        currentPassword = userData['password_hash'];
+        profileImage =
+            Uint8List.fromList(userData['picture']['data'].cast<int>());
+      });
     });
   }
 
@@ -105,7 +133,7 @@ class _EditUserState extends State<EditUser> {
   }
 
   Future<void> DeleteProfile() async {
-    final Map<String, dynamic> request = {'userid': widget.user['user_id']};
+    final Map<String, dynamic> request = {'userid': userData?['user_id']};
     final response = await http.post(
       Uri.parse('http://localhost:3000/delete_user'),
       headers: {
@@ -130,7 +158,7 @@ class _EditUserState extends State<EditUser> {
     String confirmPassword = confirmPasswordController.text;
     bool pw_change = false;
     bool email_change = false;
-    final user_id = widget.user['user_id'];
+    //final user_id = userData?['user_id'];
     String code = '';
     late http.Response resp = http.Response('null', 500);
 
@@ -157,14 +185,14 @@ class _EditUserState extends State<EditUser> {
     if (email.trim().isEmpty) {
       // Check if email is empty
       setState(() {
-        email = widget.user['email'];
+        email = email_old;
       });
     }
 
     if (firstname.trim().isEmpty) {
       // Check if first name is empty
       setState(() {
-        firstname = widget.user['first_name'];
+        firstname = firstname_old;
       });
     }
 
@@ -178,7 +206,7 @@ class _EditUserState extends State<EditUser> {
     if (lastname.trim().isEmpty) {
       // Check if last name is empty
       setState(() {
-        lastname = widget.user['last_name'];
+        lastname = lastname_old;
       });
     }
 
@@ -242,15 +270,13 @@ class _EditUserState extends State<EditUser> {
     }
 
     if (new_password.isNotEmpty && current_password.isEmpty ||
-        current_password.isEmpty &&
-            email.isNotEmpty &&
-            email != widget.user['email'] ||
+        current_password.isEmpty && email.isNotEmpty && email != email_old ||
         current_password.isEmpty &&
             firstname.isNotEmpty &&
-            firstname != widget.user['first_name'] ||
+            firstname != firstname_old ||
         current_password.isEmpty &&
             lastname.isNotEmpty &&
-            lastname != widget.user['last_name']) {
+            lastname != lastname_old) {
       setState(() {
         currentPasswordError =
             'You have to enter your current password to make any changes!';
@@ -271,20 +297,19 @@ class _EditUserState extends State<EditUser> {
       return;
     }
     if (_imageProvider == AssetImage('lib/assets/profile_image.png') &&
-        widget.user['picture'] == null) {
+        profileImage == null) {
       // User did not choose a profile picture, set it to null or handle as needed
       profileImageBytes =
           null; // or you can set it to a null value expected by your API
     } else if (_imageProvider == AssetImage('lib/assets/profile_image.png') &&
-        widget.user['picture'] != null) {
-      profileImageBytes =
-          Uint8List.fromList(widget.user['picture']['data'].cast<int>());
+        profileImage != null) {
+      profileImageBytes = profileImage;
     }
 
 //##############################################################################
     bool verificationSuccess = true;
 
-    if (email.isNotEmpty && email != widget.user['email']) {
+    if (email.isNotEmpty && email != email_old) {
       email_change = true;
       Map<String, dynamic> request;
       request = {'userid': user_id, 'email': email};
@@ -311,7 +336,7 @@ class _EditUserState extends State<EditUser> {
       }
     }
 //##############################################################################
-    print('Picture data: $profileImageBytes');
+    //print('Picture data: $profileImageBytes');
 
     final Map<String, dynamic> requestBody;
     // Create a JSON payload to send to the API
@@ -321,7 +346,6 @@ class _EditUserState extends State<EditUser> {
         requestBody = {
           //'username': username,
           'email': email,
-          'old_email': widget.user['email'],
           'firstname': firstname,
           'lastname': lastname,
           'password': current_password,
@@ -365,18 +389,18 @@ class _EditUserState extends State<EditUser> {
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
-        final token = data['token'];
-        final userT = data['user'];
 
-        const storage = FlutterSecureStorage();
-        await storage.write(key: 'token', value: token);
-        widget.user = userT;
-        showSnackBar(
-            message:
-                ' Profile update successful!  Verification code has been sent to $email ');
+        showSnackBar(message: ' Profile update successful!');
+
+        /*Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => EditUser(),
+          ),
+        );*/
 
         Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => EditUser(user: userT)));
+            MaterialPageRoute(builder: (context) => EditUser()));
       } else if (response.statusCode == 401) {
         showSnackBar(isError: true, message: 'Current password is invalid!');
       } /*else if (response.statusCode == 402) {
@@ -411,137 +435,149 @@ class _EditUserState extends State<EditUser> {
 
   @override
   Widget build(BuildContext context) {
-    String username = widget.user['username'];
-    String email = widget.user['email'];
-    String firstname = widget.user['first_name'];
-    String lastname = widget.user['last_name'];
+    return FutureBuilder<Map<String, dynamic>>(
+      // Fetch user profile data here
+      future: ApiService.fetchUserProfile(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          // Show loading indicator while fetching data
+          return CircularProgressIndicator();
+        } else if (snapshot.hasError) {
+          // Handle errors
+          return Text('Error: ${snapshot.error}');
+        } else {
+          // Once data is loaded, display the dashboard
+          final Map<String, dynamic> user = snapshot.data!;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Edit Profile'),
-        automaticallyImplyLeading: false,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.of(context).pushReplacement(MaterialPageRoute(
-                builder: (context) => const DashboardScreen()));
-          },
-        ),
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              ClipOval(
-                child: CircleAvatar(
-                  radius: 80,
-                  backgroundImage: widget.user['picture'] != null &&
-                          widget.user['picture'] is Map<String, dynamic> &&
-                          widget.user['picture']['data'] != null
-                      ? MemoryImage(Uint8List.fromList(
-                          widget.user['picture']['data'].cast<int>()))
-                      : _imageProvider,
-                ),
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Edit Profile'),
+              automaticallyImplyLeading: false,
+              leading: IconButton(
+                icon: Icon(Icons.arrow_back),
+                onPressed: () {
+                  Navigator.of(context).pushReplacement(MaterialPageRoute(
+                      builder: (context) => const DashboardScreen()));
+                },
               ),
-              Visibility(
-                  visible: isEditing,
-                  child: ElevatedButton(
-                    onPressed: isEditing ? _pickImage : null,
-                    child: Text('Change Profile Picture'),
-                  )),
-              const SizedBox(height: 16.0),
-              TextField(
-                controller: usernameController,
-                decoration: InputDecoration(
-                  labelText: 'Username',
-                  enabled: false,
-                  border: const OutlineInputBorder(),
-                  errorText: usernameError,
-                ),
-              ),
-              const SizedBox(height: 16.0),
-              TextField(
-                controller: emailController,
-                decoration: InputDecoration(
-                  labelText: 'Email',
-                  enabled: isEditing,
-                  border: const OutlineInputBorder(),
-                  errorText: emailError,
-                ),
-              ),
-              const SizedBox(height: 16.0),
-              TextField(
-                controller: firstnameController,
-                decoration: InputDecoration(
-                  labelText: 'First name',
-                  enabled: isEditing,
-                  border: const OutlineInputBorder(),
-                  errorText: firstnameError,
-                ),
-              ),
-              const SizedBox(height: 16.0),
-              TextField(
-                controller: lastnameController,
-                decoration: InputDecoration(
-                  labelText: 'Last name',
-                  enabled: isEditing,
-                  border: const OutlineInputBorder(),
-                  errorText: lastnameError,
-                ),
-              ),
-              const SizedBox(height: 16.0),
-              Visibility(
-                  visible: isEditing,
-                  child: TextField(
-                    controller: currentPasswordController,
-                    obscureText: true,
-                    decoration: InputDecoration(
-                      labelText: 'Current password',
-                      enabled: isEditing,
-                      border: const OutlineInputBorder(),
-                      errorText: currentPasswordError,
+            ),
+            body: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    ClipOval(
+                      child: CircleAvatar(
+                        radius: 80,
+                        backgroundImage: user['picture'] != null &&
+                                user['picture'] is Map<String, dynamic> &&
+                                user['picture']['data'] != null
+                            ? MemoryImage(Uint8List.fromList(
+                                user['picture']['data'].cast<int>()))
+                            : _imageProvider,
+                      ),
                     ),
-                  )),
-              const SizedBox(height: 16.0),
-              Visibility(
-                  visible: isEditing,
-                  child: TextField(
-                    controller: passwordController,
-                    obscureText: true,
-                    decoration: InputDecoration(
-                      labelText: 'New password',
-                      enabled: isEditing,
-                      border: const OutlineInputBorder(),
-                      errorText: passwordError,
+                    Visibility(
+                        visible: isEditing,
+                        child: ElevatedButton(
+                          onPressed: isEditing ? _pickImage : null,
+                          child: Text('Change Profile Picture'),
+                        )),
+                    const SizedBox(height: 16.0),
+                    TextField(
+                      controller: usernameController,
+                      decoration: InputDecoration(
+                        labelText: 'Username',
+                        enabled: false,
+                        border: const OutlineInputBorder(),
+                        errorText: usernameError,
+                      ),
                     ),
-                  )),
-              const SizedBox(height: 16.0),
-              Visibility(
-                  visible: isEditing,
-                  child: TextField(
-                    controller: confirmPasswordController,
-                    obscureText: true,
-                    decoration: InputDecoration(
-                      labelText: 'Confirm password',
-                      enabled: isEditing,
-                      border: const OutlineInputBorder(),
-                      errorText: usernameError,
+                    const SizedBox(height: 16.0),
+                    TextField(
+                      controller: emailController,
+                      decoration: InputDecoration(
+                        labelText: 'Email',
+                        enabled: isEditing,
+                        border: const OutlineInputBorder(),
+                        errorText: emailError,
+                      ),
                     ),
-                  )),
-              const SizedBox(height: 16.0),
-              ElevatedButton(
-                child: Icon(isEditing ? Icons.save : Icons.edit),
-                onPressed: isEditing ? EditUserProfile : toggleEditMode,
+                    const SizedBox(height: 16.0),
+                    TextField(
+                      controller: firstnameController,
+                      decoration: InputDecoration(
+                        labelText: 'First name',
+                        enabled: isEditing,
+                        border: const OutlineInputBorder(),
+                        errorText: firstnameError,
+                      ),
+                    ),
+                    const SizedBox(height: 16.0),
+                    TextField(
+                      controller: lastnameController,
+                      decoration: InputDecoration(
+                        labelText: 'Last name',
+                        enabled: isEditing,
+                        border: const OutlineInputBorder(),
+                        errorText: lastnameError,
+                      ),
+                    ),
+                    const SizedBox(height: 16.0),
+                    Visibility(
+                        visible: isEditing,
+                        child: TextField(
+                          controller: currentPasswordController,
+                          obscureText: true,
+                          decoration: InputDecoration(
+                            labelText: 'Current password',
+                            enabled: isEditing,
+                            border: const OutlineInputBorder(),
+                            errorText: currentPasswordError,
+                          ),
+                        )),
+                    const SizedBox(height: 16.0),
+                    Visibility(
+                        visible: isEditing,
+                        child: TextField(
+                          controller: passwordController,
+                          obscureText: true,
+                          decoration: InputDecoration(
+                            labelText: 'New password',
+                            enabled: isEditing,
+                            border: const OutlineInputBorder(),
+                            errorText: passwordError,
+                          ),
+                        )),
+                    const SizedBox(height: 16.0),
+                    Visibility(
+                        visible: isEditing,
+                        child: TextField(
+                          controller: confirmPasswordController,
+                          obscureText: true,
+                          decoration: InputDecoration(
+                            labelText: 'Confirm password',
+                            enabled: isEditing,
+                            border: const OutlineInputBorder(),
+                            errorText: usernameError,
+                          ),
+                        )),
+                    const SizedBox(height: 16.0),
+                    ElevatedButton(
+                      child: Icon(isEditing ? Icons.save : Icons.edit),
+                      onPressed: isEditing ? EditUserProfile : toggleEditMode,
+                    ),
+                    const SizedBox(height: 16.0),
+                    ElevatedButton(
+                        onPressed: DeleteProfile, child: Text("Delete Account"))
+                  ],
+                ),
               ),
-              const SizedBox(height: 16.0),
-              ElevatedButton(
-                  onPressed: DeleteProfile, child: Text("Delete Account"))
-            ],
-          ),
-        ),
-      ),
+            ),
+          );
+        }
+      },
     );
   }
 

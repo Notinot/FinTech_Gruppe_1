@@ -295,7 +295,6 @@ app.post('/delete_user', async (req, res) => {
 //editing user
 app.post('/edit_user', async (req, res) => {
   const { email, firstname, lastname, password,new_password, userid,pw_change,picture } = req.body;
-
   emailChange = false;
 
   let pictureData = null;

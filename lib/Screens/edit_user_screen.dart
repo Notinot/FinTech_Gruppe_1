@@ -27,7 +27,7 @@ class _EditUserState extends State<EditUser> {
   late Future<Map<String, dynamic>> user = ApiService.fetchUserProfile();
   Map<String, dynamic> userData = {};
 
-  late ImageProvider<Object>? _imageProvider;
+  late ImageProvider<Object> _imageProvider;
 
   late String email_old;
   late String username;
@@ -70,6 +70,7 @@ class _EditUserState extends State<EditUser> {
   @override
   void initState() {
     super.initState();
+    _imageProvider = AssetImage('lib/assets/profile_image.png');
     // Use the user Future's result to initialize the controllers
     user.then((userData) {
       setState(() {
@@ -90,13 +91,28 @@ class _EditUserState extends State<EditUser> {
         profileImage =
             Uint8List.fromList(userData['picture']['data'].cast<int>());
 
-        _imageProvider = (userData['picture'] != null &&
+        /*_imageProvider = ((userData['picture'] != null &&
                     userData['picture'] is Map<String, dynamic> &&
                     userData['picture']['data'] != null
                 ? MemoryImage(
                     Uint8List.fromList(userData['picture']['data'].cast<int>()))
                 : AssetImage('lib/assets/profile_image.png'))
-            as ImageProvider<Object>?;
+            as ImageProvider<Object>?)!;*/
+
+        if (userData['picture'] != null &&
+            userData['picture'] is Map<String, dynamic> &&
+            userData['picture']['data'] != null) {
+          _imageProvider = MemoryImage(
+            Uint8List.fromList(userData['picture']['data'].cast<int>()),
+          );
+          profileImage =
+              Uint8List.fromList(userData['picture']['data'].cast<int>());
+        } else {
+          // Provide a default value if userData['picture'] is null
+          _imageProvider = AssetImage('lib/assets/profile_image.png');
+          profileImage =
+              null; // or you can set it to a null value expected by your API
+        }
       });
     });
   }
@@ -171,6 +187,21 @@ class _EditUserState extends State<EditUser> {
     late http.Response resp = http.Response('null', 500);
 
     Uint8List? profileImageBytes;
+
+    if (_imageProvider != null) {
+      if (_imageProvider is MemoryImage) {
+        final memoryImage = _imageProvider as MemoryImage;
+        profileImageBytes = memoryImage.bytes;
+      } else if (_imageProvider is AssetImage) {
+        // Handle AssetImage or any other ImageProvider types if needed
+        // For now, set profileImageBytes to null or a default value
+        profileImageBytes = null;
+      }
+    } else {
+      // Handle the case when _imageProvider is null
+      // For now, set profileImageBytes to null or a default value
+      profileImageBytes = null;
+    }
 
     if (_imageProvider is MemoryImage) {
       final memoryImage = _imageProvider as MemoryImage;
@@ -456,6 +487,7 @@ class _EditUserState extends State<EditUser> {
         } else {
           // Once data is loaded, display the dashboard
           final Map<String, dynamic> user = snapshot.data!;
+
           user['picture'] = _imageProvider;
 
           return Scaffold(

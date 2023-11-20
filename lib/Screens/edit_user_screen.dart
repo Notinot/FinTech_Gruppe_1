@@ -71,6 +71,7 @@ class _EditUserState extends State<EditUser> {
   void initState() {
     super.initState();
     _imageProvider = AssetImage('lib/assets/profile_image.png');
+    profileImage = null;
     // Use the user Future's result to initialize the controllers
     user.then((userData) {
       setState(() {

@@ -21,11 +21,6 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   final TextEditingController maxParticipantsController = TextEditingController();
   final TextEditingController feeController = TextEditingController();
 
-  enum Countrys{
-  'Germany',
-  'Italy'
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

@@ -294,7 +294,7 @@ app.post('/delete_user', async (req, res) => {
 
 //editing user
 app.post('/edit_user', async (req, res) => {
-  const { email, firstname, lastname, password,new_password, userid,pw_change,picture } = req.body;
+  const { email, firstname, lastname,new_password, userid,pw_change,picture } = req.body;
   emailChange = false;
 
   let pictureData = null;
@@ -333,7 +333,7 @@ app.post('/edit_user', async (req, res) => {
   if (samePassword) {
     return res.status(406).json({ message: 'Your new password cannot be your old password' });
   }
-  console.log(password)
+
   console.log(new_password)
   console.log(samePassword)
 
@@ -342,18 +342,13 @@ app.post('/edit_user', async (req, res) => {
     query = 'UPDATE User SET email=?, first_name=?, last_name=?, picture=? WHERE user_id = ? ';
 
     if(pw_change == true){
-      const passwordMatch = await bcrypt.compare(password + existingInfo[0].salt, existingInfo[0].password_hash);
-      if (passwordMatch) {
-        const salt = generateSalt();
+      
+      const salt = generateSalt();
      const passwordHash = await bcrypt.hash(new_password + salt, 10);
 
      updateData = [email, firstname, lastname, passwordHash,salt, pictureData,userid];
      query = 'UPDATE User SET email=?, first_name=?, last_name=?, password_hash=?,salt = ?, picture=? WHERE user_id=?';
       
-        
-      } else if(!passwordMatch) {
-        return res.status(401).json({ error: 'Current password invalid!' });
-    } 
   }
 
 
@@ -367,6 +362,34 @@ app.post('/edit_user', async (req, res) => {
     console.error('Error updating profile:', error);
     res.status(500).json({ message: 'Internal server error',error: error.message });
     console.log('Received data:', req.body);
+  }
+});
+
+app.post('/verifyPassword', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    console.log(email)
+    console.log(password)
+    // Check if the user with the provided email exists
+    const [user] = await db.query('SELECT * FROM User WHERE email = ?', [email]);
+
+    if (user.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Compare the provided password with the hashed password
+    const hashedPassword = user[0].password_hash;
+    const salt = user[0].salt;
+    const passwordMatch = await bcrypt.compare(password + salt, hashedPassword);
+
+    if (passwordMatch) {
+      res.json({ message: 'Password is correct' });
+    } else {
+      res.status(401).json({ message: 'Incorrect password' });
+    }
+  } catch (error) {
+    console.error('Error checking password:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 

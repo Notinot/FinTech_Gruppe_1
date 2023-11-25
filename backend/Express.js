@@ -7,14 +7,15 @@ const app = express();
 const port = 3000;
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
-
-// Generate a random secret key for JWT
-const jwtSecret = crypto.randomBytes(64).toString('hex');
+const authenticateToken = require('./authenticateToken');
+const config = require('./config');
+const jwtSecret = config.jwtSecret;
 const jwtOptions = {
-  expiresIn: '1h', // Token expiration time
+  expiresIn: '5h', // Token expiration time
 };
 
 app.use(express.json());
+// Middleware to extract and verify JWT
 
 // Enable CORS to allow requests from any origin and restrict to POST requests
 app.use(cors({
@@ -24,9 +25,12 @@ app.use(cors({
 
 // Create a connection pool to the MySQL database
 const db = mysql.createPool({
-  host: 'btxppofwkgo3xl10tfwy-mysql.services.clever-cloud.com',
-  user: 'ud86jc8auniwbfsm',
-  password: 'ER0nIAbQy5qyAeSd4ZCV',
+  host: 'localhost',
+  user: 'root',
+  password: 'Italia_Union486',
+  // host: 'btxppofwkgo3xl10tfwy-mysql.services.clever-cloud.com',
+  // user: 'ud86jc8auniwbfsm',
+  // password: 'ER0nIAbQy5qyAeSd4ZCV',
   database: 'btxppofwkgo3xl10tfwy',
 });
 let server; // Define the server variable at a higher scope
@@ -84,18 +88,25 @@ app.post('/changepassword', async (req, res) => {
   const [user] = await db.query('SELECT * FROM User WHERE email = ?', [email]);
 
 
+  // Hash new Password
+  const salt = generateSalt();
+  const hashedPassword = await bcrypt.hash(newPassword + salt, 10)
+
+  // Compare
+  const passwordMatch = await bcrypt.compare(newPassword + user[0].salt, user[0].password_hash);
+
   if (verificationCode != user[0].verification_code) {
 
       return res.status(401).json({ message: 'Invalid verification code' });
   }
+  else if (passwordMatch){
 
-  // Hash new Password
-  const salt = generateSalt();
-  const hashedPassword = await bcrypt.hash(newPassword + salt, 10);
+        return res.status(400).json({ message: 'Old password can not be new password' });
+  }
   
   try{
 
-    await db.query('UPDATE User SET password_hash = ?, salt = ? WHERE email = ?', [hashedPassword, salt, email]);
+    await db.query('UPDATE User SET password_hash = ?, salt = ?, verification_code = NULL WHERE email = ?', [hashedPassword, salt, email]);
     return res.json({ message: 'Account verified successfully' });
 
   }catch{
@@ -174,7 +185,7 @@ app.post('/login', async (req, res) => {
     }
 
     // Verification code is valid; update the "active" attribute to 1
-    await db.query('UPDATE User SET active = 1 WHERE email = ?', [email]);
+    await db.query('UPDATE User SET active = 1, verification_code = NULL WHERE email = ?', [email]);
   }
 
   // Compare the provided password with the hashed password
@@ -184,12 +195,14 @@ app.post('/login', async (req, res) => {
 
   if (passwordMatch) {
     // Issue a JSON Web Token (JWT) upon successful login
-    const token = jwt.sign({ userId: user[0].id }, jwtSecret, jwtOptions);
+    const token = jwt.sign({ userId: user[0].user_id}, jwtSecret, jwtOptions);
+    console.log('User object:', user);
+    console.log('User ID:', user[0].user_id);
 
     // Fetch and include the user's data in the response
     const userData = user[0];
 
-    res.json({ message: 'Login successful', token, user: userData });
+    res.json({ message: 'Login successful', token});
   } else {
     res.status(401).json({ message: 'Invalid email or password' });
   }
@@ -199,16 +212,17 @@ app.post('/login', async (req, res) => {
 // Route to fetch user profile with JWT authentication
 app.get('/user/profile', authenticateToken, async (req, res) => {
   try {
+    console.log('Token:', req.headers['authorization']);
     // Get the user ID from the authenticated token
     const userId = req.user.userId;
-
+    console.log('userId:', userId);
     // Fetch the user's profile data from the database based on the user ID
-    const [userData] = await db.query('SELECT * FROM User WHERE id = ?', [userId]);
+    const [userData] = await db.query('SELECT * FROM User WHERE user_id = ?', [userId]);
 
     if (userData.length === 0) {
       return res.status(404).json({ message: 'User not found' });
     }
-
+    console.log('/user/profile userData:', userData);
     // Send the user's profile data as the response
     res.json({ user: userData[0] });
   } catch (error) {
@@ -216,6 +230,42 @@ app.get('/user/profile', authenticateToken, async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 });
+
+//get friends of specific user
+app.get('/friends/:user_id', async(req, res) => {
+  const user_id = req.params.user_id;  
+const query =
+`SELECT
+CASE
+    WHEN f.requester_id = ? THEN u_addressee.username
+    WHEN f.addressee_id = ? THEN u_requester.username
+END AS friend_username,
+CASE
+    WHEN f.requester_id = ? THEN u_addressee.first_name
+    WHEN f.addressee_id = ? THEN u_requester.first_name
+END AS friend_first_name,
+CASE
+    WHEN f.requester_id = ? THEN u_addressee.last_name
+    WHEN f.addressee_id = ? THEN u_requester.last_name
+END AS friend_last_name,
+CASE
+    WHEN f.requester_id = ? THEN u_addressee.picture
+    WHEN f.addressee_id = ? THEN u_requester.picture
+END AS friend_picture
+FROM
+Friendship f
+JOIN
+User u_requester ON f.requester_id = u_requester.user_id
+JOIN
+User u_addressee ON f.addressee_id = u_addressee.user_id
+WHERE
+f.status = 'accepted'
+AND (f.requester_id = ? OR f.addressee_id = ?);
+`;
+const [friends] = await db.query(query, [user_id, user_id, user_id, user_id, user_id, user_id, user_id, user_id,user_id, user_id]);
+  res.json({friends}); //Example of JSON: {friends: [{friend_username: user1, friend_first_name: Hund, friend_last_name: ert}]}
+});
+
 
 
 app.post('/verify', async (req, res) => {
@@ -239,6 +289,92 @@ app.post('/verify', async (req, res) => {
   res.json({ message: 'Account verified successfully' });
 });
 
+//delete user
+app.post('/delete_user', async (req, res) => {
+  const{userid} = req.body;
+  const [deleteUser] = await db.query('Update User Set active = 0 WHERE user_id = ?', [userid]);});
+
+
+//editing user
+app.post('/edit_user', async (req, res) => {
+  const { email, firstname, lastname, password,new_password, userid,pw_change,picture } = req.body;
+  emailChange = false;
+
+  let pictureData = null;
+  if (picture != null) {
+    pictureData = Buffer.from(picture, 'base64');
+  }
+
+  // Check if the user exists based on the provided user_id
+   [existingUser] = await db.query('SELECT * FROM User WHERE user_id = ?', [userid]);
+  console.log(existingUser);
+
+  if (existingUser.length === 0) {
+    return res.status(404).json({ message: 'User not found' });
+  }
+
+  
+
+  const [existingInfo] = await db.query(
+    'SELECT * FROM User WHERE email = ?',
+    [email]
+  );
+
+  /*const [existingUsername] = await db.query('SELECT * FROM User WHERE username = ? AND user_id != ?', [username, userid]);
+  if (existingUsername.length > 0) {
+    return res.status(402).json({ message: 'Username already in use' });
+  }
+*/
+  // Check if the new email is already in use by a different user
+  const [existingEmail] = await db.query('SELECT * FROM User WHERE email = ? AND user_id != ?', [email, userid]);
+  if (existingEmail.length > 0) {
+    return res.status(403).json({ message: 'Email already in use' });
+  }
+
+  
+  const samePassword = await bcrypt.compare(new_password + existingInfo[0].salt, existingInfo[0].password_hash);
+  if (samePassword) {
+    return res.status(406).json({ message: 'Your new password cannot be your old password' });
+  }
+  console.log(password)
+  console.log(new_password)
+  console.log(samePassword)
+
+  try {
+    updateData = [email, firstname, lastname,pictureData,userid];
+    query = 'UPDATE User SET email=?, first_name=?, last_name=?, picture=? WHERE user_id = ? ';
+
+    if(pw_change == true){
+      const passwordMatch = await bcrypt.compare(password + existingInfo[0].salt, existingInfo[0].password_hash);
+      if (passwordMatch) {
+        const salt = generateSalt();
+     const passwordHash = await bcrypt.hash(new_password + salt, 10);
+
+     updateData = [email, firstname, lastname, passwordHash,salt, pictureData,userid];
+     query = 'UPDATE User SET email=?, first_name=?, last_name=?, password_hash=?,salt = ?, picture=? WHERE user_id=?';
+      
+        
+      } else if(!passwordMatch) {
+        return res.status(401).json({ error: 'Current password invalid!' });
+    } 
+  }
+
+
+    await db.query(query, updateData);
+    [existingUser] = await db.query('SELECT * FROM User WHERE user_id = ?', [userid]);
+    const token = jwt.sign({ userid : existingUser[0].userid}, jwtSecret, jwtOptions);
+
+    res.json({ message: 'Profile updated successfully',token,user: existingUser[0] });
+  }
+   catch (error) {
+    console.error('Error updating profile:', error);
+    res.status(500).json({ message: 'Internal server error',error: error.message });
+    console.log('Received data:', req.body);
+  }
+});
+
+
+
 // Route to check the user's active status
 app.post('/check-active', async (req, res) => {
   const { email } = req.body;
@@ -256,10 +392,97 @@ app.post('/check-active', async (req, res) => {
 });
 
 
+// Route for sending money with JWT authentication
+app.post('/send-money', authenticateToken, async (req, res) => {
+  try {
+    // Extract the authenticated user ID from the request
+    const senderId = req.user.userId;
+    console.log('senderId:', senderId);
+    // Extract other information from the request body
+    const { recipient, amount, message } = req.body;
+
+    // Validate input
+    if (!recipient || !amount || amount <= 0) {
+      return res.status(400).json({ message: 'Invalid input' });
+    }
+
+    // Fetch recipient ID based on the recipient username or email
+    const [recipientData] = await db.query('SELECT user_id FROM User WHERE username = ? OR email = ?', [recipient, recipient]);
+
+    if (recipientData.length === 0) {
+      return res.status(404).json({ message: 'Recipient not found' });
+    }
+
+    const recipientId = recipientData[0].user_id;
+
+    // Insert transaction with message
+    await db.query('INSERT INTO Transaction (sender_id, receiver_id, amount, transaction_type, created_at, message) VALUES (?, ?, ?, ?, NOW(), ?)', [
+      senderId,
+      recipientId,
+      amount,
+      'Payment',
+      message,
+    ]);
+
+    // Update sender and recipient balances
+    const senderBalance = await getBalance(senderId);
+
+    if (senderBalance < amount) {
+      return res.status(400).json({ message: 'Insufficient funds' });
+    }
+
+    const recipientBalance = await getBalance(recipientId);
+
+    // Update balances in the database
+    await updateBalance(senderId, -amount);
+    await updateBalance(recipientId, +amount);
+
+    res.json({ message: 'Money transfer successful' });
+  } catch (error) {
+    console.error('Error transferring money:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Route to fetch transactions with JWT authentication
+app.get('/transactions', authenticateToken, async (req, res) => {
+  try {
+    // Get the user ID from the authenticated token
+    const userId = req.user.userId;
+    console.log('userId:', userId);
+
+    // Fetch the user's transaction history from the database based on the user ID
+    const transactions = await db.query(`
+      SELECT 
+        Transaction.*, 
+        sender.username AS sender_username, 
+        receiver.username AS receiver_username 
+      FROM 
+        Transaction 
+      LEFT JOIN 
+        User AS sender ON Transaction.sender_id = sender.user_id 
+      LEFT JOIN 
+        User AS receiver ON Transaction.receiver_id = receiver.user_id 
+      WHERE 
+        sender_id = ? OR receiver_id = ?
+    `, [userId, userId]);
+
+    console.log('transactions:', transactions);
+
+    // Send the user's transaction history as the response
+    res.json(transactions);
+  } catch (error) {
+    console.error('Error fetching transactions:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+
 // Route for health check
 app.get('/health', (req, res) => {
   res.sendStatus(200); // Send a 200 OK response when the server is healthy
 });
+
 
 // Start the server and handle graceful shutdown on SIGINT signal
 server = app.listen(port, () => {
@@ -272,23 +495,11 @@ server = app.listen(port, () => {
   });
 });
 
-// Middleware to authenticate the user token
-function authenticateToken(req, res, next) {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
 
-  if (!token) {
-    return res.status(401).json({ message: 'Unauthorized' });
-  }
 
-  jwt.verify(token, jwtSecret, (err, user) => {
-    if (err) {
-      return res.status(403).json({ message: 'Forbidden' });
-    }
-    req.user = user;
-    next();
-  });
-}
+
+
+
 
 // Import the required nodemailer library
 const nodemailer = require('nodemailer');
@@ -387,3 +598,45 @@ function sendVerificationEmail(to, code) {
     }
   });
 }
+
+// Function to update user balance
+async function updateBalance(userId, amount) {
+  try {
+    // Fetch the existing balance
+    const [userData] = await db.query('SELECT balance FROM User WHERE user_id = ?', [userId]);
+    const currentBalance = parseFloat(userData[0].balance);
+
+    // Update the balance
+    const newBalance = currentBalance + amount;
+    await db.query('UPDATE User SET balance = ? WHERE user_id = ?', [newBalance, userId]);
+
+    return true; // Successfully updated balance
+  } catch (error) {
+    console.error('Error updating balance:', error);
+    return false; // Failed to update balance
+  }
+}
+// Function to get user balance
+async function getBalance(userId) {
+  try {
+    // Fetch the user's balance
+    const [userData] = await db.query('SELECT balance FROM User WHERE user_id = ?', [userId]);
+    console.log('getBalance:');
+    console.log('userId:', userId);
+    console.log('userData:', userData);
+
+    if (userData.length === 0) {
+      console.log('User not found');
+      return 0; // Return 0 if user not found
+    }
+
+    const balance = parseFloat(userData[0].balance);
+
+    return balance;
+  } catch (error) {
+    console.error('Error fetching balance:', error);
+    return 0; // Return 0 in case of an error
+  }
+}
+
+

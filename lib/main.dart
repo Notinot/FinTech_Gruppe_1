@@ -21,7 +21,7 @@ class _PayfriendzAppState extends State<PayfriendzApp> {
   }
 
   Future<void> checkServerAvailability() async {
-    // const serverUrl = 'http://192.168.1.161:3000';
+    // const serverUrl = '192.168.56.1:3000';
     const serverUrl = 'http://localhost:3000';
     final response = await http.get(Uri.parse('$serverUrl/health'));
     setState(() {

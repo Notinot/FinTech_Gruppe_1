@@ -1,4 +1,8 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/Screens/FriendsScreen.dart';
+import 'package:flutter_application_1/Screens/edit_user_screen.dart';
 import 'package:flutter_application_1/Screens/login_screen.dart';
 import 'transaction_history_screen.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -16,9 +20,13 @@ class AppDrawer extends StatelessWidget {
           UserAccountsDrawerHeader(
             accountName: Text(user['username']),
             accountEmail: Text(user['email']),
-            currentAccountPicture: const CircleAvatar(
-              backgroundImage: AssetImage(
-                  'lib/assets/profile_img.png'), // Replace with the user's profile picture
+            currentAccountPicture: CircleAvatar(
+              backgroundImage: user['picture'] != null &&
+                      user['picture'] is Map<String, dynamic> &&
+                      user['picture']['data'] != null
+                  ? MemoryImage(
+                      Uint8List.fromList(user['picture']['data'].cast<int>()))
+                  : AssetImage('lib/assets/profile_img.png') as ImageProvider,
             ),
           ),
           ListTile(
@@ -31,10 +39,13 @@ class AppDrawer extends StatelessWidget {
           ),
           ListTile(
             leading: const Icon(Icons.attach_money),
-            title: const Text('Money Transfer'),
+            title: const Text('Transaction History'),
             onTap: () {
-              // Navigate to the money transfer section
-              // Implement the navigation as needed
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const TransactionHistoryScreen()),
+              );
             },
           ),
           ListTile(
@@ -57,21 +68,28 @@ class AppDrawer extends StatelessWidget {
             },
           ),
           ListTile(
-            leading: const Icon(Icons.group),
-            title: const Text('Groups'),
+            leading: const Icon(Icons.groups_rounded),
+            title: const Text('Friends'),
             onTap: () {
-              // Navigate to the groups section
-              // Implement the navigation as needed
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => FriendsScreen(user: user)),
+                //builder: (context) => FriendsScreen()),
+              );
             },
           ),
           ListTile(
-            leading: const Icon(Icons.settings),
-            title: const Text('Settings'),
+            leading: const Icon(Icons.person),
+            title: const Text('Profile information'),
             onTap: () {
-              // Navigate to the settings section
-              // Implement the navigation as needed
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => EditUser()),
+              );
             },
           ),
+
           const Divider(), // Add a divider to separate the top items from the bottom items
           ListTile(
             leading: const Icon(Icons.exit_to_app),

@@ -4,9 +4,9 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 
 class UserProfileSection extends StatelessWidget {
-  final String username;
+  final Map<String, dynamic> user;
 
-  const UserProfileSection(this.username, {super.key});
+  const UserProfileSection(this.user, {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -22,13 +22,18 @@ class UserProfileSection extends StatelessWidget {
     return Column(
       children: <Widget>[
         CircleAvatar(
-          backgroundImage: image.image,
+          backgroundImage: user['picture'] != null &&
+                  user['picture'] is Map<String, dynamic> &&
+                  user['picture']['data'] != null
+              ? MemoryImage(
+                  Uint8List.fromList(user['picture']['data'].cast<int>()))
+              : image.image,
           radius: 50,
           backgroundColor: Colors.grey, // Fallback background color
         ),
         const SizedBox(height: 16),
         Text(
-          'Welcome, $username',
+          'Welcome, ' + user['username'],
           style: const TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,

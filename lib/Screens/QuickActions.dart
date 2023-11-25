@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Screens/send_money_screen.dart';
+import 'package:flutter_application_1/Screens/create_event_screen.dart';
 
 class QuickActions extends StatelessWidget {
-  const QuickActions({super.key});
-
+  final Map<String, dynamic> user;
+  const QuickActions({super.key, required this.user});
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -31,6 +32,10 @@ class QuickActions extends StatelessWidget {
           label: 'Create Event',
           onTap: () {
             // Implement the action for creating an event
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => CreateEventScreen()),
+            );
           },
         ),
       ],
@@ -44,7 +49,10 @@ class QuickActionButton extends StatelessWidget {
   final Function onTap;
 
   const QuickActionButton(
-      {super.key, required this.icon, required this.label, required this.onTap});
+      {super.key,
+      required this.icon,
+      required this.label,
+      required this.onTap});
 
   @override
   Widget build(BuildContext context) {

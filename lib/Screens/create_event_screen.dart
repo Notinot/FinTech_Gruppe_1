@@ -25,13 +25,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   final TextEditingController priceController = TextEditingController();
 
   Color countryButton = Colors.grey;
-  Color titleBorder = Colors.grey;
-  Color descriptionBorder = Colors.grey;
   Color priceBorder = Colors.grey;
-  Color maxParticipantBorder = Colors.grey;
-  Color cityBorder = Colors.grey;
-  Color streetBorder = Colors.grey;
-  Color zipcodeBorder = Colors.grey;
 
   String? title;
   String? description;
@@ -41,9 +35,31 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   String? zipcode;
   String? price;
 
+  String? titleError;
+  String? descriptionError;
+  String? maxParticipantsError;
+  String? cityError;
+  String? streetError;
+  String? zipcodeError;
+
   bool countryButtonUsed = false;
 
+  void clearErrors() {
+    // Clear any previous error messages
+    setState(() {
+      titleError = null;
+      descriptionError = null;
+      maxParticipantsError = null;
+      cityError = null;
+      streetError = null;
+      zipcodeError = null;
+    });
+  }
+
+
   Future<void> handleCreateEvent() async {
+
+    clearErrors();
 
     final String title = titleController.text;
     final String description = descriptionController.text;
@@ -70,22 +86,42 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
 
     if(title.trim().isEmpty){
 
+      setState(() {
+        titleError = 'Event title cannot be empty';
+      });
+      return;
     }
 
     if(maxParticipants.trim().isEmpty){
 
+      setState(() {
+        maxParticipantsError = 'Maximal number of participants cannot be empty';
+      });
+      return;
     }
 
     if(city.trim().isEmpty){
 
+      setState(() {
+        cityError = 'City cannot be empty';
+      });
+      return;
     }
 
     if(street.trim().isEmpty){
 
+      setState(() {
+        streetError = 'City cannot be empty';
+      });
+      return;
     }
 
     if(zipcode.trim().isEmpty){
 
+      setState(() {
+        zipcodeError = 'City cannot be empty';
+      });
+      return;
     }
 
     if(selectedCountry == ''){
@@ -94,20 +130,20 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         countryButton = Colors.red;
       });
       showErrorSnackBar(context, 'Select a Country');
+      return;
     }
 
     if (parsedPrice <= 0) {
-      /*
+
       setState(() {
-        amountBorderColor = Colors.red;
+        priceBorder = Colors.red;
       });
 
-       */
       showErrorSnackBar(context, 'Enter a valid amount');
       return;
     }
 
-    return;
+
   }
 
   @override

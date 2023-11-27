@@ -229,6 +229,7 @@ app.get('/user/profile', authenticateToken, async (req, res) => {
 });
 
 //get friends of specific user
+//returns JSON with: 
 app.get('/friends/:user_id', async(req, res) => {
   const user_id = req.params.user_id;  
 const query =
@@ -260,10 +261,52 @@ f.status = 'accepted'
 AND (f.requester_id = ? OR f.addressee_id = ?);
 `;
 const [friends] = await db.query(query, [user_id, user_id, user_id, user_id, user_id, user_id, user_id, user_id,user_id, user_id]);
-  res.json({friends}); //Example of JSON: {friends: [{friend_username: user1, friend_first_name: Hund, friend_last_name: ert}]}
+res.json({friends}); 
 });
 
+//get pending friend requests of specific user
+//returns JSON with: 
+app.get('/friends/pending/:user_id', async(req, res) => {
+  const user_id = req.params.user_id;  
+const query =
+`SELECT  f.requester_id, u.username, u.first_name, u.last_name, u.picture
+FROM Friendship f
+JOIN User u ON f.requester_id = u.user_id
+WHERE f.addressee_id = ? AND f.status = 'pending';
+`;
+const [pendingFriends] = await db.query(query, [user_id]);
+  res.json({pendingFriends}); //!
+});
 
+//handle friend request
+/*
+Receives: boolean value whether request was accepted or declined
+          ID of person who was accepted or declined
+*/
+app.post('/friends/request/:user_id', async (req, res) => {
+  const user_id = req.params.user_id;  
+  const{friendId, accepted} = req.body;
+  if(accepted){
+    const query =
+    `Update Friendship
+     Set status =  'accepted' 
+     WHERE addressee_id = ? AND requester_id = ? ` ;  
+  }else{
+    const query =
+    `Update Friendship
+     Set status =  'declined' 
+     WHERE addressee_id = ? AND requester_id = ? ` ;
+  }
+   const [friendRequest] = await db.query(query, [user_id, friendId]);
+   res.json({friendRequest});
+    });
+
+/*
+--add friend
+--remove friend
+--add BLOCKED functionality? 
+
+*/
 
 app.post('/verify', async (req, res) => {
   const { email, verificationCode } = req.body;

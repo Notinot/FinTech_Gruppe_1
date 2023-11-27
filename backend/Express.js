@@ -301,9 +301,42 @@ app.post('/friends/request/:user_id', async (req, res) => {
    res.json({friendRequest});
     });
 
+  //add friend (sending friend request)
+      //names of routes are kinda misleading
+  app.post('/friends/add/:user_id', async (req, res) => {
+    const user_id = req.params.user_id;  
+    const{friendId} = req.body;
+  
+    const query = `
+    INSERT INTO Friendship 
+    (requester_id, addressee_id, status, request_time) 
+    VALUES (?, ?, ?, NOW())`;
+     const [addingFriend] = await db.query(query, [user_id, friendId]);
+     res.json({addingFriend});
+      });
+
+  //removing friend
+  app.delete('/friends/:user_id', async (req, res) => {
+    const user_id = req.params.user_id;
+    const{friendId} = req.body;
+
+    const query = `
+    DELETE FROM Friendship
+    WHERE (requester_id = ? AND addressee_id = ?) OR (requester_id = ? AND addressee_id = ?)
+    `;
+
+    try {
+        const [deletingFriend] = await db.query(query, [user_id, friendId, friend_id, user_id]);
+
+        res.json({ success: true, message: 'Friend deleted successfully.' });
+    } catch (error) {
+        console.error('Error deleting friend:', error);
+        res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+});
+
+
 /*
---add friend
---remove friend
 --add BLOCKED functionality? 
 
 */

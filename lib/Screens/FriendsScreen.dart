@@ -14,7 +14,7 @@ class FriendsScreen extends StatefulWidget {
 class _FriendsScreenState extends State<FriendsScreen> {
   List<Map<String, dynamic>> friendData = [];
   List<Map<String, dynamic>> pendingFriends = [];
-  int? user_id = null;
+  int? user_id = null; //correct way?
 
   @override
   void initState() {
@@ -157,6 +157,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
       if (response.statusCode == 200) {
         fetchPendingFriends();
         //fetch friends as well
+        fetchData(); //reads JWT again which is kina unnecessary
       } else {
         print(
             'Failed to accept friend request. Status code: ${response.statusCode}');

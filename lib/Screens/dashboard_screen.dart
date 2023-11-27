@@ -21,7 +21,9 @@ class DashboardScreen extends StatelessWidget {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           // Show loading indicator while fetching data
-          return CircularProgressIndicator();
+          return CircularProgressIndicator(
+            value: 0.5,
+          );
         } else if (snapshot.hasError) {
           // Handle errors
           return Text('Error: ${snapshot.error}');

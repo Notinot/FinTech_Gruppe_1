@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Screens/send_money_screen.dart';
+import 'package:flutter_application_1/Screens/request_money_screen.dart';
 
 class QuickActions extends StatelessWidget {
   final Map<String, dynamic> user;
@@ -23,15 +24,16 @@ class QuickActions extends StatelessWidget {
           icon: Icons.request_page,
           label: 'Request Payment',
           onTap: () {
-            // Implement the action for requesting payment
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => RequestMoneyScreen()),
+            );
           },
         ),
         QuickActionButton(
           icon: Icons.event,
           label: 'Create Event',
-          onTap: () {
-            // Implement the action for creating an event
-          },
+          onTap: () {},
         ),
       ],
     );

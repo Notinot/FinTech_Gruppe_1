@@ -24,18 +24,16 @@ class QuickActions extends StatelessWidget {
           icon: Icons.request_page,
           label: 'Request Payment',
           onTap: () {
-            // Implement the action for requesting payment
-          },
-        ),
-        QuickActionButton(
-          icon: Icons.event,
-          label: 'Create Event',
-          onTap: () {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => RequestMoneyScreen()),
             );
           },
+        ),
+        QuickActionButton(
+          icon: Icons.event,
+          label: 'Create Event',
+          onTap: () {},
         ),
       ],
     );

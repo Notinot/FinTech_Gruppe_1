@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+//import 'dart:ffi';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Screens/dashboard_screen.dart';
@@ -39,7 +40,6 @@ class _EditUserState extends State<EditUser> {
 
   late TextEditingController usernameController;
   late TextEditingController emailController;
-  late TextEditingController currentPasswordController;
   late TextEditingController passwordController;
   late TextEditingController confirmPasswordController;
   late TextEditingController firstnameController;
@@ -51,7 +51,6 @@ class _EditUserState extends State<EditUser> {
   String? firstnameError;
   String? lastnameError;
   String? confirmPasswordError;
-  String? currentPasswordError;
   Map<String, dynamic>? userT;
 
   void clearErrors() {
@@ -59,7 +58,6 @@ class _EditUserState extends State<EditUser> {
     setState(() {
       passwordError = null;
       confirmPasswordError = null;
-      currentPasswordError = null;
       emailError = null;
       usernameError = null;
       firstnameError = null;
@@ -77,7 +75,6 @@ class _EditUserState extends State<EditUser> {
       setState(() {
         usernameController = TextEditingController(text: userData['username']);
         emailController = TextEditingController(text: userData['email']);
-        currentPasswordController = TextEditingController();
         passwordController = TextEditingController();
         confirmPasswordController = TextEditingController();
         firstnameController =
@@ -179,7 +176,6 @@ class _EditUserState extends State<EditUser> {
     String firstname = firstnameController.text;
     String lastname = lastnameController.text;
     String new_password = passwordController.text;
-    String current_password = currentPasswordController.text;
     String confirmPassword = confirmPasswordController.text;
     bool pw_change = false;
     bool email_change = false;
@@ -304,28 +300,8 @@ class _EditUserState extends State<EditUser> {
       return;
     }
 
-    if ((new_password == confirmPassword && new_password.isNotEmpty) &&
-        current_password.isNotEmpty) {
+    if ((new_password == confirmPassword && new_password.isNotEmpty)) {
       pw_change = true;
-    }
-
-    if (new_password.isNotEmpty && current_password.isEmpty ||
-        current_password.isEmpty && email.isNotEmpty && email != email_old ||
-        current_password.isEmpty &&
-            firstname.isNotEmpty &&
-            firstname != firstname_old ||
-        current_password.isEmpty &&
-            lastname.isNotEmpty &&
-            lastname != lastname_old) {
-      setState(() {
-        currentPasswordError =
-            'You have to enter your current password to make any changes!';
-      });
-      showSnackBar(
-          isError: true,
-          message:
-              'Current password not entered while trying to update Account Information');
-      return;
     }
 
     if (!EmailValid(email) && email.isNotEmpty) {
@@ -388,7 +364,6 @@ class _EditUserState extends State<EditUser> {
           'email': email,
           'firstname': firstname,
           'lastname': lastname,
-          'password': current_password,
           'new_password': new_password,
           'userid': user_id,
           'pw_change': pw_change,
@@ -405,7 +380,6 @@ class _EditUserState extends State<EditUser> {
           'email': email,
           'firstname': firstname,
           'lastname': lastname,
-          'password': current_password,
           'new_password': new_password,
           'userid': user_id,
           'email_change': email_change,
@@ -481,7 +455,12 @@ class _EditUserState extends State<EditUser> {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           // Show loading indicator while fetching data
-          return CircularProgressIndicator();
+          return Transform.scale(
+              scale: 0.2,
+              child: CircularProgressIndicator(
+                value: 0.4,
+                strokeWidth: 1.5,
+              ));
         } else if (snapshot.hasError) {
           // Handle errors
           return Text('Error: ${snapshot.error}');
@@ -570,19 +549,6 @@ class _EditUserState extends State<EditUser> {
                     Visibility(
                         visible: isEditing,
                         child: TextField(
-                          controller: currentPasswordController,
-                          obscureText: true,
-                          decoration: InputDecoration(
-                            labelText: 'Current password',
-                            enabled: isEditing,
-                            border: const OutlineInputBorder(),
-                            errorText: currentPasswordError,
-                          ),
-                        )),
-                    const SizedBox(height: 16.0),
-                    Visibility(
-                        visible: isEditing,
-                        child: TextField(
                           controller: passwordController,
                           obscureText: true,
                           decoration: InputDecoration(
@@ -623,10 +589,17 @@ class _EditUserState extends State<EditUser> {
     );
   }
 
-  void toggleEditMode() {
-    setState(() {
-      isEditing = !isEditing;
-    });
+  void toggleEditMode() async {
+    bool correctPassword = await verifyPassword();
+    if (!isEditing && correctPassword) {
+      setState(() {
+        isEditing = true;
+      });
+    } else if (isEditing) {
+      setState(() {
+        isEditing = false;
+      });
+    }
   }
 
   Future<String> verify() async {
@@ -674,6 +647,83 @@ class _EditUserState extends State<EditUser> {
       return await completer.future; // Wait for the Future to complete
     } catch (error) {
       return ''; // Handle error or return a default value
+    }
+  }
+
+  Future<bool> verifyPassword() async {
+    Completer<bool> completer = Completer<bool>();
+    TextEditingController currentPasswordController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Enter your current password'),
+          content: TextField(
+            controller: currentPasswordController,
+            obscureText: true,
+            decoration: InputDecoration(
+              hintText: 'Password',
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                completer.completeError('User cancelled');
+              },
+              child: Text('Close'),
+            ),
+            TextButton(
+              onPressed: () async {
+                try {
+                  // Make an HTTP request to verify the password on the backend
+                  Map<String, dynamic> request = {
+                    'email': email_old,
+                    'password': currentPasswordController.text,
+                  };
+
+                  final response = await http.post(
+                    Uri.parse('http://localhost:3000/verifyPassword'),
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: json.encode(request),
+                  );
+
+                  print(
+                      'Verification Response: ${response.statusCode} - ${response.body}');
+
+                  if (response.statusCode == 200) {
+                    // Password is correct, set completer to true
+                    Navigator.of(context).pop(); // Close the AlertDialog
+                    completer.complete(true);
+                  } else {
+                    // Password is incorrect, show an error message
+                    showSnackBar(
+                      isError: true,
+                      message: 'Incorrect password',
+                    );
+                  }
+                } catch (error) {
+                  // Handle error or show an error message
+                  showSnackBar(
+                    isError: true,
+                    message: 'Error verifying password: $error',
+                  );
+                }
+              },
+              child: Text('Submit'),
+            ),
+          ],
+        );
+      },
+    );
+
+    try {
+      return await completer.future;
+    } catch (error) {
+      return false; // Handle error or return a default value
     }
   }
 }

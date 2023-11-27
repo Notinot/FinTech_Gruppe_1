@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
+import 'edit_user_screen.dart';
 
 class SendMoneyScreen extends StatefulWidget {
   SendMoneyScreen({super.key});
@@ -151,6 +152,7 @@ class _SendMoneyScreenState extends State<SendMoneyScreen> {
                       amountBorderColor = Colors.grey;
                     });
                   }
+
                   // Use the sendMoney method
                   bool success =
                       await sendMoney(recipient, parsedAmount, message);

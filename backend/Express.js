@@ -229,6 +229,7 @@ app.get('/user/profile', authenticateToken, async (req, res) => {
 });
 
 //get friends of specific user
+//returns JSON with: 
 app.get('/friends/:user_id', async(req, res) => {
   const user_id = req.params.user_id;  
 const query =
@@ -260,10 +261,85 @@ f.status = 'accepted'
 AND (f.requester_id = ? OR f.addressee_id = ?);
 `;
 const [friends] = await db.query(query, [user_id, user_id, user_id, user_id, user_id, user_id, user_id, user_id,user_id, user_id]);
-  res.json({friends}); //Example of JSON: {friends: [{friend_username: user1, friend_first_name: Hund, friend_last_name: ert}]}
+res.json({friends}); 
+});
+
+//get pending friend requests of specific user
+//returns JSON with: 
+app.get('/friends/pending/:user_id', async(req, res) => {
+  const user_id = req.params.user_id;  
+const query =
+`SELECT  f.requester_id, u.username, u.first_name, u.last_name, u.picture
+FROM Friendship f
+JOIN User u ON f.requester_id = u.user_id
+WHERE f.addressee_id = ? AND f.status = 'pending';
+`;
+const [pendingFriends] = await db.query(query, [user_id]);
+  res.json({pendingFriends}); //!
+});
+
+//handle friend request
+/*
+Receives: boolean value whether request was accepted or declined
+          ID of person who was accepted or declined
+*/
+app.post('/friends/request/:user_id', async (req, res) => {
+  const user_id = req.params.user_id;  
+  const{friendId, accepted} = req.body;
+  if(accepted){
+    const query =
+    `Update Friendship
+     Set status =  'accepted' 
+     WHERE addressee_id = ? AND requester_id = ? ` ;  
+  }else{
+    const query =
+    `Update Friendship
+     Set status =  'declined' 
+     WHERE addressee_id = ? AND requester_id = ? ` ;
+  }
+   const [friendRequest] = await db.query(query, [user_id, friendId]);
+   res.json({friendRequest});
+    });
+
+  //add friend (sending friend request)
+      //names of routes are kinda misleading
+  app.post('/friends/add/:user_id', async (req, res) => {
+    const user_id = req.params.user_id;  
+    const{friendId} = req.body;
+  
+    const query = `
+    INSERT INTO Friendship 
+    (requester_id, addressee_id, status, request_time) 
+    VALUES (?, ?, ?, NOW())`;
+     const [addingFriend] = await db.query(query, [user_id, friendId]);
+     res.json({addingFriend});
+      });
+
+  //removing friend
+  app.delete('/friends/:user_id', async (req, res) => {
+    const user_id = req.params.user_id;
+    const{friendId} = req.body;
+
+    const query = `
+    DELETE FROM Friendship
+    WHERE (requester_id = ? AND addressee_id = ?) OR (requester_id = ? AND addressee_id = ?)
+    `;
+
+    try {
+        const [deletingFriend] = await db.query(query, [user_id, friendId, friend_id, user_id]);
+
+        res.json({ success: true, message: 'Friend deleted successfully.' });
+    } catch (error) {
+        console.error('Error deleting friend:', error);
+        res.status(500).json({ success: false, message: 'Internal server error' });
+    }
 });
 
 
+/*
+--add BLOCKED functionality? 
+
+*/
 
 app.post('/verify', async (req, res) => {
   const { email, verificationCode } = req.body;
@@ -294,7 +370,7 @@ app.post('/delete_user', async (req, res) => {
 
 //editing user
 app.post('/edit_user', async (req, res) => {
-  const { email, firstname, lastname, password,new_password, userid,pw_change,picture } = req.body;
+  const { email, firstname, lastname,new_password, userid,pw_change,picture } = req.body;
   emailChange = false;
 
   let pictureData = null;
@@ -333,7 +409,7 @@ app.post('/edit_user', async (req, res) => {
   if (samePassword) {
     return res.status(406).json({ message: 'Your new password cannot be your old password' });
   }
-  console.log(password)
+
   console.log(new_password)
   console.log(samePassword)
 
@@ -342,18 +418,13 @@ app.post('/edit_user', async (req, res) => {
     query = 'UPDATE User SET email=?, first_name=?, last_name=?, picture=? WHERE user_id = ? ';
 
     if(pw_change == true){
-      const passwordMatch = await bcrypt.compare(password + existingInfo[0].salt, existingInfo[0].password_hash);
-      if (passwordMatch) {
-        const salt = generateSalt();
+      
+      const salt = generateSalt();
      const passwordHash = await bcrypt.hash(new_password + salt, 10);
 
      updateData = [email, firstname, lastname, passwordHash,salt, pictureData,userid];
      query = 'UPDATE User SET email=?, first_name=?, last_name=?, password_hash=?,salt = ?, picture=? WHERE user_id=?';
       
-        
-      } else if(!passwordMatch) {
-        return res.status(401).json({ error: 'Current password invalid!' });
-    } 
   }
 
 
@@ -367,6 +438,34 @@ app.post('/edit_user', async (req, res) => {
     console.error('Error updating profile:', error);
     res.status(500).json({ message: 'Internal server error',error: error.message });
     console.log('Received data:', req.body);
+  }
+});
+
+app.post('/verifyPassword', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    console.log(email)
+    console.log(password)
+    // Check if the user with the provided email exists
+    const [user] = await db.query('SELECT * FROM User WHERE email = ?', [email]);
+
+    if (user.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Compare the provided password with the hashed password
+    const hashedPassword = user[0].password_hash;
+    const salt = user[0].salt;
+    const passwordMatch = await bcrypt.compare(password + salt, hashedPassword);
+
+    if (passwordMatch) {
+      res.json({ message: 'Password is correct' });
+    } else {
+      res.status(401).json({ message: 'Incorrect password' });
+    }
+  } catch (error) {
+    console.error('Error checking password:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 

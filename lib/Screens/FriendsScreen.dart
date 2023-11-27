@@ -1,27 +1,32 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'api_service.dart';
 
 class FriendsScreen extends StatefulWidget {
-  final Map<String, dynamic> user;
-  const FriendsScreen({super.key, required this.user});
+  const FriendsScreen({super.key});
 
   @override
   _FriendsScreenState createState() => _FriendsScreenState();
 }
 
 class _FriendsScreenState extends State<FriendsScreen> {
+  //get user profile via jwt
+  //late Future<Map<String, dynamic>> user = ApiService.fetchUserProfile();
   List<Map<String, dynamic>> friendData = []; // List to store friend data
 
   @override
   void initState() {
     super.initState();
-    final user_id = widget.user['user_id'];
-    fetchData(user_id);
+    fetchData();
   }
 
-  Future<void> fetchData(int userId) async {
+  Future<void> fetchData() async {
+    //get user information via JWT
     try {
+      Map<String, dynamic> user = await ApiService.fetchUserProfile();
+      final userId = user['user_id'];
       final response =
           await http.get(Uri.parse('http://localhost:3000/friends/$userId'));
 

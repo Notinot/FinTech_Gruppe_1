@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Screens/send_money_screen.dart';
 import 'package:flutter_application_1/Screens/request_money_screen.dart';
+import 'package:flutter_application_1/Screens/create_event_screen.dart';
 
 class QuickActions extends StatelessWidget {
   final Map<String, dynamic> user;
@@ -33,7 +34,13 @@ class QuickActions extends StatelessWidget {
         QuickActionButton(
           icon: Icons.event,
           label: 'Create Event',
-          onTap: () {},
+          onTap: () {
+            // Implement the action for creating an event
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => CreateEventScreen()),
+            );
+          },
         ),
       ],
     );

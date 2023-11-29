@@ -443,11 +443,11 @@ app.post('/edit_user', async (req, res) => {
 
 app.post('/verifyPassword', async (req, res) => {
   try {
-    const { email, password } = req.body;
-    console.log(email)
+    const { userid, password } = req.body;
+    console.log(userid)
     console.log(password)
     // Check if the user with the provided email exists
-    const [user] = await db.query('SELECT * FROM User WHERE email = ?', [email]);
+    const [user] = await db.query('SELECT * FROM User WHERE user_id = ?', [userid]);
 
     if (user.length === 0) {
       return res.status(404).json({ message: 'User not found' });

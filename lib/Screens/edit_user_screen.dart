@@ -679,7 +679,7 @@ class _EditUserState extends State<EditUser> {
                 try {
                   // Make an HTTP request to verify the password on the backend
                   Map<String, dynamic> request = {
-                    'email': email_old,
+                    'userid': user_id,
                     'password': currentPasswordController.text,
                   };
 

@@ -40,6 +40,7 @@ dependencies:
   file_picker: ^6.1.1
   flutter_otp_text_field: ^1.1.0+2
   country_picker: ^2.0.22
+  numberpicker: ^2.1.2
   
 
   # The following adds the Cupertino Icons font to your application.

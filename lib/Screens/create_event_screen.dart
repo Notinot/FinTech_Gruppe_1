@@ -1,6 +1,7 @@
 import 'package:country_picker/country_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:numberpicker/numberpicker.dart';
 
 
 class CreateEventScreen extends StatefulWidget {
@@ -15,6 +16,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
 
   var selectedCat = 'Book and Literature';
   var selectedCountry = '';
+  var selectedMaxParticipants = 1;
 
   final TextEditingController titleController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
@@ -57,13 +59,52 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   }
 
 
+  Future<DateTime?> showDateTimePicker({
+
+    required BuildContext context,
+    DateTime? initialDate,
+    DateTime? firstDate,
+    DateTime? lastDate,
+  }) async {
+    initialDate ??= DateTime.now();
+    firstDate ??= DateTime.now();
+    lastDate ??= firstDate.add(const Duration(days: 365 * 200));
+
+    final DateTime? selectedDate = await showDatePicker(
+    context: context,
+    initialDate: initialDate,
+    firstDate: firstDate,
+    lastDate: lastDate);
+
+    if (selectedDate == null) return null;
+
+    if(!context.mounted) return selectedDate;
+
+    final TimeOfDay? selectedTime = await showTimePicker(
+
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(selectedDate)
+    );
+
+    return selectedTime == null
+        ? selectedDate
+        : DateTime(
+      selectedDate.year,
+      selectedDate.month,
+      selectedDate.day,
+      selectedTime.hour,
+        selectedTime.minute
+    );
+
+  }
+
   Future<void> handleCreateEvent() async {
 
     clearErrors();
 
     final String title = titleController.text;
     final String description = descriptionController.text;
-    final String maxParticipants = maxParticipantsController.text;
+    final int maxParticipants = selectedMaxParticipants;
     final String city = cityController.text;
     final String street = streetController.text;
     final String zipcode = zipcodeController.text;
@@ -88,14 +129,6 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
 
       setState(() {
         titleError = 'Event title cannot be empty';
-      });
-      return;
-    }
-
-    if(maxParticipants.trim().isEmpty){
-
-      setState(() {
-        maxParticipantsError = 'Maximal number of participants cannot be empty';
       });
       return;
     }
@@ -179,7 +212,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
             children: <Widget>[
               const SizedBox(height: 16.0),
               const Text(
-                'Event details',
+                'Event information',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16.0),
@@ -211,15 +244,35 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                   border: OutlineInputBorder(),
                 ),
               ),
-              const SizedBox(height: 16.0),
-              TextFormField(
-                controller: maxParticipantsController,
-                decoration: const InputDecoration(
-                  labelText: 'Maximal participants',
-                  border: OutlineInputBorder(),
-                ),
+              const SizedBox(height: 24.0),
+              const Text('Maximal number of participants', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              NumberPicker(
+                  minValue: 1, maxValue: 100, value: selectedMaxParticipants,
+                  onChanged: (value) => (
+                  setState(() => selectedMaxParticipants = value)
+                  )
               ),
-              const SizedBox(height: 32.0),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.remove),
+                    onPressed: () => setState(() {
+                      final newValue = selectedMaxParticipants - 1;
+                      selectedMaxParticipants = newValue.clamp(1, 100);
+                    }),
+                  ),
+                  Text('Participants: $selectedMaxParticipants', style: const TextStyle(fontSize: 16)),
+                  IconButton(
+                    icon: Icon(Icons.add),
+                    onPressed: () => setState(() {
+                      final newValue = selectedMaxParticipants + 1;
+                      selectedMaxParticipants = newValue.clamp(1, 100);
+                    }),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 42.0),
               const Text(
                 'Location',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -255,7 +308,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 'Currently chosen: $selectedCountry',
                 style: TextStyle(fontSize: 14, fontWeight: FontWeight.normal),
               ),
-              const SizedBox(height: 16.0),
+              const SizedBox(height: 20.0),
               TextFormField(
                 controller: cityController,
                 decoration: const InputDecoration(

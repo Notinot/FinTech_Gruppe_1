@@ -245,6 +245,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 ),
               ),
               const SizedBox(height: 24.0),
+              // Insert Here
+              // showDateTimePicker(context: DateTime.now())
+              const SizedBox(height: 24.0),
               const Text('Maximal number of participants', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               NumberPicker(
                   minValue: 1, maxValue: 100, value: selectedMaxParticipants,

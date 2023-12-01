@@ -1,11 +1,14 @@
+import 'dart:convert';
 import 'package:country_picker/country_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
 import 'package:numberpicker/numberpicker.dart';
-
+import 'package:http/http.dart' as http;
+import 'package:path/path.dart';
 
 class CreateEventScreen extends StatefulWidget {
-
   CreateEventScreen({super.key});
 
   @override
@@ -13,21 +16,26 @@ class CreateEventScreen extends StatefulWidget {
 }
 
 class _CreateEventScreenState extends State<CreateEventScreen> {
-
   var selectedCat = 'Book and Literature';
   var selectedCountry = '';
   var selectedMaxParticipants = 1;
+  var selectedTimestamp;
+  var unixTimestamp;
+  var displayTimestamp;
 
   final TextEditingController titleController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
-  final TextEditingController maxParticipantsController = TextEditingController();
+  final TextEditingController maxParticipantsController =
+      TextEditingController();
   final TextEditingController cityController = TextEditingController();
   final TextEditingController streetController = TextEditingController();
   final TextEditingController zipcodeController = TextEditingController();
   final TextEditingController priceController = TextEditingController();
 
   Color countryButton = Colors.grey;
+  Color datetimeButton = Colors.grey;
   Color priceBorder = Colors.grey;
+  Color wrongDate = Colors.black;
 
   String? title;
   String? description;
@@ -43,6 +51,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   String? cityError;
   String? streetError;
   String? zipcodeError;
+  String? priceError;
 
   bool countryButtonUsed = false;
 
@@ -55,12 +64,11 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       cityError = null;
       streetError = null;
       zipcodeError = null;
+      priceError = null;
     });
   }
 
-
   Future<DateTime?> showDateTimePicker({
-
     required BuildContext context,
     DateTime? initialDate,
     DateTime? firstDate,
@@ -71,117 +79,168 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     lastDate ??= firstDate.add(const Duration(days: 365 * 200));
 
     final DateTime? selectedDate = await showDatePicker(
-    context: context,
-    initialDate: initialDate,
-    firstDate: firstDate,
-    lastDate: lastDate);
+        context: context,
+        initialDate: initialDate,
+        firstDate: firstDate,
+        lastDate: lastDate);
 
     if (selectedDate == null) return null;
 
-    if(!context.mounted) return selectedDate;
+    if (!context.mounted) return selectedDate;
 
     final TimeOfDay? selectedTime = await showTimePicker(
+        context: context, initialTime: TimeOfDay.fromDateTime(selectedDate));
 
-      context: context,
-      initialTime: TimeOfDay.fromDateTime(selectedDate)
-    );
+    setState(() {
+      datetimeButton = Colors.blue;
+    });
+
+    selectedTime == null;
+    selectedTimestamp = DateTime(selectedDate.year, selectedDate.month,
+        selectedDate.day, selectedTime!.hour, selectedTime.minute);
+
+    unixTimestamp = selectedTimestamp.toString();
+    unixTimestamp = DateTime.parse(unixTimestamp).millisecondsSinceEpoch;
+
+    displayTimestamp = selectedTimestamp.toString().substring(0, 16);
 
     return selectedTime == null
         ? selectedDate
-        : DateTime(
-      selectedDate.year,
-      selectedDate.month,
-      selectedDate.day,
-      selectedTime.hour,
-        selectedTime.minute
-    );
-
+        : DateTime(selectedDate.year, selectedDate.month, selectedDate.day,
+            selectedTime.hour, selectedTime.minute);
   }
 
   Future<void> handleCreateEvent() async {
-
+    // Error cleaning
     clearErrors();
+    // datetimeButton = Colors.grey;
+    // countryButton = Colors.grey;
 
     final String title = titleController.text;
     final String description = descriptionController.text;
-    final int maxParticipants = selectedMaxParticipants;
     final String city = cityController.text;
     final String street = streetController.text;
     final String zipcode = zipcodeController.text;
     final String price = priceController.text;
 
+    try {
+      if (unixTimestamp == null || unixTimestamp == '') {
+        setState(() {
+          datetimeButton = Colors.red;
+        });
+      }
+
+      if (unixTimestamp < DateTime.now().millisecondsSinceEpoch) {
+        setState(() {
+          datetimeButton = Colors.red;
+          wrongDate = Colors.red;
+        });
+      }
+    } catch (e) {
+      print("error $e");
+    }
 
     // Remove euro sign, periods and spaces
-    final cleanedAmountText = price
-        .replaceAll('€', '')
-        .replaceAll(' ', '')
-        .replaceAll('.', '');
+    final cleanedAmountText =
+        price.replaceAll('€', '').replaceAll(' ', '').replaceAll('.', '');
 
     // Replace commas with periods
-    final normalizedAmountText =
-    cleanedAmountText.replaceAll(',', '.');
+    final normalizedAmountText = cleanedAmountText.replaceAll(',', '.');
 
     // Parse the amount
-    final parsedPrice =
-        double.tryParse(normalizedAmountText) ?? 0.0;
+    final parsedPrice = double.tryParse(normalizedAmountText) ?? 0.0;
 
-    if(title.trim().isEmpty){
-
+    if (title.trim().isEmpty) {
       setState(() {
         titleError = 'Event title cannot be empty';
       });
-      return;
     }
 
-    if(city.trim().isEmpty){
+    if (description.trim().isEmpty) {
+      setState(() {
+        descriptionError = 'Please enter a brief description';
+      });
+    }
 
+    if (city.trim().isEmpty) {
       setState(() {
         cityError = 'City cannot be empty';
       });
-      return;
     }
 
-    if(street.trim().isEmpty){
-
+    if (street.trim().isEmpty) {
       setState(() {
-        streetError = 'City cannot be empty';
+        streetError = 'Street cannot be empty';
       });
-      return;
     }
 
-    if(zipcode.trim().isEmpty){
-
+    if (zipcode.trim().isEmpty) {
       setState(() {
-        zipcodeError = 'City cannot be empty';
+        zipcodeError = 'Zipcode cannot be empty';
       });
-      return;
     }
 
-    if(selectedCountry == ''){
-
+    if (selectedCountry == '') {
       setState(() {
         countryButton = Colors.red;
       });
-      showErrorSnackBar(context, 'Select a Country');
-      return;
+      showErrorSnackBar(context as BuildContext, 'Select a Country');
     }
 
     if (parsedPrice <= 0) {
-
       setState(() {
-        priceBorder = Colors.red;
+        priceError = "Enter a valid price";
       });
 
-      showErrorSnackBar(context, 'Enter a valid amount');
-      return;
+      showErrorSnackBar(context as BuildContext, 'Enter a valid amount');
     }
 
+    // Start for request
+    const storage = FlutterSecureStorage();
+    final token = await storage.read(key: 'token');
 
+    if (token == null) {
+      if (kDebugMode) {
+        print('JWT token not found.');
+      }
+      return;
+    }
+    if (kDebugMode) {
+      print('token: $token');
+    }
+
+    final createEventResponse =
+        await http.post(Uri.parse('http://localhost:3000/create-event'),
+            headers: {
+              'Content-Type': 'application/json; charset=UTF-8',
+              'Authorization': 'Bearer $token',
+            },
+            body: json.encode(<String, dynamic>{
+              'category': selectedCat,
+              'title': title,
+              'description': description,
+              'max_participants': selectedMaxParticipants,
+              'datetime_event': selectedTimestamp.toString(),
+              'country': selectedCountry,
+              'city': city,
+              'street': street,
+              'zipcode': zipcode,
+              'price': parsedPrice
+            }));
+
+    print(createEventResponse);
+
+    if (createEventResponse.statusCode == 200) {
+      print('Event successfuly created');
+      return;
+    } else {
+      print('Error creating the event: ${createEventResponse.body}');
+      return;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-
     final List<String> categories = <String>[
       'Book and Literature',
       'Cultural and Arts',
@@ -199,12 +258,11 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       'Professional'
     ];
 
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Create Event'),
       ),
-      body:  SingleChildScrollView(
+      body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -224,37 +282,59 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                     selectedCat = newValue!;
                   });
                 },
-                dropdownMenuEntries: categories.map<DropdownMenuEntry<String>>((String value) {
+                dropdownMenuEntries:
+                    categories.map<DropdownMenuEntry<String>>((String value) {
                   return DropdownMenuEntry<String>(value: value, label: value);
                 }).toList(),
               ),
               const SizedBox(height: 16.0),
               TextFormField(
                 controller: titleController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Event title',
                   border: OutlineInputBorder(),
+                  errorText: titleError,
                 ),
               ),
               const SizedBox(height: 16.0),
               TextFormField(
                 controller: descriptionController,
-                decoration: const InputDecoration(
-                  labelText: 'Description',
-                  border: OutlineInputBorder(),
-                ),
+                decoration: InputDecoration(
+                    labelText: 'Description',
+                    border: OutlineInputBorder(),
+                    errorText: descriptionError),
               ),
               const SizedBox(height: 24.0),
-              // Insert Here
-              // showDateTimePicker(context: DateTime.now())
-              const SizedBox(height: 24.0),
-              const Text('Maximal number of participants', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: datetimeButton, // Button background color
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 35, vertical: 16),
+                  ),
+                  onPressed: () {
+                    showDateTimePicker(context: context);
+                  },
+                  child: const Text('Pick Date and Time')),
+              const SizedBox(height: 16.0),
+              Column(
+                children: [
+                  if (selectedTimestamp != null)
+                    Text('$displayTimestamp',
+                        style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.normal,
+                            color: wrongDate)),
+                ],
+              ),
+              const SizedBox(height: 32.0),
+              const Text('Maximal number of participants',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               NumberPicker(
-                  minValue: 1, maxValue: 100, value: selectedMaxParticipants,
-                  onChanged: (value) => (
-                  setState(() => selectedMaxParticipants = value)
-                  )
-              ),
+                  minValue: 1,
+                  maxValue: 100,
+                  value: selectedMaxParticipants,
+                  onChanged: (value) =>
+                      (setState(() => selectedMaxParticipants = value))),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -265,7 +345,8 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                       selectedMaxParticipants = newValue.clamp(1, 100);
                     }),
                   ),
-                  Text('Participants: $selectedMaxParticipants', style: const TextStyle(fontSize: 16)),
+                  Text('Participants: $selectedMaxParticipants',
+                      style: const TextStyle(fontSize: 16)),
                   IconButton(
                     icon: Icon(Icons.add),
                     onPressed: () => setState(() {
@@ -285,18 +366,19 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: countryButton, // Button background color
                   padding:
-                  const EdgeInsets.symmetric(horizontal: 35, vertical: 16),
+                      const EdgeInsets.symmetric(horizontal: 35, vertical: 16),
                 ),
                 onPressed: () {
-
                   showCountryPicker(
                     context: context,
                     showPhoneCode: false,
                     onSelect: (Country country) {
-
                       selectedCountry = country.name;
+
+                      /*
                       showSuccessSnackBar(
                       context, 'Country: $selectedCountry');
+                      */
 
                       setState(() {
                         countryButton = Colors.blue;
@@ -304,36 +386,37 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                     },
                   );
                 },
-                child: const Text('Select Country'),
+                child: const Text('Pick Country'),
               ),
-              const SizedBox(height: 12.0),
-              Text(
-                'Currently chosen: $selectedCountry',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.normal),
-              ),
-              const SizedBox(height: 20.0),
+              const SizedBox(height: 16.0),
+              if (selectedCountry != '')
+                Text(
+                  '$selectedCountry',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.normal),
+                ),
+              const SizedBox(height: 24.0),
               TextFormField(
                 controller: cityController,
-                decoration: const InputDecoration(
-                  labelText: 'City',
-                  border: OutlineInputBorder(),
-                ),
+                decoration: InputDecoration(
+                    labelText: 'City',
+                    border: OutlineInputBorder(),
+                    errorText: cityError),
               ),
               const SizedBox(height: 16.0),
               TextFormField(
                 controller: streetController,
-                decoration: const InputDecoration(
-                  labelText: 'Street',
-                  border: OutlineInputBorder(),
-                ),
+                decoration: InputDecoration(
+                    labelText: 'Street',
+                    border: OutlineInputBorder(),
+                    errorText: streetError),
               ),
               const SizedBox(height: 16.0),
               TextFormField(
                 controller: zipcodeController,
-                decoration: const InputDecoration(
-                  labelText: 'Zipcode',
-                  border: OutlineInputBorder(),
-                ),
+                decoration: InputDecoration(
+                    labelText: 'Zipcode',
+                    border: OutlineInputBorder(),
+                    errorText: zipcodeError),
               ),
               const SizedBox(height: 32.0),
               Text(
@@ -343,17 +426,18 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
               const SizedBox(height: 16.0),
               TextFormField(
                 controller: priceController,
-                decoration: const InputDecoration(
-                  hintText: '0,00 €', // Initial value
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.monetization_on),
-                ),
+                decoration: InputDecoration(
+                    hintText: '0,00 €', // Initial value
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.monetization_on),
+                    errorText: priceError),
                 keyboardType: const TextInputType.numberWithOptions(
                     decimal: true), // Allow decimals
                 onChanged: (value) {
                   if (value.isNotEmpty) {
                     // Remove any non-numeric characters
-                    final cleanedValue = value.replaceAll(RegExp(r'[^0-9]'), '');
+                    final cleanedValue =
+                        value.replaceAll(RegExp(r'[^0-9]'), '');
 
                     // Convert the cleaned value to an integer
                     final intValue = int.tryParse(cleanedValue) ?? 0;
@@ -369,12 +453,12 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                   }
                 },
               ),
-              const SizedBox(height: 32.0),
+              const SizedBox(height: 40.0),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue, // Button background color
                   padding:
-                  const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+                      const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
                 ),
                 onPressed: handleCreateEvent,
                 child: const Text(

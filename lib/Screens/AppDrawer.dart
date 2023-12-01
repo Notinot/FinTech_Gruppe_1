@@ -37,17 +37,7 @@ class AppDrawer extends StatelessWidget {
               // Implement the navigation as needed
             },
           ),
-          ListTile(
-            leading: const Icon(Icons.attach_money),
-            title: const Text('Transaction History'),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const TransactionHistoryScreen()),
-              );
-            },
-          ),
+
           ListTile(
             leading: const Icon(Icons.history),
             title: const Text('History'),

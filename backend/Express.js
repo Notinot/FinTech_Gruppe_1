@@ -495,8 +495,9 @@ app.post('/send-money', authenticateToken, async (req, res) => {
     // Extract the authenticated user ID from the request
     const senderId = req.user.userId;
     console.log('senderId:', senderId);
+
     // Extract other information from the request body
-    const { recipient, amount, message } = req.body;
+    const { recipient, amount, message, event_id } = req.body;
 
     // Validate input
     if (!recipient || !amount || amount <= 0) {
@@ -512,13 +513,14 @@ app.post('/send-money', authenticateToken, async (req, res) => {
 
     const recipientId = recipientData[0].user_id;
 
-    // Insert transaction with message
-    await db.query('INSERT INTO Transaction (sender_id, receiver_id, amount, transaction_type, created_at, message) VALUES (?, ?, ?, ?, NOW(), ?)', [
+    // Insert transaction with message and event_id
+    await db.query('INSERT INTO Transaction (sender_id, receiver_id, amount, transaction_type, created_at, message, processed, event_id) VALUES (?, ?, ?, ?, NOW(), ?, 1, ?)', [
       senderId,
       recipientId,
       amount,
       'Payment',
       message,
+      event_id, // Assuming event_id is passed in the request body
     ]);
 
     // Update sender and recipient balances
@@ -537,6 +539,46 @@ app.post('/send-money', authenticateToken, async (req, res) => {
     res.json({ message: 'Money transfer successful' });
   } catch (error) {
     console.error('Error transferring money:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Route for requesting money with JWT authentication
+app.post('/request-money', authenticateToken, async (req, res) => {
+  try {
+    // Extract the authenticated user ID from the request
+    const requesterId = req.user.userId;
+    console.log('requesterId:', requesterId);
+
+    // Extract other information from the request body
+    const { recipient, amount, message } = req.body;
+
+    // Validate input
+    if (!recipient || !amount || amount <= 0) {
+      return res.status(400).json({ message: 'Invalid input' });
+    }
+
+    // Fetch recipient ID based on the recipient username or email
+    const [recipientData] = await db.query('SELECT user_id FROM User WHERE username = ? OR email = ?', [recipient, recipient]);
+
+    if (recipientData.length === 0) {
+      return res.status(404).json({ message: 'Recipient not found' });
+    }
+
+    const recipientId = recipientData[0].user_id;
+
+    // Insert transaction with message and set transaction_type to "Request"
+    await db.query('INSERT INTO Transaction (sender_id, receiver_id, amount, transaction_type, created_at, message, processed) VALUES (?, ?, ?, ?, NOW(), ?, 0)', [
+      requesterId,
+      recipientId,
+      amount,
+      'Request',
+      message,
+    ]);
+
+    res.json({ message: 'Money request sent successfully' });
+  } catch (error) {
+    console.error('Error requesting money:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });

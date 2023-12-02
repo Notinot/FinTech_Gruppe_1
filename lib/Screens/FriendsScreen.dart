@@ -23,6 +23,10 @@ class _FriendsScreenState extends State<FriendsScreen> {
     fetchPendingFriends();
   }
 
+  /*
+  Reads JWT to get user_id
+  Then fetches Friends
+  */
   Future<void> fetchData() async {
     try {
       //read jwt
@@ -46,6 +50,9 @@ class _FriendsScreenState extends State<FriendsScreen> {
     }
   }
 
+  /*
+  Fetches Pending Friend Requests
+  */
   Future<void> fetchPendingFriends() async {
     try {
       final response = await http
@@ -66,6 +73,9 @@ class _FriendsScreenState extends State<FriendsScreen> {
     }
   }
 
+  /*
+  Actual Screen
+  */
   @override
   Widget build(BuildContext context) {
     return Scaffold(

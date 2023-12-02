@@ -176,6 +176,7 @@ class TransactionItem extends StatelessWidget {
   Widget build(BuildContext context) {
     // Determine if the transaction is a received or sent transaction
     bool isReceived = transaction.receiver_id == userId;
+
     return ListTile(
       key: ValueKey<int>(transaction.transactionId), // Add a key
 
@@ -184,10 +185,23 @@ class TransactionItem extends StatelessWidget {
         color: isReceived ? Colors.green : Colors.red,
       ),
       title: Text(isReceived
-          ? 'Received from ${transaction.senderUsername}'
-          : 'Payment to ${transaction.receiverUsername}'),
-      subtitle: Text(
-        '\€${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}',
+          ? '${transaction.transactionType} from ${transaction.senderUsername}'
+          : '${transaction.transactionType} to ${transaction.receiverUsername}'),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '\€${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}',
+          ),
+          Text(
+            'Type: ${transaction.transactionType}',
+            style: TextStyle(
+              color: transaction.transactionType == 'Request'
+                  ? Colors.orange // Change color for request transactions
+                  : null,
+            ),
+          ),
+        ],
       ),
       trailing: Text(
         DateFormat('dd/MM/yyyy').format(transaction.createdAt),

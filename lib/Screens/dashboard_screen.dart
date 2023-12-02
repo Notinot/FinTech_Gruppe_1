@@ -31,39 +31,42 @@ class DashboardScreen extends StatelessWidget {
           final Map<String, dynamic> user = snapshot.data!;
 
           return Scaffold(
-              appBar: AppBar(
-                title: const Text('Dashboard'),
-              ),
-              body: SingleChildScrollView(
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      // Display user's profile information
-                      UserProfileSection(user),
-                      // Display user's account summary
-                      AccountSummary(user['balance'].toDouble()),
-                      // Show user notifications
-                      Notifications(),
-                      // Display upcoming events
-                      UpcomingEvents(
-                        events: [
-                          Event(title: 'Meeting', date: '2023-11-01'),
-                          Event(title: 'Workshop', date: '2023-11-05'),
-                          Event(title: 'Conference', date: '2023-11-10'),
-                        ],
-                      ),
-                    ],
-                  ),
+            appBar: AppBar(
+              title: const Text('Dashboard'),
+            ),
+            body: SingleChildScrollView(
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    // Display user's profile information
+                    UserProfileSection(user),
+                    // Display user's account summary
+                    AccountSummary(user['balance'].toDouble()),
+                    // Show user notifications
+                    Notifications(),
+                    // Display upcoming events
+                    UpcomingEvents(
+                      events: [
+                        Event(title: 'Meeting', date: '2023-11-01'),
+                        Event(title: 'Workshop', date: '2023-11-05'),
+                        Event(title: 'Conference', date: '2023-11-10'),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-              // Add the AppDrawer to the dashboard screen
-              drawer: AppDrawer(user: user),
-              floatingActionButton: Positioned(
-                //bottom: 16.0,
-                //right: 16.0,
-                child: QuickMenu(user: user),
-              ));
+            ),
+            // Add the AppDrawer to the dashboard screen
+            drawer: AppDrawer(user: user),
+            //floatingActionButton: Positioned(
+            //bottom: 16.0,
+            //right: 16.0,
+            //child: QuickMenu(user: user),
+            //)
+            floatingActionButton: QuickMenu(
+                user: user), //somehow The Positioned Widget made some problems
+          );
         }
       },
     );

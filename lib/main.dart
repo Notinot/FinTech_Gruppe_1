@@ -1,6 +1,10 @@
+import 'dart:html';
+
 import 'package:flutter/material.dart';
 import 'Screens/login_screen.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'Screens/dashboard_screen.dart';
 
 void main() {
   runApp(PayfriendzApp());
@@ -13,11 +17,13 @@ class PayfriendzApp extends StatefulWidget {
 
 class _PayfriendzAppState extends State<PayfriendzApp> {
   bool serverAvailable = false;
+  bool isLoggedIn = false;
 
   @override
   void initState() {
     super.initState();
     checkServerAvailability();
+    //checkStayLoggedIn(); //COMMENT THIS OUT TO STAY LOGGED IN (in theory)
   }
 
   Future<void> checkServerAvailability() async {
@@ -29,9 +35,25 @@ class _PayfriendzAppState extends State<PayfriendzApp> {
     });
   }
 
+  //Testing Stay Logged in function for future implementation
+  Future<void> checkStayLoggedIn() async {
+    const secureStorage = FlutterSecureStorage();
+    String? authToken = await secureStorage.read(key: 'token');
+    print(authToken);
+    if (authToken != null && authToken.isNotEmpty) {
+      setState(() {
+        isLoggedIn = true;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (serverAvailable) {
+    if (serverAvailable && isLoggedIn) {
+      return const MaterialApp(
+        home: DashboardScreen(),
+      );
+    } else if (serverAvailable) {
       return const MaterialApp(
         home: LoginScreen(),
       );

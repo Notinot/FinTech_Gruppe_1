@@ -14,7 +14,8 @@ class FriendsScreen extends StatefulWidget {
 class _FriendsScreenState extends State<FriendsScreen> {
   List<Map<String, dynamic>> friendData = [];
   List<Map<String, dynamic>> pendingFriends = [];
-  int? user_id = null; //correct way?
+
+  int? user_id = null; //not the right way, needs to be updated
 
   @override
   void initState() {
@@ -55,6 +56,9 @@ class _FriendsScreenState extends State<FriendsScreen> {
   */
   Future<void> fetchPendingFriends() async {
     try {
+      //reads JWT again (need to be updated)
+      Map<String, dynamic> user = await ApiService.fetchUserProfile();
+      user_id = user['user_id'];
       final response = await http
           .get(Uri.parse('http://localhost:3000/friends/pending/$user_id'));
 
@@ -105,7 +109,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
                         ElevatedButton(
                           //accept friend requests
                           onPressed: () {
-                            //change variable name in backend
+                            //maybe change variable name in backend
                             handleFriendRequest(
                                 pendingFriend['requester_id'], true);
                           },
@@ -167,7 +171,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
       if (response.statusCode == 200) {
         fetchPendingFriends();
         //fetch friends as well
-        fetchData(); //reads JWT again which is kina unnecessary
+        fetchData(); //reads JWT again which is kinda unnecessary
       } else {
         print(
             'Failed to accept friend request. Status code: ${response.statusCode}');

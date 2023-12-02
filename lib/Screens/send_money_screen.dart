@@ -208,6 +208,7 @@ class _SendMoneyScreenState extends State<SendMoneyScreen> {
           'recipient': recipient,
           'amount': amount,
           'message': message,
+          'event_id': null,
         }),
       );
       print(sendMoneyResponse);

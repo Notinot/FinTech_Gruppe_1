@@ -1,5 +1,10 @@
+import 'dart:convert';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
 
 class RequestMoneyScreen extends StatefulWidget {
   RequestMoneyScreen({super.key});
@@ -101,7 +106,7 @@ class _RequestMoneyScreenState extends State<RequestMoneyScreen> {
             const SizedBox(height: 24),
             Center(
               child: ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
                   final requester = requesterController.text;
                   final amount = double.tryParse(amountController.text
                           .replaceAll('€', '') // Remove euro sign
@@ -137,15 +142,21 @@ class _RequestMoneyScreenState extends State<RequestMoneyScreen> {
                     return;
                   }
 
-                  // Implement the logic to request money
-                  // Once money is requested, show a success message
-                  showSuccessSnackBar(
-                      context, 'Money requested successfully from $requester');
+                  // Use the sendMoney method
+                  bool success = await requestMoney(requester, amount, message);
 
-                  // Clear the input fields after requesting money
-                  requesterController.clear();
-                  amountController.clear();
-                  messageController.clear();
+                  if (success) {
+                    // Clear the input fields after sending money
+                    requesterController.clear();
+                    amountController.clear();
+                    messageController.clear();
+
+                    // Show success snackbar
+                    showSuccessSnackBar(context, 'Request sent to $requester');
+                  } else {
+                    // Show error snackbar
+                    showErrorSnackBar(context, 'Error requesting money');
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   foregroundColor: Colors.white,
@@ -163,6 +174,53 @@ class _RequestMoneyScreenState extends State<RequestMoneyScreen> {
         ),
       ),
     );
+  }
+
+  Future<bool> requestMoney(
+      String recipient, double amount, String message) async {
+    try {
+      // Retrieve the JWT token from secure storage
+      const storage = FlutterSecureStorage();
+      final token = await storage.read(key: 'token');
+
+      if (token == null) {
+        if (kDebugMode) {
+          print('JWT token not found.');
+        }
+        return false;
+      }
+      if (kDebugMode) {
+        print('token: $token');
+      }
+
+      // Continue with the request money request
+      final requestMoneyResponse = await http.post(
+        Uri.parse('http://localhost:3000/request-money'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $token',
+        },
+        body: json.encode(<String, dynamic>{
+          'recipient': recipient,
+          'amount': amount,
+          'message': message,
+          'event_id': null,
+        }),
+      );
+
+      if (requestMoneyResponse.statusCode == 200) {
+        // Request for money sent successfully
+        return true;
+      } else {
+        // Request for money failed, handle accordingly
+        print('Error requesting money: ${requestMoneyResponse.body}');
+        return false;
+      }
+    } catch (e) {
+      // Exception occurred, handle accordingly
+      print('Error requesting money: $e');
+      return false;
+    }
   }
 
   void showErrorSnackBar(BuildContext context, String message) {

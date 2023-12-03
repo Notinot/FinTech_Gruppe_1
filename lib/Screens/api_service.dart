@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ffi';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
@@ -30,5 +31,13 @@ class ApiService {
     } else {
       throw Exception('Failed to load user profile');
     }
+  }
+
+  // async function to fetch the user_id from the flutter secure storage
+  static Future<String> fetchUserId() async {
+    const storage = FlutterSecureStorage();
+    final userId = await storage.read(key: 'user_id');
+    print(userId);
+    return userId!;
   }
 }

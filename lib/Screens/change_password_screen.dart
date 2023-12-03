@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_application_1/Screens/login_screen.dart';
 import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
 import 'package:http/http.dart' as http;
+import 'api_service.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
   final String email;
@@ -121,7 +122,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     };
 
     final response = await http.post(
-        Uri.parse('http://localhost:3000/changepassword'),
+        Uri.parse('${ApiService.serverUrl}/changepassword'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode(requestBody));
 

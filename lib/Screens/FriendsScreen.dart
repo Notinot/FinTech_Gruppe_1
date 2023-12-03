@@ -34,7 +34,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
       Map<String, dynamic> user = await ApiService.fetchUserProfile();
       user_id = user['user_id'];
       final response =
-          await http.get(Uri.parse('http://localhost:3000/friends/$user_id'));
+          await http.get(Uri.parse('${ApiService.serverUrl}/friends/$user_id'));
 
       if (response.statusCode == 200) {
         Map<String, dynamic> data = json.decode(response.body);
@@ -60,7 +60,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
       Map<String, dynamic> user = await ApiService.fetchUserProfile();
       user_id = user['user_id'];
       final response = await http
-          .get(Uri.parse('http://localhost:3000/friends/pending/$user_id'));
+          .get(Uri.parse('${ApiService.serverUrl}/friends/pending/$user_id'));
 
       if (response.statusCode == 200) {
         Map<String, dynamic> data = json.decode(response.body);
@@ -161,7 +161,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
       };
 
       final response = await http.post(
-        Uri.parse('http://localhost:3000/friends/request/$user_id'),
+        Uri.parse('${ApiService.serverUrl}/friends/request/$user_id'),
         body: json.encode(requestBody),
         headers: {
           'Content-Type': 'application/json',

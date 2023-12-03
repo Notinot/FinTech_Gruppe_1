@@ -39,7 +39,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
 
       // Make an HTTP GET request to fetch transactions
       final response = await http.get(
-        Uri.parse('http://localhost:3000/transactions'),
+        Uri.parse('${ApiService.serverUrl}/transactions'),
         headers: {
           'Content-Type': 'application/json; charset=UTF-8',
           'Authorization': 'Bearer $token',

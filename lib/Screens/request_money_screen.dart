@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
+import 'api_service.dart';
 
 class RequestMoneyScreen extends StatefulWidget {
   RequestMoneyScreen({super.key});
@@ -195,7 +196,7 @@ class _RequestMoneyScreenState extends State<RequestMoneyScreen> {
 
       // Continue with the request money request
       final requestMoneyResponse = await http.post(
-        Uri.parse('http://localhost:3000/request-money'),
+        Uri.parse('${ApiService.serverUrl}/request-money'),
         headers: {
           'Content-Type': 'application/json; charset=UTF-8',
           'Authorization': 'Bearer $token',

@@ -1,10 +1,10 @@
-import 'dart:html';
-
+//import 'dart:html';
 import 'package:flutter/material.dart';
 import 'Screens/login_screen.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'Screens/dashboard_screen.dart';
+import 'Screens/api_service.dart';
 
 void main() {
   runApp(PayfriendzApp());
@@ -27,9 +27,8 @@ class _PayfriendzAppState extends State<PayfriendzApp> {
   }
 
   Future<void> checkServerAvailability() async {
-    // const serverUrl = '192.168.56.1:3000';
-    const serverUrl = 'http://localhost:3000';
-    final response = await http.get(Uri.parse('$serverUrl/health'));
+    final response =
+        await http.get(Uri.parse('${ApiService.serverUrl}/health'));
     setState(() {
       serverAvailable = response.statusCode == 200;
     });

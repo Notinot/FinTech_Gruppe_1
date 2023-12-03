@@ -87,6 +87,9 @@ class _LoginScreenState extends State<LoginScreen> {
       const storage = FlutterSecureStorage();
       await storage.write(key: 'token', value: token);
 
+      //save the user id
+      await storage.write(key: 'user_id', value: data['user_id'].toString());
+
       // Navigate to the dashboard with the obtained token
       Navigator.pushReplacement(
         context,

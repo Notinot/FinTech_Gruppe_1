@@ -315,10 +315,11 @@ app.post('/friends/request/:user_id', async (req, res) => {
   
     //get user_id from username
     const [temp] = await db.query('SELECT user_id FROM User WHERE username = ?', [friendUsername]);
-    const friendId = temp[0].user_id;
-    
+
     //checks if username even exists
-    if(friendId != null){ 
+    if(temp[0] != undefined){
+      console.log("BDIABIDSADINAPSIDN");
+      const friendId = temp[0].user_id; 
     //check if users are already friends
     const[friends] = await db.query(
       ` 
@@ -337,16 +338,18 @@ app.post('/friends/request/:user_id', async (req, res) => {
       (requester_id, addressee_id, status, request_time) 
       VALUES (?, ?, ?, NOW())`;
        const [addingFriend] = await db.query(query, [user_id, friendId, 'pending']);
-       res.json({addingFriend});
+       res.status(200).json({addingFriend});
       }else{
+        console.log("        //ES GIBT SCHON EINEN EINTRAG MIT DENEN");
+
         //ES GIBT SCHON EINEN EINTRAG MIT DENEN
-        res.status(500).json({ success: false, message: 'Internal server error' });
+        res.status(500).json('Cannot add User');
 
       }
     }else{
+      console.log("USERNAME NOT FOUNNNNNDDD");
       //error handling wenns den username gar nicht gab
-      res.status(500).json({ success: false, message: 'Internal server error' });
-
+      res.status(500).json({message: 'Username not found'});
     }
       });
      

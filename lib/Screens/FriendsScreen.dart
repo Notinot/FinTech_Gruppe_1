@@ -203,7 +203,7 @@ class _SearchBarState extends State<SearchBar> {
       onSubmitted: (value) {
         print('Submitted: $value');
         handleAddFriend(value);
-        showSuccessSnackBar(context, 'Friend request send to: $value');
+        // showSuccessSnackBar(context, 'Friend request send to: $value');
       },
     );
   }
@@ -228,10 +228,12 @@ class _SearchBarState extends State<SearchBar> {
       print('BLI BLUB');
       if (response.statusCode == 200) {
         print('added friend: $friendName');
+        print('response body: $response.body');
         //hier kann man ein Pop-up machen
       } else {
-        print('Error MEssaage: $response.body');
+        print('Error MEssaage: ${response.body}');
       }
+      showSuccessSnackBar(context, response.body);
     } catch (e) {
       print('Error accepting friend request: $e');
     }

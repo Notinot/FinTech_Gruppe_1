@@ -82,6 +82,7 @@ class _RequestMoneyScreenState extends State<RequestMoneyScreen> {
                   ).format(intValue / 100);
 
                   amountController.text = formattedAmount;
+                  print('amountController.text: ${amountController.text}');
                 }
               },
             ),
@@ -108,43 +109,53 @@ class _RequestMoneyScreenState extends State<RequestMoneyScreen> {
             Center(
               child: ElevatedButton(
                 onPressed: () async {
-                  final requester = requesterController.text;
-                  final amount = double.tryParse(amountController.text
-                          .replaceAll('€', '') // Remove euro sign
-                          .replaceAll('.', '') // Remove periods
-                          .replaceAll(',', '') // Remove commas
-                          .trim()) ??
-                      0.0;
+                  final recipient = requesterController.text;
+                  final amount = amountController.text;
+                  print(amount);
                   final message = messageController.text;
 
-                  if (requester.trim().isEmpty) {
+                  // Remove euro sign, periods and spaces
+                  final cleanedAmountText = amount
+                      .replaceAll('€', '')
+                      .replaceAll(' ', '')
+                      .replaceAll('.', '');
+
+                  // Replace commas with periods
+                  final normalizedAmountText =
+                      cleanedAmountText.replaceAll(',', '.');
+
+                  // Parse the amount
+                  final parsedAmount =
+                      double.tryParse(normalizedAmountText) ?? 0.0;
+
+                  print(parsedAmount);
+
+                  if (recipient.trim().isEmpty) {
                     setState(() {
                       requesterBorderColor = Colors.red;
                     });
-                    showErrorSnackBar(context, 'Requester cannot be empty');
+                    showErrorSnackBar(context, 'Recipient cannot be empty');
+                    return;
                   } else {
                     setState(() {
                       requesterBorderColor = Colors.grey;
                     });
                   }
 
-                  if (amount <= 0) {
+                  if (parsedAmount <= 0) {
                     setState(() {
                       amountBorderColor = Colors.red;
                     });
                     showErrorSnackBar(context, 'Enter a valid amount');
+                    return;
                   } else {
                     setState(() {
                       amountBorderColor = Colors.grey;
                     });
                   }
-
-                  if (requester.trim().isEmpty || amount <= 0) {
-                    return;
-                  }
-
                   // Use the sendMoney method
-                  bool success = await requestMoney(requester, amount, message);
+                  bool success =
+                      await requestMoney(recipient, parsedAmount, message);
 
                   if (success) {
                     // Clear the input fields after sending money
@@ -153,7 +164,7 @@ class _RequestMoneyScreenState extends State<RequestMoneyScreen> {
                     messageController.clear();
 
                     // Show success snackbar
-                    showSuccessSnackBar(context, 'Request sent to $requester');
+                    showSuccessSnackBar(context, 'Request sent to $recipient');
                   } else {
                     // Show error snackbar
                     showErrorSnackBar(context, 'Error requesting money');

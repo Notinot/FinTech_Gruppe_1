@@ -12,6 +12,8 @@ import 'api_service.dart';
 
 
 class CreateEventScreen extends StatefulWidget {
+
+
   CreateEventScreen({super.key});
 
   @override
@@ -138,6 +140,12 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
           wrongDate = Colors.red;
         });
       }
+      else{
+        setState(() {
+          datetimeButton = Colors.blue;
+          wrongDate = Colors.grey;
+        });
+      }
     } catch (e) {
       print("error $e");
     }
@@ -224,22 +232,20 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
 
     print(createEventResponse);
 
-    if (createEventResponse.statusCode == 200) {
+      if (createEventResponse.statusCode == 200) {
 
-      // Doesnt work
-      showSnackBar(message: ' Creating event was successful ');
-      Navigator.push(
-        context as BuildContext,
-        MaterialPageRoute(builder: (context) => DashboardScreen()),
-      );
-    }
-    else if(createEventResponse.statusCode == 401) {
+        Navigator.push(
+          this.context,
+          MaterialPageRoute(builder: (context) => const DashboardScreen()),
+        );
+            }
+      else if(createEventResponse.statusCode == 401) {
 
-      setState(() {
-        cityError = 'The address does not exist';
-        streetError = ' ';
-        zipcodeError = ' ';
-      });
+        setState(() {
+          cityError = 'The address does not exist';
+          streetError = ' ';
+          zipcodeError = ' ';
+        });
 
       print('The address does not exist');
       return;

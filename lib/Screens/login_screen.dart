@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dashboard_screen.dart';
 import 'registration_screen.dart';
+import 'api_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -24,7 +25,8 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> checkUserActiveStatus(String email) async {
     final response = await http.post(
       // Uri.parse('http://192.168.178.28:3000/check-active'),
-      Uri.parse('http://localhost:3000/check-active'), // Use the correct route
+      Uri.parse(
+          '${ApiService.serverUrl}/check-active'), // Use the correct route
       headers: {'Content-Type': 'application/json'},
       body: json.encode({'email': email}),
     );
@@ -72,7 +74,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     final response = await http.post(
       // Uri.parse('http://192.168.178.28:3000/login'),
-      Uri.parse('http://localhost:3000/login'),
+      Uri.parse('${ApiService.serverUrl}/login'),
       headers: {'Content-Type': 'application/json'},
       body: json.encode(requestData),
     );
@@ -80,10 +82,13 @@ class _LoginScreenState extends State<LoginScreen> {
     if (response.statusCode == 200) {
       final Map<String, dynamic> data = json.decode(response.body);
       final token = data['token'];
-
+      final userID = data['user_id'];
       // Save the token securely
       const storage = FlutterSecureStorage();
       await storage.write(key: 'token', value: token);
+      //save the user id
+      await storage.write(key: 'user_id', value: userID.toString());
+      print("LoginScreen: user id = " + userID.toString());
 
       // Navigate to the dashboard with the obtained token
       Navigator.pushReplacement(

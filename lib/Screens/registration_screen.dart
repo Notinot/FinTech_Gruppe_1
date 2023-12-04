@@ -11,6 +11,7 @@ import 'dart:io' as io;
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'api_service.dart';
 
 class RegistrationScreen extends StatefulWidget {
   const RegistrationScreen({super.key});
@@ -237,7 +238,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     // Make an HTTP POST request to your backend API
     final response = await http.post(
       //Uri.parse('http://192.168.178.28:3000/register'),
-      Uri.parse('http://localhost:3000/register'),
+      Uri.parse('${ApiService.serverUrl}/register'),
       headers: {
         'Content-Type': 'application/json', // Set the content type
       },

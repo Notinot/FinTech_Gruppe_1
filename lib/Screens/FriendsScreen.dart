@@ -14,7 +14,8 @@ class FriendsScreen extends StatefulWidget {
 class _FriendsScreenState extends State<FriendsScreen> {
   List<Map<String, dynamic>> friendData = [];
   List<Map<String, dynamic>> pendingFriends = [];
-  int? user_id = null; //correct way?
+
+  int? user_id = null; //not the right way, needs to be updated
 
   @override
   void initState() {
@@ -23,18 +24,21 @@ class _FriendsScreenState extends State<FriendsScreen> {
     fetchPendingFriends();
   }
 
+  /*
+  Reads JWT to get user_id
+  Then fetches Friends
+  */
   Future<void> fetchData() async {
     try {
       //read jwt
       Map<String, dynamic> user = await ApiService.fetchUserProfile();
       user_id = user['user_id'];
       final response =
-          await http.get(Uri.parse('http://localhost:3000/friends/$user_id'));
+          await http.get(Uri.parse('${ApiService.serverUrl}/friends/$user_id'));
 
       if (response.statusCode == 200) {
         Map<String, dynamic> data = json.decode(response.body);
         List<dynamic> friends = data['friends'];
-
         setState(() {
           friendData = friends.cast<Map<String, dynamic>>();
         });
@@ -46,10 +50,16 @@ class _FriendsScreenState extends State<FriendsScreen> {
     }
   }
 
+  /*
+  Fetches Pending Friend Requests
+  */
   Future<void> fetchPendingFriends() async {
     try {
+      //reads JWT again (need to be updated)
+      Map<String, dynamic> user = await ApiService.fetchUserProfile();
+      user_id = user['user_id'];
       final response = await http
-          .get(Uri.parse('http://localhost:3000/friends/pending/$user_id'));
+          .get(Uri.parse('${ApiService.serverUrl}/friends/pending/$user_id'));
 
       if (response.statusCode == 200) {
         Map<String, dynamic> data = json.decode(response.body);
@@ -66,11 +76,14 @@ class _FriendsScreenState extends State<FriendsScreen> {
     }
   }
 
+  /*
+  Actual Screen
+  */
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Friends Screen'),
+        title: SearchBar(),
       ),
       body: Center(
         child: Column(
@@ -95,7 +108,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
                         ElevatedButton(
                           //accept friend requests
                           onPressed: () {
-                            //change variable name in backend
+                            //maybe change variable name in backend
                             handleFriendRequest(
                                 pendingFriend['requester_id'], true);
                           },
@@ -147,7 +160,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
       };
 
       final response = await http.post(
-        Uri.parse('http://localhost:3000/friends/request/$user_id'),
+        Uri.parse('${ApiService.serverUrl}/friends/request/$user_id'),
         body: json.encode(requestBody),
         headers: {
           'Content-Type': 'application/json',
@@ -157,7 +170,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
       if (response.statusCode == 200) {
         fetchPendingFriends();
         //fetch friends as well
-        fetchData(); //reads JWT again which is kina unnecessary
+        fetchData(); //reads JWT again which is kinda unnecessary
       } else {
         print(
             'Failed to accept friend request. Status code: ${response.statusCode}');
@@ -165,5 +178,71 @@ class _FriendsScreenState extends State<FriendsScreen> {
     } catch (e) {
       print('Error accepting friend request: $e');
     }
+  }
+}
+
+class SearchBar extends StatefulWidget {
+  @override
+  _SearchBarState createState() => _SearchBarState();
+}
+
+class _SearchBarState extends State<SearchBar> {
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      decoration: InputDecoration(
+        hintText: 'Search...',
+        border: InputBorder.none,
+        hintStyle: TextStyle(color: Colors.white),
+      ),
+      style: TextStyle(color: Colors.white),
+      onChanged: (inputQuery) {
+        //hier könnten Vorschläge gemacht werden
+        print('Search query: $inputQuery');
+      }, //add friend hier? oder erstmal anzeigen und dannach adden?
+      onSubmitted: (value) {
+        print('Submitted: $value');
+        handleAddFriend(value);
+        showSuccessSnackBar(context, 'Friend request send to: $value');
+      },
+    );
+  }
+
+  void handleAddFriend(friendName) async {
+    try {
+      //reads JWT again (need to be updated)
+      Map<String, dynamic> user = await ApiService.fetchUserProfile();
+      int user_id = user['user_id'];
+
+      Map<String, dynamic> requestBody = {
+        'friendUsername': friendName,
+      };
+
+      final response = await http.post(
+        Uri.parse('${ApiService.serverUrl}/friends/add/$user_id'),
+        body: json.encode(requestBody),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      );
+      print('BLI BLUB');
+      if (response.statusCode == 200) {
+        print('added friend: $friendName');
+        //hier kann man ein Pop-up machen
+      } else {
+        print('Error MEssaage: $response.body');
+      }
+    } catch (e) {
+      print('Error accepting friend request: $e');
+    }
+  }
+
+  void showSuccessSnackBar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.green,
+      ),
+    );
   }
 }

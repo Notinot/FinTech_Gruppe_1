@@ -193,14 +193,17 @@ app.post('/login', async (req, res) => {
 
   if (passwordMatch) {
     // Issue a JSON Web Token (JWT) upon successful login
-    const token = jwt.sign({ userId: user[0].user_id}, jwtSecret, jwtOptions);
+    const token = jwt.sign({ userId: user[0].user_id }, jwtSecret, jwtOptions);
+    // Save user_id in a variable
+    const user_id = user[0].user_id;
     console.log('User object:', user);
     console.log('User ID:', user[0].user_id);
 
     // Fetch and include the user's data in the response
     const userData = user[0];
 
-    res.json({ message: 'Login successful', token});
+    // Send the token and the user_id to the frontend
+    res.json({ message: 'Login successful', token, user_id });
   } else {
     res.status(401).json({ message: 'Invalid email or password' });
   }
@@ -287,17 +290,19 @@ Receives: boolean value whether request was accepted or declined
 app.post('/friends/request/:user_id', async (req, res) => {
   const user_id = req.params.user_id;  
   const{friendId, accepted} = req.body;
+  var query = '';
   if(accepted){
-    const query =
+     query =
     `Update Friendship
-     Set status =  'accepted' 
+     Set status = 'accepted' 
      WHERE addressee_id = ? AND requester_id = ? ` ;  
   }else{
-    const query =
+     query =
     `Update Friendship
-     Set status =  'declined' 
+     Set status = 'declined' 
      WHERE addressee_id = ? AND requester_id = ? ` ;
   }
+ console.log(query);
    const [friendRequest] = await db.query(query, [user_id, friendId]);
    res.json({friendRequest});
     });
@@ -306,15 +311,45 @@ app.post('/friends/request/:user_id', async (req, res) => {
       //names of routes are kinda misleading
   app.post('/friends/add/:user_id', async (req, res) => {
     const user_id = req.params.user_id;  
-    const{friendId} = req.body;
+    const{friendUsername} = req.body;
   
-    const query = `
-    INSERT INTO Friendship 
-    (requester_id, addressee_id, status, request_time) 
-    VALUES (?, ?, ?, NOW())`;
-     const [addingFriend] = await db.query(query, [user_id, friendId]);
-     res.json({addingFriend});
+    //get user_id from username
+    const [temp] = await db.query('SELECT user_id FROM User WHERE username = ?', [friendUsername]);
+    const friendId = temp[0].user_id;
+    
+    //checks if username even exists
+    if(friendId != null){ 
+    //check if users are already friends
+    const[friends] = await db.query(
+      ` 
+      SELECT * 
+      FROM Friendship 
+      WHERE (requester_id = ? AND addressee_id = ?)
+      OR    (requester_id = ? AND addressee_id = ?)
+      `
+      ,[user_id,friendId,
+        friendId,user_id]);
+
+      //when they are not already friends
+      if(friends[0] == null){
+        const query = `
+      INSERT INTO Friendship 
+      (requester_id, addressee_id, status, request_time) 
+      VALUES (?, ?, ?, NOW())`;
+       const [addingFriend] = await db.query(query, [user_id, friendId, 'pending']);
+       res.json({addingFriend});
+      }else{
+        //ES GIBT SCHON EINEN EINTRAG MIT DENEN
+        res.status(500).json({ success: false, message: 'Internal server error' });
+
+      }
+    }else{
+      //error handling wenns den username gar nicht gab
+      res.status(500).json({ success: false, message: 'Internal server error' });
+
+    }
       });
+     
 
   //removing friend
   app.delete('/friends/:user_id', async (req, res) => {
@@ -495,8 +530,9 @@ app.post('/send-money', authenticateToken, async (req, res) => {
     // Extract the authenticated user ID from the request
     const senderId = req.user.userId;
     console.log('senderId:', senderId);
+
     // Extract other information from the request body
-    const { recipient, amount, message } = req.body;
+    const { recipient, amount, message, event_id } = req.body;
 
     // Validate input
     if (!recipient || !amount || amount <= 0) {
@@ -512,13 +548,14 @@ app.post('/send-money', authenticateToken, async (req, res) => {
 
     const recipientId = recipientData[0].user_id;
 
-    // Insert transaction with message
-    await db.query('INSERT INTO Transaction (sender_id, receiver_id, amount, transaction_type, created_at, message) VALUES (?, ?, ?, ?, NOW(), ?)', [
+    // Insert transaction with message and event_id
+    await db.query('INSERT INTO Transaction (sender_id, receiver_id, amount, transaction_type, created_at, message, processed, event_id) VALUES (?, ?, ?, ?, NOW(), ?, 1, ?)', [
       senderId,
       recipientId,
       amount,
       'Payment',
       message,
+      event_id, // Assuming event_id is passed in the request body
     ]);
 
     // Update sender and recipient balances
@@ -537,6 +574,46 @@ app.post('/send-money', authenticateToken, async (req, res) => {
     res.json({ message: 'Money transfer successful' });
   } catch (error) {
     console.error('Error transferring money:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Route for requesting money with JWT authentication
+app.post('/request-money', authenticateToken, async (req, res) => {
+  try {
+    // Extract the authenticated user ID from the request
+    const requesterId = req.user.userId;
+    console.log('requesterId:', requesterId);
+
+    // Extract other information from the request body
+    const { recipient, amount, message } = req.body;
+
+    // Validate input
+    if (!recipient || !amount || amount <= 0) {
+      return res.status(400).json({ message: 'Invalid input' });
+    }
+
+    // Fetch recipient ID based on the recipient username or email
+    const [recipientData] = await db.query('SELECT user_id FROM User WHERE username = ? OR email = ?', [recipient, recipient]);
+
+    if (recipientData.length === 0) {
+      return res.status(404).json({ message: 'Recipient not found' });
+    }
+
+    const recipientId = recipientData[0].user_id;
+
+    // Insert transaction with message and set transaction_type to "Request"
+    await db.query('INSERT INTO Transaction (sender_id, receiver_id, amount, transaction_type, created_at, message, processed) VALUES (?, ?, ?, ?, NOW(), ?, 0)', [
+      requesterId,
+      recipientId,
+      amount,
+      'Request',
+      message,
+    ]);
+
+    res.json({ message: 'Money request sent successfully' });
+  } catch (error) {
+    console.error('Error requesting money:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });

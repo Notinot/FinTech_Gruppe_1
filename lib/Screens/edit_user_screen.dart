@@ -157,7 +157,7 @@ class _EditUserState extends State<EditUser> {
   Future<void> DeleteProfile() async {
     final Map<String, dynamic> request = {'userid': userData?['user_id']};
     final response = await http.post(
-      Uri.parse('http://localhost:3000/delete_user'),
+      Uri.parse('${ApiService.serverUrl}/delete_user'),
       headers: {
         'Content-Type': 'application/json',
       },
@@ -330,7 +330,7 @@ class _EditUserState extends State<EditUser> {
       Map<String, dynamic> request;
       request = {'userid': user_id, 'email': email};
       resp = await http.post(
-        Uri.parse('http://localhost:3000/edit_user/send_code'),
+        Uri.parse('${ApiService.serverUrl}/edit_user/send_code'),
         headers: {
           'Content-Type': 'application/json',
         },
@@ -341,7 +341,7 @@ class _EditUserState extends State<EditUser> {
         code = await verify();
         request = {'userid': user_id, 'verificationCode': code};
         resp = await http.post(
-          Uri.parse('http://localhost:3000/edit_user/verify'),
+          Uri.parse('${ApiService.serverUrl}/edit_user/verify'),
           headers: {
             'Content-Type': 'application/json',
           },
@@ -394,7 +394,7 @@ class _EditUserState extends State<EditUser> {
       print('Picture data: $requestBody');
       // Make an HTTP POST request to your backend API
       final response = await http.post(
-        Uri.parse('http://localhost:3000/edit_user'),
+        Uri.parse('${ApiService.serverUrl}/edit_user'),
         headers: {
           'Content-Type': 'application/json',
         },
@@ -684,7 +684,7 @@ class _EditUserState extends State<EditUser> {
                   };
 
                   final response = await http.post(
-                    Uri.parse('http://localhost:3000/verifyPassword'),
+                    Uri.parse('${ApiService.serverUrl}/verifyPassword'),
                     headers: {
                       'Content-Type': 'application/json',
                     },

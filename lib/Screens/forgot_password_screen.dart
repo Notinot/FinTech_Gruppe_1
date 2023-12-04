@@ -5,6 +5,7 @@ import 'package:flutter_application_1/Screens/change_password_screen.dart';
 import 'login_screen.dart';
 import 'registration_screen.dart';
 import 'package:http/http.dart' as http;
+import 'api_service.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -35,7 +36,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   Future<bool> checkUserActiveStatus(String email) async {
     final response = await http.post(
-      Uri.parse('http://localhost:3000/check-active'), // Use the correct route
+      Uri.parse(
+          '${ApiService.serverUrl}/check-active'), // Use the correct route
       headers: {'Content-Type': 'application/json'},
       body: json.encode({'email': email}),
     );
@@ -74,7 +76,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     requestBody = {'email': email};
 
     final response = await http.post(
-        Uri.parse('http://localhost:3000/forgotpassword'),
+        Uri.parse('${ApiService.serverUrl}/forgotpassword'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode(requestBody));
 

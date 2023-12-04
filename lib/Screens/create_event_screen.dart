@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:numberpicker/numberpicker.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart';
+import 'api_service.dart';
 
 
 class CreateEventScreen extends StatefulWidget {
@@ -203,7 +204,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     }
 
     final createEventResponse =
-        await http.post(Uri.parse('http://localhost:3000/create-event'),
+        await http.post(Uri.parse('${ApiService.serverUrl}/create-event'),
             headers: {
               'Content-Type': 'application/json; charset=UTF-8',
               'Authorization': 'Bearer $token',

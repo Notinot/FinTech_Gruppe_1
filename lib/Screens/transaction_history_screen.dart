@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:ffi';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Screens/api_service.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -311,38 +312,93 @@ class TransactionDetailScreen extends StatelessWidget {
       {Key? key, required this.transaction, required this.userId})
       : super(key: key);
 
-  // Function to handle accepting the request
+  // Function to accept a request
   Future<void> acceptRequest(BuildContext context) async {
-    // Make an API request to accept the request
-    // Implement  API call to update the processed column to 1 and handle the money transfer
+    try {
+      const storage = FlutterSecureStorage();
+      final token = await storage.read(key: 'token');
+      // Make a request to your backend API to accept the request
+      final response = await http.post(
+        Uri.parse(
+            '${ApiService.serverUrl}/transactions/${transaction.transaction_id}'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $token',
+        },
+        body: json.encode({'action': 'accept'}),
+      );
 
-    // Show a success message or handle errors
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Request accepted successfully'),
-        duration: Duration(seconds: 2),
+      if (response.statusCode == 200) {
+        // Request successful, you can update the UI or navigate to a different screen
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Request accepted successfully')),
+        );
+      } else {
+        // Request failed, handle the error
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error accepting request')),
+        );
+      }
+    } catch (error) {
+      // Handle exceptions
+      print('Error accepting request: $error');
+    }
+
+    //navigate back to transaction history screen
+    Navigator.pop(context);
+
+    //refresh transaction history screen
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => TransactionHistoryScreen(),
       ),
     );
-
-    // Navigate back to the transaction history screen
-    Navigator.pop(context);
   }
 
-  // Function to handle denying the request
+  // Function to deny a request
   Future<void> denyRequest(BuildContext context) async {
-    // Make an API request to deny the request
-    // Implement API call to update the processed column to 2
+    try {
+      const storage = FlutterSecureStorage();
+      final token = await storage.read(key: 'token');
+      print('Transaction ID: ${transaction.transaction_id}');
+      // Make a request to your backend API to deny the request
+      final response = await http.post(
+        Uri.parse(
+            '${ApiService.serverUrl}/transactions/${transaction.transaction_id}'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $token',
+        },
+        body: json.encode({'action': 'decline'}),
+      );
+      print('Response: ${response.body}');
+      if (response.statusCode == 200) {
+        // Request successful, you can update the UI or navigate to a different screen
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Request denied successfully')),
+        );
+      } else {
+        // Request failed, handle the error
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error denying request')),
+        );
+      }
+    } catch (error) {
+      // Handle exceptions
+      print('Error denying request: $error');
+    }
 
-    // Show a success message or handle errors
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Request denied successfully'),
-        duration: Duration(seconds: 2),
+    //navigate back to transaction history screen
+    Navigator.pop(context);
+
+    //refresh transaction history screen
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => TransactionHistoryScreen(),
       ),
     );
-
-    // Navigate back to the transaction history screen
-    Navigator.pop(context);
   }
 
   @override

@@ -639,7 +639,7 @@ app.get('/transactions', authenticateToken, async (req, res) => {
         sender_id = ? OR receiver_id = ?
     `, [userId, userId]);
 
-    console.log('transactions:', transactions);
+    //console.log('transactions:', transactions);
 
     // Send the user's transaction history as the response
     res.json(transactions);
@@ -648,6 +648,78 @@ app.get('/transactions', authenticateToken, async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 });
+
+//Route to accept or decline a transaction Request with JWT authentication
+app.post('/transactions/:transactionId', authenticateToken, async (req, res) => {
+  try {
+    // Get the user ID from the authenticated token
+    const userId = req.user.userId;
+    console.log('userId:', userId);
+    // Get the transaction ID from the request parameters
+    const transactionId = req.params.transactionId;
+    console.log('transactionId:', transactionId);
+    // Extract the action from the request body
+    const { action } = req.body;
+    console.log('action:', action);
+    // Validate input
+    if (!action || (action !== 'accept' && action !== 'decline')) {
+      return res.status(400).json({ message: 'Invalid input' });
+    }
+
+    // Fetch the transaction from the database based on the transaction ID
+    const [transactionData] = await db.query('SELECT * FROM Transaction WHERE transaction_id = ?', [transactionId]);
+    console.log('transactionData:', transactionData);
+    if (transactionData.length === 0) {
+      return res.status(404).json({ message: 'Transaction not found' });
+    }
+
+    const transaction = transactionData[0];
+
+    // Check if the transaction has already been processed
+    if (transaction.processed === 1) {
+      return res.status(400).json({ message: 'Transaction has already been processed' });
+    }
+
+    // Check if the user is the recipient of the transaction
+    if (transaction.receiver_id !== userId) {
+      return res.status(401).json({ message: 'You are not authorized to perform this action' });
+    }
+
+    // Handle the transaction based on the action
+
+    if (action === 'accept') {
+
+      //check if user has enough money
+      const senderBalance = await getBalance(transaction.receiver_id);
+      if (senderBalance < transaction.amount) {
+        return res.status(400).json({ message: 'Insufficient funds' });
+      }
+      
+      // Update the transaction status to "accepted"
+      await db.query('UPDATE Transaction SET processed = 1 WHERE transaction_id = ?', [transactionId]);
+
+    
+      // Update balances in the database
+      await updateBalance(transaction.sender_id, -transaction.amount);
+      await updateBalance(transaction.receiver_id, +transaction.amount);
+
+      res.json({ message: 'Transaction accepted successfully' });
+    }
+
+    if (action === 'decline') {
+      // Update the transaction status to "declined"
+      await db.query('UPDATE Transaction SET processed = 2 WHERE transaction_id = ?', [transactionId]);
+
+      res.json({ message: 'Transaction declined successfully' });
+    }
+  } catch (error) {
+    console.error('Error accepting transaction:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+}
+);
+
+
 
 
 // Create Event
@@ -684,11 +756,13 @@ app.post('/create-event', authenticateToken, async (req, res) => {
         console.log('Address does not exist');
         return res.status(401).json({ message: 'Address could not be validated' });
       }
-
+      //print response
+      console.log(response[0].extra.confidence);
       console.log('Address does exist');
+      
     }
     else {
-
+      
       console.log('No response received');
       return res.status(401).json({ message: 'Address could not be validated' });
     }

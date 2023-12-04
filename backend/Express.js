@@ -193,14 +193,17 @@ app.post('/login', async (req, res) => {
 
   if (passwordMatch) {
     // Issue a JSON Web Token (JWT) upon successful login
-    const token = jwt.sign({ userId: user[0].user_id}, jwtSecret, jwtOptions);
+    const token = jwt.sign({ userId: user[0].user_id }, jwtSecret, jwtOptions);
+    // Save user_id in a variable
+    const user_id = user[0].user_id;
     console.log('User object:', user);
     console.log('User ID:', user[0].user_id);
 
     // Fetch and include the user's data in the response
     const userData = user[0];
 
-    res.json({ message: 'Login successful', token});
+    // Send the token and the user_id to the frontend
+    res.json({ message: 'Login successful', token, user_id });
   } else {
     res.status(401).json({ message: 'Invalid email or password' });
   }

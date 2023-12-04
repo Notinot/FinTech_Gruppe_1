@@ -78,6 +78,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     return FutureBuilder<Map<String, dynamic>>(
       // Fetch user profile data
       future: ApiService.fetchUserProfile(),
+
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           // Show loading indicator while fetching data
@@ -245,8 +246,8 @@ class TransactionItem extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) =>
-                TransactionDetailScreen(transaction: transaction),
+            builder: (context) => TransactionDetailScreen(
+                transaction: transaction, userId: userId),
           ),
         );
       },
@@ -290,8 +291,9 @@ class TransactionItem extends StatelessWidget {
 // TransactionDetailScreen displays detailed information about a transaction
 class TransactionDetailScreen extends StatelessWidget {
   final Transaction transaction;
-
-  const TransactionDetailScreen({Key? key, required this.transaction})
+  final int userId;
+  const TransactionDetailScreen(
+      {Key? key, required this.transaction, required this.userId})
       : super(key: key);
 
   // Function to handle accepting the request
@@ -395,9 +397,10 @@ class TransactionDetailScreen extends StatelessWidget {
 
                 // Add buttons for accepting and denying the request
                 // buttons only appear when the transaction is a request and the transaction is unprocessed and the sender is not the current user
+
                 if (transaction.transactionType == 'Request' &&
                     transaction.processed == 0 &&
-                    transaction.sender_id != ApiService.fetchUserId)
+                    transaction.sender_id != userId)
                   Column(
                     children: [
                       SizedBox(height: 20),

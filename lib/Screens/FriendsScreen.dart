@@ -230,10 +230,12 @@ class _SearchBarState extends State<SearchBar> {
         print('added friend: $friendName');
         print('response body: $response.body');
         //hier kann man ein Pop-up machen
+        showSuccessSnackBar(
+            context, 'Friend request sended to User: $friendName');
       } else {
         print('Error MEssaage: ${response.body}');
+        showErrorSnackBar(context, json.decode(response.body));
       }
-      showSuccessSnackBar(context, response.body);
     } catch (e) {
       print('Error accepting friend request: $e');
     }
@@ -244,6 +246,15 @@ class _SearchBarState extends State<SearchBar> {
       SnackBar(
         content: Text(message),
         backgroundColor: Colors.green,
+      ),
+    );
+  }
+
+  void showErrorSnackBar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
       ),
     );
   }

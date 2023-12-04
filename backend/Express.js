@@ -223,7 +223,7 @@ app.get('/user/profile', authenticateToken, async (req, res) => {
     if (userData.length === 0) {
       return res.status(404).json({ message: 'User not found' });
     }
-    console.log('/user/profile userData:', userData);
+    //console.log('/user/profile userData:', userData);
     // Send the user's profile data as the response
     res.json({ user: userData[0] });
   } catch (error) {
@@ -318,7 +318,6 @@ app.post('/friends/request/:user_id', async (req, res) => {
 
     //checks if username even exists
     if(temp[0] != undefined){
-      console.log("BDIABIDSADINAPSIDN");
       const friendId = temp[0].user_id; 
     //check if users are already friends
     const[friends] = await db.query(
@@ -340,16 +339,12 @@ app.post('/friends/request/:user_id', async (req, res) => {
        const [addingFriend] = await db.query(query, [user_id, friendId, 'pending']);
        res.status(200).json({addingFriend});
       }else{
-        console.log("        //ES GIBT SCHON EINEN EINTRAG MIT DENEN");
-
-        //ES GIBT SCHON EINEN EINTRAG MIT DENEN
+        //res.status(500).json({message: 'Cannot add User'});
         res.status(500).json('Cannot add User');
-
       }
     }else{
-      console.log("USERNAME NOT FOUNNNNNDDD");
-      //error handling wenns den username gar nicht gab
-      res.status(500).json({message: 'Username not found'});
+      //res.status(500).json({message: 'Username not found'});
+      res.status(500).json('Username not found');
     }
       });
      

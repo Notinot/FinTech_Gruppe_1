@@ -2,11 +2,13 @@ import 'dart:convert';
 import 'package:country_picker/country_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/Screens/dashboard_screen.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
 import 'package:numberpicker/numberpicker.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart';
+
 
 class CreateEventScreen extends StatefulWidget {
   CreateEventScreen({super.key});
@@ -111,10 +113,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   }
 
   Future<void> handleCreateEvent() async {
+
     // Error cleaning
     clearErrors();
-    // datetimeButton = Colors.grey;
-    // countryButton = Colors.grey;
 
     final String title = titleController.text;
     final String description = descriptionController.text;
@@ -162,6 +163,13 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       });
     }
 
+    if (selectedCountry == '') {
+      setState(() {
+        countryButton = Colors.red;
+      });
+      showErrorSnackBar(context as BuildContext, 'Select a Country');
+    }
+
     if (city.trim().isEmpty) {
       setState(() {
         cityError = 'City cannot be empty';
@@ -178,21 +186,6 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       setState(() {
         zipcodeError = 'Zipcode cannot be empty';
       });
-    }
-
-    if (selectedCountry == '') {
-      setState(() {
-        countryButton = Colors.red;
-      });
-      showErrorSnackBar(context as BuildContext, 'Select a Country');
-    }
-
-    if (parsedPrice <= 0) {
-      setState(() {
-        priceError = "Enter a valid price";
-      });
-
-      showErrorSnackBar(context as BuildContext, 'Enter a valid amount');
     }
 
     // Start for request
@@ -231,9 +224,26 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     print(createEventResponse);
 
     if (createEventResponse.statusCode == 200) {
-      print('Event successfuly created');
+
+      // Doesnt work
+      showSnackBar(message: ' Creating event was successful ');
+      Navigator.push(
+        context as BuildContext,
+        MaterialPageRoute(builder: (context) => DashboardScreen()),
+      );
+    }
+    else if(createEventResponse.statusCode == 401) {
+
+      setState(() {
+        cityError = 'The address does not exist';
+        streetError = ' ';
+        zipcodeError = ' ';
+      });
+
+      print('The address does not exist');
       return;
-    } else {
+    }
+    else{
       print('Error creating the event: ${createEventResponse.body}');
       return;
     }
@@ -277,6 +287,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
               DropdownMenu<String>(
                 initialSelection: categories.first,
                 hintText: 'Categories',
+                requestFocusOnTap: false,
                 onSelected: (String? newValue) {
                   setState(() {
                     selectedCat = newValue!;
@@ -374,11 +385,6 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                     showPhoneCode: false,
                     onSelect: (Country country) {
                       selectedCountry = country.name;
-
-                      /*
-                      showSuccessSnackBar(
-                      context, 'Country: $selectedCountry');
-                      */
 
                       setState(() {
                         countryButton = Colors.blue;
@@ -491,6 +497,15 @@ void showSuccessSnackBar(BuildContext context, String message) {
     SnackBar(
       content: Text(message),
       backgroundColor: Colors.green,
+    ),
+  );
+}
+
+void showSnackBar({bool isError = false, required String message}) {
+  ScaffoldMessenger.of(context as BuildContext).showSnackBar(
+    SnackBar(
+      content: Text(message),
+      backgroundColor: isError ? Colors.red : Colors.green,
     ),
   );
 }

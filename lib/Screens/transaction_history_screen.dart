@@ -1,9 +1,11 @@
 import 'dart:convert';
+import 'dart:ffi';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Screens/api_service.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
+import 'api_service.dart';
 
 // TransactionHistoryScreen is a StatefulWidget that displays a user's transaction history.
 class TransactionHistoryScreen extends StatefulWidget {
@@ -76,6 +78,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     return FutureBuilder<Map<String, dynamic>>(
       // Fetch user profile data
       future: ApiService.fetchUserProfile(),
+
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           // Show loading indicator while fetching data
@@ -125,7 +128,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
 
 // Transaction class represents a financial transaction with relevant details
 class Transaction {
-  int transactionId;
+  int transaction_id;
   int sender_id;
   int receiver_id;
   String senderUsername;
@@ -134,9 +137,11 @@ class Transaction {
   String transactionType;
   DateTime createdAt;
   String message;
+  int? event_id;
+  int processed;
 
   Transaction({
-    required this.transactionId,
+    required this.transaction_id,
     required this.sender_id,
     required this.receiver_id,
     required this.senderUsername,
@@ -145,12 +150,14 @@ class Transaction {
     required this.transactionType,
     required this.createdAt,
     required this.message,
+    required this.event_id,
+    required this.processed,
   });
 
   // Factory method to create a Transaction object from JSON data
   factory Transaction.fromJson(Map<String, dynamic> json) {
     return Transaction(
-      transactionId: json['transaction_id'],
+      transaction_id: json['transaction_id'],
       sender_id: json['sender_id'],
       receiver_id: json['receiver_id'],
       senderUsername: json['sender_username'],
@@ -159,6 +166,8 @@ class Transaction {
       transactionType: json['transaction_type'],
       createdAt: DateTime.parse(json['created_at']),
       message: json['message'],
+      event_id: json['event_id'],
+      processed: json['processed'],
     );
   }
 }
@@ -168,37 +177,71 @@ class TransactionItem extends StatelessWidget {
   final Transaction transaction;
   final int userId;
 
-  const TransactionItem(
-      {Key? key, required this.transaction, required this.userId})
-      : super(key: key);
+  const TransactionItem({
+    Key? key,
+    required this.transaction,
+    required this.userId,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     // Determine if the transaction is a received or sent transaction
     bool isReceived = transaction.receiver_id == userId;
+    //Determine if request is processed or denied or unprocessed
+    bool isProcessed = transaction.processed == 1;
+    bool isDenied = transaction.processed == 2;
+
+    // Determine the color based on transaction type
+    Color iconColor;
+    Color textColor;
+    if (transaction.transactionType == 'Request') {
+      //determine color based on processed status
+      if (isProcessed) {
+        iconColor = Colors.green;
+        textColor = Colors.black;
+      } else if (isDenied) {
+        iconColor = Colors.red;
+        textColor = Colors.black;
+      } else {
+        iconColor = Colors.orange;
+        textColor = Colors.black;
+      }
+    } else {
+      // Money transaction
+      iconColor = isReceived ? Colors.green : Colors.red;
+      textColor = Colors.black;
+    }
 
     return ListTile(
-      key: ValueKey<int>(transaction.transactionId), // Add a key
+      key: ValueKey<int>(transaction.transaction_id), // Add a key
 
       leading: Icon(
         Icons.monetization_on,
-        color: isReceived ? Colors.green : Colors.red,
+        color: iconColor,
       ),
-      title: Text(isReceived
-          ? '${transaction.transactionType} from ${transaction.senderUsername}'
-          : '${transaction.transactionType} to ${transaction.receiverUsername}'),
+      title: Text(
+        isReceived
+            ? '${transaction.transactionType} from ${transaction.senderUsername}'
+            : '${transaction.transactionType} to ${transaction.receiverUsername}',
+        style: TextStyle(color: textColor),
+      ),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             '\€${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}',
+            style: TextStyle(color: textColor),
           ),
           Text(
             'Type: ${transaction.transactionType}',
             style: TextStyle(
-              color: transaction.transactionType == 'Request'
-                  ? Colors.orange // Change color for request transactions
-                  : null,
+              color: textColor,
+            ),
+          ),
+          Text(
+            'Status: ${getStatusText(transaction)}',
+            style: TextStyle(
+              color: getStatusColor(transaction),
             ),
           ),
         ],
@@ -212,21 +255,88 @@ class TransactionItem extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) =>
-                TransactionDetailScreen(transaction: transaction),
+            builder: (context) => TransactionDetailScreen(
+                transaction: transaction, userId: userId),
           ),
         );
       },
     );
+  }
+
+  String getStatusText(Transaction transaction) {
+    if (transaction.transactionType == 'Request') {
+      // For request transactions, display the status
+      if (transaction.processed == 1) {
+        return 'Processed';
+      } else if (transaction.processed == 2) {
+        return 'Denied';
+      } else {
+        return 'Unprocessed';
+      }
+    } else {
+      // For money transactions, no additional status text needed
+      return '';
+    }
+  }
+
+  Color getStatusColor(Transaction transaction) {
+    if (transaction.transactionType == 'Request') {
+      // For request transactions, determine the color based on the status
+      if (transaction.processed == 1) {
+        return Colors.green;
+      } else if (transaction.processed == 2) {
+        return Colors.red;
+      } else {
+        return Colors.black;
+      }
+    } else {
+      // For money transactions, no additional status color needed
+      return Colors.black;
+    }
   }
 }
 
 // TransactionDetailScreen displays detailed information about a transaction
 class TransactionDetailScreen extends StatelessWidget {
   final Transaction transaction;
-
-  const TransactionDetailScreen({Key? key, required this.transaction})
+  final int userId;
+  const TransactionDetailScreen(
+      {Key? key, required this.transaction, required this.userId})
       : super(key: key);
+
+  // Function to handle accepting the request
+  Future<void> acceptRequest(BuildContext context) async {
+    // Make an API request to accept the request
+    // Implement  API call to update the processed column to 1 and handle the money transfer
+
+    // Show a success message or handle errors
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Request accepted successfully'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+
+    // Navigate back to the transaction history screen
+    Navigator.pop(context);
+  }
+
+  // Function to handle denying the request
+  Future<void> denyRequest(BuildContext context) async {
+    // Make an API request to deny the request
+    // Implement API call to update the processed column to 2
+
+    // Show a success message or handle errors
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Request denied successfully'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+
+    // Navigate back to the transaction history screen
+    Navigator.pop(context);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -248,41 +358,71 @@ class TransactionDetailScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                    transaction.transactionType == 'Payment'
-                        ? 'From: ${transaction.senderUsername}'
-                        : 'To: ${transaction.receiverUsername}',
-                    style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue)),
+                  transaction.transactionType == 'Payment'
+                      ? 'From: ${transaction.senderUsername}'
+                      : 'To: ${transaction.receiverUsername}',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue,
+                  ),
+                ),
                 SizedBox(height: 10),
                 Text(
-                    transaction.transactionType == 'Payment'
-                        ? 'To: ${transaction.receiverUsername}'
-                        : 'From: ${transaction.senderUsername}',
-                    style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue)),
+                  transaction.transactionType == 'Payment'
+                      ? 'To: ${transaction.receiverUsername}'
+                      : 'From: ${transaction.senderUsername}',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue,
+                  ),
+                ),
                 SizedBox(height: 10),
                 Text(
-                    'Amount: \€${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}',
-                    style: TextStyle(fontSize: 20)),
-                SizedBox(height: 10),
-                Text('Type: ${transaction.transactionType}',
-                    style: TextStyle(fontSize: 20)),
+                  'Amount: \€${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}',
+                  style: TextStyle(fontSize: 20),
+                ),
                 SizedBox(height: 10),
                 Text(
-                    'Date: ${DateFormat('dd/MM/yyyy').format(transaction.createdAt)}',
-                    style: TextStyle(fontSize: 20)),
+                  'Type: ${transaction.transactionType}',
+                  style: TextStyle(fontSize: 20),
+                ),
                 SizedBox(height: 10),
                 Text(
-                    'Time: ${DateFormat('HH:mm:ss').format(transaction.createdAt)}',
-                    style: TextStyle(fontSize: 20)),
+                  'Date: ${DateFormat('dd/MM/yyyy').format(transaction.createdAt)}',
+                  style: TextStyle(fontSize: 20),
+                ),
+                SizedBox(height: 10),
+                Text(
+                  'Time: ${DateFormat('HH:mm:ss').format(transaction.createdAt)}',
+                  style: TextStyle(fontSize: 20),
+                ),
                 SizedBox(height: 10),
                 if (transaction.message.isNotEmpty)
                   Text('Message: ${transaction.message}',
                       style: TextStyle(fontSize: 20)),
+
+                // Add buttons for accepting and denying the request
+                // buttons only appear when the transaction is a request and the transaction is unprocessed and the sender is not the current user
+
+                if (transaction.transactionType == 'Request' &&
+                    transaction.processed == 0 &&
+                    transaction.sender_id != userId)
+                  Column(
+                    children: [
+                      SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: () => acceptRequest(context),
+                        child: Text('Accept Request'),
+                      ),
+                      SizedBox(height: 10),
+                      ElevatedButton(
+                        onPressed: () => denyRequest(context),
+                        child: Text('Deny Request'),
+                      ),
+                    ],
+                  ),
               ],
             ),
           ),

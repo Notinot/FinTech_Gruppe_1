@@ -566,8 +566,8 @@ app.post('/send-money', authenticateToken, async (req, res) => {
     const recipientBalance = await getBalance(recipientId);
 
     // Update balances in the database
-    await updateBalance(senderId, -amount);
-    await updateBalance(recipientId, +amount);
+    await updateBalance(senderId, +amount);
+    await updateBalance(recipientId, -amount);
 
     res.json({ message: 'Money transfer successful' });
   } catch (error) {
@@ -932,7 +932,7 @@ async function updateBalance(userId, amount) {
     const [userData] = await db.query('SELECT balance FROM User WHERE user_id = ?', [userId]);
     const currentBalance = parseFloat(userData[0].balance);
 
-    // Update the balance
+    // Update the balance accordingly
     const newBalance = currentBalance + amount;
     await db.query('UPDATE User SET balance = ? WHERE user_id = ?', [newBalance, userId]);
 

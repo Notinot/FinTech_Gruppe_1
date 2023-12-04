@@ -203,7 +203,7 @@ class _SearchBarState extends State<SearchBar> {
       onSubmitted: (value) {
         print('Submitted: $value');
         handleAddFriend(value);
-        // Handle the submission action here
+        showSuccessSnackBar(context, 'Friend request send to: $value');
       },
     );
   }
@@ -225,14 +225,24 @@ class _SearchBarState extends State<SearchBar> {
           'Content-Type': 'application/json',
         },
       );
+      print('BLI BLUB');
       if (response.statusCode == 200) {
         print('added friend: $friendName');
         //hier kann man ein Pop-up machen
       } else {
-        print('Der is no user with the name: $friendName');
+        print('Error MEssaage: $response.body');
       }
     } catch (e) {
       print('Error accepting friend request: $e');
     }
+  }
+
+  void showSuccessSnackBar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.green,
+      ),
+    );
   }
 }

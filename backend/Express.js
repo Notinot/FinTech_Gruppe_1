@@ -316,16 +316,37 @@ app.post('/friends/request/:user_id', async (req, res) => {
     //get user_id from username
     const [temp] = await db.query('SELECT user_id FROM User WHERE username = ?', [friendUsername]);
     const friendId = temp[0].user_id;
-   
-    if(friendId != null){ //noch schauen ob users nicht schon befreundet sind oder pending, declined usw.
-      const query = `
+    
+    //checks if username even exists
+    if(friendId != null){ 
+    //check if users are already friends
+    const[friends] = await db.query(
+      ` 
+      SELECT * 
+      FROM Friendship 
+      WHERE (requester_id = ? AND addressee_id = ?)
+      OR    (requester_id = ? AND addressee_id = ?)
+      `
+      ,[user_id,friendId,
+        friendId,user_id]);
+
+      //when they are not already friends
+      if(friends[0] == null){
+        const query = `
       INSERT INTO Friendship 
       (requester_id, addressee_id, status, request_time) 
       VALUES (?, ?, ?, NOW())`;
        const [addingFriend] = await db.query(query, [user_id, friendId, 'pending']);
        res.json({addingFriend});
+      }else{
+        //ES GIBT SCHON EINEN EINTRAG MIT DENEN
+        res.status(500).json({ success: false, message: 'Internal server error' });
+
+      }
     }else{
       //error handling wenns den username gar nicht gab
+      res.status(500).json({ success: false, message: 'Internal server error' });
+
     }
       });
      

@@ -187,6 +187,7 @@ class TransactionItem extends StatelessWidget {
   Widget build(BuildContext context) {
     // Determine if the transaction is a received or sent transaction
     bool isReceived = transaction.receiver_id == userId;
+
     //Determine if request is processed or denied or unprocessed
     bool isProcessed = transaction.processed == 1;
     bool isDenied = transaction.processed == 2;
@@ -273,26 +274,32 @@ class TransactionItem extends StatelessWidget {
       } else {
         return 'Unprocessed';
       }
-    } else {
-      // For money transactions, no additional status text needed
-      return '';
-    }
-  }
-
-  Color getStatusColor(Transaction transaction) {
-    if (transaction.transactionType == 'Request') {
-      // For request transactions, determine the color based on the status
-      if (transaction.processed == 1) {
-        return Colors.green;
-      } else if (transaction.processed == 2) {
-        return Colors.red;
+    } else if (transaction.transactionType == 'Payment') {
+      // For money transactions, display the status based on the sender and receiver
+      if (transaction.sender_id == userId) {
+        return 'Sent';
       } else {
-        return Colors.black;
+        return 'Received';
       }
+    }
+    // For money transactions, no additional status text needed
+    return '';
+  }
+}
+
+Color getStatusColor(Transaction transaction) {
+  if (transaction.transactionType == 'Request') {
+    // For request transactions, determine the color based on the status
+    if (transaction.processed == 1) {
+      return Colors.green;
+    } else if (transaction.processed == 2) {
+      return Colors.red;
     } else {
-      // For money transactions, no additional status color needed
       return Colors.black;
     }
+  } else {
+    // For money transactions, no additional status color needed
+    return Colors.black;
   }
 }
 

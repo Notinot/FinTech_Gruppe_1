@@ -187,20 +187,29 @@ class TransactionItem extends StatelessWidget {
   Widget build(BuildContext context) {
     // Determine if the transaction is a received or sent transaction
     bool isReceived = transaction.receiver_id == userId;
+    //Determine if request is processed or denied or unprocessed
+    bool isProcessed = transaction.processed == 1;
+    bool isDenied = transaction.processed == 2;
 
     // Determine the color based on transaction type
     Color iconColor;
     Color textColor;
     if (transaction.transactionType == 'Request') {
-      // Request transaction
-      iconColor = Colors.orange;
-      textColor =
-          Colors.black; // You can customize the color for request transactions
+      //determine color based on processed status
+      if (isProcessed) {
+        iconColor = Colors.green;
+        textColor = Colors.black;
+      } else if (isDenied) {
+        iconColor = Colors.red;
+        textColor = Colors.black;
+      } else {
+        iconColor = Colors.orange;
+        textColor = Colors.black;
+      }
     } else {
       // Money transaction
       iconColor = isReceived ? Colors.green : Colors.red;
-      textColor =
-          Colors.black; // You can customize the color for money transactions
+      textColor = Colors.black;
     }
 
     return ListTile(
@@ -278,8 +287,7 @@ class TransactionItem extends StatelessWidget {
       } else if (transaction.processed == 2) {
         return Colors.red;
       } else {
-        return Colors
-            .black; // You can customize the color for unprocessed requests
+        return Colors.black;
       }
     } else {
       // For money transactions, no additional status color needed

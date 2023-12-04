@@ -655,48 +655,65 @@ app.get('/transactions', authenticateToken, async (req, res) => {
 });
 
 
-// Create a Event
+// Create Event
 app.post('/create-event', authenticateToken, async (req, res) => {
 
-  try{
-    // Extract the authenticated user ID from the request
+  let eventId;
+
+  try {
     const senderId = req.user.userId;
     console.log('senderId:', senderId);
 
-    // Extract other information from the request body
     const { category, title, description, max_participants, datetime_event, country, city, street, zipcode, price } = req.body;
 
-
-    console.log(max_participants);
-
     // Validate input
-    if (!category || !title || !description || !max_participants || !datetime_event || !country || !city || !street || !zipcode || price <= 0) {
-
+    if (!category || !title || !description || !max_participants || !datetime_event || !country || !city || !street || !zipcode ) {
       return res.status(400).json({ message: 'Invalid input' });
     }
 
+    const address = `${street}, ${zipcode}, ${city}, ${country}`;
+
+    // Validate address
+    const NodeGeocoder = require('node-geocoder');
+    const geocoder = NodeGeocoder({
+      provider: 'opencage',
+      apiKey: '7b209ea4bde844489fd0411dc1b53b9d'
+    });
+
+    const response = await geocoder.geocode(address);
+
+    if (response && response.length > 0) {
+
+      if (response[0].extra.confidence < 5) {
+
+        console.log('Address does not exist');
+        return res.status(401).json({ message: 'Address could not be validated' });
+      }
+
+      console.log('Address does exist');
+    }
+    else {
+
+      console.log('No response received');
+      return res.status(401).json({ message: 'Address could not be validated' });
+    }
 
     // Create Event in Table
-    const eventQuery = await db.query('INSERT INTO Event (category, title, description, max_participants, datetime_created, datetime_event, price, creator_id) VALUES (?, ?, ?, ?, NOW(), ?, ?, ?)', [
+    const [eventQuery] = await db.query('INSERT INTO Event (category, title, description, max_participants, datetime_created, datetime_event, price, creator_id) VALUES (?, ?, ?, ?, NOW(), ?, ?, ?)', [
       category,
       title,
       description,
       max_participants,
-      datetime_event, 
+      datetime_event,
       price,
       senderId
-    ])
-  
+    ]);
+
     console.log(eventQuery);
 
     // Get Event ID
     const [eventIdQuery] = await db.query('SELECT * FROM Event WHERE creator_id = ? ORDER BY datetime_created DESC LIMIT 1', senderId);
-    const eventId = eventIdQuery[0].id;
-
-    console.log(country);
-    console.log(city);
-    console.log(street);
-    console.log(zipcode);
+    eventId = eventIdQuery[0].id;
 
     // Link Event -> Location
     const locationQuery = await db.query('INSERT INTO Location (event_id, country, city, street, zipcode) VALUES (?, ?, ?, ?, ?)', [eventId, country, city, street, zipcode]);
@@ -706,15 +723,17 @@ app.post('/create-event', authenticateToken, async (req, res) => {
     const user_eventQuery = await db.query('INSERT INTO User_Event (event_id, user_id) VALUES (?, ?)', [eventId, senderId]);
     console.log(user_eventQuery);
 
-    res.status(200).json({message: 'Event created successfully'});
+    res.status(200).json({ message: 'Event created successfully' });
 
-  }
-  catch (error) {
+  } catch (error) {
+
     console.error('Error creating event:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 
 });
+
+
 
 // Route for health check
 app.get('/health', (req, res) => {

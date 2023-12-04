@@ -39,7 +39,6 @@ class _FriendsScreenState extends State<FriendsScreen> {
       if (response.statusCode == 200) {
         Map<String, dynamic> data = json.decode(response.body);
         List<dynamic> friends = data['friends'];
-
         setState(() {
           friendData = friends.cast<Map<String, dynamic>>();
         });
@@ -84,7 +83,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Friends Screen'),
+        title: SearchBar(),
       ),
       body: Center(
         child: Column(
@@ -175,6 +174,62 @@ class _FriendsScreenState extends State<FriendsScreen> {
       } else {
         print(
             'Failed to accept friend request. Status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error accepting friend request: $e');
+    }
+  }
+}
+
+class SearchBar extends StatefulWidget {
+  @override
+  _SearchBarState createState() => _SearchBarState();
+}
+
+class _SearchBarState extends State<SearchBar> {
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      decoration: InputDecoration(
+        hintText: 'Search...',
+        border: InputBorder.none,
+        hintStyle: TextStyle(color: Colors.white),
+      ),
+      style: TextStyle(color: Colors.white),
+      onChanged: (inputQuery) {
+        //hier könnten Vorschläge gemacht werden
+        print('Search query: $inputQuery');
+      }, //add friend hier? oder erstmal anzeigen und dannach adden?
+      onSubmitted: (value) {
+        print('Submitted: $value');
+        handleAddFriend(value);
+        // Handle the submission action here
+      },
+    );
+  }
+
+  void handleAddFriend(friendName) async {
+    try {
+      //reads JWT again (need to be updated)
+      Map<String, dynamic> user = await ApiService.fetchUserProfile();
+      int user_id = user['user_id'];
+
+      Map<String, dynamic> requestBody = {
+        'friendUsername': friendName,
+      };
+
+      final response = await http.post(
+        Uri.parse('${ApiService.serverUrl}/friends/add/$user_id'),
+        body: json.encode(requestBody),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      );
+      if (response.statusCode == 200) {
+        print('added friend: $friendName');
+        //hier kann man ein Pop-up machen
+      } else {
+        print('Der is no user with the name: $friendName');
       }
     } catch (e) {
       print('Error accepting friend request: $e');

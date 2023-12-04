@@ -287,17 +287,19 @@ Receives: boolean value whether request was accepted or declined
 app.post('/friends/request/:user_id', async (req, res) => {
   const user_id = req.params.user_id;  
   const{friendId, accepted} = req.body;
+  var query = '';
   if(accepted){
-    const query =
+     query =
     `Update Friendship
-     Set status =  'accepted' 
+     Set status = 'accepted' 
      WHERE addressee_id = ? AND requester_id = ? ` ;  
   }else{
-    const query =
+     query =
     `Update Friendship
-     Set status =  'declined' 
+     Set status = 'declined' 
      WHERE addressee_id = ? AND requester_id = ? ` ;
   }
+ console.log(query);
    const [friendRequest] = await db.query(query, [user_id, friendId]);
    res.json({friendRequest});
     });
@@ -306,15 +308,24 @@ app.post('/friends/request/:user_id', async (req, res) => {
       //names of routes are kinda misleading
   app.post('/friends/add/:user_id', async (req, res) => {
     const user_id = req.params.user_id;  
-    const{friendId} = req.body;
+    const{friendUsername} = req.body;
   
-    const query = `
-    INSERT INTO Friendship 
-    (requester_id, addressee_id, status, request_time) 
-    VALUES (?, ?, ?, NOW())`;
-     const [addingFriend] = await db.query(query, [user_id, friendId]);
-     res.json({addingFriend});
+    //get user_id from username
+    const [temp] = await db.query('SELECT user_id FROM User WHERE username = ?', [friendUsername]);
+    const friendId = temp[0].user_id;
+   
+    if(friendId != null){ //noch schauen ob users nicht schon befreundet sind oder pending, declined usw.
+      const query = `
+      INSERT INTO Friendship 
+      (requester_id, addressee_id, status, request_time) 
+      VALUES (?, ?, ?, NOW())`;
+       const [addingFriend] = await db.query(query, [user_id, friendId, 'pending']);
+       res.json({addingFriend});
+    }else{
+      //error handling wenns den username gar nicht gab
+    }
       });
+     
 
   //removing friend
   app.delete('/friends/:user_id', async (req, res) => {

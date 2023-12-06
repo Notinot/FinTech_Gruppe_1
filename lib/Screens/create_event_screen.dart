@@ -132,6 +132,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         setState(() {
           datetimeButton = Colors.red;
         });
+        return;
       }
 
       if (unixTimestamp < DateTime.now().millisecondsSinceEpoch) {
@@ -139,6 +140,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
           datetimeButton = Colors.red;
           wrongDate = Colors.red;
         });
+        return;
       }
       else{
         setState(() {

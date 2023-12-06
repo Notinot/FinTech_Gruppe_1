@@ -58,6 +58,10 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   String? zipcodeError;
   String? priceError;
 
+  bool? weekly;
+  bool? monthly;
+  bool? yearly;
+
   bool countryButtonUsed = false;
 
   void clearErrors() {
@@ -346,7 +350,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                             color: wrongDate)),
                 ],
               ),
-              const SizedBox(height: 32.0),
+              const SizedBox(height: 16),
+              const Divider(height: 8, thickness: 2),
+              const SizedBox(height: 16),
               const Text('Maximal number of participants',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               NumberPicker(
@@ -376,9 +382,11 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 42.0),
+              const SizedBox(height: 21),
+              const Divider(height: 8, thickness: 2),
+              const SizedBox(height: 21),
               const Text(
-                'Location',
+                'Location (optional)',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16.0),
@@ -433,7 +441,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                     border: OutlineInputBorder(),
                     errorText: zipcodeError),
               ),
-              const SizedBox(height: 32.0),
+              const SizedBox(height: 16),
+              const Divider(height: 8, thickness: 2),
+              const SizedBox(height: 16),
               Text(
                 'Price',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -467,6 +477,51 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                     priceController.text = formattedPrice;
                   }
                 },
+              ),
+              const SizedBox(height: 16),
+              const Divider(height: 8, thickness: 2),
+              const SizedBox(height: 16),
+              Text(
+                'Repeatable Event',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              CheckboxListTile(
+                value: weekly ?? false,
+                onChanged: (bool? value) {
+                  setState(() {
+
+                    weekly = value ?? false;
+                    monthly = false;
+                    yearly = false;
+                  });
+                },
+                title: const Text('Weekly'),
+              ),
+              const Divider(height: 0, thickness: 1),
+              CheckboxListTile(
+                value: monthly ?? false,
+                onChanged: (bool? value) {
+                  setState(() {
+
+                    monthly = value ?? false;
+                    weekly = false;
+                    yearly = false;
+                  });
+                },
+                title: const Text('Monthly'),
+              ),
+              const Divider(height: 0, thickness: 1),
+              CheckboxListTile(
+                value: yearly ?? false,
+                onChanged: (bool? value) {
+                  setState(() {
+
+                    yearly = value ?? false;
+                    weekly = false;
+                    monthly = false;
+                  });
+                },
+                title: const Text('Yearly'),
               ),
               const SizedBox(height: 40.0),
               ElevatedButton(

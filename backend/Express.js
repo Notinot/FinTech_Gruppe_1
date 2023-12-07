@@ -700,8 +700,8 @@ app.post('/transactions/:transactionId', authenticateToken, async (req, res) => 
 
     
       // Update balances in the database
-      await updateBalance(transaction.sender_id, -transaction.amount);
-      await updateBalance(transaction.receiver_id, +transaction.amount);
+      await updateBalance(transaction.sender_id, +transaction.amount);
+      await updateBalance(transaction.receiver_id, -transaction.amount);
 
       res.json({ message: 'Transaction accepted successfully' });
     }

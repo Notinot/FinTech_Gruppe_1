@@ -89,47 +89,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              'Pending Friend Requests:',
-            ),
-            Expanded(
-              child: ListView.builder(
-                itemCount: pendingFriends.length,
-                itemBuilder: (context, index) {
-                  final pendingFriend = pendingFriends[index];
-                  return ListTile(
-                    title: Text('${pendingFriend['username']}'),
-                    subtitle: Text(
-                      '${pendingFriend['first_name']} ${pendingFriend['last_name']}',
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        ElevatedButton(
-                          //accept friend requests
-                          onPressed: () {
-                            //maybe change variable name in backend
-                            handleFriendRequest(
-                                pendingFriend['requester_id'], true);
-                          },
-                          child: Text('Accept'),
-                        ),
-                        SizedBox(width: 8),
-                        TextButton(
-                          //decline friend request
-                          onPressed: () {
-                            //change variable name in backend
-                            handleFriendRequest(
-                                pendingFriend['requester_id'], false);
-                          },
-                          child: Text('Decline'),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
+            _buildPendingFriendRequests(),
             Text(
               'Your Friends:',
             ),
@@ -150,6 +110,60 @@ class _FriendsScreenState extends State<FriendsScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildPendingFriendRequests() {
+    if (pendingFriends.isNotEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Pending Friend Requests:',
+          ),
+          Container(
+            height: 200, // Set a fixed height or use Flexible
+            child: ListView.builder(
+              itemCount: pendingFriends.length,
+              itemBuilder: (context, index) {
+                final pendingFriend = pendingFriends[index];
+                return ListTile(
+                  title: Text('${pendingFriend['username']}'),
+                  subtitle: Text(
+                    '${pendingFriend['first_name']} ${pendingFriend['last_name']}',
+                  ),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ElevatedButton(
+                        onPressed: () {
+                          handleFriendRequest(
+                            pendingFriend['requester_id'],
+                            true,
+                          );
+                        },
+                        child: Text('Accept'),
+                      ),
+                      SizedBox(width: 8),
+                      TextButton(
+                        onPressed: () {
+                          handleFriendRequest(
+                            pendingFriend['requester_id'],
+                            false,
+                          );
+                        },
+                        child: Text('Decline'),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      );
+    } else {
+      return Container();
+    }
   }
 
   void handleFriendRequest(int friendId, bool accepted) async {
@@ -225,11 +239,7 @@ class _SearchBarState extends State<SearchBar> {
           'Content-Type': 'application/json',
         },
       );
-      print('BLI BLUB');
       if (response.statusCode == 200) {
-        print('added friend: $friendName');
-        print('response body: $response.body');
-        //hier kann man ein Pop-up machen
         showSuccessSnackBar(
             context, 'Friend request sended to User: $friendName');
       } else {

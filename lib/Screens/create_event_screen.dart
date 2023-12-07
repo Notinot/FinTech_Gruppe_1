@@ -12,6 +12,8 @@ import 'api_service.dart';
 
 
 class CreateEventScreen extends StatefulWidget {
+
+
   CreateEventScreen({super.key});
 
   @override
@@ -55,6 +57,10 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   String? streetError;
   String? zipcodeError;
   String? priceError;
+
+  bool? weekly;
+  bool? monthly;
+  bool? yearly;
 
   bool countryButtonUsed = false;
 
@@ -130,12 +136,20 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         setState(() {
           datetimeButton = Colors.red;
         });
+        return;
       }
 
       if (unixTimestamp < DateTime.now().millisecondsSinceEpoch) {
         setState(() {
           datetimeButton = Colors.red;
           wrongDate = Colors.red;
+        });
+        return;
+      }
+      else{
+        setState(() {
+          datetimeButton = Colors.blue;
+          wrongDate = Colors.grey;
         });
       }
     } catch (e) {
@@ -224,22 +238,20 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
 
     print(createEventResponse);
 
-    if (createEventResponse.statusCode == 200) {
+      if (createEventResponse.statusCode == 200) {
 
-      // Doesnt work
-      showSnackBar(message: ' Creating event was successful ');
-      Navigator.push(
-        context as BuildContext,
-        MaterialPageRoute(builder: (context) => DashboardScreen()),
-      );
-    }
-    else if(createEventResponse.statusCode == 401) {
+        Navigator.push(
+          this.context,
+          MaterialPageRoute(builder: (context) => const DashboardScreen()),
+        );
+            }
+      else if(createEventResponse.statusCode == 401) {
 
-      setState(() {
-        cityError = 'The address does not exist';
-        streetError = ' ';
-        zipcodeError = ' ';
-      });
+        setState(() {
+          cityError = 'The address does not exist';
+          streetError = ' ';
+          zipcodeError = ' ';
+        });
 
       print('The address does not exist');
       return;
@@ -338,7 +350,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                             color: wrongDate)),
                 ],
               ),
-              const SizedBox(height: 32.0),
+              const SizedBox(height: 16),
+              const Divider(height: 8, thickness: 2),
+              const SizedBox(height: 16),
               const Text('Maximal number of participants',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               NumberPicker(
@@ -368,9 +382,11 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 42.0),
+              const SizedBox(height: 21),
+              const Divider(height: 8, thickness: 2),
+              const SizedBox(height: 21),
               const Text(
-                'Location',
+                'Location (optional)',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16.0),
@@ -425,7 +441,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                     border: OutlineInputBorder(),
                     errorText: zipcodeError),
               ),
-              const SizedBox(height: 32.0),
+              const SizedBox(height: 16),
+              const Divider(height: 8, thickness: 2),
+              const SizedBox(height: 16),
               Text(
                 'Price',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -459,6 +477,51 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                     priceController.text = formattedPrice;
                   }
                 },
+              ),
+              const SizedBox(height: 16),
+              const Divider(height: 8, thickness: 2),
+              const SizedBox(height: 16),
+              Text(
+                'Repeatable Event',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              CheckboxListTile(
+                value: weekly ?? false,
+                onChanged: (bool? value) {
+                  setState(() {
+
+                    weekly = value ?? false;
+                    monthly = false;
+                    yearly = false;
+                  });
+                },
+                title: const Text('Weekly'),
+              ),
+              const Divider(height: 0, thickness: 1),
+              CheckboxListTile(
+                value: monthly ?? false,
+                onChanged: (bool? value) {
+                  setState(() {
+
+                    monthly = value ?? false;
+                    weekly = false;
+                    yearly = false;
+                  });
+                },
+                title: const Text('Monthly'),
+              ),
+              const Divider(height: 0, thickness: 1),
+              CheckboxListTile(
+                value: yearly ?? false,
+                onChanged: (bool? value) {
+                  setState(() {
+
+                    yearly = value ?? false;
+                    weekly = false;
+                    monthly = false;
+                  });
+                },
+                title: const Text('Yearly'),
               ),
               const SizedBox(height: 40.0),
               ElevatedButton(

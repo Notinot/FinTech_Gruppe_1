@@ -379,7 +379,7 @@ class TransactionDetailScreen extends StatelessWidget {
       } else {
         // Request failed, handle the error
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error denying request')),
+          SnackBar(content: Text('Error: ${response.body}')),
         );
       }
     } catch (error) {

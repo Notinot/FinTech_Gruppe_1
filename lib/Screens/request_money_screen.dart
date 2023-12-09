@@ -129,7 +129,7 @@ class _RequestMoneyScreenState extends State<RequestMoneyScreen> {
                       double.tryParse(normalizedAmountText) ?? 0.0;
 
                   print(parsedAmount);
-
+// Check if the recipient is empty
                   if (recipient.trim().isEmpty) {
                     setState(() {
                       requesterBorderColor = Colors.red;
@@ -141,7 +141,7 @@ class _RequestMoneyScreenState extends State<RequestMoneyScreen> {
                       requesterBorderColor = Colors.grey;
                     });
                   }
-
+// Check if the amount is valid
                   if (parsedAmount <= 0) {
                     setState(() {
                       amountBorderColor = Colors.red;
@@ -153,12 +153,23 @@ class _RequestMoneyScreenState extends State<RequestMoneyScreen> {
                       amountBorderColor = Colors.grey;
                     });
                   }
-                  // Use the sendMoney method
+                  // check if user is requesting money from himself (username or email)
+                  final Map<String, dynamic> user =
+                      await ApiService.fetchUserProfile();
+
+                  if (recipient == user['username'] ||
+                      recipient == user['email']) {
+                    showErrorSnackBar(
+                        context, 'You cannot request money from yourself');
+                    return;
+                  }
+
+                  // Call the request money function
                   bool success =
                       await requestMoney(recipient, parsedAmount, message);
 
                   if (success) {
-                    // Clear the input fields after sending money
+                    // Clear the text fields
                     requesterController.clear();
                     amountController.clear();
                     messageController.clear();

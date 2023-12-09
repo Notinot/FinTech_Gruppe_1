@@ -33,10 +33,10 @@ class ApiService {
   }
 
   // async function to fetch the user_id from the flutter secure storage
-  static Future<String?> fetchUserId() async {
+  static Future<String> fetchUserId() async {
     const storage = FlutterSecureStorage();
     final userId = await storage.read(key: 'user_id');
     print("APIService: user id = " + userId.toString());
-    return userId;
+    return userId.toString();
   }
 }

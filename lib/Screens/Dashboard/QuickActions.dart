@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/Screens/send_money_screen.dart';
-import 'package:flutter_application_1/Screens/request_money_screen.dart';
-import 'package:flutter_application_1/Screens/create_event_screen.dart';
+import 'package:flutter_application_1/Screens/Money/SendMoneyScreen.dart';
+import 'package:flutter_application_1/Screens/Money/RequestMoneyScreen.dart';
+import 'package:flutter_application_1/Screens/Events/CreateEventScreen.dart';
 
 class QuickActions extends StatelessWidget {
   final Map<String, dynamic> user;

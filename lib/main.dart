@@ -1,9 +1,9 @@
 //import 'dart:html';
 import 'package:flutter/material.dart';
-import 'Screens/login_screen.dart';
+import 'Screens/Login & Register/LoginScreen.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'Screens/dashboard_screen.dart';
+import 'Screens/Dashboard/dashBoardScreen.dart';
 import 'Screens/api_service.dart';
 
 void main() {

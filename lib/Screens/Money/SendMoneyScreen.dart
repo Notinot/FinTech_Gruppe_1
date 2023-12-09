@@ -2,31 +2,33 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/Screens/Dashboard/dashBoardScreen.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
-import 'api_service.dart';
+import '../EditUser/EditUserScreen.dart';
+import '../api_service.dart';
 
-class RequestMoneyScreen extends StatefulWidget {
-  RequestMoneyScreen({super.key});
+class SendMoneyScreen extends StatefulWidget {
+  SendMoneyScreen({super.key});
 
   @override
-  _RequestMoneyScreenState createState() => _RequestMoneyScreenState();
+  _SendMoneyScreenState createState() => _SendMoneyScreenState();
 }
 
-class _RequestMoneyScreenState extends State<RequestMoneyScreen> {
-  final TextEditingController requesterController = TextEditingController();
+class _SendMoneyScreenState extends State<SendMoneyScreen> {
+  final TextEditingController recipientController = TextEditingController();
   final TextEditingController amountController = TextEditingController();
   final TextEditingController messageController = TextEditingController();
 
-  Color requesterBorderColor = Colors.grey;
+  Color recipientBorderColor = Colors.grey;
   Color amountBorderColor = Colors.grey;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Request Money'),
+        title: const Text('Send Money'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -34,19 +36,19 @@ class _RequestMoneyScreenState extends State<RequestMoneyScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             const Text(
-              'Request from:',
+              'Recipient:',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             TextFormField(
-              controller: requesterController,
+              controller: recipientController,
               decoration: InputDecoration(
-                hintText: 'Enter your name or email',
+                hintText: 'Enter recipient name or email',
                 enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: requesterBorderColor),
+                  borderSide: BorderSide(color: recipientBorderColor),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: requesterBorderColor),
+                  borderSide: BorderSide(color: recipientBorderColor),
                 ),
                 prefixIcon: const Icon(Icons.person),
               ),
@@ -82,7 +84,6 @@ class _RequestMoneyScreenState extends State<RequestMoneyScreen> {
                   ).format(intValue / 100);
 
                   amountController.text = formattedAmount;
-                  print('amountController.text: ${amountController.text}');
                 }
               },
             ),
@@ -95,7 +96,7 @@ class _RequestMoneyScreenState extends State<RequestMoneyScreen> {
             TextFormField(
               controller: messageController,
               decoration: const InputDecoration(
-                hintText: 'Enter a message for the payer',
+                hintText: 'Enter a message for the recipient',
                 enabledBorder: OutlineInputBorder(
                   borderSide: BorderSide(color: Colors.grey),
                 ),
@@ -109,7 +110,7 @@ class _RequestMoneyScreenState extends State<RequestMoneyScreen> {
             Center(
               child: ElevatedButton(
                 onPressed: () async {
-                  final recipient = requesterController.text;
+                  final recipient = recipientController.text;
                   final amount = amountController.text;
                   print(amount);
                   final message = messageController.text;
@@ -129,19 +130,19 @@ class _RequestMoneyScreenState extends State<RequestMoneyScreen> {
                       double.tryParse(normalizedAmountText) ?? 0.0;
 
                   print(parsedAmount);
-// Check if the recipient is empty
+
                   if (recipient.trim().isEmpty) {
                     setState(() {
-                      requesterBorderColor = Colors.red;
+                      recipientBorderColor = Colors.red;
                     });
                     showErrorSnackBar(context, 'Recipient cannot be empty');
                     return;
                   } else {
                     setState(() {
-                      requesterBorderColor = Colors.grey;
+                      recipientBorderColor = Colors.grey;
                     });
                   }
-// Check if the amount is valid
+
                   if (parsedAmount <= 0) {
                     setState(() {
                       amountBorderColor = Colors.red;
@@ -153,44 +154,38 @@ class _RequestMoneyScreenState extends State<RequestMoneyScreen> {
                       amountBorderColor = Colors.grey;
                     });
                   }
-                  // check if user is requesting money from himself (username or email)
-                  final Map<String, dynamic> user =
-                      await ApiService.fetchUserProfile();
 
-                  if (recipient == user['username'] ||
-                      recipient == user['email']) {
-                    showErrorSnackBar(
-                        context, 'You cannot request money from yourself');
-                    return;
-                  }
-
-                  // Call the request money function
+                  // Use the sendMoney method
                   bool success =
-                      await requestMoney(recipient, parsedAmount, message);
+                      await sendMoney(recipient, parsedAmount, message);
 
                   if (success) {
-                    // Clear the text fields
-                    requesterController.clear();
+                    // Clear the input fields after sending money
+                    recipientController.clear();
                     amountController.clear();
                     messageController.clear();
 
                     // Show success snackbar
-                    showSuccessSnackBar(context, 'Request sent to $recipient');
+                    showSuccessSnackBar(
+                        context, 'Money sent successfully to $recipient');
+
+                    // Navigate to the dashboard screen
+                    Navigator.pop(context);
+
+                    // Refresh the dashboard screen
+                    Navigator.pushReplacement(
+                      // Add this line
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => DashboardScreen(),
+                      ),
+                    );
                   } else {
                     // Show error snackbar
-                    showErrorSnackBar(context, 'Error requesting money');
+                    showErrorSnackBar(context, 'Failed to send money');
                   }
                 },
-                style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  backgroundColor: Colors.blue, // Text color
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                ),
-                child: const Text(
-                  'Request Money',
-                  style: TextStyle(fontSize: 16),
-                ),
+                child: Text('Send Money'), // Add this line
               ),
             ),
           ],
@@ -199,7 +194,7 @@ class _RequestMoneyScreenState extends State<RequestMoneyScreen> {
     );
   }
 
-  Future<bool> requestMoney(
+  Future<bool> sendMoney(
       String recipient, double amount, String message) async {
     try {
       // Retrieve the JWT token from secure storage
@@ -216,9 +211,9 @@ class _RequestMoneyScreenState extends State<RequestMoneyScreen> {
         print('token: $token');
       }
 
-      // Continue with the request money request
-      final requestMoneyResponse = await http.post(
-        Uri.parse('${ApiService.serverUrl}/request-money'),
+      // Continue with the send money request
+      final sendMoneyResponse = await http.post(
+        Uri.parse('${ApiService.serverUrl}/send-money'),
         headers: {
           'Content-Type': 'application/json; charset=UTF-8',
           'Authorization': 'Bearer $token',
@@ -230,18 +225,18 @@ class _RequestMoneyScreenState extends State<RequestMoneyScreen> {
           'event_id': null,
         }),
       );
-
-      if (requestMoneyResponse.statusCode == 200) {
-        // Request for money sent successfully
+      print(sendMoneyResponse);
+      if (sendMoneyResponse.statusCode == 200) {
+        // Money sent successfully
         return true;
       } else {
-        // Request for money failed, handle accordingly
-        print('Error requesting money: ${requestMoneyResponse.body}');
+        // Money transfer failed, handle accordingly
+        print('Error sending money: ${sendMoneyResponse.body}');
         return false;
       }
     } catch (e) {
       // Exception occurred, handle accordingly
-      print('Error requesting money: $e');
+      print('Error sending money: $e');
       return false;
     }
   }

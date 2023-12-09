@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:flutter_application_1/expandable_fab.dart';
-import 'package:flutter_application_1/Screens/create_event_screen.dart';
-import 'package:flutter_application_1/Screens/login_screen.dart';
-import 'package:flutter_application_1/Screens/request_money_screen.dart';
-import 'package:flutter_application_1/Screens/send_money_screen.dart';
+import 'package:flutter_application_1/Screens/Dashboard/expandable_fab.dart';
+import 'package:flutter_application_1/Screens/Events/CreateEventScreen.dart';
+import 'package:flutter_application_1/Screens/Login%20&%20Register/LoginScreen.dart';
+import 'package:flutter_application_1/Screens/Money/RequestMoneyScreen.dart';
+import 'package:flutter_application_1/Screens/Money/SendMoneyScreen.dart';
 
 class QuickMenu extends StatelessWidget {
   final Map<String, dynamic> user;

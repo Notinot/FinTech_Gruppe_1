@@ -1,10 +1,17 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/Screens/FriendsScreen.dart';
-import 'package:flutter_application_1/Screens/edit_user_screen.dart';
-import 'package:flutter_application_1/Screens/login_screen.dart';
-import 'transaction_history_screen.dart';
+
+import 'package:flutter_application_1/Screens/Dashboard/dashBoardScreen.dart';
+
+import 'package:flutter_application_1/Screens/Friends/FriendsScreen.dart';
+
+import 'package:flutter_application_1/Screens/Money/TransactionHistoryScreen.dart';
+
+import 'package:flutter_application_1/Screens/Login%20&%20Register/LoginScreen.dart';
+
+import 'package:flutter_application_1/Screens/EditUser/EditUserScreen.dart';
+
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class AppDrawer extends StatelessWidget {
@@ -33,8 +40,11 @@ class AppDrawer extends StatelessWidget {
             leading: const Icon(Icons.dashboard),
             title: const Text('Dashboard'),
             onTap: () {
-              // Navigate to the dashboard screen
-              // Implement the navigation as needed
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const DashboardScreen()),
+              );
             },
           ),
 

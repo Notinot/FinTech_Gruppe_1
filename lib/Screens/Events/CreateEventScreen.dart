@@ -2,18 +2,15 @@ import 'dart:convert';
 import 'package:country_picker/country_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/Screens/dashboard_screen.dart';
+import 'package:flutter_application_1/Screens/Dashboard/dashBoardScreen.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
 import 'package:numberpicker/numberpicker.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart';
-import 'api_service.dart';
-
+import '../api_service.dart';
 
 class CreateEventScreen extends StatefulWidget {
-
-
   CreateEventScreen({super.key});
 
   @override
@@ -120,7 +117,6 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   }
 
   Future<void> handleCreateEvent() async {
-
     // Error cleaning
     clearErrors();
 
@@ -145,8 +141,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
           wrongDate = Colors.red;
         });
         return;
-      }
-      else{
+      } else {
         setState(() {
           datetimeButton = Colors.blue;
           wrongDate = Colors.grey;
@@ -238,25 +233,21 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
 
     print(createEventResponse);
 
-      if (createEventResponse.statusCode == 200) {
-
-        Navigator.push(
-          this.context,
-          MaterialPageRoute(builder: (context) => const DashboardScreen()),
-        );
-            }
-      else if(createEventResponse.statusCode == 401) {
-
-        setState(() {
-          cityError = 'The address does not exist';
-          streetError = ' ';
-          zipcodeError = ' ';
-        });
+    if (createEventResponse.statusCode == 200) {
+      Navigator.push(
+        this.context,
+        MaterialPageRoute(builder: (context) => const DashboardScreen()),
+      );
+    } else if (createEventResponse.statusCode == 401) {
+      setState(() {
+        cityError = 'The address does not exist';
+        streetError = ' ';
+        zipcodeError = ' ';
+      });
 
       print('The address does not exist');
       return;
-    }
-    else{
+    } else {
       print('Error creating the event: ${createEventResponse.body}');
       return;
     }
@@ -489,7 +480,6 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 value: weekly ?? false,
                 onChanged: (bool? value) {
                   setState(() {
-
                     weekly = value ?? false;
                     monthly = false;
                     yearly = false;
@@ -502,7 +492,6 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 value: monthly ?? false,
                 onChanged: (bool? value) {
                   setState(() {
-
                     monthly = value ?? false;
                     weekly = false;
                     yearly = false;
@@ -515,7 +504,6 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 value: yearly ?? false,
                 onChanged: (bool? value) {
                   setState(() {
-
                     yearly = value ?? false;
                     weekly = false;
                     monthly = false;

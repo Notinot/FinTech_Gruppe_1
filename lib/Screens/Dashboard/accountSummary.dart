@@ -26,7 +26,7 @@ class AccountSummary extends StatelessWidget {
               ),
             ),
             Text(
-              '\$${balance.toStringAsFixed(2)}',
+              '\€${balance.toStringAsFixed(2)}',
               style: const TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,

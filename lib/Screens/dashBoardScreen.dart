@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/Screens/AppDrawer.dart';
-import 'package:flutter_application_1/Screens/Notifications.dart';
-import 'package:flutter_application_1/Screens/account_summary.dart';
+import 'package:flutter_application_1/Screens/Dashboard/appDrawer.dart';
+import 'package:flutter_application_1/Screens/Dashboard/Notifications.dart';
+import 'package:flutter_application_1/Screens/Dashboard/accountSummary.dart';
 import 'package:flutter_application_1/Screens/api_service.dart';
-import 'package:flutter_application_1/Screens/create_event_screen.dart';
-import 'package:flutter_application_1/Screens/quick_menu.dart';
-import 'package:flutter_application_1/Screens/request_money_screen.dart';
-import 'package:flutter_application_1/Screens/send_money_screen.dart';
-import 'package:flutter_application_1/Screens/user_profile_section.dart';
+import 'package:flutter_application_1/Screens/Events/CreateEventScreen.dart';
+import 'package:flutter_application_1/Screens/Dashboard/quickActionsMenu.dart';
+import 'package:flutter_application_1/Screens/Money/RequestMoneyScreen.dart';
+import 'package:flutter_application_1/Screens/Money/SendMoneyScreen.dart';
+import 'package:flutter_application_1/Screens/Dashboard/userProfileSection.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({Key? key}) : super(key: key);

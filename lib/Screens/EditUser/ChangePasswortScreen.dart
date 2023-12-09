@@ -3,10 +3,10 @@ import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_application_1/Screens/login_screen.dart';
+import 'package:flutter_application_1/Screens/Login%20&%20Register/LoginScreen.dart';
 import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
 import 'package:http/http.dart' as http;
-import 'api_service.dart';
+import '../api_service.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
   final String email;

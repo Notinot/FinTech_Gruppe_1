@@ -1,11 +1,11 @@
 import 'dart:convert';
-import 'package:flutter_application_1/Screens/forgot_password_screen.dart';
+import 'package:flutter_application_1/Screens/Login%20&%20Register/ForgotPasswortScreen.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'dashboard_screen.dart';
-import 'registration_screen.dart';
-import 'api_service.dart';
+import '../Dashboard/dashBoardScreen.dart';
+import 'RegistrationScreen.dart';
+import '../api_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});

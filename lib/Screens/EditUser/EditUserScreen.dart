@@ -3,17 +3,18 @@ import 'dart:convert';
 //import 'dart:ffi';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/Screens/dashboard_screen.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_application_1/Screens/Dashboard/dashBoardScreen.dart';
 import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'login_screen.dart';
+import 'package:flutter_application_1/Screens/Login & Register/LoginScreen.dart';
+
 import 'package:http/http.dart' as http;
 import 'dart:io' as io;
 
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'api_service.dart';
+import 'package:flutter/foundation.dart' show kIsWeb; // Import for web support
+import 'package:flutter_application_1/Screens/api_service.dart';
 
 class EditUser extends StatefulWidget {
   EditUser({super.key});

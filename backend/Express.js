@@ -566,8 +566,8 @@ app.post('/send-money', authenticateToken, async (req, res) => {
     const recipientBalance = await getBalance(recipientId);
 
     // Update balances in the database
-    await updateBalance(senderId, +amount);
-    await updateBalance(recipientId, -amount);
+    await updateBalance(senderId, -amount);
+    await updateBalance(recipientId, +amount);
 
     res.json({ message: 'Money transfer successful' });
   } catch (error) {

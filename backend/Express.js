@@ -503,7 +503,38 @@ app.post('/verifyPassword', async (req, res) => {
   }
 });
 
+// Route to verify Password with JWT authentication
+app.post('/verifyPasswort_Token', authenticateToken, async (req, res) => {
+  try {
+    // Get the user ID from the authenticated token
+    const userId = req.user.userId;
+    console.log('userId:', userId);
 
+    // Extract the password from the request body
+    const { password } = req.body;
+
+    // Check if the user with the provided email exists
+    const [user] = await db.query('SELECT * FROM User WHERE user_id = ?', [userId]);
+
+    if (user.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Compare the provided password with the hashed password
+    const hashedPassword = user[0].password_hash;
+    const salt = user[0].salt;
+    const passwordMatch = await bcrypt.compare(password + salt, hashedPassword);
+
+    if (passwordMatch) {
+      res.json({ message: 'Password is correct' });
+    } else {
+      res.status(401).json({ message: 'Incorrect password' });
+    }
+  } catch (error) {
+    console.error('Error checking password:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
 
 // Route to check the user's active status
 app.post('/check-active', async (req, res) => {

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/Screens/Dashboard/dashBoardScreen.dart';
 import 'package:flutter_application_1/Screens/api_service.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
@@ -302,17 +303,17 @@ class TransactionItem extends StatelessWidget {
     Color iconColor;
     Color textColor;
     if (transaction.transactionType == 'Request') {
-      //determine color based on processed status and if the user is the sender or receiver. if the user is the receiver of a request and it is processed the color should be red and if it is unprocessed the color should be black. if the user is the sender of a request and it is processed the color should be green and if it is unprocessed the color should be black. if the user is the sender of a request and it is denied the color should be red.
+      // For request transactions, determine the color based on the status (subtle green for processed, subtle red for denied, black for unprocessed)
       if (isProcessed) {
         if (isReceived) {
-          iconColor = Colors.red;
+          iconColor = Colors.red[400]!;
           textColor = Colors.black;
         } else {
-          iconColor = Colors.green;
+          iconColor = Colors.green[400]!;
           textColor = Colors.black;
         }
       } else if (isDenied) {
-        iconColor = Colors.red;
+        iconColor = Colors.red[400]!;
         textColor = Colors.black;
       } else {
         iconColor = Colors.black;
@@ -321,28 +322,25 @@ class TransactionItem extends StatelessWidget {
     } else {
       // For money transactions, determine the color based on whether the user received or sent money
       if (isReceived) {
-        iconColor = Colors.green;
+        iconColor = Colors.green[400]!;
         textColor = Colors.black;
       } else {
-        iconColor = Colors.red;
+        iconColor = Colors.red[400]!;
         textColor = Colors.black;
       }
     }
 
     return ListTile(
       key: ValueKey<int>(transaction.transaction_id), // Add a key
+
       // Display the icon based on the transaction type
       leading: Icon(
         transaction.transactionType == 'Request'
-            ? Icons.request_page
-            : Icons.monetization_on,
+            ? Icons.request_page_rounded
+            : Icons.monetization_on_rounded,
         color: iconColor,
       ),
-      // Display the transaction type and the sender/receiver, depending on whether the user received or sent money or requested money
-      // If the transaction is a request, display the sender and receiver, if the user is the sender, display the receiver, if the user is the receiver, display the sender
-      // If the transaction is a money transaction, display the sender and receiver, if the user received money, display the sender, if the user sent money, display the receiver
-      // If the transaction is a request and the user is the sender, display the receiver, if the user is the receiver, display the sender
-
+      // Display the username of the sender or receiver based on the transaction type
       title: Text(
         transaction.transactionType == 'Request'
             ? isReceived
@@ -363,7 +361,7 @@ class TransactionItem extends StatelessWidget {
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          //Display the amount and give it a subtle green background if the user received money or a subtle red background if the user sent money, but not for requests
+          // Display the amount
           Container(
             padding: EdgeInsets.all(5),
             decoration: BoxDecoration(
@@ -398,7 +396,7 @@ class TransactionItem extends StatelessWidget {
             ),
         ],
       ),
-      // Display the date and time
+      // Display the date and time of the transaction in the trailing position
       trailing: Text(
         '${DateFormat('dd/MM/yyyy').format(transaction.createdAt)}\n${DateFormat('HH:mm').format(transaction.createdAt)}',
         textAlign: TextAlign.right,
@@ -443,7 +441,7 @@ class TransactionItem extends StatelessWidget {
 
 Color getStatusColor(Transaction transaction) {
   if (transaction.transactionType == 'Request') {
-    // For request transactions, determine the color based on the status
+    // For request transactions, determine the color based on the status (subtle green for processed, subtle red for denied, black for unprocessed)
     if (transaction.processed == 1) {
       return Colors.green;
     } else if (transaction.processed == 2) {
@@ -554,6 +552,7 @@ class TransactionDetailScreen extends StatelessWidget {
     );
   }
 
+  // Build the UI
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -636,6 +635,23 @@ class TransactionDetailScreen extends StatelessWidget {
                       ElevatedButton(
                         onPressed: () => denyRequest(context),
                         child: Text('Deny Request'),
+                      ),
+                    ],
+                  ),
+                // Add a link to the event details screen if the transaction is associated with an event and the event is not null (Go to dashboard while event details screen is not implemented)
+                if (transaction.event_id != null)
+                  Column(
+                    children: [
+                      SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => DashboardScreen()),
+                          );
+                        },
+                        child: Text('View Event Details'),
                       ),
                     ],
                   ),

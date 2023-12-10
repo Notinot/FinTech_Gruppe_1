@@ -32,8 +32,8 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     super.initState();
     transactionsFuture = fetchTransactions();
     searchBar = search_bar.SearchBar(
-      showClearButton: true,
-      inBar: false,
+      showClearButton: false,
+      inBar: true,
       setState: setState,
       onSubmitted: onSubmitted,
       onChanged: onChanged,
@@ -168,9 +168,8 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Use the buildAppBar function to build the AppBar
       appBar: searchBar.build(context),
-      //add a floating action button to refresh the transaction history screen.make it elevated and add an icon
+      //floating action button to refresh the transaction history screen
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           setState(() {
@@ -179,11 +178,11 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
         },
         child: const Icon(Icons.refresh),
       ),
-      //add a navigation bar at the bottom of the screen to navigate to the send money and request money screens respectively
+      //navigation bar at the bottom of the screen to navigate to the send money and request money screens respectively
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(Icons.send),
+            icon: Icon(Icons.monetization_on),
             label: 'Send Money',
           ),
           BottomNavigationBarItem(

@@ -303,7 +303,6 @@ class TransactionItem extends StatelessWidget {
     Color iconColor;
     Color textColor;
     if (transaction.transactionType == 'Request') {
-      // For request transactions, determine the color based on the status (subtle green for processed, subtle red for denied, black for unprocessed)
       if (isProcessed) {
         if (isReceived) {
           iconColor = Colors.red[400]!;
@@ -361,26 +360,54 @@ class TransactionItem extends StatelessWidget {
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Display the amount
+          // Display the amount of the transaction in the subtitle position in a container with a background color based on the transaction type and whether the user received or sent money.
+          //if the transaction type is a request, and the user is the receiver and the request is processed, display the amount in red
+          // if the transaction type is a request, and the user is the sender and the request is processed, display the amount in green
+          //if the transaction type is a request, and the user is the sender and the request is denied, display the amount normally
+          //if the transaction type is a request, and the user is the receiver and the request is denied, display the amount normally
+          //if the transaction type is a request, and the user is the sender and the request is unprocessed, display the amount normally
+          //if the transaction type is a request, and the user is the receiver and the request is unprocessed, display the amount normally
+          //if the transaction type is a payment, and the user is the sender, display the amount in red
+          //if the transaction type is a payment, and the user is the receiver, display the amount in green
+          // add a minus sign if the user lost money
           Container(
             padding: EdgeInsets.all(5),
             decoration: BoxDecoration(
               color: transaction.transactionType == 'Request'
-                  ? Colors.transparent
+                  ? isProcessed
+                      ? isReceived
+                          ? Colors.red[300]
+                          : Colors.green[300]
+                      : Colors.transparent
                   : isReceived
-                      ? Colors.green[100]
-                      : Colors.red[100],
+                      ? Colors.green[300]
+                      : Colors.red[300],
               borderRadius: BorderRadius.circular(5),
             ),
             child: Text(
-              '\€${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}',
+              transaction.transactionType == 'Request'
+                  ? isProcessed
+                      ? isReceived
+                          ? '-${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}\€'
+                          : '+${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}\€'
+                      : '${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}\€'
+                  : isReceived
+                      ? '+${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}\€'
+                      : '-${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}\€',
               style: TextStyle(
-                color: textColor,
+                color: transaction.transactionType == 'Request'
+                    ? isProcessed
+                        ? isReceived
+                            ? Colors.black
+                            : Colors.black
+                        : Colors.black
+                    : isReceived
+                        ? Colors.black
+                        : Colors.black,
                 fontWeight: FontWeight.bold,
               ),
             ),
           ),
-
           // Display the event name if the transaction is associated with an event
           if (transaction.event_id != null)
             Text(
@@ -403,8 +430,14 @@ class TransactionItem extends StatelessWidget {
         style: TextStyle(color: textColor),
       ),
 
+      //Add a divider between each transaction. Remove the divider for the last transaction
+      shape: RoundedRectangleBorder(
+        side: BorderSide(color: Colors.grey, width: 0.5),
+        borderRadius: BorderRadius.circular(0),
+      ),
+
+      // Navigate to the transaction details screen when the transaction is tapped
       onTap: () {
-        // Navigate to the TransactionDetailScreen when tapped
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -561,12 +594,12 @@ class TransactionDetailScreen extends StatelessWidget {
         backgroundColor: Colors.blue,
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Card(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15.0),
           ),
-          elevation: 5,
+          elevation: 10,
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -596,7 +629,9 @@ class TransactionDetailScreen extends StatelessWidget {
                 SizedBox(height: 10),
                 Text(
                   'Amount: \€${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}',
-                  style: TextStyle(fontSize: 20),
+                  style: TextStyle(
+                    fontSize: 20,
+                  ),
                 ),
                 SizedBox(height: 10),
                 Text(

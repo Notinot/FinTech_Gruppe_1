@@ -6,6 +6,7 @@ import 'package:flutter_application_1/Screens/Dashboard/dashBoardScreen.dart';
 import 'package:flutter_application_1/Screens/Events/CreateEventScreen.dart';
 
 import 'package:flutter_application_1/Screens/Friends/FriendsScreen.dart';
+import 'package:flutter_application_1/Screens/Money/AddMoneyScreen.dart';
 
 import 'package:flutter_application_1/Screens/Money/TransactionHistoryScreen.dart';
 
@@ -89,6 +90,19 @@ class AppDrawer extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => EditUser()),
+              );
+            },
+          ),
+
+          //ListTile to add money to the account
+          ListTile(
+            leading: const Icon(Icons.add),
+            title: const Text('Add Money'),
+            onTap: () {
+              // Navigate to the events section
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => AddMoneyScreen()),
               );
             },
           ),

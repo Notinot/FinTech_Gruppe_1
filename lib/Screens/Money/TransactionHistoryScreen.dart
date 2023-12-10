@@ -266,8 +266,23 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
+                    // Display the user's balance
+                    Text(
+                      'Balance: ${NumberFormat("#,##0.00", "de_DE").format(user['balance'])}\€',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                        color: Colors.white,
+                      ),
+                    ),
                     // Button to navigate to the send money screen
                     ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue[600],
+                          textStyle: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                          )),
                       onPressed: () {
                         Navigator.push(
                           context,
@@ -276,10 +291,16 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                           ),
                         );
                       },
-                      child: Text('Send'),
+                      child: Icon(Icons.monetization_on_rounded),
                     ),
                     // Button to navigate to the request money screen
                     ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue[600],
+                          textStyle: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                          )),
                       onPressed: () {
                         Navigator.push(
                           context,
@@ -288,16 +309,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                           ),
                         );
                       },
-                      child: Text('Request'),
-                    ),
-                    // Display the user's balance
-                    Text(
-                      '${NumberFormat("#,##0.00", "de_DE").format(user['balance'])}\€',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
-                        color: Colors.white,
-                      ),
+                      child: Icon(Icons.request_page_rounded),
                     ),
                   ],
                 ),

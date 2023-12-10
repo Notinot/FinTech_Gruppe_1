@@ -554,6 +554,34 @@ app.get('/balance', authenticateToken, async (req, res) => {
   }
 });
 
+// Route to add money to the user's balance with JWT authentication
+app.post('/addMoney', authenticateToken, async (req, res) => {
+  try {
+    console.log('addMoney request body:', req.body);
+    // Get the user ID from the authenticated token
+    const userId = req.user.userId;
+    console.log('userId in /addmoney:', userId);
+
+    // Extract the amount from the request body
+    const { amount } = req.body;
+
+    // Validate input
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ message: 'Invalid input' });
+    }
+
+    // Update the user's balance
+    await updateBalance(userId, +amount);
+
+    // Send true as the response
+    res.json({ success: true });
+    
+    console.log('Money added successfully');
+  } catch (error) {
+    console.error('Error adding money:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
 
 // Route to check the user's active status
 app.post('/check-active', async (req, res) => {

@@ -70,7 +70,7 @@ class ApiService {
         throw Exception('Failed to load user profile');
       }
     } catch (e) {
-      print('Error fetching data: $e');
+      print('checkUserPassword: Error fetching data: $e');
       return false;
     }
   }
@@ -102,8 +102,44 @@ class ApiService {
         throw Exception('Failed to load user profile');
       }
     } catch (e) {
-      print('Error fetching data: $e');
+      print('fetchUserBalance: Error fetching data: $e');
       return 0;
+    }
+  }
+
+  //async function to add money to the users account
+  static Future<bool> addMoney(double amount) async {
+    try {
+      print("APIService: addMoney: amount = $amount");
+      // Retrieve the token from secure storage
+      const storage = FlutterSecureStorage();
+      final token = await storage.read(key: 'token');
+
+      if (token == null) {
+        throw Exception('Token not found');
+      }
+
+      final response = await http.post(
+        Uri.parse('${ApiService.serverUrl}/addMoney'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $token',
+        },
+        body: json.encode(<String, dynamic>{
+          'amount': amount,
+        }),
+      );
+      print("APIService: addMoney: response = $response");
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        final bool success = data['success'];
+        return success;
+      } else {
+        throw Exception('Failed to load user profile');
+      }
+    } catch (e) {
+      print('addMoney function: Error fetching data: $e');
+      return false;
     }
   }
 }

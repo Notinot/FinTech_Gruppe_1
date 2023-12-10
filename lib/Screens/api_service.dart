@@ -74,4 +74,36 @@ class ApiService {
       return false;
     }
   }
+
+  // async function to get the users balance with token
+  static Future<double> fetchUserBalance() async {
+    try {
+      // Retrieve the token from secure storage
+      const storage = FlutterSecureStorage();
+      final token = await storage.read(key: 'token');
+
+      if (token == null) {
+        throw Exception('Token not found');
+      }
+
+      final response = await http.get(
+        Uri.parse('${ApiService.serverUrl}/balance'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        final double balance = data['balance'];
+        return balance;
+      } else {
+        throw Exception('Failed to load user profile');
+      }
+    } catch (e) {
+      print('Error fetching data: $e');
+      return 0;
+    }
+  }
 }

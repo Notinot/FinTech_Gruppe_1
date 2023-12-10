@@ -536,6 +536,25 @@ app.post('/verifyPasswort_Token', authenticateToken, async (req, res) => {
   }
 });
 
+//Route to get the users balance with JWT authentication
+app.get('/balance', authenticateToken, async (req, res) => {
+  try {
+    // Get the user ID from the authenticated token
+    const userId = req.user.userId;
+    console.log('userId:', userId);
+
+    // Fetch the user's balance from the database based on the user ID
+    const balance = await getBalance(userId);
+
+    // Send the user's balance as the response
+    res.json({ balance });
+  } catch (error) {
+    console.error('Error fetching balance:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+
 // Route to check the user's active status
 app.post('/check-active', async (req, res) => {
   const { email } = req.body;

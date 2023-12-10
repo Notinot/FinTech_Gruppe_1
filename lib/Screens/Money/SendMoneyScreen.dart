@@ -154,8 +154,37 @@ class _SendMoneyScreenState extends State<SendMoneyScreen> {
                       amountBorderColor = Colors.grey;
                     });
                   }
+                  // wait for user to confirm the transaction
+                  final confirmed = await showDialog(
+                    context: context,
+                    builder: (context) {
+                      return AlertDialog(
+                        title: const Text('Confirm'),
+                        content: Text(
+                            'Are you sure you want to send \n€$parsedAmount to $recipient?'),
+                        actions: [
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pop(context, false);
+                            },
+                            child: const Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pop(context, true);
+                            },
+                            child: const Text('Confirm'),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                  if (confirmed == null || !confirmed) {
+                    // User cancelled the transaction
+                    return;
+                  }
 
-                  // Use the sendMoney method
+                  // if user confirms the transaction, send the money
                   bool success =
                       await sendMoney(recipient, parsedAmount, message);
 

@@ -164,7 +164,35 @@ class _RequestMoneyScreenState extends State<RequestMoneyScreen> {
                         context, 'You cannot request money from yourself');
                     return;
                   }
-
+                  // wait for user to confirm the transaction
+                  final confirmed = await showDialog(
+                    context: context,
+                    builder: (context) {
+                      return AlertDialog(
+                        title: const Text('Confirm'),
+                        content: Text(
+                            'Are you sure you want to request \n€$parsedAmount from $recipient?'),
+                        actions: [
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pop(context, false);
+                            },
+                            child: const Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pop(context, true);
+                            },
+                            child: const Text('Confirm'),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                  if (confirmed == null || !confirmed) {
+                    // User cancelled the transaction
+                    return;
+                  }
                   // Call the request money function
                   bool success =
                       await requestMoney(recipient, parsedAmount, message);

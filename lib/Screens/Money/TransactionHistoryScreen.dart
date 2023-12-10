@@ -476,7 +476,7 @@ class TransactionItem extends StatelessWidget {
       } else if (transaction.processed == 2) {
         return 'Denied';
       } else {
-        return 'Unprocessed';
+        return 'Pending';
       }
     } else if (transaction.transactionType == 'Payment') {
       // For money transactions, display the status based on the sender and receiver
@@ -499,6 +499,8 @@ Color getStatusColor(Transaction transaction) {
       return Colors.green;
     } else if (transaction.processed == 2) {
       return Colors.red;
+    } else if (transaction.processed == 0) {
+      return Colors.orange;
     } else {
       return Colors.black;
     }
@@ -518,6 +520,35 @@ class TransactionDetailScreen extends StatelessWidget {
 
   // Function to accept a request
   Future<void> acceptRequest(BuildContext context) async {
+    // wait for user to confirm the transaction
+    final confirmed = await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Confirm'),
+          content: Text(
+              'Are you sure you want to send \n${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}\€ to ${transaction.senderUsername}?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context, false);
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context, true);
+              },
+              child: const Text('Confirm'),
+            ),
+          ],
+        );
+      },
+    );
+    if (confirmed == null || !confirmed) {
+      // User cancelled the transaction
+      return;
+    }
     try {
       const storage = FlutterSecureStorage();
       final token = await storage.read(key: 'token');
@@ -562,6 +593,34 @@ class TransactionDetailScreen extends StatelessWidget {
 
   // Function to deny a request
   Future<void> denyRequest(BuildContext context) async {
+    // wait for user to confirm the transaction
+    final confirmed = await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Confirm'),
+          content: Text('Are you sure you want to deny the Request?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context, false);
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context, true);
+              },
+              child: const Text('Confirm'),
+            ),
+          ],
+        );
+      },
+    );
+    if (confirmed == null || !confirmed) {
+      // User cancelled the transaction
+      return;
+    }
     try {
       const storage = FlutterSecureStorage();
       final token = await storage.read(key: 'token');

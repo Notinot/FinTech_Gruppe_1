@@ -9,6 +9,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_search_bar/flutter_search_bar.dart' as search_bar;
 import 'RequestMoneyScreen.dart';
 import 'SendMoneyScreen.dart';
+import 'package:flutter_application_1/Screens/Money/TransactionHistoryScreen.dart';
 
 // TransactionHistoryScreen is a StatefulWidget that displays a user's transaction history.
 class TransactionHistoryScreen extends StatefulWidget {
@@ -235,45 +236,45 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
 
 // Transaction class represents a financial transaction with relevant details
 class Transaction {
-  int transaction_id;
-  int sender_id;
-  int receiver_id;
+  int transactionId;
+  int senderId;
+  int receiverId;
   String senderUsername;
   String receiverUsername;
   double amount;
   String transactionType;
   DateTime createdAt;
   String message;
-  int? event_id;
+  int? eventId;
   int processed;
 
   Transaction({
-    required this.transaction_id,
-    required this.sender_id,
-    required this.receiver_id,
+    required this.transactionId,
+    required this.senderId,
+    required this.receiverId,
     required this.senderUsername,
     required this.receiverUsername,
     required this.amount,
     required this.transactionType,
     required this.createdAt,
     required this.message,
-    required this.event_id,
+    required this.eventId,
     required this.processed,
   });
 
   // Factory method to create a Transaction object from JSON data
   factory Transaction.fromJson(Map<String, dynamic> json) {
     return Transaction(
-      transaction_id: json['transaction_id'],
-      sender_id: json['sender_id'],
-      receiver_id: json['receiver_id'],
+      transactionId: json['transaction_id'],
+      senderId: json['sender_id'],
+      receiverId: json['receiver_id'],
       senderUsername: json['sender_username'],
       receiverUsername: json['receiver_username'],
       amount: double.parse(json['amount'].toString()),
       transactionType: json['transaction_type'],
       createdAt: DateTime.parse(json['created_at']),
       message: json['message'],
-      event_id: json['event_id'],
+      eventId: json['event_id'],
       processed: json['processed'],
     );
   }
@@ -293,7 +294,7 @@ class TransactionItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Determine if the transaction is a received or sent transaction
-    bool isReceived = transaction.receiver_id == userId;
+    bool isReceived = transaction.receiverId == userId;
 
     //Determine if request is processed or denied or unprocessed
     bool isProcessed = transaction.processed == 1;
@@ -330,7 +331,7 @@ class TransactionItem extends StatelessWidget {
     }
 
     return ListTile(
-      key: ValueKey<int>(transaction.transaction_id), // Add a key
+      key: ValueKey<int>(transaction.transactionId), // Add a key
 
       // Display the icon based on the transaction type
       leading: Icon(
@@ -360,16 +361,7 @@ class TransactionItem extends StatelessWidget {
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Display the amount of the transaction in the subtitle position in a container with a background color based on the transaction type and whether the user received or sent money.
-          //if the transaction type is a request, and the user is the receiver and the request is processed, display the amount in red
-          // if the transaction type is a request, and the user is the sender and the request is processed, display the amount in green
-          //if the transaction type is a request, and the user is the sender and the request is denied, display the amount normally
-          //if the transaction type is a request, and the user is the receiver and the request is denied, display the amount normally
-          //if the transaction type is a request, and the user is the sender and the request is unprocessed, display the amount normally
-          //if the transaction type is a request, and the user is the receiver and the request is unprocessed, display the amount normally
-          //if the transaction type is a payment, and the user is the sender, display the amount in red
-          //if the transaction type is a payment, and the user is the receiver, display the amount in green
-          // add a minus sign if the user lost money
+          // Display the amount of the transaction based on the transaction type and whether the user received or sent money
           Container(
             padding: EdgeInsets.all(5),
             decoration: BoxDecoration(
@@ -409,9 +401,9 @@ class TransactionItem extends StatelessWidget {
             ),
           ),
           // Display the event name if the transaction is associated with an event
-          if (transaction.event_id != null)
+          if (transaction.eventId != null)
             Text(
-              'Event: ${transaction.event_id}',
+              'Event: ${transaction.eventId}',
               style: TextStyle(color: textColor),
             ),
 
@@ -449,6 +441,7 @@ class TransactionItem extends StatelessWidget {
     );
   }
 
+  // Function to get the status text for a transaction
   String getStatusText(Transaction transaction) {
     if (transaction.transactionType == 'Request') {
       // For request transactions, display the status
@@ -461,7 +454,7 @@ class TransactionItem extends StatelessWidget {
       }
     } else if (transaction.transactionType == 'Payment') {
       // For money transactions, display the status based on the sender and receiver
-      if (transaction.sender_id == userId) {
+      if (transaction.senderId == userId) {
         return 'Sent';
       } else {
         return 'Received';
@@ -472,6 +465,7 @@ class TransactionItem extends StatelessWidget {
   }
 }
 
+// Function to get the status color for a transaction
 Color getStatusColor(Transaction transaction) {
   if (transaction.transactionType == 'Request') {
     // For request transactions, determine the color based on the status (subtle green for processed, subtle red for denied, black for unprocessed)
@@ -504,7 +498,7 @@ class TransactionDetailScreen extends StatelessWidget {
       // Make a request to your backend API to accept the request
       final response = await http.post(
         Uri.parse(
-            '${ApiService.serverUrl}/transactions/${transaction.transaction_id}'),
+            '${ApiService.serverUrl}/transactions/${transaction.transactionId}'),
         headers: {
           'Content-Type': 'application/json; charset=UTF-8',
           'Authorization': 'Bearer $token',
@@ -545,11 +539,11 @@ class TransactionDetailScreen extends StatelessWidget {
     try {
       const storage = FlutterSecureStorage();
       final token = await storage.read(key: 'token');
-      print('Transaction ID: ${transaction.transaction_id}');
+      print('Transaction ID: ${transaction.transactionId}');
       // Make a request to your backend API to deny the request
       final response = await http.post(
         Uri.parse(
-            '${ApiService.serverUrl}/transactions/${transaction.transaction_id}'),
+            '${ApiService.serverUrl}/transactions/${transaction.transactionId}'),
         headers: {
           'Content-Type': 'application/json; charset=UTF-8',
           'Authorization': 'Bearer $token',
@@ -588,6 +582,12 @@ class TransactionDetailScreen extends StatelessWidget {
   // Build the UI
   @override
   Widget build(BuildContext context) {
+    // Determine if the transaction is a received or sent transaction
+    bool isReceived = transaction.receiverId == userId;
+
+    //Determine if request is processed or denied or unprocessed
+    bool isProcessed = transaction.processed == 1;
+    bool isDenied = transaction.processed == 2;
     return Scaffold(
       appBar: AppBar(
         title: Text('Transaction Details'),
@@ -605,6 +605,7 @@ class TransactionDetailScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Display the username of the sender or receiver based on the transaction type
                 Text(
                   transaction.transactionType == 'Payment'
                       ? 'From: ${transaction.senderUsername}'
@@ -616,6 +617,8 @@ class TransactionDetailScreen extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: 10),
+
+                // Display the amount of the transaction based on the transaction type and whether the user received or sent money
                 Text(
                   transaction.transactionType == 'Payment'
                       ? 'To: ${transaction.receiverUsername}'
@@ -627,38 +630,96 @@ class TransactionDetailScreen extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: 10),
-                Text(
-                  'Amount: \€${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}',
-                  style: TextStyle(
-                    fontSize: 20,
+
+                // Display the amount of the transaction based on the transaction type and whether the user received or sent money
+                Container(
+                  padding: EdgeInsets.all(5),
+                  decoration: BoxDecoration(
+                    color: transaction.transactionType == 'Request'
+                        ? isProcessed
+                            ? isReceived
+                                ? Colors.red[300]
+                                : Colors.green[300]
+                            : Colors.transparent
+                        : isReceived
+                            ? Colors.green[300]
+                            : Colors.red[300],
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                  child: Text(
+                    transaction.transactionType == 'Request'
+                        ? isProcessed
+                            ? isReceived
+                                ? '-${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}\€'
+                                : '+${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}\€'
+                            : '${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}\€'
+                        : isReceived
+                            ? '+${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}\€'
+                            : '-${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}\€',
+                    style: TextStyle(
+                        color: transaction.transactionType == 'Request'
+                            ? isProcessed
+                                ? isReceived
+                                    ? Colors.black
+                                    : Colors.black
+                                : Colors.black
+                            : isReceived
+                                ? Colors.black
+                                : Colors.black,
+                        fontSize: 20),
                   ),
                 ),
                 SizedBox(height: 10),
+
+                // Display the type of the transaction
                 Text(
                   'Type: ${transaction.transactionType}',
                   style: TextStyle(fontSize: 20),
                 ),
                 SizedBox(height: 10),
+
+                // Display the date of the transaction
                 Text(
-                  'Date: ${DateFormat('dd/MM/yyyy').format(transaction.createdAt)}',
+                  'Date: ${DateFormat('dd.MM.yyyy').format(transaction.createdAt)}',
                   style: TextStyle(fontSize: 20),
                 ),
                 SizedBox(height: 10),
+
+                // Display the time of the transaction
                 Text(
                   'Time: ${DateFormat('HH:mm:ss').format(transaction.createdAt)}',
                   style: TextStyle(fontSize: 20),
                 ),
                 SizedBox(height: 10),
+
+                // Display the event name if the transaction is associated with an event
+                if (transaction.eventId != null)
+                  Text('Event: ${transaction.eventId}',
+                      style: TextStyle(fontSize: 20)),
+                SizedBox(height: 10),
+
+                // Display the message if the transaction has a message
                 if (transaction.message.isNotEmpty)
                   Text('Message: ${transaction.message}',
                       style: TextStyle(fontSize: 20)),
+                SizedBox(height: 10),
 
-                // Add buttons for accepting and denying the request
+                // Display the status if the transaction is a request
+                if (transaction.transactionType == 'Request')
+                  Text(
+                    'Status: ${getStatusText(transaction)}',
+                    style: TextStyle(
+                        fontSize: 20,
+                        color: getStatusColor(transaction),
+                        fontWeight: FontWeight.bold),
+                  ),
+                SizedBox(height: 10),
+
+                // buttons for accepting and denying the request
                 // buttons only appear when the transaction is a request and the transaction is unprocessed and the sender is not the current user
-
                 if (transaction.transactionType == 'Request' &&
                     transaction.processed == 0 &&
-                    transaction.sender_id != userId)
+                    transaction.senderId != userId)
                   Column(
                     children: [
                       SizedBox(height: 20),
@@ -674,7 +735,7 @@ class TransactionDetailScreen extends StatelessWidget {
                     ],
                   ),
                 // Add a link to the event details screen if the transaction is associated with an event and the event is not null (Go to dashboard while event details screen is not implemented)
-                if (transaction.event_id != null)
+                if (transaction.eventId != null)
                   Column(
                     children: [
                       SizedBox(height: 20),
@@ -696,5 +757,27 @@ class TransactionDetailScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  getStatusText(Transaction transaction) {
+    if (transaction.transactionType == 'Request') {
+      // For request transactions, display the status
+      if (transaction.processed == 1) {
+        return 'Processed';
+      } else if (transaction.processed == 2) {
+        return 'Denied';
+      } else {
+        return 'Unprocessed';
+      }
+    } else if (transaction.transactionType == 'Payment') {
+      // For money transactions, display the status based on the sender and receiver
+      if (transaction.senderId == userId) {
+        return 'Sent';
+      } else {
+        return 'Received';
+      }
+    }
+    // For money transactions, no additional status text needed
+    return '';
   }
 }

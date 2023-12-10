@@ -573,6 +573,9 @@ app.post('/addMoney', authenticateToken, async (req, res) => {
     // Update the user's balance
     await updateBalance(userId, +amount);
 
+    //insert as transaction into database. sender and receiver are the same. processed = 3 means it is a deposit, message is empty
+    await db.query('INSERT INTO Transaction (sender_id, receiver_id, amount, transaction_type, created_at, message, processed) VALUES (?, ?, ?, ?, NOW(), ?, 3)', 
+    [userId, userId, amount, 'Deposit', '']);
     // Send true as the response
     res.json({ success: true });
     

@@ -383,7 +383,7 @@ class TransactionItem extends StatelessWidget {
   Widget build(BuildContext context) {
     // Determine if the transaction is a received or sent transaction
     bool isReceived = transaction.receiverId == userId;
-
+    bool isDeposit = transaction.transactionType == 'Deposit';
     //Determine if request is processed or denied or unprocessed
     bool isProcessed = transaction.processed == 1;
     bool isDenied = transaction.processed == 2;
@@ -416,36 +416,75 @@ class TransactionItem extends StatelessWidget {
         iconColor = Colors.red[400]!;
         textColor = Colors.black;
       }
+
+      // if deposit, change color to green
     }
 
     return ListTile(
       key: ValueKey<int>(transaction.transactionId), // Add a key
 
-      // Display the icon based on the transaction type
-      leading: Icon(
-        transaction.transactionType == 'Request'
-            ? Icons.request_page_rounded
-            : Icons.monetization_on_rounded,
-        color: iconColor,
-      ),
-      // Display the username of the sender or receiver based on the transaction type
-      title: Text(
-        transaction.transactionType == 'Request'
-            ? isReceived
-                //  ? 'From: ${transaction.senderUsername}'
-                //  : 'To: ${transaction.receiverUsername}'
-                ? '${transaction.senderUsername}'
-                : '${transaction.receiverUsername}'
-            : isReceived
-                //   ? 'From: ${transaction.senderUsername}'
-                //   : 'To: ${transaction.receiverUsername}',
-                ? '${transaction.senderUsername}'
-                : '${transaction.receiverUsername}',
-        style: TextStyle(
-          color: textColor,
-          fontWeight: FontWeight.normal,
-        ),
-      ),
+      // Display the icon based on the transaction type. Use a red icon for requests and a green icon for money transactions and a differenct green icon for deposits
+      leading: transaction.transactionType == 'Request'
+          ? isProcessed
+              ? isReceived
+                  ? Icon(
+                      Icons.request_page_rounded,
+                      color: iconColor,
+                    )
+                  : Icon(
+                      Icons.request_page_rounded,
+                      color: iconColor,
+                    )
+              : Icon(
+                  Icons.request_page_rounded,
+                  color: iconColor,
+                )
+          : isDeposit
+              ? Icon(
+                  Icons.add,
+                  color: Colors.green[400],
+                )
+              : isReceived
+                  ? Icon(
+                      Icons.monetization_on_rounded,
+                      color: iconColor,
+                    )
+                  : Icon(
+                      Icons.monetization_on_rounded,
+                      color: iconColor,
+                    ),
+
+      // Display the username of the sender or receiver based on the transaction type. if it is a request, display the sender username if the user received money and the receiver username if the user sent money. if it is a money transaction, display the sender username if the user received money and the receiver username if the user sent money.if the transaction type is "Deposit", display nothing in the title
+      title: transaction.transactionType == 'Request'
+          ? isProcessed
+              ? isReceived
+                  ? Text(
+                      '${transaction.senderUsername}',
+                      style: TextStyle(color: textColor),
+                    )
+                  : Text(
+                      '${transaction.receiverUsername}',
+                      style: TextStyle(color: textColor),
+                    )
+              : Text(
+                  '${transaction.senderUsername}',
+                  style: TextStyle(color: textColor),
+                )
+          : isDeposit
+              ? Text(
+                  'Deposit',
+                  style:
+                      TextStyle(color: textColor, fontWeight: FontWeight.bold),
+                )
+              : isReceived
+                  ? Text(
+                      '${transaction.senderUsername}',
+                      style: TextStyle(color: textColor),
+                    )
+                  : Text(
+                      '${transaction.receiverUsername}',
+                      style: TextStyle(color: textColor),
+                    ),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -760,7 +799,7 @@ class TransactionDetailScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Display the username of the sender or receiver based on the transaction type
+                // Display the username of the sender or receiver based on the transaction type. if it is a deposit, leave it blank
                 Text(
                   transaction.transactionType == 'Payment'
                       ? 'From: ${transaction.senderUsername}'

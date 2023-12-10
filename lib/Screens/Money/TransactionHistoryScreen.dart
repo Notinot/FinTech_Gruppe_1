@@ -32,6 +32,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     super.initState();
     transactionsFuture = fetchTransactions();
     searchBar = search_bar.SearchBar(
+      showClearButton: true,
       inBar: false,
       setState: setState,
       onSubmitted: onSubmitted,
@@ -107,12 +108,17 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
               transaction.senderUsername
                   .toLowerCase()
                   .contains(value.toLowerCase()) ||
+              transaction.message.toLowerCase().contains(value.toLowerCase()) ||
               transaction.receiverUsername
                   .toLowerCase()
                   .contains(value.toLowerCase()))
           .toList();
       setState(() {
         transactionsFuture = Future.value(filteredTransactions);
+      });
+    } else {
+      setState(() {
+        transactionsFuture = fetchTransactions();
       });
     }
   }
@@ -137,6 +143,10 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
       setState(() {
         transactionsFuture = Future.value(filteredTransactions);
       });
+    } else {
+      setState(() {
+        transactionsFuture = fetchTransactions();
+      });
     }
   }
 
@@ -149,8 +159,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
   }
 
   Future<void> onClosed() async {
-    // Handle search bar closed
-    // Update the UI to show the original list
+    //update the UI to show the original list without filtering
     setState(() {
       transactionsFuture = fetchTransactions();
     });
@@ -161,6 +170,15 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     return Scaffold(
       // Use the buildAppBar function to build the AppBar
       appBar: searchBar.build(context),
+      //add a floating action button to refresh the transaction history screen.make it elevated and add an icon
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          setState(() {
+            transactionsFuture = fetchTransactions();
+          });
+        },
+        child: const Icon(Icons.refresh),
+      ),
       //add a navigation bar at the bottom of the screen to navigate to the send money and request money screens respectively
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
@@ -313,10 +331,10 @@ class TransactionItem extends StatelessWidget {
           textColor = Colors.black;
         }
       } else if (isDenied) {
-        iconColor = Colors.red[400]!;
+        iconColor = Colors.black;
         textColor = Colors.black;
       } else {
-        iconColor = Colors.black;
+        iconColor = Colors.orange[400]!;
         textColor = Colors.black;
       }
     } else {
@@ -407,11 +425,19 @@ class TransactionItem extends StatelessWidget {
               style: TextStyle(color: textColor),
             ),
 
+          // Display the message if the transaction has a message. If the message is too long, display only the first 20 characters
+          if (transaction.message.isNotEmpty)
+            Text(
+              '${transaction.message.length > 30 ? transaction.message.substring(0, 30) + '...' : transaction.message}',
+              style: TextStyle(color: textColor, fontStyle: FontStyle.italic),
+            ),
           // Display the status if the transaction is a request
           if (transaction.transactionType == 'Request')
             Text(
               '${getStatusText(transaction)}',
-              style: TextStyle(color: getStatusColor(transaction)),
+              style: TextStyle(
+                color: getStatusColor(transaction),
+              ),
             ),
         ],
       ),

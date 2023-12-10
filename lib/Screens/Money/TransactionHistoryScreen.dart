@@ -179,7 +179,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
         child: const Icon(Icons.refresh),
       ),
       //navigation bar at the bottom of the screen to navigate to the send money and request money screens respectively
-      bottomNavigationBar: BottomNavigationBar(
+      /* bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.monetization_on),
@@ -210,6 +210,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
           }
         },
       ),
+      */
       body: FutureBuilder<Map<String, dynamic>>(
         // Fetch user profile data
         future: ApiService.fetchUserProfile(),
@@ -246,6 +247,64 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
             );
           }
         },
+      ),
+      // Bottom navigation bar
+      bottomNavigationBar: BottomAppBar(
+        color: Colors.blue[400],
+        child: FutureBuilder<Map<String, dynamic>>(
+          // Fetch user profile data
+          future: ApiService.fetchUserProfile(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return CircularProgressIndicator();
+            } else if (snapshot.hasError) {
+              return Text('Error: ${snapshot.error}');
+            } else {
+              final Map<String, dynamic> user = snapshot.data!;
+              return Container(
+                height: 50,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    // Button to navigate to the send money screen
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => SendMoneyScreen(),
+                          ),
+                        );
+                      },
+                      child: Text('Send'),
+                    ),
+                    // Button to navigate to the request money screen
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => RequestMoneyScreen(),
+                          ),
+                        );
+                      },
+                      child: Text('Request'),
+                    ),
+                    // Display the user's balance
+                    Text(
+                      '${NumberFormat("#,##0.00", "de_DE").format(user['balance'])}\€',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+          },
+        ),
       ),
     );
   }

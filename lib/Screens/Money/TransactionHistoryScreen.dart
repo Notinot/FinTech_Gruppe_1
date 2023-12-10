@@ -5,6 +5,9 @@ import 'package:flutter_application_1/Screens/api_service.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_search_bar/flutter_search_bar.dart' as search_bar;
+import 'RequestMoneyScreen.dart';
+import 'SendMoneyScreen.dart';
 
 // TransactionHistoryScreen is a StatefulWidget that displays a user's transaction history.
 class TransactionHistoryScreen extends StatefulWidget {
@@ -18,12 +21,24 @@ class TransactionHistoryScreen extends StatefulWidget {
 class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
   // Future to hold a list of transactions
   late Future<List<Transaction>> transactionsFuture;
+  late search_bar.SearchBar searchBar;
+
+  List<Transaction> allTransactions = [];
 
   @override
   void initState() {
     super.initState();
-    // Initialize the Future to fetch transactions
     transactionsFuture = fetchTransactions();
+    searchBar = search_bar.SearchBar(
+      inBar: false,
+      setState: setState,
+      onSubmitted: onSubmitted,
+      onChanged: onChanged,
+      onCleared: onCleared,
+      onClosed: onClosed,
+      buildDefaultAppBar: buildAppBar,
+      hintText: "Search",
+    );
   }
 
   // Function to fetch transactions from the API
@@ -71,56 +86,148 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     }
   }
 
+  // Function to build the AppBar
+  AppBar buildAppBar(BuildContext context) {
+    return AppBar(
+      title: Text('Transaction History'),
+      actions: [searchBar.getSearchAction(context)],
+    );
+  }
+
+  Future<void> onSubmitted(String value) async {
+    // Apply the filter only if the user has entered a search query
+    if (value.isNotEmpty) {
+      List<Transaction> filteredTransactions = allTransactions
+          .where((transaction) =>
+              transaction.transactionType
+                  .toLowerCase()
+                  .contains(value.toLowerCase()) ||
+              transaction.senderUsername
+                  .toLowerCase()
+                  .contains(value.toLowerCase()) ||
+              transaction.receiverUsername
+                  .toLowerCase()
+                  .contains(value.toLowerCase()))
+          .toList();
+      setState(() {
+        transactionsFuture = Future.value(filteredTransactions);
+      });
+    }
+  }
+
+  Future<void> onChanged(String value) async {
+    // Handle search value changes
+    // Update the UI or filter the list dynamically
+    if (value.isNotEmpty) {
+      List<Transaction> filteredTransactions = allTransactions
+          .where((transaction) =>
+              transaction.transactionType
+                  .toLowerCase()
+                  .contains(value.toLowerCase()) ||
+              transaction.senderUsername
+                  .toLowerCase()
+                  .contains(value.toLowerCase()) ||
+              transaction.message.toLowerCase().contains(value.toLowerCase()) ||
+              transaction.receiverUsername
+                  .toLowerCase()
+                  .contains(value.toLowerCase()))
+          .toList();
+      setState(() {
+        transactionsFuture = Future.value(filteredTransactions);
+      });
+    }
+  }
+
+  Future<void> onCleared() async {
+    // Handle search bar cleared
+    // Update the UI to show the original list without filtering
+    setState(() {
+      transactionsFuture = fetchTransactions();
+    });
+  }
+
+  Future<void> onClosed() async {
+    // Handle search bar closed
+    // Update the UI to show the original list
+    setState(() {
+      transactionsFuture = fetchTransactions();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Build the UI using FutureBuilder for asynchronous data loading
-    return FutureBuilder<Map<String, dynamic>>(
-      // Fetch user profile data
-      future: ApiService.fetchUserProfile(),
-
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          // Show loading indicator while fetching data
-          return CircularProgressIndicator();
-        } else if (snapshot.hasError) {
-          // Handle errors
-          return Text('Error: ${snapshot.error}');
-        } else {
-          // Once data is loaded, display the screen
-          final Map<String, dynamic> user = snapshot.data!;
-          return Scaffold(
-            appBar: AppBar(
-              title: const Text('Transaction History'),
-            ),
-            body: FutureBuilder<List<Transaction>>(
+    return Scaffold(
+      // Use the buildAppBar function to build the AppBar
+      appBar: searchBar.build(context),
+      //add a navigation bar at the bottom of the screen to navigate to the send money and request money screens respectively
+      bottomNavigationBar: BottomNavigationBar(
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.send),
+            label: 'Send Money',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.request_page),
+            label: 'Request Money',
+          ),
+        ],
+        currentIndex: 0,
+        selectedItemColor: Colors.blue,
+        onTap: (index) {
+          if (index == 0) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => SendMoneyScreen(),
+              ),
+            );
+          } else {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => RequestMoneyScreen(),
+              ),
+            );
+          }
+        },
+      ),
+      body: FutureBuilder<Map<String, dynamic>>(
+        // Fetch user profile data
+        future: ApiService.fetchUserProfile(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return CircularProgressIndicator();
+          } else if (snapshot.hasError) {
+            return Text('Error: ${snapshot.error}');
+          } else {
+            final Map<String, dynamic> user = snapshot.data!;
+            return FutureBuilder<List<Transaction>>(
               future: transactionsFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  // Show a loading indicator while fetching transaction data
                   return const Center(child: CircularProgressIndicator());
                 } else if (snapshot.hasError) {
-                  // Display an error message if the transaction data cannot be loaded
                   return Center(child: Text('Error: ${snapshot.error}'));
                 } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  // Display a message if there are no transactions
                   return const Center(child: Text('No transactions found.'));
                 } else {
-                  // Display the list of transactions
-                  List<Transaction> transactions = snapshot.data!;
+                  // Save all transactions for reference
+                  allTransactions = snapshot.data!;
                   return ListView.builder(
-                    itemCount: transactions.length,
+                    itemCount: allTransactions.length,
                     itemBuilder: (context, index) {
                       return TransactionItem(
-                          transaction: transactions[index],
-                          userId: user['user_id']);
+                        transaction: allTransactions[index],
+                        userId: user['user_id'],
+                      );
                     },
                   );
                 }
               },
-            ),
-          );
-        }
-      },
+            );
+          }
+        },
+      ),
     );
   }
 }
@@ -195,61 +302,109 @@ class TransactionItem extends StatelessWidget {
     Color iconColor;
     Color textColor;
     if (transaction.transactionType == 'Request') {
-      //determine color based on processed status
+      //determine color based on processed status and if the user is the sender or receiver. if the user is the receiver of a request and it is processed the color should be red and if it is unprocessed the color should be black. if the user is the sender of a request and it is processed the color should be green and if it is unprocessed the color should be black. if the user is the sender of a request and it is denied the color should be red.
       if (isProcessed) {
-        iconColor = Colors.green;
-        textColor = Colors.black;
+        if (isReceived) {
+          iconColor = Colors.red;
+          textColor = Colors.black;
+        } else {
+          iconColor = Colors.green;
+          textColor = Colors.black;
+        }
       } else if (isDenied) {
         iconColor = Colors.red;
         textColor = Colors.black;
       } else {
-        iconColor = Colors.orange;
+        iconColor = Colors.black;
         textColor = Colors.black;
       }
     } else {
-      // Money transaction
-      iconColor = isReceived ? Colors.green : Colors.red;
-      textColor = Colors.black;
+      // For money transactions, determine the color based on whether the user received or sent money
+      if (isReceived) {
+        iconColor = Colors.green;
+        textColor = Colors.black;
+      } else {
+        iconColor = Colors.red;
+        textColor = Colors.black;
+      }
     }
 
     return ListTile(
       key: ValueKey<int>(transaction.transaction_id), // Add a key
-
+      // Display the icon based on the transaction type
       leading: Icon(
-        Icons.monetization_on,
+        transaction.transactionType == 'Request'
+            ? Icons.request_page
+            : Icons.monetization_on,
         color: iconColor,
       ),
+      // Display the transaction type and the sender/receiver, depending on whether the user received or sent money or requested money
+      // If the transaction is a request, display the sender and receiver, if the user is the sender, display the receiver, if the user is the receiver, display the sender
+      // If the transaction is a money transaction, display the sender and receiver, if the user received money, display the sender, if the user sent money, display the receiver
+      // If the transaction is a request and the user is the sender, display the receiver, if the user is the receiver, display the sender
+
       title: Text(
-        isReceived
-            ? '${transaction.transactionType} from ${transaction.senderUsername}'
-            : '${transaction.transactionType} to ${transaction.receiverUsername}',
-        style: TextStyle(color: textColor),
+        transaction.transactionType == 'Request'
+            ? isReceived
+                //  ? 'From: ${transaction.senderUsername}'
+                //  : 'To: ${transaction.receiverUsername}'
+                ? '${transaction.senderUsername}'
+                : '${transaction.receiverUsername}'
+            : isReceived
+                //   ? 'From: ${transaction.senderUsername}'
+                //   : 'To: ${transaction.receiverUsername}',
+                ? '${transaction.senderUsername}'
+                : '${transaction.receiverUsername}',
+        style: TextStyle(
+          color: textColor,
+          fontWeight: FontWeight.normal,
+        ),
       ),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '\€${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}',
-            style: TextStyle(color: textColor),
-          ),
-          Text(
-            'Type: ${transaction.transactionType}',
-            style: TextStyle(
-              color: textColor,
+          //Display the amount and give it a subtle green background if the user received money or a subtle red background if the user sent money, but not for requests
+          Container(
+            padding: EdgeInsets.all(5),
+            decoration: BoxDecoration(
+              color: transaction.transactionType == 'Request'
+                  ? Colors.transparent
+                  : isReceived
+                      ? Colors.green[100]
+                      : Colors.red[100],
+              borderRadius: BorderRadius.circular(5),
+            ),
+            child: Text(
+              '\€${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}',
+              style: TextStyle(
+                color: textColor,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
-          Text(
-            'Status: ${getStatusText(transaction)}',
-            style: TextStyle(
-              color: getStatusColor(transaction),
+
+          // Display the event name if the transaction is associated with an event
+          if (transaction.event_id != null)
+            Text(
+              'Event: ${transaction.event_id}',
+              style: TextStyle(color: textColor),
             ),
-          ),
+
+          // Display the status if the transaction is a request
+          if (transaction.transactionType == 'Request')
+            Text(
+              '${getStatusText(transaction)}',
+              style: TextStyle(color: getStatusColor(transaction)),
+            ),
         ],
       ),
+      // Display the date and time
       trailing: Text(
-        DateFormat('dd/MM/yyyy').format(transaction.createdAt),
-        style: const TextStyle(fontSize: 12),
+        '${DateFormat('dd/MM/yyyy').format(transaction.createdAt)}\n${DateFormat('HH:mm').format(transaction.createdAt)}',
+        textAlign: TextAlign.right,
+        style: TextStyle(color: textColor),
       ),
+
       onTap: () {
         // Navigate to the TransactionDetailScreen when tapped
         Navigator.push(

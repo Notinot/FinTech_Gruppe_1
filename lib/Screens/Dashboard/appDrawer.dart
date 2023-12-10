@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 
 import 'package:flutter_application_1/Screens/Dashboard/dashBoardScreen.dart';
+import 'package:flutter_application_1/Screens/Events/CreateEventScreen.dart';
 
 import 'package:flutter_application_1/Screens/Friends/FriendsScreen.dart';
 
@@ -64,7 +65,10 @@ class AppDrawer extends StatelessWidget {
             title: const Text('Events'),
             onTap: () {
               // Navigate to the events section
-              // Implement the navigation as needed
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => CreateEventScreen()),
+              );
             },
           ),
           ListTile(

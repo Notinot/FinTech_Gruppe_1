@@ -467,7 +467,7 @@ class TransactionItem extends StatelessWidget {
                       style: TextStyle(color: textColor),
                     )
               : Text(
-                  '${transaction.receiverUsername}',
+                  '${transaction.senderUsername}',
                   style: TextStyle(color: textColor),
                 )
           : isDeposit
@@ -812,7 +812,7 @@ class TransactionDetailScreen extends StatelessWidget {
                                 style: TextStyle(fontSize: 20),
                               )
                         : Text(
-                            'From: ${transaction.receiverUsername}',
+                            'From: ${transaction.senderUsername}',
                             style: TextStyle(fontSize: 20),
                           )
                     : transaction.transactionType == 'Deposit'
@@ -830,6 +830,7 @@ class TransactionDetailScreen extends StatelessWidget {
                                 'To: ${transaction.receiverUsername}',
                                 style: TextStyle(fontSize: 20),
                               ),
+                SizedBox(height: 10),
                 // Display the amount of the transaction based on the transaction type and whether the user received or sent money
                 Container(
                   padding: EdgeInsets.all(5),

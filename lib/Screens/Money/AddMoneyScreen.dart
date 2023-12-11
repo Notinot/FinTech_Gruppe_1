@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/Screens/Dashboard/dashBoardScreen.dart';
 import 'package:flutter_application_1/Screens/api_service.dart';
 import 'package:intl/intl.dart';
 
@@ -96,6 +97,11 @@ class _AddMoneyScreenState extends State<AddMoneyScreen> {
                         backgroundColor: Colors.green,
                       ),
                     );
+                    //Navigate to the dashboard
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => DashboardScreen()));
                   } else {
                     // Show an error message
                     ScaffoldMessenger.of(context).showSnackBar(

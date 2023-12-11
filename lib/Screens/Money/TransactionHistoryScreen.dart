@@ -384,6 +384,7 @@ class TransactionItem extends StatelessWidget {
     // Determine if the transaction is a received or sent transaction
     bool isReceived = transaction.receiverId == userId;
     bool isDeposit = transaction.transactionType == 'Deposit';
+    bool userIsSender = transaction.senderId == userId;
     //Determine if request is processed or denied or unprocessed
     bool isProcessed = transaction.processed == 1;
     bool isDenied = transaction.processed == 2;
@@ -454,7 +455,11 @@ class TransactionItem extends StatelessWidget {
                       color: iconColor,
                     ),
 
-      // Display the username of the sender or receiver based on the transaction type. if it is a request, display the sender username if the user received money and the receiver username if the user sent money. if it is a money transaction, display the sender username if the user received money and the receiver username if the user sent money.if the transaction type is "Deposit", display nothing in the title
+      // Display the username of the sender or receiver based on the transaction type.
+      // if it is a request, display the sender username if the user received money and the receiver username if the user sent money.
+      // if it is a money transaction, display the sender username if the user received money and the receiver username if the user sent money.
+      //if it is a deposit, display nothing in the title
+      // use userisSender to determine if the user is the sender of the transaction or request
       title: transaction.transactionType == 'Request'
           ? isProcessed
               ? isReceived
@@ -466,15 +471,19 @@ class TransactionItem extends StatelessWidget {
                       '${transaction.receiverUsername}',
                       style: TextStyle(color: textColor),
                     )
-              : Text(
-                  '${transaction.senderUsername}',
-                  style: TextStyle(color: textColor),
-                )
+              : userIsSender
+                  ? Text(
+                      '${transaction.receiverUsername}', // Display receiver's username if the user is the sender
+                      style: TextStyle(color: textColor),
+                    )
+                  : Text(
+                      '${transaction.senderUsername}', // Display sender's username if the user is the receiver
+                      style: TextStyle(color: textColor),
+                    )
           : isDeposit
               ? Text(
                   'Deposit',
-                  style:
-                      TextStyle(color: textColor, fontWeight: FontWeight.bold),
+                  style: TextStyle(color: textColor),
                 )
               : isReceived
                   ? Text(
@@ -485,6 +494,7 @@ class TransactionItem extends StatelessWidget {
                       '${transaction.receiverUsername}',
                       style: TextStyle(color: textColor),
                     ),
+
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -778,7 +788,8 @@ class TransactionDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     // Determine if the transaction is a received or sent transaction
     bool isReceived = transaction.receiverId == userId;
-
+    bool userIsSender = transaction.senderId == userId;
+    bool userIsReceiver = transaction.receiverId == userId;
     //Determine if request is processed or denied or unprocessed
     bool isProcessed = transaction.processed == 1;
     bool isDenied = transaction.processed == 2;
@@ -807,35 +818,34 @@ class TransactionDetailScreen extends StatelessWidget {
                       )
                     : SizedBox(height: 0),
                 SizedBox(height: 10),
-                // Display the username of the sender or receiver based on the transaction type. if it is a request, display the sender username if the user received money and the receiver username if the user sent money. if it is a money transaction, display the sender username if the user received money and the receiver username if the user sent money.if it is a deposit, display nothing in the title
+                // Display the username of the sender or receiver based on the transaction type.
+                // if it is a request, display the sender username if the user received money and the receiver username if the user sent money.
+                // if it is a money transaction, display the sender username if the user received money and the receiver username if the user sent money.
+                //if it is a deposit, display nothing in the title
                 transaction.transactionType == 'Request'
                     ? isProcessed
                         ? isReceived
                             ? Text(
-                                'From: ${transaction.senderUsername}',
+                                'Sender: ${transaction.senderUsername}',
                                 style: TextStyle(fontSize: 20),
                               )
                             : Text(
-                                'To: ${transaction.receiverUsername}',
+                                'Receiver: ${transaction.receiverUsername}',
                                 style: TextStyle(fontSize: 20),
                               )
                         : Text(
-                            'From: ${transaction.senderUsername}',
+                            'Sender: ${transaction.senderUsername}',
                             style: TextStyle(fontSize: 20),
                           )
                     : transaction.transactionType == 'Deposit'
-                        ? Text(
-                            'Deposit',
-                            style: TextStyle(
-                                fontSize: 20, fontWeight: FontWeight.bold),
-                          )
+                        ? SizedBox(height: 0)
                         : isReceived
                             ? Text(
-                                'From: ${transaction.senderUsername}',
+                                'Sender: ${transaction.senderUsername}',
                                 style: TextStyle(fontSize: 20),
                               )
                             : Text(
-                                'To: ${transaction.receiverUsername}',
+                                'Receiver: ${transaction.receiverUsername}',
                                 style: TextStyle(fontSize: 20),
                               ),
                 SizedBox(height: 10),
@@ -968,7 +978,7 @@ class TransactionDetailScreen extends StatelessWidget {
       } else if (transaction.processed == 2) {
         return 'Denied';
       } else {
-        return 'Unprocessed';
+        return 'Pending';
       }
     } else if (transaction.transactionType == 'Payment') {
       // For money transactions, display the status based on the sender and receiver

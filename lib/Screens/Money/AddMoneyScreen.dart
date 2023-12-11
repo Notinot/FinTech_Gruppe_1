@@ -11,18 +11,19 @@ class AddMoneyScreen extends StatefulWidget {
 class _AddMoneyScreenState extends State<AddMoneyScreen> {
   double balance = 0.0;
   final TextEditingController amountController = TextEditingController();
-  //fetch the user's balance from the database, use the fetchUserBalance function from api_service.dart
+
   @override
   void initState() {
     super.initState();
-    ApiService.fetchUserBalance().then((value) {
-      setState(() {
-        balance = value;
-      });
-    });
+    _fetchUserBalance();
   }
 
-  //show the add money dialo
+  void _fetchUserBalance() async {
+    final value = await ApiService.fetchUserBalance();
+    setState(() {
+      balance = value;
+    });
+  }
 
   void _showAddMoneyDialog() {
     showDialog(
@@ -30,89 +31,34 @@ class _AddMoneyScreenState extends State<AddMoneyScreen> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text('Add Money'),
-          content: TextFormField(
-            controller: amountController,
-            decoration: const InputDecoration(
-              hintText: '0,00 €', // Initial value
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.euro),
+          content: Container(
+            width: 250,
+            child: TextFormField(
+              controller: amountController,
+              decoration: InputDecoration(
+                hintText: '0.00 €',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.euro),
+              ),
+              keyboardType: TextInputType.numberWithOptions(decimal: true),
+              onChanged: (value) {
+                if (value.isNotEmpty) {
+                  final cleanedValue = value.replaceAll(RegExp(r'[^0-9]'), '');
+                  final intValue = int.tryParse(cleanedValue) ?? 0;
+                  final formattedAmount = NumberFormat.currency(
+                    decimalDigits: 2,
+                    symbol: '€',
+                    locale: 'de_DE',
+                  ).format(intValue / 100);
+
+                  amountController.text = formattedAmount;
+                }
+              },
             ),
-            keyboardType: const TextInputType.numberWithOptions(
-                decimal: true), // Allow decimals
-            onChanged: (value) {
-              if (value.isNotEmpty) {
-                // Remove any non-numeric characters
-                final cleanedValue = value.replaceAll(RegExp(r'[^0-9]'), '');
-
-                // Convert the cleaned value to an integer
-                final intValue = int.tryParse(cleanedValue) ?? 0;
-
-                // Format the integer as a currency value with the correct pattern
-                final formattedAmount = NumberFormat.currency(
-                  decimalDigits: 2,
-                  symbol: '€', // Euro sign
-                  locale: 'de_DE', // German locale for correct separators
-                ).format(intValue / 100);
-
-                // Update the text field
-                amountController.text = formattedAmount;
-              }
-            },
           ),
           actions: [
             TextButton(
-              onPressed: () {
-                final amount = amountController.text;
-                // Remove euro sign, periods and spaces
-                final cleanedAmountText = amount
-                    .replaceAll('€', '')
-                    .replaceAll(' ', '')
-                    .replaceAll('.', '');
-
-                // Replace commas with periods
-                final normalizedAmountText =
-                    cleanedAmountText.replaceAll(',', '.');
-
-                // Parse the amount
-                final parsedAmount =
-                    double.tryParse(normalizedAmountText) ?? 0.0;
-                print(parsedAmount);
-                //add the money to the user's balance in the database
-                ApiService.addMoney(parsedAmount).then((value) {
-                  if (value) {
-                    // Update the balance
-                    ApiService.fetchUserBalance().then((value) {
-                      setState(() {
-                        balance = value;
-                      });
-                    });
-
-                    // Close the dialog
-                    Navigator.of(context).pop();
-
-                    // Show a success message
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Money added successfully'),
-                        backgroundColor: Colors.green,
-                      ),
-                    );
-                    //Navigate to the dashboard
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => DashboardScreen()));
-                  } else {
-                    // Show an error message
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Failed to add money'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                  }
-                });
-              },
+              onPressed: () => _addMoney(),
               child: Text('Add'),
             ),
             TextButton(
@@ -127,6 +73,41 @@ class _AddMoneyScreenState extends State<AddMoneyScreen> {
     );
   }
 
+  void _addMoney() async {
+    final amount = amountController.text;
+    final cleanedAmountText =
+        amount.replaceAll('€', '').replaceAll(' ', '').replaceAll('.', '');
+    final normalizedAmountText = cleanedAmountText.replaceAll(',', '.');
+    final parsedAmount = double.tryParse(normalizedAmountText) ?? 0.0;
+
+    final success = await ApiService.addMoney(parsedAmount);
+
+    if (success) {
+      _fetchUserBalance();
+
+      Navigator.of(context).pop();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Money added successfully'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => DashboardScreen()),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to add money'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -134,19 +115,48 @@ class _AddMoneyScreenState extends State<AddMoneyScreen> {
         title: Text('Add Money'),
       ),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Balance: \€${balance.toStringAsFixed(2)}',
-              style: TextStyle(fontSize: 24),
-            ),
-            SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _showAddMoneyDialog,
-              child: Icon(Icons.add),
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8.0),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.5),
+                      spreadRadius: 2,
+                      blurRadius: 4,
+                      offset: Offset(0, 2), // changes position of shadow
+                    ),
+                  ],
+                ),
+                padding: EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
+                    Text(
+                      'Balance',
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      '€${balance.toStringAsFixed(2)}',
+                      style:
+                          TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _showAddMoneyDialog,
+                child: Icon(Icons.add),
+              ),
+            ],
+          ),
         ),
       ),
     );

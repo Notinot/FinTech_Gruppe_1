@@ -6,6 +6,7 @@ import 'package:flutter_application_1/Screens/Dashboard/dashBoardScreen.dart';
 import 'package:flutter_application_1/Screens/Events/CreateEventScreen.dart';
 
 import 'package:flutter_application_1/Screens/Friends/FriendsScreen.dart';
+import 'package:flutter_application_1/Screens/Friends/FriendsScreenTEMP.dart';
 
 import 'package:flutter_application_1/Screens/Money/TransactionHistoryScreen.dart';
 
@@ -77,8 +78,8 @@ class AppDrawer extends StatelessWidget {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => FriendsScreen()),
-                //    builder: (context) => FriendsScreen(user: user)),
+                // MaterialPageRoute(builder: (context) => FriendsScreen()),
+                MaterialPageRoute(builder: (context) => FriendsScreenTEMP()),
               );
             },
           ),

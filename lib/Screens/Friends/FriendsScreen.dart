@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../api_service.dart';
 
 class FriendsScreen extends StatefulWidget {
@@ -79,6 +78,16 @@ class _FriendsScreenState extends State<FriendsScreen> {
   /*
   Actual Screen
   */
+  /* Vllt hier alles bisschen mehr aufteilen
+      Searchbar(),
+        Column(
+          children[
+            PendingFriends(),
+            Friends(),
+          ]
+        )
+   
+  */
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -87,7 +96,6 @@ class _FriendsScreenState extends State<FriendsScreen> {
       ),
       body: Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             _buildPendingFriendRequests(),
             Text(

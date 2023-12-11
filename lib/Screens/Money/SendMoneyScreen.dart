@@ -10,7 +10,11 @@ import '../EditUser/EditUserScreen.dart';
 import '../api_service.dart';
 
 class SendMoneyScreen extends StatefulWidget {
-  SendMoneyScreen({super.key});
+  final String recipient;
+  SendMoneyScreen({
+    super.key,
+    this.recipient = '',
+  });
 
   @override
   _SendMoneyScreenState createState() => _SendMoneyScreenState();
@@ -26,6 +30,11 @@ class _SendMoneyScreenState extends State<SendMoneyScreen> {
 
   @override
   Widget build(BuildContext context) {
+    print('Widget.recipient: ${widget.recipient}'); //testing
+    widget.recipient.isNotEmpty
+        ? recipientController.text = widget.recipient
+        : null; //used in Friends Screen
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Send Money'),

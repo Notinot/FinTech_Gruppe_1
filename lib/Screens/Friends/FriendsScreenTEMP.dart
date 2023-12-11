@@ -83,11 +83,47 @@ class FriendItem extends StatelessWidget {
       subtitle: Text('${friend.firstName} ${friend.lastName}'),
       trailing: Icon(Icons.info),
       onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => SendMoneyScreen(recipient: friend.username),
-          ),
+        //Open Dialog with two options, go to sendmoney or requestMoney screen
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text('Send or request money'),
+              content: SingleChildScrollView(
+                child: ListBody(
+                  children: <Widget>[
+                    Text('What do you want to do?'),
+                  ],
+                ),
+              ),
+              actions: <Widget>[
+                TextButton(
+                  child: Text('Send'),
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => SendMoneyScreen(
+                          recipient: friend.username,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                TextButton(
+                  child: Text('Request'),
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => SendMoneyScreen(
+                          recipient: friend.username,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            );
+          },
         );
       },
     );

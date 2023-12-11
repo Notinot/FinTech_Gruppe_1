@@ -179,7 +179,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
         child: const Icon(Icons.refresh),
       ),
       //navigation bar at the bottom of the screen to navigate to the send money and request money screens respectively
-      bottomNavigationBar: BottomNavigationBar(
+      /* bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.monetization_on),
@@ -210,6 +210,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
           }
         },
       ),
+      */
       body: FutureBuilder<Map<String, dynamic>>(
         // Fetch user profile data
         future: ApiService.fetchUserProfile(),
@@ -246,6 +247,76 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
             );
           }
         },
+      ),
+      // Bottom navigation bar
+      bottomNavigationBar: BottomAppBar(
+        color: Colors.blue[400],
+        child: FutureBuilder<Map<String, dynamic>>(
+          // Fetch user profile data
+          future: ApiService.fetchUserProfile(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return CircularProgressIndicator();
+            } else if (snapshot.hasError) {
+              return Text('Error: ${snapshot.error}');
+            } else {
+              final Map<String, dynamic> user = snapshot.data!;
+              return Container(
+                height: 50,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    // Display the user's balance
+                    Text(
+                      'Balance: ${NumberFormat("#,##0.00", "de_DE").format(user['balance'])}\€',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                        color: Colors.white,
+                      ),
+                    ),
+                    // Button to navigate to the send money screen
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue[600],
+                          textStyle: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                          )),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => SendMoneyScreen(),
+                          ),
+                        );
+                      },
+                      child: Icon(Icons.monetization_on_rounded),
+                    ),
+                    // Button to navigate to the request money screen
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue[600],
+                          textStyle: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                          )),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => RequestMoneyScreen(),
+                          ),
+                        );
+                      },
+                      child: Icon(Icons.request_page_rounded),
+                    ),
+                  ],
+                ),
+              );
+            }
+          },
+        ),
       ),
     );
   }
@@ -312,7 +383,7 @@ class TransactionItem extends StatelessWidget {
   Widget build(BuildContext context) {
     // Determine if the transaction is a received or sent transaction
     bool isReceived = transaction.receiverId == userId;
-
+    bool isDeposit = transaction.transactionType == 'Deposit';
     //Determine if request is processed or denied or unprocessed
     bool isProcessed = transaction.processed == 1;
     bool isDenied = transaction.processed == 2;
@@ -345,36 +416,75 @@ class TransactionItem extends StatelessWidget {
         iconColor = Colors.red[400]!;
         textColor = Colors.black;
       }
+
+      // if deposit, change color to green
     }
 
     return ListTile(
       key: ValueKey<int>(transaction.transactionId), // Add a key
 
-      // Display the icon based on the transaction type
-      leading: Icon(
-        transaction.transactionType == 'Request'
-            ? Icons.request_page_rounded
-            : Icons.monetization_on_rounded,
-        color: iconColor,
-      ),
-      // Display the username of the sender or receiver based on the transaction type
-      title: Text(
-        transaction.transactionType == 'Request'
-            ? isReceived
-                //  ? 'From: ${transaction.senderUsername}'
-                //  : 'To: ${transaction.receiverUsername}'
-                ? '${transaction.senderUsername}'
-                : '${transaction.receiverUsername}'
-            : isReceived
-                //   ? 'From: ${transaction.senderUsername}'
-                //   : 'To: ${transaction.receiverUsername}',
-                ? '${transaction.senderUsername}'
-                : '${transaction.receiverUsername}',
-        style: TextStyle(
-          color: textColor,
-          fontWeight: FontWeight.normal,
-        ),
-      ),
+      // Display the icon based on the transaction type. Use a red icon for requests and a green icon for money transactions and a differenct green icon for deposits
+      leading: transaction.transactionType == 'Request'
+          ? isProcessed
+              ? isReceived
+                  ? Icon(
+                      Icons.request_page_rounded,
+                      color: iconColor,
+                    )
+                  : Icon(
+                      Icons.request_page_rounded,
+                      color: iconColor,
+                    )
+              : Icon(
+                  Icons.request_page_rounded,
+                  color: iconColor,
+                )
+          : isDeposit
+              ? Icon(
+                  Icons.add,
+                  color: Colors.green[400],
+                )
+              : isReceived
+                  ? Icon(
+                      Icons.monetization_on_rounded,
+                      color: iconColor,
+                    )
+                  : Icon(
+                      Icons.monetization_on_rounded,
+                      color: iconColor,
+                    ),
+
+      // Display the username of the sender or receiver based on the transaction type. if it is a request, display the sender username if the user received money and the receiver username if the user sent money. if it is a money transaction, display the sender username if the user received money and the receiver username if the user sent money.if the transaction type is "Deposit", display nothing in the title
+      title: transaction.transactionType == 'Request'
+          ? isProcessed
+              ? isReceived
+                  ? Text(
+                      '${transaction.senderUsername}',
+                      style: TextStyle(color: textColor),
+                    )
+                  : Text(
+                      '${transaction.receiverUsername}',
+                      style: TextStyle(color: textColor),
+                    )
+              : Text(
+                  '${transaction.senderUsername}',
+                  style: TextStyle(color: textColor),
+                )
+          : isDeposit
+              ? Text(
+                  'Deposit',
+                  style:
+                      TextStyle(color: textColor, fontWeight: FontWeight.bold),
+                )
+              : isReceived
+                  ? Text(
+                      '${transaction.senderUsername}',
+                      style: TextStyle(color: textColor),
+                    )
+                  : Text(
+                      '${transaction.receiverUsername}',
+                      style: TextStyle(color: textColor),
+                    ),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -689,32 +799,38 @@ class TransactionDetailScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Display the username of the sender or receiver based on the transaction type
-                Text(
-                  transaction.transactionType == 'Payment'
-                      ? 'From: ${transaction.senderUsername}'
-                      : 'To: ${transaction.receiverUsername}',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue,
-                  ),
-                ),
+                // Display the username of the sender or receiver based on the transaction type. if it is a request, display the sender username if the user received money and the receiver username if the user sent money. if it is a money transaction, display the sender username if the user received money and the receiver username if the user sent money.if it is a deposit, display nothing in the title
+                transaction.transactionType == 'Request'
+                    ? isProcessed
+                        ? isReceived
+                            ? Text(
+                                'From: ${transaction.senderUsername}',
+                                style: TextStyle(fontSize: 20),
+                              )
+                            : Text(
+                                'To: ${transaction.receiverUsername}',
+                                style: TextStyle(fontSize: 20),
+                              )
+                        : Text(
+                            'From: ${transaction.senderUsername}',
+                            style: TextStyle(fontSize: 20),
+                          )
+                    : transaction.transactionType == 'Deposit'
+                        ? Text(
+                            'Deposit',
+                            style: TextStyle(
+                                fontSize: 20, fontWeight: FontWeight.bold),
+                          )
+                        : isReceived
+                            ? Text(
+                                'From: ${transaction.senderUsername}',
+                                style: TextStyle(fontSize: 20),
+                              )
+                            : Text(
+                                'To: ${transaction.receiverUsername}',
+                                style: TextStyle(fontSize: 20),
+                              ),
                 SizedBox(height: 10),
-
-                // Display the amount of the transaction based on the transaction type and whether the user received or sent money
-                Text(
-                  transaction.transactionType == 'Payment'
-                      ? 'To: ${transaction.receiverUsername}'
-                      : 'From: ${transaction.senderUsername}',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue,
-                  ),
-                ),
-                SizedBox(height: 10),
-
                 // Display the amount of the transaction based on the transaction type and whether the user received or sent money
                 Container(
                   padding: EdgeInsets.all(5),

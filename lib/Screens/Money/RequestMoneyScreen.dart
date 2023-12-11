@@ -9,7 +9,11 @@ import 'package:http/http.dart' as http;
 import '../api_service.dart';
 
 class RequestMoneyScreen extends StatefulWidget {
-  RequestMoneyScreen({super.key});
+  final String requester;
+  RequestMoneyScreen({
+    super.key,
+    this.requester = '',
+  });
 
   @override
   _RequestMoneyScreenState createState() => _RequestMoneyScreenState();
@@ -25,6 +29,9 @@ class _RequestMoneyScreenState extends State<RequestMoneyScreen> {
 
   @override
   Widget build(BuildContext context) {
+    widget.requester.isNotEmpty //used in FriendsSreen
+        ? requesterController.text = widget.requester
+        : null;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Request Money'),

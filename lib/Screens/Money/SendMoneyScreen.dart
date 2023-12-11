@@ -11,6 +11,7 @@ import '../api_service.dart';
 
 class SendMoneyScreen extends StatefulWidget {
   final String recipient;
+
   SendMoneyScreen({
     super.key,
     this.recipient = '',
@@ -30,10 +31,9 @@ class _SendMoneyScreenState extends State<SendMoneyScreen> {
 
   @override
   Widget build(BuildContext context) {
-    print('Widget.recipient: ${widget.recipient}'); //testing
-    widget.recipient.isNotEmpty
+    widget.recipient.isNotEmpty //used in FriendsSreen
         ? recipientController.text = widget.recipient
-        : null; //used in Friends Screen
+        : null;
 
     return Scaffold(
       appBar: AppBar(

@@ -799,6 +799,14 @@ class TransactionDetailScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Display the type of the transaction, unless it is a deposit
+                transaction.transactionType != 'Deposit'
+                    ? Text(
+                        'Type: ${transaction.transactionType}',
+                        style: TextStyle(fontSize: 20),
+                      )
+                    : SizedBox(height: 0),
+                SizedBox(height: 10),
                 // Display the username of the sender or receiver based on the transaction type. if it is a request, display the sender username if the user received money and the receiver username if the user sent money. if it is a money transaction, display the sender username if the user received money and the receiver username if the user sent money.if it is a deposit, display nothing in the title
                 transaction.transactionType == 'Request'
                     ? isProcessed
@@ -868,13 +876,6 @@ class TransactionDetailScreen extends StatelessWidget {
                                 : Colors.black,
                         fontSize: 20),
                   ),
-                ),
-                SizedBox(height: 10),
-
-                // Display the type of the transaction
-                Text(
-                  'Type: ${transaction.transactionType}',
-                  style: TextStyle(fontSize: 20),
                 ),
                 SizedBox(height: 10),
 

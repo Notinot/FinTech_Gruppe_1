@@ -636,21 +636,21 @@ class _EditUserState extends State<EditUser> {
             onSubmit: (String verificationCode) {
               if (double.tryParse(verificationCode) == null) {
                 showSnackBar(
-                    isError: true,
-                    message: 'Verification code needs to consist of digits');
+                  isError: true,
+                  message: 'Verification code needs to consist of digits',
+                );
                 return;
               }
               Navigator.of(context).pop(); // Close the AlertDialog
-              completer.complete(
-                  verificationCode); // Complete the Future with the entered code
+              completer
+                  .complete(verificationCode); // Complete with entered code
             },
           ),
           actions: <Widget>[
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
-                completer.completeError(
-                    'User cancelled'); // Complete the Future with an error
+                completer.completeError('User cancelled');
               },
               child: Text('Close'),
             ),

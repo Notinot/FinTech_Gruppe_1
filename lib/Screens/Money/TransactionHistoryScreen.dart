@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:html';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Screens/Dashboard/dashBoardScreen.dart';
@@ -9,7 +10,11 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_search_bar/flutter_search_bar.dart' as search_bar;
 import 'RequestMoneyScreen.dart';
 import 'SendMoneyScreen.dart';
+import 'package:flutter_application_1/Screens/Money/quickMenuTransaction.dart';
+
+import 'package:flutter_application_1/Screens/Dashboard/quickActionsMenu.dart';
 import 'package:flutter_application_1/Screens/Money/TransactionHistoryScreen.dart';
+import 'package:flutter_application_1/Screens/Friends/FriendsScreen.dart';
 
 // TransactionHistoryScreen is a StatefulWidget that displays a user's transaction history.
 class TransactionHistoryScreen extends StatefulWidget {
@@ -239,6 +244,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                       return TransactionItem(
                         transaction: allTransactions[index],
                         userId: user['user_id'],
+                        username: user['username'],
                       );
                     },
                   );
@@ -372,11 +378,12 @@ class Transaction {
 class TransactionItem extends StatelessWidget {
   final Transaction transaction;
   final int userId;
-
+  final String username;
   const TransactionItem({
     Key? key,
     required this.transaction,
     required this.userId,
+    required this.username,
   }) : super(key: key);
 
   @override
@@ -404,8 +411,11 @@ class TransactionItem extends StatelessWidget {
       } else if (isDenied) {
         iconColor = Colors.black;
         textColor = Colors.black;
+      } else if (userIsSender) {
+        iconColor = Colors.orange[600]!;
+        textColor = Colors.black;
       } else {
-        iconColor = Colors.orange[400]!;
+        iconColor = Colors.orange[300]!;
         textColor = Colors.black;
       }
     } else {
@@ -473,11 +483,13 @@ class TransactionItem extends StatelessWidget {
                     )
               : userIsSender
                   ? Text(
-                      '${transaction.receiverUsername}', // Display receiver's username if the user is the sender
+                      '${transaction.receiverUsername}',
+                      //'To: ${transaction.receiverUsername}', // Display receiver's username if the user is the sender
                       style: TextStyle(color: textColor),
                     )
                   : Text(
                       '${transaction.senderUsername}', // Display sender's username if the user is the receiver
+                      // 'From: ${transaction.senderUsername}',
                       style: TextStyle(color: textColor),
                     )
           : isDeposit
@@ -519,7 +531,9 @@ class TransactionItem extends StatelessWidget {
                       ? isReceived
                           ? '-${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}\€'
                           : '+${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}\€'
-                      : '${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}\€'
+                      : isReceived
+                          ? '-${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}\€'
+                          : '+${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}\€'
                   : isReceived
                       ? '+${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}\€'
                       : '-${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}\€',
@@ -579,7 +593,7 @@ class TransactionItem extends StatelessWidget {
           context,
           MaterialPageRoute(
             builder: (context) => TransactionDetailScreen(
-                transaction: transaction, userId: userId),
+                transaction: transaction, userId: userId, username: username),
           ),
         );
       },
@@ -633,8 +647,12 @@ Color getStatusColor(Transaction transaction) {
 class TransactionDetailScreen extends StatelessWidget {
   final Transaction transaction;
   final int userId;
+  final String username;
   const TransactionDetailScreen(
-      {Key? key, required this.transaction, required this.userId})
+      {Key? key,
+      required this.transaction,
+      required this.userId,
+      required this.username})
       : super(key: key);
 
   // Function to accept a request
@@ -818,37 +836,73 @@ class TransactionDetailScreen extends StatelessWidget {
                       )
                     : SizedBox(height: 0),
                 SizedBox(height: 10),
+
                 // Display the username of the sender or receiver based on the transaction type.
                 // if it is a request, display the sender username if the user received money and the receiver username if the user sent money.
                 // if it is a money transaction, display the sender username if the user received money and the receiver username if the user sent money.
                 //if it is a deposit, display nothing in the title
-                transaction.transactionType == 'Request'
-                    ? isProcessed
-                        ? isReceived
-                            ? Text(
-                                'Sender: ${transaction.senderUsername}',
-                                style: TextStyle(fontSize: 20),
-                              )
-                            : Text(
-                                'Receiver: ${transaction.receiverUsername}',
-                                style: TextStyle(fontSize: 20),
-                              )
-                        : Text(
-                            'Sender: ${transaction.senderUsername}',
-                            style: TextStyle(fontSize: 20),
-                          )
-                    : transaction.transactionType == 'Deposit'
-                        ? SizedBox(height: 0)
-                        : isReceived
-                            ? Text(
-                                'Sender: ${transaction.senderUsername}',
-                                style: TextStyle(fontSize: 20),
-                              )
-                            : Text(
-                                'Receiver: ${transaction.receiverUsername}',
-                                style: TextStyle(fontSize: 20),
-                              ),
+                GestureDetector(
+                  onTap: () =>
+                      //check if the actively displayed username is the logged in user. if so, dont show the modal
+                      transaction.transactionType == 'Request'
+                          ? isProcessed
+                              ? isReceived
+                                  ? transaction.senderUsername == username
+                                      ? null
+                                      : _showUserOptions(
+                                          context, transaction.senderUsername)
+                                  : transaction.receiverUsername == username
+                                      ? null
+                                      : _showUserOptions(
+                                          context, transaction.receiverUsername)
+                              : userIsSender
+                                  ? transaction.receiverUsername == username
+                                      ? null
+                                      : _showUserOptions(
+                                          context, transaction.receiverUsername)
+                                  : transaction.senderUsername == username
+                                      ? null
+                                      : _showUserOptions(
+                                          context, transaction.senderUsername)
+                          : isReceived
+                              ? transaction.senderUsername == username
+                                  ? null
+                                  : _showUserOptions(
+                                      context, transaction.senderUsername)
+                              : transaction.receiverUsername == username
+                                  ? null
+                                  : _showUserOptions(
+                                      context, transaction.receiverUsername),
+                  child: transaction.transactionType == 'Request'
+                      ? isProcessed
+                          ? isReceived
+                              ? Text(
+                                  'Sender: ${transaction.senderUsername}',
+                                  style: TextStyle(fontSize: 20),
+                                )
+                              : Text(
+                                  'Receiver: ${transaction.receiverUsername}',
+                                  style: TextStyle(fontSize: 20),
+                                )
+                          : Text(
+                              'Sender: ${transaction.senderUsername}',
+                              style: TextStyle(fontSize: 20),
+                            )
+                      : transaction.transactionType == 'Deposit'
+                          ? SizedBox(height: 0)
+                          : isReceived
+                              ? Text(
+                                  'Sender: ${transaction.senderUsername}',
+                                  style: TextStyle(fontSize: 20),
+                                )
+                              : Text(
+                                  'Receiver: ${transaction.receiverUsername}',
+                                  style: TextStyle(fontSize: 20),
+                                ),
+                ),
                 SizedBox(height: 10),
+                // Making usernames interactive
+
                 // Display the amount of the transaction based on the transaction type and whether the user received or sent money
                 Container(
                   padding: EdgeInsets.all(5),
@@ -890,29 +944,55 @@ class TransactionDetailScreen extends StatelessWidget {
                 SizedBox(height: 10),
 
                 // Display the date of the transaction
-                Text(
-                  'Date: ${DateFormat('dd.MM.yyyy').format(transaction.createdAt)}',
-                  style: TextStyle(fontSize: 20),
+                TextField(
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'Date',
+                    hintText:
+                        '${DateFormat('dd/MM/yyyy').format(transaction.createdAt)}',
+                  ),
+                  readOnly: true,
                 ),
+
                 SizedBox(height: 10),
 
                 // Display the time of the transaction
-                Text(
-                  'Time: ${DateFormat('HH:mm:ss').format(transaction.createdAt)}',
-                  style: TextStyle(fontSize: 20),
+                TextField(
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'Time',
+                    hintText:
+                        '${DateFormat('HH:mm').format(transaction.createdAt)}',
+                  ),
+                  readOnly: true,
                 ),
+
                 SizedBox(height: 10),
 
                 // Display the event name if the transaction is associated with an event
                 if (transaction.eventId != null)
-                  Text('Event: ${transaction.eventId}',
-                      style: TextStyle(fontSize: 20)),
-                SizedBox(height: 10),
+                  TextField(
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(),
+                      labelText: 'Event',
+                      hintText: '${transaction.eventId}',
+                    ),
+                    readOnly: true,
+                  ),
 
                 // Display the message if the transaction has a message
                 if (transaction.message.isNotEmpty)
-                  Text('Message: ${transaction.message}',
-                      style: TextStyle(fontSize: 20)),
+                  Text.rich(TextSpan(children: [
+                    TextSpan(
+                      text: 'Message: ',
+                      style: TextStyle(fontSize: 20),
+                    ),
+                    TextSpan(
+                      text: '${transaction.message}',
+                      style:
+                          TextStyle(fontSize: 20, fontStyle: FontStyle.italic),
+                    ),
+                  ])),
                 SizedBox(height: 10),
 
                 // Display the status if the transaction is a request
@@ -962,11 +1042,15 @@ class TransactionDetailScreen extends StatelessWidget {
                       ),
                     ],
                   ),
+                // Additional UI elements for user interactions (sending money, requests, adding as friend)
+                _buildUserOptionsModal(context),
               ],
             ),
           ),
         ),
       ),
+      floatingActionButton: QuickMenuTransaction(
+          user: "username"), //somehow The Positioned Widget made some problems
     );
   }
 
@@ -990,5 +1074,38 @@ class TransactionDetailScreen extends StatelessWidget {
     }
     // For money transactions, no additional status text needed
     return '';
+  }
+
+  void _showUserOptions(BuildContext context, String username) {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            ListTile(
+              leading: Icon(Icons.money),
+              title: Text('Send Money'),
+              onTap: () => {}, // Implement sending money functionality
+            ),
+            ListTile(
+              leading: Icon(Icons.request_page),
+              title: Text('Send Request'),
+              onTap: () => {}, // Implement send request functionality
+            ),
+            ListTile(
+              leading: Icon(Icons.person_add),
+              title: Text('Add as Friend'),
+              onTap: () => {}, // Implement add friend functionality
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildUserOptionsModal(BuildContext context) {
+    // Placeholder for modal or dropdown UI
+    return Container(); // Implement this widget according to your UI design
   }
 }

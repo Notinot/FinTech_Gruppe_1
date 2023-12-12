@@ -1095,4 +1095,37 @@ async function getBalance(userId) {
   }
 }
 
+//route to get the events the user is part of with JWT authentication
+app.get('/events', authenticateToken, async (req, res) => {
+  try {
+    console.log('Token:', req.headers['authorization']);
+    // Get the user ID from the authenticated token
+    const userId = req.user.userId;
+    console.log('userId:', userId);
+    // Fetch the user's events from the database based on the user ID
+    const [events] = await db.query(`
+      SELECT 
+        Event.*, 
+        Location.*, 
+        User_Event.user_id,
+        User.username AS creator_username,
+        User.picture AS creator_picture
+      FROM 
+        Event 
+      JOIN 
+        Location ON Event.id = Location.event_id 
+      JOIN 
+        User_Event ON Event.id = User_Event.event_id 
+      JOIN 
+        User ON Event.creator_id = User.user_id 
+      WHERE 
+        User_Event.user_id = ?
+    `, [userId]);
+    console.log('events:', events);
+    res.json(events);
+  } catch (error) {
+    console.error('Error fetching Events:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
 

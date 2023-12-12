@@ -801,6 +801,14 @@ app.post('/transactions/:transactionId', authenticateToken, async (req, res) => 
 );
 
 
+// Fetch Events
+app.post('/events', authenticateToken, async (req, res) => {
+
+    const senderId = req.user.userID;
+    console.log('senderId: ', senderId);
+
+
+});
 
 
 // Create Event
@@ -810,7 +818,7 @@ app.post('/create-event', authenticateToken, async (req, res) => {
 
   try {
     const senderId = req.user.userId;
-    console.log('senderId:', senderId);
+    console.log('senderId: ', senderId);
 
     const { category, title, description, max_participants, datetime_event, country, city, street, zipcode, price } = req.body;
 

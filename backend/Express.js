@@ -439,7 +439,7 @@ app.post('/edit_user', async (req, res) => {
   }
 
   
-  const samePassword = await bcrypt.compare(new_password + existingInfo[0].salt, existingInfo[0].password_hash);
+  const samePassword = await bcrypt.compare(new_password + existingUser[0].salt, existingUser[0].password_hash);
   if (samePassword) {
     return res.status(406).json({ message: 'Your new password cannot be your old password' });
   }
@@ -474,6 +474,36 @@ app.post('/edit_user', async (req, res) => {
     console.log('Received data:', req.body);
   }
 });
+
+app.post('/edit_user/verify', async (req, res) => {
+  const { userid, verificationCode } = req.body;
+  console.log('Received userid:', userid);
+  console.log('Received verificationCode:', verificationCode);
+  
+  
+  const [code] = await db.query('SELECT verification_code FROM User WHERE user_id = ?', [userid]);
+console.log("needed input:",code[0].verification_code);
+
+  if(code[0].verification_code === verificationCode.trim()){
+    res.json({ message: 'Verification succeeded' });
+  }
+  else{
+    res.status(411).json({ message: 'Wrong verification code' })
+  }
+}
+);
+
+app.post('/edit_user/send_code', async (req, res) => {
+  const {userid,email} = req.body;
+   code = Math.floor(100000 + Math.random() * 900000).toString();
+   query = 'UPDATE User SET verification_code = ? WHERE user_id = ? ';
+   updateData = [code,userid];
+   await db.query(query, updateData);
+   sendVerificationEmail(email,code);
+   console.log(code);
+   res.json({ message: 'Email sent' });
+  }
+   );
 
 app.post('/verifyPassword', async (req, res) => {
   try {

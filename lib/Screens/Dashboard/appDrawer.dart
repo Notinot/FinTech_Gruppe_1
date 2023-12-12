@@ -16,6 +16,7 @@ import 'package:flutter_application_1/Screens/Login%20&%20Register/LoginScreen.d
 import 'package:flutter_application_1/Screens/EditUser/EditUserScreen.dart';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter_application_1/Screens/Events/EventScreen.dart';
 
 class AppDrawer extends StatelessWidget {
   final Map<String, dynamic> user;
@@ -69,7 +70,7 @@ class AppDrawer extends StatelessWidget {
               // Navigate to the events section
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => CreateEventScreen()),
+                MaterialPageRoute(builder: (context) => EventScreen()),
               );
             },
           ),

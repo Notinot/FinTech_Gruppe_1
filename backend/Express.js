@@ -837,6 +837,15 @@ app.post('/events', authenticateToken, async (req, res) => {
     const senderId = req.user.userID;
     console.log('senderId: ', senderId);
 
+    try{
+
+        const fetchEvents = await db.query('SELECT * FROM Event WHERE creator_id = ?', [sender_id]);
+        res.json(fetchEvents);
+
+    } catch (error) {
+         console.error('Error fetching events:', error);
+         res.status(500).json({ message: 'Internal server error' });
+       }
 
 });
 
@@ -850,7 +859,7 @@ app.post('/create-event', authenticateToken, async (req, res) => {
     const senderId = req.user.userId;
     console.log('senderId: ', senderId);
 
-    const { category, title, description, max_participants, datetime_event, country, city, street, zipcode, price } = req.body;
+    const { category, title, description, max_participants, datetime_event, country, city, street, zipcode, price, recurrence } = req.body;
 
     // Validate input
     if (!category || !title || !description || !max_participants || !datetime_event || !country || !city || !street || !zipcode ) {
@@ -887,14 +896,16 @@ app.post('/create-event', authenticateToken, async (req, res) => {
     }
 
     // Create Event in Table
-    const [eventQuery] = await db.query('INSERT INTO Event (category, title, description, max_participants, datetime_created, datetime_event, price, creator_id) VALUES (?, ?, ?, ?, NOW(), ?, ?, ?)', [
+    const [eventQuery] = await db.query('INSERT INTO Event (category, title, description, max_participants, datetime_created, datetime_event, price, creator_id, recurrence_type, recurrence_interval) VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?)', [
       category,
       title,
       description,
       max_participants,
       datetime_event,
       price,
-      senderId
+      senderId,
+      recurrence,
+      0
     ]);
 
     console.log(eventQuery);

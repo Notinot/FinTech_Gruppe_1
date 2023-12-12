@@ -1,5 +1,6 @@
-
+import 'dart:async';
 import 'dart:convert';
+import 'dart:core';
 
 import 'package:flutter_application_1/Screens/api_service.dart';
 import 'package:http/http.dart' as http;
@@ -18,11 +19,12 @@ class EventOverview extends StatefulWidget {
 
 class _EventOverviewState extends State<EventOverview>{
 
+  late Future<List<Event>> eventsFuture;
+  List<Event> allEvents = [];
 
-  Future<void> fetchEvents() async{
+  Future<List<Event>> fetchEvents() async{
 
     try{
-
       // Retrieve the user's authentication token from secure storage
       const storage = FlutterSecureStorage();
       final token = await storage.read(key: 'token');
@@ -44,11 +46,23 @@ class _EventOverviewState extends State<EventOverview>{
       if(response.statusCode == 200){
 
         final List<dynamic> data = json.decode(response.body);
+        final List<dynamic> eventsData = data[0];
+        List<Event> events = eventsData.map((eventData) {
+          return Event.fromJson(eventData as Map<String, dynamic>);
+        }).toList();
 
+        events.sort((a, b) => b.datetime_event.compareTo(a.datetime_event));
+
+        return events;
+      }
+      else{
+        // Handle errors if the request is not successful
+        throw Exception(
+            'Error fetching events. Status Code: ${response.statusCode}');
       }
     }
     catch (e) {
-
+      rethrow;
     }
   }
 
@@ -60,11 +74,57 @@ class _EventOverviewState extends State<EventOverview>{
       ),
       body: Center(
         child: Column(
-          children: [],
+          children: [
+
+          ],
         )
       )
     );
   }
 
+
+}
+
+class Event {
+
+  int id;
+  String category;
+  String title;
+  String description;
+  int max_participants;
+  DateTime datetime_created;
+  DateTime datetime_event;
+  double price;
+  bool status;
+  int creator_id;
+
+  Event({
+    required this.id,
+    required this.category,
+    required this.title ,
+    required this.description,
+    required this.max_participants,
+    required this.datetime_created,
+    required this.datetime_event,
+    required this.price,
+    required this.status,
+    required this.creator_id,
+  });
+
+  factory Event.fromJson(Map<String, dynamic> json){
+
+    return Event(
+        id: json['id'],
+        category: json['category'],
+        title: json['title'],
+        description: json['description'],
+        max_participants: json['max_participants'],
+        datetime_created: json['datetime_created'],
+        datetime_event: json['datetime_event'],
+        price: json['price'],
+        status: json['status'],
+        creator_id: json['creator_id']
+    );
+  }
 
 }

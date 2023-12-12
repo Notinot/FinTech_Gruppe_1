@@ -126,6 +126,8 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     final String street = streetController.text;
     final String zipcode = zipcodeController.text;
     final String price = priceController.text;
+    String? recurrence;
+
 
     try {
       if (unixTimestamp == null || unixTimestamp == '') {
@@ -198,6 +200,16 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       });
     }
 
+    if(weekly = true){
+      recurrence = 'Weekly';
+    }
+    else if(monthly = true){
+      recurrence = 'Monthly';
+    }
+    else if(yearly = true){
+      recurrence = 'Yearly';
+    }
+
     // Start for request
     const storage = FlutterSecureStorage();
     final token = await storage.read(key: 'token');
@@ -228,7 +240,8 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
               'city': city,
               'street': street,
               'zipcode': zipcode,
-              'price': parsedPrice
+              'price': parsedPrice,
+              'recurrence': recurrence
             }));
 
     print(createEventResponse);

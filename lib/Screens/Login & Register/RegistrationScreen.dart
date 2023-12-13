@@ -104,6 +104,20 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     if (_imageProvider is MemoryImage) {
       final memoryImage = _imageProvider as MemoryImage;
       profileImageBytes = memoryImage.bytes;
+    } else if (_imageProvider is FileImage) {
+      final fileImage = _imageProvider as FileImage;
+
+      // You need to get the file path from the FileImage
+      final file = io.File(fileImage.file.path);
+
+      try {
+        // Read the file as bytes
+        profileImageBytes = await file.readAsBytes();
+      } catch (error) {
+        // Handle the error, e.g., set profileImageBytes to null
+        print('Error reading file: $error');
+        profileImageBytes = null;
+      }
     }
 
     if (username.trim().isEmpty) {

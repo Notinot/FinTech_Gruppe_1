@@ -157,16 +157,56 @@ class _EditUserState extends State<EditUser> {
   }
 
   Future<void> DeleteProfile() async {
-    final Map<String, dynamic> request = {'userid': userData?['user_id']};
-    final response = await http.post(
-      Uri.parse('${ApiService.serverUrl}/delete_user'),
-      headers: {
-        'Content-Type': 'application/json',
+    // Show a confirmation dialog
+    bool confirmDelete = await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Delete Account?'),
+          content: Text(
+              'Are you sure you want to delete your account?\nThis can not be undone!'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(false); // User pressed No
+              },
+              child: Text('No'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(true); // User pressed Yes
+              },
+              child: Text('Yes'),
+            ),
+          ],
+        );
       },
-      body: json.encode(request),
     );
-    Navigator.pushReplacement(
-        context, MaterialPageRoute(builder: (context) => const LoginScreen()));
+
+    // Check user's choice
+    if (confirmDelete == true) {
+      // User confirmed, proceed with the account deletion
+      final Map<String, dynamic> request = {'userid': user_id};
+      final response = await http.post(
+        Uri.parse('${ApiService.serverUrl}/delete_user'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: json.encode(request),
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+        );
+      } else {
+        print('Failed to delete profile. Status code: ${response.statusCode}');
+      }
+    } else {
+      // User chose not to delete the account
+      print('Account deletion canceled by the user.');
+    }
   }
 
   Future<void> EditUserProfile() async {
@@ -593,8 +633,12 @@ class _EditUserState extends State<EditUser> {
                       onPressed: isEditing ? EditUserProfile : toggleEditMode,
                     ),
                     const SizedBox(height: 16.0),
-                    ElevatedButton(
-                        onPressed: DeleteProfile, child: Text("Delete Account"))
+                    Visibility(
+                        visible: isEditing,
+                        child: ElevatedButton(
+                          onPressed: DeleteProfile,
+                          child: Text("Delete Account"),
+                        ))
                   ],
                 ),
               ),

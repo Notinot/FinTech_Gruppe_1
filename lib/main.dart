@@ -57,15 +57,20 @@ class _PayfriendzAppState extends State<PayfriendzApp> {
         home: LoginScreen(),
       );
     } else {
-      return const MaterialApp(
-        home: ServerUnavailableScreen(),
+      return MaterialApp(
+        home: ServerUnavailableScreen(
+          onRetry: checkServerAvailability,
+        ),
       );
     }
   }
 }
 
 class ServerUnavailableScreen extends StatelessWidget {
-  const ServerUnavailableScreen({super.key});
+  final VoidCallback onRetry;
+
+  const ServerUnavailableScreen({Key? key, required this.onRetry})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -79,10 +84,7 @@ class ServerUnavailableScreen extends StatelessWidget {
           children: [
             const Text('The server is currently unavailable.'),
             ElevatedButton(
-              onPressed: () {
-                // Implement a retry mechanism
-                // You can add logic to retry connecting to the server here.
-              },
+              onPressed: onRetry,
               child: const Text('Retry'),
             ),
           ],

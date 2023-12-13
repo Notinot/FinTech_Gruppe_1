@@ -282,22 +282,19 @@ const [pendingFriends] = await db.query(query, [user_id]);
   res.json({pendingFriends}); //!
 });
 
-//check if user is already friends with another user by username of other user and user_id of user from token. use JWT authentication. returns boolean
-app.get('/friends/:friend_username',authenticateToken, async(req, res) => {
-  const friend_username = req.params.friend_username;  
+//check if user is already friends with another user by userID of other user and user_id of user from token. use JWT authentication. returns boolean
+app.get('/checkIfFriends',authenticateToken, async(req, res) => {
   const user_id = req.user.userId;
+  const {friendId} = req.body;
   const query =
-  `SELECT *
-  FROM Friendship f
-  JOIN User u ON f.requester_id = u.user_id
-  WHERE f.addressee_id = ? AND f.status = 'accepted' AND u.username = ?;
-  `;
-  const [friends] = await db.query(query, [user_id, friend_username]);
+  `SELECT * FROM Friendship WHERE (requester_id = ? AND addressee_id = ?) OR (requester_id = ? AND addressee_id = ?)`;
+  const [friends] = await db.query(query, [user_id, friendId, friendId, user_id]);
+  console.log("user id and friend id",user_id,friendId);
+  console.log("friends",friends);
   if(friends[0] == null){
-    res.json(false);
-  }
-  else{
-    res.json(true);
+    res.json({isFriend: false});
+  }else{
+    res.json({isFriend: true});
   }
 });
 

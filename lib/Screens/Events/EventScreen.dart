@@ -6,11 +6,13 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 
+
 class EventScreen extends StatefulWidget {
   const EventScreen({Key? key}) : super(key: key);
   @override
   _EventScreenState createState() => _EventScreenState();
 }
+
 
 class _EventScreenState extends State<EventScreen> {
   late Future<List<Event>> eventsFuture;
@@ -22,12 +24,12 @@ class _EventScreenState extends State<EventScreen> {
     eventsFuture = fetchEvents();
   }
 
+
   // Fetch events from the backend
   Future<List<Event>> fetchEvents() async {
     try {
       const storage = FlutterSecureStorage();
-      final token = await
-storage.read(key: 'token');
+      final token = await storage.read(key: 'token');
 
       if (token == null) {
         throw Exception('Token not found');
@@ -60,6 +62,7 @@ storage.read(key: 'token');
       rethrow;
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -106,7 +109,7 @@ storage.read(key: 'token');
   }
 }
 
-//create Event Class
+
 class Event {
 
   final int eventID;
@@ -114,8 +117,8 @@ class Event {
   final String description;
   final String category;
   final int max_Participants;
-  final String datetimeCreated;
-  final String datetimeEvent;
+  DateTime datetimeCreated;
+  DateTime datetimeEvent;
   final double price;
   final int status;
   int? recurrence_type;
@@ -153,8 +156,8 @@ class Event {
       title: json['title'],
       description: json['description'],
       max_Participants: json['max_participants'],
-      datetimeCreated: json['datetime_created'],
-      datetimeEvent: json['datetime_event'],
+      datetimeCreated: DateTime.parse(json['datetime_created']),
+      datetimeEvent: DateTime.parse(json['datetime_event']),
       price: json['price'],
       status: json['status'],
       recurrence_type: json['recurrence_type'],
@@ -167,7 +170,7 @@ class Event {
   }
 }
 
-//display a single event object in a ListTile
+//Display a single event object in a ListTile
 class EventItem extends StatelessWidget {
 
   final Event event;
@@ -179,7 +182,6 @@ class EventItem extends StatelessWidget {
       leading: Icon(Icons.event),
       title: Text(event.title),
       subtitle: Text(event.description),
-      //trailing: Icon(Icons.info), //hier noch eine onPressed Funktion für Friend Info/del/block etc
       trailing: IconButton(
           onPressed: () {
             Navigator.push(
@@ -226,32 +228,126 @@ class EventItem extends StatelessWidget {
   }
 }
 
-//create EventInfoScreen
+
+
+class EventDateSection extends StatelessWidget {
+
+  final Event event;
+
+  const EventDateSection({Key? key, required this.event})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.date_range),
+            SizedBox(width: 8),
+            Text(
+              DateFormat('dd.MM.yyyy').format(event.datetimeEvent),
+              style: TextStyle(fontSize: 18),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+
+
+class EventTimeSection extends StatelessWidget {
+  final Event event;
+
+  const EventTimeSection({Key? key, required this.event})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.watch_rounded),
+            SizedBox(width: 8),
+            Text(
+              DateFormat('HH:mm').format(event.datetimeEvent),
+              style: TextStyle(fontSize: 18),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+
 class EventInfoScreen extends StatelessWidget {
   final Event event;
   const EventInfoScreen({super.key, required this.event});
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       appBar: AppBar(
         title: Text(event.title),
       ),
       body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(event.description),
-          Text(event.category),
-          Text(event.max_Participants.toString()),
-          Text(event.datetimeEvent),
-          Text(event.price.toString()),
-          Text(event.status.toString()),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.category_rounded),
+              SizedBox(width: 8),
+              Text(
+                event.category,
+                style: TextStyle(fontSize: 18),
+              ),
+            ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.description_rounded),
+              SizedBox(width: 8),
+              Text(
+                event.description,
+                style: TextStyle(fontSize: 18),
+              ),
+            ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.emoji_people_rounded),
+              Text(
+                event.max_Participants.toString(),
+                style: TextStyle(fontSize: 18),
+              ),
+            ],
+          ),
+          EventDateSection(event: event),
+          EventTimeSection(event: event),
+          Text(
+              formatAmount(),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)
+          )
         ],
       ),
     );
   }
-}
 
-//create EventDetailsScreen
+  String formatAmount() {
+    // Your logic to format the amount
+    return '+${NumberFormat("#,##0.00", "de_DE").format(event.price)} €'; // Example
+  }
+}
 
 

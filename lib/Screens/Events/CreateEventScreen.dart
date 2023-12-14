@@ -19,7 +19,7 @@ class CreateEventScreen extends StatefulWidget {
 
 class _CreateEventScreenState extends State<CreateEventScreen> {
   var selectedCat = 'Book and Literature';
-  var selectedCountry;
+  var selectedCountry = '';
   var selectedMaxParticipants = 1;
   var selectedTimestamp;
   var unixTimestamp;
@@ -126,7 +126,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     String? street = streetController.text;
     String? zipcode = zipcodeController.text;
     final String price = priceController.text;
-    int recurrence_type;
+    final int recurrence_type;
 
     try {
       if (unixTimestamp == null || unixTimestamp == '') {
@@ -178,21 +178,6 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       setState(() {
         descriptionError = 'Please enter a brief description';
       });
-    }
-
-    if (city.trim().isEmpty) {
-
-      city = null;
-    }
-
-    if (street.trim().isEmpty) {
-
-      street = null;
-    }
-
-    if (zipcode.trim().isEmpty) {
-
-      zipcode = null;
     }
 
     if(weekly == true){
@@ -256,7 +241,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
 
     } else if (createEventResponse.statusCode == 401) {
       setState(() {
-        selectedCountry = null;
+        selectedCountry = '';
         countryButton = Colors.red;
         cityError = 'The address does not exist';
         streetError = ' ';
@@ -423,7 +408,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 child: const Text('Pick Country'),
               ),
               const SizedBox(height: 16.0),
-              if (selectedCountry != null)
+              if (selectedCountry != '')
                 Text(
                   '$selectedCountry',
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.normal),

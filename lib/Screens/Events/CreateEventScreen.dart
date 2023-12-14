@@ -197,16 +197,6 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       recurrence_type = 0;
     }
 
-    if(weekly = true){
-      recurrence = 'Weekly';
-    }
-    else if(monthly = true){
-      recurrence = 'Monthly';
-    }
-    else if(yearly = true){
-      recurrence = 'Yearly';
-    }
-
     // Start for request
     const storage = FlutterSecureStorage();
     final token = await storage.read(key: 'token');
@@ -220,7 +210,6 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     if (kDebugMode) {
       print('token: $token');
     }
-
 
       final createEventResponse =
       await http.post(Uri.parse('${ApiService.serverUrl}/create-event'),

@@ -890,11 +890,8 @@ app.post('/create-event', authenticateToken, async (req, res) => {
     const senderId = req.user.userId;
     console.log('senderId: ', senderId);
 
-<<<<<<< HEAD
-    const { category, title, description, max_participants, datetime_event, country, city, street, zipcode, price, recurrence } = req.body;
-=======
+
     const { category, title, description, max_participants, datetime_event, country, city, street, zipcode, price, recurrence_type } = req.body;
->>>>>>> 7ac5946d9d58974260ee1c544be70353a020e428
 
     // Validate input
     if (!category || !title || !description || !max_participants || !datetime_event ) {
@@ -925,11 +922,7 @@ app.post('/create-event', authenticateToken, async (req, res) => {
     }
 
     // Create Event in Table
-<<<<<<< HEAD
-    const [eventQuery] = await db.query('INSERT INTO Event (category, title, description, max_participants, datetime_created, datetime_event, price, creator_id, recurrence_type, recurrence_interval) VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?)', [
-=======
     const [eventQuery] = await db.query('INSERT INTO Event (category, title, description, max_participants, datetime_created, datetime_event, price, creator_id, recurrence_interval, recurrence_type) VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, 0, ?)', [
->>>>>>> 7ac5946d9d58974260ee1c544be70353a020e428
       category,
       title,
       description,
@@ -937,12 +930,8 @@ app.post('/create-event', authenticateToken, async (req, res) => {
       datetime_event,
       price,
       senderId,
-<<<<<<< HEAD
-      recurrence,
+      recurrence_type,
       0
-=======
-      recurrence_type
->>>>>>> 7ac5946d9d58974260ee1c544be70353a020e428
     ]);
 
     console.log(eventQuery);
@@ -1176,8 +1165,6 @@ function sendDeletionEmail(to, username) {
       </body>
     </html>
   `
-    
-    
   }
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {

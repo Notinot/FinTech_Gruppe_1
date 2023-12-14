@@ -188,8 +188,8 @@ class ApiService {
   }
 
   //async function to check it user is already friends with another user. check with token and userId of other user
-  static Future<bool> checkIfFriends(int userId) async {
-    print("APIService: checkIfFriends: userId = $userId");
+  static Future<bool> checkIfFriends(int friendId) async {
+    print("APIService: checkIfFriends: userId = $friendId");
     try {
       // Retrieve the token from secure storage
       const storage = FlutterSecureStorage();
@@ -199,23 +199,20 @@ class ApiService {
         throw Exception('Token not found');
       }
 
-      final response = await http.post(
-        Uri.parse('${ApiService.serverUrl}/checkIfFriends'),
+      final response = await http.get(
+        Uri.parse('${ApiService.serverUrl}/checkIfFriends?friendId=$friendId'),
         headers: {
           'Content-Type': 'application/json; charset=UTF-8',
           'Authorization': 'Bearer $token',
         },
-        body: json.encode(<String, dynamic>{
-          'userId': userId,
-        }),
       );
-
+      print("APIService: checkIfFriends: response = $response");
       if (response.statusCode == 200) {
-        final Map<String, dynamic> data = json.decode(response.body);
-        final bool isFriend = data['isFriend'];
-        return isFriend;
+        final data = json.decode(response.body);
+        print("APIService: checkIfFriends: data = $data");
+        return data['isFriend'] ?? false; // Safely handle potential null values
       } else {
-        throw Exception('Failed to load user profile');
+        throw Exception('Error: ${response.statusCode}');
       }
     } catch (e) {
       print('checkIfFriends function: Error fetching data: $e');

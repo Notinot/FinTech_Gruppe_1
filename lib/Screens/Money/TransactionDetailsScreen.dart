@@ -30,7 +30,43 @@ class TransactionDetailsScreen extends StatelessWidget {
     bool userIsReceiver = transaction.receiverId == userId;
     bool isProcessed = transaction.processed == 1;
     bool isDenied = transaction.processed == 2;
-    bool isFriend = false;
+    int friendId = 0;
+    String friendUsername = '';
+    transaction.transactionType == 'Request'
+        ? isProcessed
+            ? isReceived
+                ? friendId = transaction.senderId
+                : friendId = transaction.receiverId
+            : userIsSender
+                ? friendId = transaction.receiverId
+                : friendId = transaction.senderId
+        : transaction.transactionType == 'Payment'
+            ? isReceived
+                ? friendId = transaction.senderId
+                : friendId = transaction.receiverId
+            : transaction.transactionType == 'Deposit'
+                ? SizedBox(height: 10)
+                : SizedBox(height: 10);
+
+    transaction.transactionType == 'Request'
+        ? isProcessed
+            ? isReceived
+                ? friendUsername = transaction.senderUsername
+                : friendUsername = transaction.receiverUsername
+            : userIsSender
+                ? friendUsername = transaction.receiverUsername
+                : friendUsername = transaction.senderUsername
+        : transaction.transactionType == 'Payment'
+            ? isReceived
+                ? friendUsername = transaction.senderUsername
+                : friendUsername = transaction.receiverUsername
+            : transaction.transactionType == 'Deposit'
+                ? friendUsername = ''
+                : SizedBox(height: 10);
+    //check if the user is already a friend
+    Future<bool> isFriend = ApiService.checkIfFriends(friendId);
+    isFriend ??= false as Future<bool>;
+    isFriend.then((value) => print('Is Friend: $value'));
 
     return Scaffold(
       appBar: AppBar(
@@ -94,66 +130,7 @@ class TransactionDetailsScreen extends StatelessWidget {
                 // if it is a money transaction, display the sender username if the user received money and the receiver username if the user sent money.
                 //if it is a deposit, display nothing in the title
 
-                GestureDetector(
-                  onTap: () => transaction.transactionType == 'Request'
-                      ? isProcessed
-                          ? isReceived
-                              ? transaction.senderUsername == username
-                                  ? null
-                                  : isFriend ==
-                                          ApiService.checkIfFriends(
-                                              transaction.receiverId)
-                                      ? _showUserOptionsFriend(
-                                          context, transaction.senderUsername)
-                                      : _showUserOptions(
-                                          context, transaction.senderUsername)
-                              : transaction.receiverUsername == username
-                                  ? null
-                                  : isFriend ==
-                                          ApiService.checkIfFriends(
-                                              transaction.senderId)
-                                      ? _showUserOptionsFriend(
-                                          context, transaction.receiverUsername)
-                                      : _showUserOptions(
-                                          context, transaction.receiverUsername)
-                          : userIsSender
-                              ? transaction.receiverUsername == username
-                                  ? null
-                                  : isFriend ==
-                                          ApiService.checkIfFriends(
-                                              transaction.receiverId)
-                                      ? _showUserOptionsFriend(
-                                          context, transaction.receiverUsername)
-                                      : _showUserOptions(
-                                          context, transaction.receiverUsername)
-                              : transaction.senderUsername == username
-                                  ? null
-                                  : isFriend ==
-                                          ApiService.checkIfFriends(
-                                              transaction.senderId)
-                                      ? _showUserOptionsFriend(
-                                          context, transaction.senderUsername)
-                                      : _showUserOptions(
-                                          context, transaction.senderUsername)
-                      : isReceived
-                          ? transaction.senderUsername == username
-                              ? null
-                              : isFriend ==
-                                      ApiService.checkIfFriends(
-                                          transaction.senderId)
-                                  ? _showUserOptionsFriend(
-                                      context, transaction.senderUsername)
-                                  : _showUserOptions(
-                                      context, transaction.senderUsername)
-                          : transaction.receiverUsername == username
-                              ? null
-                              : isFriend ==
-                                      ApiService.checkIfFriends(
-                                          transaction.receiverId)
-                                  ? _showUserOptionsFriend(
-                                      context, transaction.receiverUsername)
-                                  : _showUserOptions(
-                                      context, transaction.receiverUsername),
+                Container(
                   child: transaction.transactionType == 'Request'
                       ? isProcessed
                           ? isReceived
@@ -279,36 +256,6 @@ class TransactionDetailsScreen extends StatelessWidget {
                 ),
                 SizedBox(height: 10),
 
-                // Display the event name if the transaction is associated with an event
-                if (transaction.eventId != null)
-                  Row(
-                    children: [
-                      Icon(Icons.event_rounded),
-                      SizedBox(width: 10),
-                      Text(
-                        'Event:" transaction.eventName"',
-                        style: TextStyle(fontSize: 20),
-                      ),
-                    ],
-                  ),
-                SizedBox(height: 10),
-
-                // Display the message if the transaction has a message
-                if (transaction.message.isEmpty == false)
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(Icons.message_rounded),
-                      SizedBox(width: 10),
-                      Text(
-                        '${transaction.message}',
-                        style: TextStyle(fontSize: 20),
-                      ),
-                    ],
-                  ),
-
-                SizedBox(height: 10),
-
                 // Display the status if the transaction is a request
                 if (transaction.transactionType == 'Request')
                   Row(
@@ -325,7 +272,34 @@ class TransactionDetailsScreen extends StatelessWidget {
                     ],
                   ),
                 SizedBox(height: 10),
+// Display the message if the transaction has a message
+                if (transaction.message.isEmpty == false)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.message_rounded),
+                      SizedBox(width: 10),
+                      Text(
+                        '${transaction.message}',
+                        style: TextStyle(fontSize: 20),
+                      ),
+                    ],
+                  ),
 
+                SizedBox(height: 10),
+                // Display the event name if the transaction is associated with an event
+                if (transaction.eventId != null)
+                  Row(
+                    children: [
+                      Icon(Icons.event_rounded),
+                      SizedBox(width: 10),
+                      Text(
+                        'Event:" transaction.eventName"',
+                        style: TextStyle(fontSize: 20),
+                      ),
+                    ],
+                  ),
+                SizedBox(height: 10),
                 // buttons for accepting and denying the request
                 // buttons only appear when the transaction is a request and the transaction is unprocessed and the sender is not the current user
                 if (transaction.transactionType == 'Request' &&
@@ -442,55 +416,15 @@ class TransactionDetailsScreen extends StatelessWidget {
       //     ],
       //   ),
       // ),
-      //Display floating action button  quickMenuTransaction, with the same conditions as the GestureDetector above
-      floatingActionButton: transaction.transactionType == 'Request'
-          ? isProcessed
-              ? isReceived
-                  ? transaction.senderUsername == username
-                      ? null
-                      : FloatingActionButton(
-                          onPressed: () => _showUserOptions(
-                              context, transaction.senderUsername),
-                          child: Icon(Icons.more_vert),
-                        )
-                  : transaction.receiverUsername == username
-                      ? null
-                      : FloatingActionButton(
-                          onPressed: () => _showUserOptions(
-                              context, transaction.receiverUsername),
-                          child: Icon(Icons.more_vert),
-                        )
-              : userIsSender
-                  //Request is unprocessed and user is sender
-                  ? transaction.senderUsername == username
-                      ? null
-                      : FloatingActionButton(
-                          onPressed: () => _showUserOptions(
-                              context, transaction.receiverUsername),
-                          child: Icon(Icons.more_vert),
-                        )
-                  : transaction.senderUsername == username
-                      ? null
-                      : FloatingActionButton(
-                          onPressed: () => _showUserOptions(
-                              context, transaction.receiverUsername),
-                          child: Icon(Icons.more_vert),
-                        )
-          : isReceived
-              ? transaction.senderUsername == username
-                  ? null
-                  : FloatingActionButton(
-                      onPressed: () =>
-                          _showUserOptions(context, transaction.senderUsername),
-                      child: Icon(Icons.more_vert),
-                    )
-              : transaction.receiverUsername == username
-                  ? null
-                  : FloatingActionButton(
-                      onPressed: () => _showUserOptions(
-                          context, transaction.receiverUsername),
-                      child: Icon(Icons.more_vert),
-                    ),
+      //Show floating button only if friendUsername is not empty
+      floatingActionButton: friendUsername != ''
+          ? FloatingActionButton(
+              onPressed: () {
+                _showUserOptions(context, isFriend, friendUsername);
+              },
+              child: Icon(Icons.more_horiz_rounded),
+            )
+          : SizedBox(height: 10),
     );
   }
 
@@ -680,7 +614,7 @@ class TransactionDetailsScreen extends StatelessWidget {
     }
   }
 
-  void _showUserOptions(BuildContext context, String username) {
+  void _showUserOptionss(BuildContext context, String username) {
     showModalBottomSheet(
       context: context,
       builder: (context) {
@@ -738,7 +672,9 @@ class TransactionDetailsScreen extends StatelessWidget {
     );
   }
 
-  void _showUserOptionsFriend(BuildContext context, String username) {
+  void _showUserOptions(
+      BuildContext context, Future<bool> isFriend, String friendUsername) {
+    //show modal bottom sheet with different options if the user is already a friend
     showModalBottomSheet(
       context: context,
       builder: (context) {
@@ -746,6 +682,20 @@ class TransactionDetailsScreen extends StatelessWidget {
           height: 200,
           child: Column(
             children: [
+              if (isFriend == false)
+                ListTile(
+                  leading: Icon(Icons.person_add),
+                  title: Text('Add as Friend'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => FriendsScreen(),
+                      ),
+                    );
+                  },
+                ),
               ListTile(
                 leading: Icon(Icons.monetization_on_rounded),
                 title: Text('Send Money'),
@@ -755,7 +705,7 @@ class TransactionDetailsScreen extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (context) => SendMoneyScreen(
-                        recipient: username,
+                        recipient: friendUsername,
                       ),
                     ),
                   );
@@ -770,7 +720,7 @@ class TransactionDetailsScreen extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (context) => RequestMoneyScreen(
-                        requester: username,
+                        requester: friendUsername,
                       ),
                     ),
                   );

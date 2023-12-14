@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Screens/Dashboard/dashBoardScreen.dart';
+import 'package:flutter_application_1/Screens/Money/TransactionHistoryScreen.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
@@ -213,11 +214,8 @@ class _RequestMoneyScreenState extends State<RequestMoneyScreen> {
                     // Show success snackbar
                     showSuccessSnackBar(context, 'Request sent to $recipient');
 
-                    // Navigate back to the dashboard
+                    //navigate to transaction history
                     Navigator.pop(context);
-
-                    // Refresh the dashboard
-                    DashboardScreen();
                   } else {
                     // Show error snackbar
                     showErrorSnackBar(context, 'Error requesting money');

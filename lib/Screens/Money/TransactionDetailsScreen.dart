@@ -568,64 +568,6 @@ class TransactionDetailsScreen extends StatelessWidget {
     }
   }
 
-  void _showUserOptionss(BuildContext context, String username) {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        return Container(
-          height: 200,
-          child: Column(
-            children: [
-              ListTile(
-                leading: Icon(Icons.person_add),
-                title: Text('Add as Friend'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => FriendsScreen(),
-                    ),
-                  );
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.monetization_on_rounded),
-                title: Text('Send Money'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => SendMoneyScreen(
-                        recipient: username,
-                      ),
-                    ),
-                  );
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.request_page_rounded),
-                title: Text('Request Money'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => RequestMoneyScreen(
-                        requester: username,
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
   void _showUserOptions(
       BuildContext context, isFriend, String friendUsername, int friendId) {
     //show modal bottom sheet with different options if the user is already a friend
@@ -641,7 +583,7 @@ class TransactionDetailsScreen extends StatelessWidget {
                   leading: Icon(Icons.person_add),
                   title: Text('Add as Friend'),
                   onTap: () async {
-                    if (await ApiService.addUser(friendId)) {
+                    if (await ApiService.addUserId(friendId)) {
                       showErrorSnackBar(
                           context, 'Error adding friend, please try again');
                     } else {
@@ -687,11 +629,6 @@ class TransactionDetailsScreen extends StatelessWidget {
         );
       },
     );
-  }
-
-  Widget _buildUserOptionsModal(BuildContext context) {
-    // Placeholder for modal or dropdown UI
-    return Container();
   }
 
   void showSuccessSnackBar(BuildContext context, String message) {

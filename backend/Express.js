@@ -1244,7 +1244,7 @@ app.get('/events', authenticateToken, async (req, res) => {
 });
 
 //  new route /addFriend?friendId=$friendId with JWT authentication
-app.post('/addFriend', authenticateToken, async (req, res) => {
+app.post('/addFriendId', authenticateToken, async (req, res) => {
   try{
     const userId = req.user.userId;
     const friendId = req.body.friendId;

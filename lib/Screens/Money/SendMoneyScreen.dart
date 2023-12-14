@@ -207,17 +207,7 @@ class _SendMoneyScreenState extends State<SendMoneyScreen> {
                     showSuccessSnackBar(
                         context, 'Money sent successfully to $recipient');
 
-                    // Navigate to the dashboard screen
                     Navigator.pop(context);
-
-                    // Refresh the dashboard screen
-                    Navigator.pushReplacement(
-                      // Add this line
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => DashboardScreen(),
-                      ),
-                    );
                   } else {
                     // Show error snackbar
                     showErrorSnackBar(context, 'Failed to send money');

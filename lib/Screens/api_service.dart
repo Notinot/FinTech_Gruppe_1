@@ -221,7 +221,7 @@ class ApiService {
   }
 
   //async function to check it user is already friends with another user. check with token and userId of other user
-  static Future<bool> addUser(int friendId) async {
+  static Future<bool> addUserId(int friendId) async {
     print("APIService: addFriend: friendId = $friendId");
     try {
       // Retrieve the token from secure storage
@@ -233,7 +233,7 @@ class ApiService {
       }
 
       final response = await http.post(
-        Uri.parse('${ApiService.serverUrl}/addFriend'),
+        Uri.parse('${ApiService.serverUrl}/addFriendId'),
         headers: {
           'Content-Type': 'application/json; charset=UTF-8',
           'Authorization': 'Bearer $token',

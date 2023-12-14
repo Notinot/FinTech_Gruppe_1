@@ -26,9 +26,14 @@ app.use(cors({
 // Create a connection pool to the MySQL database
 const db = mysql.createPool({
 
+/*
   host: 'btxppofwkgo3xl10tfwy-mysql.services.clever-cloud.com',
   user: 'ud86jc8auniwbfsm',
   password: 'ER0nIAbQy5qyAeSd4ZCV',
+  */
+  host: 'localhost',
+  user: 'root',
+  password: 'Italia_Union486',
   database: 'btxppofwkgo3xl10tfwy',
 });
 let server; // Define the server variable at a higher scope
@@ -842,10 +847,10 @@ app.post('/create-event', authenticateToken, async (req, res) => {
     const senderId = req.user.userId;
     console.log('senderId:', senderId);
 
-    const { category, title, description, max_participants, datetime_event, country, city, street, zipcode, price } = req.body;
+    const { category, title, description, max_participants, datetime_event, country, city, street, zipcode, price, recurrence_type } = req.body;
 
     // Validate input
-    if (!category || !title || !description || !max_participants || !datetime_event || !country || !city || !street || !zipcode ) {
+    if (!category || !title || !description || !max_participants || !datetime_event ) {
       return res.status(400).json({ message: 'Invalid input' });
     }
 
@@ -879,14 +884,15 @@ app.post('/create-event', authenticateToken, async (req, res) => {
     }
 
     // Create Event in Table
-    const [eventQuery] = await db.query('INSERT INTO Event (category, title, description, max_participants, datetime_created, datetime_event, price, creator_id) VALUES (?, ?, ?, ?, NOW(), ?, ?, ?)', [
+    const [eventQuery] = await db.query('INSERT INTO Event (category, title, description, max_participants, datetime_created, datetime_event, price, creator_id, recurrence_interval, recurrence_type) VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, 0, ?)', [
       category,
       title,
       description,
       max_participants,
       datetime_event,
       price,
-      senderId
+      senderId,
+      recurrence_type
     ]);
 
     console.log(eventQuery);
@@ -1091,7 +1097,7 @@ app.get('/events', authenticateToken, async (req, res) => {
         User_Event.user_id,
         User.username AS creator_username,
         User.picture AS creator_picture
-      FROM 
+      FROM
         Event 
       JOIN 
         Location ON Event.id = Location.event_id 

@@ -19,7 +19,7 @@ class CreateEventScreen extends StatefulWidget {
 
 class _CreateEventScreenState extends State<CreateEventScreen> {
   var selectedCat = 'Book and Literature';
-  var selectedCountry = '';
+  var selectedCountry;
   var selectedMaxParticipants = 1;
   var selectedTimestamp;
   var unixTimestamp;
@@ -122,16 +122,20 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
 
     final String title = titleController.text;
     final String description = descriptionController.text;
-    final String city = cityController.text;
-    final String street = streetController.text;
-    final String zipcode = zipcodeController.text;
+    String? city = cityController.text;
+    String? street = streetController.text;
+    String? zipcode = zipcodeController.text;
     final String price = priceController.text;
+    int recurrence_type;
 
     try {
       if (unixTimestamp == null || unixTimestamp == '') {
         setState(() {
           datetimeButton = Colors.red;
         });
+
+        showErrorSnackBar(this.context, 'Please pick date and time');
+
         return;
       }
 
@@ -140,6 +144,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
           datetimeButton = Colors.red;
           wrongDate = Colors.red;
         });
+
+        showErrorSnackBar(this.context, 'The time the event starts cannot be in the past');
+
         return;
       } else {
         setState(() {
@@ -173,29 +180,32 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       });
     }
 
-    if (selectedCountry == '') {
-      setState(() {
-        countryButton = Colors.red;
-      });
-      showErrorSnackBar(context as BuildContext, 'Select a Country');
-    }
-
     if (city.trim().isEmpty) {
-      setState(() {
-        cityError = 'City cannot be empty';
-      });
+
+      city = null;
     }
 
     if (street.trim().isEmpty) {
-      setState(() {
-        streetError = 'Street cannot be empty';
-      });
+
+      street = null;
     }
 
     if (zipcode.trim().isEmpty) {
-      setState(() {
-        zipcodeError = 'Zipcode cannot be empty';
-      });
+
+      zipcode = null;
+    }
+
+    if(weekly == true){
+      recurrence_type = 1;
+    }
+    else if(monthly == true){
+      recurrence_type = 2;
+    }
+    else if(yearly == true){
+      recurrence_type = 3;
+    }
+    else{
+      recurrence_type = 0;
     }
 
     // Start for request
@@ -212,34 +222,42 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       print('token: $token');
     }
 
-    final createEventResponse =
-        await http.post(Uri.parse('${ApiService.serverUrl}/create-event'),
-            headers: {
-              'Content-Type': 'application/json; charset=UTF-8',
-              'Authorization': 'Bearer $token',
-            },
-            body: json.encode(<String, dynamic>{
-              'category': selectedCat,
-              'title': title,
-              'description': description,
-              'max_participants': selectedMaxParticipants,
-              'datetime_event': selectedTimestamp.toString(),
-              'country': selectedCountry,
-              'city': city,
-              'street': street,
-              'zipcode': zipcode,
-              'price': parsedPrice
-            }));
+
+      final createEventResponse =
+      await http.post(Uri.parse('${ApiService.serverUrl}/create-event'),
+          headers: {
+            'Content-Type': 'application/json; charset=UTF-8',
+            'Authorization': 'Bearer $token',
+          },
+
+          body: json.encode(<String, dynamic>{
+            'category': selectedCat,
+            'title': title,
+            'description': description,
+            'max_participants': selectedMaxParticipants,
+            'datetime_event': selectedTimestamp.toString(),
+            'country': selectedCountry,
+            'city': city,
+            'street': street,
+            'zipcode': zipcode,
+            'price': parsedPrice,
+            'recurrence_type': recurrence_type
+          })
+      );
 
     print(createEventResponse);
 
     if (createEventResponse.statusCode == 200) {
+
       Navigator.push(
         this.context,
         MaterialPageRoute(builder: (context) => const DashboardScreen()),
       );
+
     } else if (createEventResponse.statusCode == 401) {
       setState(() {
+        selectedCountry = null;
+        countryButton = Colors.red;
         cityError = 'The address does not exist';
         streetError = ' ';
         zipcodeError = ' ';
@@ -247,7 +265,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
 
       print('The address does not exist');
       return;
+
     } else {
+
       print('Error creating the event: ${createEventResponse.body}');
       return;
     }
@@ -403,7 +423,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 child: const Text('Pick Country'),
               ),
               const SizedBox(height: 16.0),
-              if (selectedCountry != '')
+              if (selectedCountry != null)
                 Text(
                   '$selectedCountry',
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.normal),

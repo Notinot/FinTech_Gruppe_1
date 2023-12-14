@@ -3,8 +3,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  static const String serverUrl = 'http://10.0.2.2:3000';
-  // static const String serverUrl = 'http://localhost:3000';
+  //static const String serverUrl = 'http://10.0.2.2:3000';
+  static const String serverUrl = 'http://localhost:3000';
   // const serverUrl = '192.168.56.1:3000';
 
   static Future<Map<String, dynamic>> fetchUserProfile() async {
@@ -216,6 +216,42 @@ class ApiService {
       }
     } catch (e) {
       print('checkIfFriends function: Error fetching data: $e');
+      return false;
+    }
+  }
+
+  //async function to check it user is already friends with another user. check with token and userId of other user
+  static Future<bool> addUser(int friendId) async {
+    print("APIService: addFriend: friendId = $friendId");
+    try {
+      // Retrieve the token from secure storage
+      const storage = FlutterSecureStorage();
+      final token = await storage.read(key: 'token');
+
+      if (token == null) {
+        throw Exception('Token not found');
+      }
+
+      final response = await http.post(
+        Uri.parse('${ApiService.serverUrl}/addFriend'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $token',
+        },
+        body: json.encode(<String, dynamic>{
+          'friendId': friendId,
+        }),
+      );
+      print("APIService: addFriend: response = $response");
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        final bool success = data['success'];
+        return success;
+      } else {
+        throw Exception('Failed to load user profile');
+      }
+    } catch (e) {
+      print('addFriend function: Error fetching data: $e');
       return false;
     }
   }

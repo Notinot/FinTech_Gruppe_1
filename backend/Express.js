@@ -282,21 +282,6 @@ const [pendingFriends] = await db.query(query, [user_id]);
   res.json({pendingFriends}); //!
 });
 
-//check if user is already friends with another user by userID of other user and user_id of user from token. use JWT authentication. returns boolean
-app.get('/checkIfFriends',authenticateToken, async(req, res) => {
-  const user_id = req.user.userId;
-  const {friendId} = req.body;
-  const query =
-  `SELECT * FROM Friendship WHERE (requester_id = ? AND addressee_id = ?) OR (requester_id = ? AND addressee_id = ?)`;
-  const [friends] = await db.query(query, [user_id, friendId, friendId, user_id]);
-  console.log("user id and friend id",user_id,friendId);
-  console.log("friends",friends);
-  if(friends[0] == null){
-    res.json({isFriend: false});
-  }else{
-    res.json({isFriend: true});
-  }
-});
 
 
 //handle friend request
@@ -789,7 +774,18 @@ app.get('/transactions', authenticateToken, async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 });
-
+  //check if user is already friends with another user with JWT authentication
+  app.get('/checkIfFriends', authenticateToken, async (req, res) => {
+    const user_id = req.user.userId;
+    const friendId = req.query.friendId;
+    const query = `SELECT * FROM Friendship WHERE (requester_id = ? AND addressee_id = ?) OR (requester_id = ? AND addressee_id = ?)`;
+    const [friends] = await db.query(query, [user_id, friendId, friendId, user_id]);
+    const isFriend = friends[0] != null;
+    console.log('isFriend:', isFriend);
+    res.json({ isFriend: isFriend });
+    
+  });
+  
 //Route to accept or decline a transaction Request with JWT authentication
 app.post('/transactions/:transactionId', authenticateToken, async (req, res) => {
   try {

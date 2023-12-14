@@ -104,6 +104,20 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     if (_imageProvider is MemoryImage) {
       final memoryImage = _imageProvider as MemoryImage;
       profileImageBytes = memoryImage.bytes;
+    } else if (_imageProvider is FileImage) {
+      final fileImage = _imageProvider as FileImage;
+
+      // You need to get the file path from the FileImage
+      final file = io.File(fileImage.file.path);
+
+      try {
+        // Read the file as bytes
+        profileImageBytes = await file.readAsBytes();
+      } catch (error) {
+        // Handle the error, e.g., set profileImageBytes to null
+        print('Error reading file: $error');
+        profileImageBytes = null;
+      }
     }
 
     if (username.trim().isEmpty) {
@@ -111,6 +125,21 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       setState(() {
         usernameError = 'Username cannot be empty';
       });
+      showSnackBar(isError: true, message: 'Username cannot be empty');
+      return;
+    }
+
+    if (RegExp(r'\s').hasMatch(username) ||
+        username.toLowerCase().trim() == "deleteduser" ||
+        username.toLowerCase().trim() == "deleted") {
+      setState(() {
+        usernameError = 'This Username is invalid, choose a different one!';
+      });
+      showSnackBar(
+        isError: true,
+        message: 'This Username is invalid, choose a different one!',
+      );
+      return;
     }
 
     if (email.trim().isEmpty) {
@@ -118,6 +147,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       setState(() {
         emailError = 'Email cannot be empty';
       });
+      showSnackBar(isError: true, message: 'Email cannot be empty');
+      return;
     }
 
     if (firstname.trim().isEmpty) {
@@ -125,6 +156,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       setState(() {
         firstnameError = 'First name cannot be empty';
       });
+      showSnackBar(isError: true, message: 'First name cannot be empty');
+      return;
     }
 
     if (firstname.length < 2) {
@@ -132,6 +165,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       setState(() {
         firstnameError = 'First name must be at least two characters long';
       });
+      showSnackBar(
+          isError: true,
+          message: 'First name must be at least two characters long');
+      return;
     }
 
     if (lastname.trim().isEmpty) {
@@ -139,6 +176,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       setState(() {
         lastnameError = 'Last name cannot be empty';
       });
+      showSnackBar(isError: true, message: 'Last name cannot be empty');
+      return;
     }
 
     if (lastname.length < 2) {
@@ -146,6 +185,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       setState(() {
         lastnameError = 'Last name must be at least two characters long';
       });
+      showSnackBar(
+          isError: true,
+          message: 'Last name must be at least two characters long');
+      return;
     }
 
     if (password.isEmpty || confirmPassword.isEmpty) {

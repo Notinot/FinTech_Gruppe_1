@@ -1243,3 +1243,36 @@ app.get('/events', authenticateToken, async (req, res) => {
   }
 });
 
+//  new route /addFriend?friendId=$friendId with JWT authentication
+app.post('/addFriend', authenticateToken, async (req, res) => {
+  try{
+    const userId = req.user.userId;
+    const friendId = req.body.friendId;
+    console.log("user_id: ", userId, "- friendId: ", friendId);
+
+    //check if users are already friends
+    const [friends] = await db.query(
+      `SELECT * FROM Friendship 
+       WHERE (requester_id = ? AND addressee_id = ?)
+       OR    (requester_id = ? AND addressee_id = ?)`,
+      [userId, friendId, friendId, userId]
+    );
+
+        console.log(friends);
+      //when they are not already friends
+      if(friends[0] == null){
+        const query = `
+      INSERT INTO Friendship 
+      (requester_id, addressee_id, status, request_time) 
+      VALUES (?, ?, ?, NOW())`;
+       const [addingFriend] = await db.query(query, [userId, friendId, 'pending']);
+       res.status(200).json({addingFriend});
+      }else{
+        //res.status(500).json({message: 'Cannot add User'});
+        res.status(500).json('Cannot add User');
+      }
+    }catch (error) {
+      console.error('Error adding friend:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+});

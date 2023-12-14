@@ -256,7 +256,6 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
       ),
       // Bottom navigation bar
       bottomNavigationBar: BottomAppBar(
-        color: Colors.blue[400],
         child: FutureBuilder<Map<String, dynamic>>(
           // Fetch user profile data
           future: ApiService.fetchUserProfile(),
@@ -272,23 +271,21 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    // Display the user's balance
+                    Icon(Icons.euro), // Display the user's balance
                     Text(
-                      'Balance: ${NumberFormat("#,##0.00", "de_DE").format(user['balance'])}\€',
+                      '${NumberFormat("#,##0.00", "de_DE").format(user['balance'])}\€',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        fontSize: 20,
-                        color: Colors.white,
+                        fontSize: 17,
                       ),
                     ),
                     // Button to navigate to the send money screen
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue[600],
                           textStyle: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15,
-                          )),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      )),
                       onPressed: () {
                         Navigator.push(
                           context,
@@ -302,11 +299,10 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                     // Button to navigate to the request money screen
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue[600],
                           textStyle: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15,
-                          )),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      )),
                       onPressed: () {
                         Navigator.push(
                           context,
@@ -410,7 +406,7 @@ class TransactionItem extends StatelessWidget {
                 ? (iconColor = Colors.grey[400]!, textColor = Colors.black)
                 : userIsSender
                     ? (
-                        iconColor = Colors.orange[600]!,
+                        iconColor = Colors.orange[300]!,
                         textColor = Colors.black
                       )
                     : (
@@ -592,14 +588,6 @@ class TransactionItem extends StatelessWidget {
                       style: TextStyle(
                           color: textColor, fontStyle: FontStyle.italic),
                     ),
-                  // Display the status if the transaction is a request
-                  if (transaction.transactionType == 'Request')
-                    Text(
-                      '${getStatusText(transaction)}',
-                      style: TextStyle(
-                        color: getStatusColor(transaction),
-                      ),
-                    ),
                 ],
               ),
               // Display the date and time of the transaction in the trailing position
@@ -609,10 +597,7 @@ class TransactionItem extends StatelessWidget {
                 style: TextStyle(color: textColor),
               ),
             ),
-          )
-
-          // Display the transaction details when the transaction is tapped
-          ),
+          )),
     );
   }
 

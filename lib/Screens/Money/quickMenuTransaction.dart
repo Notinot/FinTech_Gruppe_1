@@ -8,7 +8,9 @@ import 'package:flutter_application_1/Screens/Money/SendMoneyScreen.dart';
 
 class QuickMenuTransaction extends StatelessWidget {
   final String user;
-  const QuickMenuTransaction({Key? key, required this.user}) : super(key: key);
+  const QuickMenuTransaction(
+      {Key? key, required this.user, required bool isFriend})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {

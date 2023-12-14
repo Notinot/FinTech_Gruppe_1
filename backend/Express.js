@@ -26,14 +26,10 @@ app.use(cors({
 // Create a connection pool to the MySQL database
 const db = mysql.createPool({
 
-/*
+
   host: 'btxppofwkgo3xl10tfwy-mysql.services.clever-cloud.com',
   user: 'ud86jc8auniwbfsm',
   password: 'ER0nIAbQy5qyAeSd4ZCV',
-  */
-  host: 'localhost',
-  user: 'root',
-  password: 'Italia_Union486',
   database: 'btxppofwkgo3xl10tfwy',
 });
 let server; // Define the server variable at a higher scope
@@ -902,15 +898,9 @@ app.post('/create-event', authenticateToken, async (req, res) => {
         console.log('Address does not exist');
         return res.status(401).json({ message: 'Address could not be validated' });
       }
-      //print response
-      console.log(response[0].extra.confidence);
+
+      console.log(response);
       console.log('Address does exist');
-      
-    }
-    else {
-      
-      console.log('No response received');
-      return res.status(401).json({ message: 'Address could not be validated' });
     }
 
     // Create Event in Table

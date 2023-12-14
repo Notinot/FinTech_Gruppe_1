@@ -122,11 +122,14 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
 
     final String title = titleController.text;
     final String description = descriptionController.text;
-    final String city = cityController.text;
-    final String street = streetController.text;
-    final String zipcode = zipcodeController.text;
+    String? city = cityController.text;
+    String? street = streetController.text;
+    String? zipcode = zipcodeController.text;
     final String price = priceController.text;
     String? recurrence;
+
+
+    final int recurrence_type;
 
 
     try {
@@ -134,6 +137,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         setState(() {
           datetimeButton = Colors.red;
         });
+
+        showErrorSnackBar(this.context, 'Please pick date and time');
+
         return;
       }
 
@@ -142,6 +148,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
           datetimeButton = Colors.red;
           wrongDate = Colors.red;
         });
+
+        showErrorSnackBar(this.context, 'The time the event starts cannot be in the past');
+
         return;
       } else {
         setState(() {
@@ -150,7 +159,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         });
       }
     } catch (e) {
-      print("error $e");
+      print("error {$e}");
     }
 
     // Remove euro sign, periods and spaces
@@ -175,29 +184,17 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       });
     }
 
-    if (selectedCountry == '') {
-      setState(() {
-        countryButton = Colors.red;
-      });
-      showErrorSnackBar(context as BuildContext, 'Select a Country');
+    if(weekly == true){
+      recurrence_type = 1;
     }
-
-    if (city.trim().isEmpty) {
-      setState(() {
-        cityError = 'City cannot be empty';
-      });
+    else if(monthly == true){
+      recurrence_type = 2;
     }
-
-    if (street.trim().isEmpty) {
-      setState(() {
-        streetError = 'Street cannot be empty';
-      });
+    else if(yearly == true){
+      recurrence_type = 3;
     }
-
-    if (zipcode.trim().isEmpty) {
-      setState(() {
-        zipcodeError = 'Zipcode cannot be empty';
-      });
+    else{
+      recurrence_type = 0;
     }
 
     if(weekly = true){
@@ -224,35 +221,42 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       print('token: $token');
     }
 
-    final createEventResponse =
-        await http.post(Uri.parse('${ApiService.serverUrl}/create-event'),
-            headers: {
-              'Content-Type': 'application/json; charset=UTF-8',
-              'Authorization': 'Bearer $token',
-            },
-            body: json.encode(<String, dynamic>{
-              'category': selectedCat,
-              'title': title,
-              'description': description,
-              'max_participants': selectedMaxParticipants,
-              'datetime_event': selectedTimestamp.toString(),
-              'country': selectedCountry,
-              'city': city,
-              'street': street,
-              'zipcode': zipcode,
-              'price': parsedPrice,
-              'recurrence': recurrence
-            }));
+
+      final createEventResponse =
+      await http.post(Uri.parse('${ApiService.serverUrl}/create-event'),
+          headers: {
+            'Content-Type': 'application/json; charset=UTF-8',
+            'Authorization': 'Bearer $token',
+          },
+
+          body: json.encode(<String, dynamic>{
+            'category': selectedCat,
+            'title': title,
+            'description': description,
+            'max_participants': selectedMaxParticipants,
+            'datetime_event': selectedTimestamp.toString(),
+            'country': selectedCountry,
+            'city': city,
+            'street': street,
+            'zipcode': zipcode,
+            'price': parsedPrice,
+            'recurrence_type': recurrence_type
+          })
+      );
 
     print(createEventResponse);
 
     if (createEventResponse.statusCode == 200) {
+
       Navigator.push(
         this.context,
         MaterialPageRoute(builder: (context) => const DashboardScreen()),
       );
+
     } else if (createEventResponse.statusCode == 401) {
       setState(() {
+        selectedCountry = '';
+        countryButton = Colors.red;
         cityError = 'The address does not exist';
         streetError = ' ';
         zipcodeError = ' ';
@@ -260,7 +264,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
 
       print('The address does not exist');
       return;
+
     } else {
+
       print('Error creating the event: ${createEventResponse.body}');
       return;
     }

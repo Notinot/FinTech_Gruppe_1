@@ -32,6 +32,43 @@ class ApiService {
     }
   }
 
+  //fetch username of the user
+  Future<String> fetchUsername(int senderId) async {
+    try {
+      // Retrieve the user's authentication token from secure storage
+      const storage = FlutterSecureStorage();
+      final token = await storage.read(key: 'token');
+
+      // Handle the case where the token is not available
+      if (token == null) {
+        throw Exception('Token not found');
+      }
+
+      // Make an HTTP GET request to fetch transactions
+      final response = await http.get(
+        Uri.parse('${ApiService.serverUrl}/user/profile'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      // Check if the request was successful
+      if (response.statusCode == 200) {
+        // Parse the JSON response and create a list of Transaction objects
+        final Map<String, dynamic> data = json.decode(response.body);
+        final Map<String, dynamic> user = data['user'];
+        return user['username'];
+      } else {
+        // Handle errors if the request is not successful
+        throw Exception(
+            'Error fetching transactions. Status Code: ${response.statusCode}');
+      }
+    } catch (error) {
+      rethrow;
+    }
+  }
+
   // async function to fetch the user_id from the flutter secure storage
   static Future<String> fetchUserId() async {
     const storage = FlutterSecureStorage();
@@ -139,6 +176,42 @@ class ApiService {
       }
     } catch (e) {
       print('addMoney function: Error fetching data: $e');
+      return false;
+    }
+  }
+
+  //async function to check it user is already friends with another user. check with token and userId of other user
+  static Future<bool> checkIfFriends(int userId) async {
+    print("APIService: checkIfFriends: userId = $userId");
+    try {
+      // Retrieve the token from secure storage
+      const storage = FlutterSecureStorage();
+      final token = await storage.read(key: 'token');
+
+      if (token == null) {
+        throw Exception('Token not found');
+      }
+
+      final response = await http.post(
+        Uri.parse('${ApiService.serverUrl}/checkIfFriends'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $token',
+        },
+        body: json.encode(<String, dynamic>{
+          'userId': userId,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        final bool isFriend = data['isFriend'];
+        return isFriend;
+      } else {
+        throw Exception('Failed to load user profile');
+      }
+    } catch (e) {
+      print('checkIfFriends function: Error fetching data: $e');
       return false;
     }
   }

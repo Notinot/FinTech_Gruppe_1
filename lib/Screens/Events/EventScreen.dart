@@ -4,13 +4,15 @@ import 'package:flutter_application_1/Screens/Dashboard/dashBoardScreen.dart';
 import 'package:flutter_application_1/Screens/api_service.dart'; // Assumed path
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
-import 'package:flutter_application_1/Screens/Events/EventDetailsScreen.dart';
+import 'package:intl/intl.dart';
+
 
 class EventScreen extends StatefulWidget {
   const EventScreen({Key? key}) : super(key: key);
   @override
   _EventScreenState createState() => _EventScreenState();
 }
+
 
 class _EventScreenState extends State<EventScreen> {
   late Future<List<Event>> eventsFuture;
@@ -21,6 +23,7 @@ class _EventScreenState extends State<EventScreen> {
     super.initState();
     eventsFuture = fetchEvents();
   }
+
 
   // Fetch events from the backend
   Future<List<Event>> fetchEvents() async {
@@ -41,11 +44,15 @@ class _EventScreenState extends State<EventScreen> {
       );
 
       if (response.statusCode == 200) {
-        final Map<String, dynamic> data = jsonDecode(response.body);
-        final List<dynamic> eventsData = data['events'];
-        List<Event> events = eventsData.map((eventData) {
+        final List<dynamic> data = jsonDecode(response.body);
+        final List<dynamic> eventsData = data;
+
+        List<Event> events =
+        eventsData.map((eventData) {
           return Event.fromJson(eventData as Map<String, dynamic>);
         }).toList();
+
+        events.sort((a, b) => b.datetimeCreated.compareTo(a.datetimeCreated));
 
         return events;
       } else {
@@ -55,6 +62,7 @@ class _EventScreenState extends State<EventScreen> {
       rethrow;
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -101,43 +109,70 @@ class _EventScreenState extends State<EventScreen> {
   }
 }
 
-//create Event Class
+
 class Event {
+
   final int eventID;
   final String title;
   final String description;
   final String category;
-  final int maxParticipants;
-  final String datetimeEvent;
+  final int max_Participants;
+  DateTime datetimeCreated;
+  DateTime datetimeEvent;
   final double price;
   final int status;
+  int? recurrence_type;
+  int? recurrence_interval;
+  String? country;
+  String? street;
+  String? city;
+  String? zipcode;
+
 
   Event(
-      {required this.eventID,
-      required this.title,
-      required this.description,
-      required this.category,
-      required this.maxParticipants,
-      required this.datetimeEvent,
-      required this.price,
-      required this.status});
+      {
+        required this.eventID,
+        required this.title,
+        required this.description,
+        required this.category,
+        required this.max_Participants,
+        required this.datetimeCreated,
+        required this.datetimeEvent,
+        required this.price,
+        required this.status,
+        required this.recurrence_type,
+        required this.recurrence_interval,
+        required this.country,
+        required this.city,
+        required this.street,
+        required this.zipcode
+
+      });
 
   factory Event.fromJson(Map<String, dynamic> json) {
     return Event(
-      eventID: json['eventID'],
+      eventID: json['event_id'],
+      category: json['category'],
       title: json['title'],
       description: json['description'],
-      category: json['category'],
-      maxParticipants: json['maxParticipants'],
-      datetimeEvent: json['datetimeEvent'],
+      max_Participants: json['max_participants'],
+      datetimeCreated: DateTime.parse(json['datetime_created']),
+      datetimeEvent: DateTime.parse(json['datetime_event']),
       price: json['price'],
       status: json['status'],
+      recurrence_type: json['recurrence_type'],
+      recurrence_interval: json['recurrence_interval'],
+      country: json['country'],
+      city: json['city'],
+      street: json['street'],
+      zipcode: json['zipcode']
     );
   }
 }
 
-//display a single event object in a ListTile
+//Display a single event object in a ListTile
 class EventItem extends StatelessWidget {
+
   final Event event;
   const EventItem({super.key, required this.event});
 
@@ -147,7 +182,6 @@ class EventItem extends StatelessWidget {
       leading: Icon(Icons.event),
       title: Text(event.title),
       subtitle: Text(event.description),
-      //trailing: Icon(Icons.info), //hier noch eine onPressed Funktion für Friend Info/del/block etc
       trailing: IconButton(
           onPressed: () {
             Navigator.push(
@@ -194,7 +228,66 @@ class EventItem extends StatelessWidget {
   }
 }
 
-//create EventInfoScreen
+
+
+class EventDateSection extends StatelessWidget {
+
+  final Event event;
+
+  const EventDateSection({Key? key, required this.event})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.date_range),
+            SizedBox(width: 8),
+            Text(
+              DateFormat('dd.MM.yyyy').format(event.datetimeEvent),
+              style: TextStyle(fontSize: 18),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+
+
+class EventTimeSection extends StatelessWidget {
+  final Event event;
+
+  const EventTimeSection({Key? key, required this.event})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.watch_rounded),
+            SizedBox(width: 8),
+            Text(
+              DateFormat('HH:mm').format(event.datetimeEvent),
+              style: TextStyle(fontSize: 18),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+
 class EventInfoScreen extends StatelessWidget {
   final Event event;
   const EventInfoScreen({super.key, required this.event});
@@ -206,19 +299,55 @@ class EventInfoScreen extends StatelessWidget {
         title: Text(event.title),
       ),
       body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(event.description),
-          Text(event.category),
-          Text(event.maxParticipants.toString()),
-          Text(event.datetimeEvent),
-          Text(event.price.toString()),
-          Text(event.status.toString()),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.category_rounded),
+              SizedBox(width: 8),
+              Text(
+                event.category,
+                style: TextStyle(fontSize: 18),
+              ),
+            ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.description_rounded),
+              SizedBox(width: 8),
+              Text(
+                event.description,
+                style: TextStyle(fontSize: 18),
+              ),
+            ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.emoji_people_rounded),
+              Text(
+                event.max_Participants.toString(),
+                style: TextStyle(fontSize: 18),
+              ),
+            ],
+          ),
+          EventDateSection(event: event),
+          EventTimeSection(event: event),
+          Text(
+              formatAmount(),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)
+          )
         ],
       ),
     );
   }
-}
 
-//create EventDetailsScreen
+  String formatAmount() {
+    // Your logic to format the amount
+    return '+${NumberFormat("#,##0.00", "de_DE").format(event.price)} €'; // Example
+  }
+}
 
 

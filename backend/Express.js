@@ -26,6 +26,7 @@ app.use(cors({
 // Create a connection pool to the MySQL database
 const db = mysql.createPool({
 
+
   host: 'btxppofwkgo3xl10tfwy-mysql.services.clever-cloud.com',
   user: 'ud86jc8auniwbfsm',
   password: 'ER0nIAbQy5qyAeSd4ZCV',
@@ -282,6 +283,23 @@ const [pendingFriends] = await db.query(query, [user_id]);
   res.json({pendingFriends}); //!
 });
 
+//check if user is already friends with another user by userID of other user and user_id of user from token. use JWT authentication. returns boolean
+app.get('/checkIfFriends',authenticateToken, async(req, res) => {
+  const user_id = req.user.userId;
+  const {friendId} = req.body;
+  const query =
+  `SELECT * FROM Friendship WHERE (requester_id = ? AND addressee_id = ?) OR (requester_id = ? AND addressee_id = ?)`;
+  const [friends] = await db.query(query, [user_id, friendId, friendId, user_id]);
+  console.log("user id and friend id",user_id,friendId);
+  console.log("friends",friends);
+  if(friends[0] == null){
+    res.json({isFriend: false});
+  }else{
+    res.json({isFriend: true});
+  }
+});
+
+
 //handle friend request
 /*
 Receives: boolean value whether request was accepted or declined
@@ -399,7 +417,20 @@ app.post('/verify', async (req, res) => {
 //delete user
 app.post('/delete_user', async (req, res) => {
   const{userid} = req.body;
-  const [deleteUser] = await db.query('Update User Set active = 0 WHERE user_id = ?', [userid]);});
+  try{
+    const [userInfo] = await db.query('SELECT username, email FROM User WHERE user_id = ?', [userid]);
+    const { username, email } = userInfo[0];
+    sendDeletionEmail(email, username);
+    await db.query('UPDATE User SET active = 0, username = null,email = null, Picture = null,password_hash = null WHERE user_id = ?', [userid]);
+    await db.query('DELETE FROM Friendship WHERE (requester_id = ? ) OR (addressee_id = ?)'
+      , [userid, userid]);
+    
+    res.json({message : 'Account deleted'});}
+  catch (error) {
+    console.error('User deletion failed. Error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
 
 
 //editing user
@@ -859,10 +890,14 @@ app.post('/create-event', authenticateToken, async (req, res) => {
     const senderId = req.user.userId;
     console.log('senderId: ', senderId);
 
+<<<<<<< HEAD
     const { category, title, description, max_participants, datetime_event, country, city, street, zipcode, price, recurrence } = req.body;
+=======
+    const { category, title, description, max_participants, datetime_event, country, city, street, zipcode, price, recurrence_type } = req.body;
+>>>>>>> 7ac5946d9d58974260ee1c544be70353a020e428
 
     // Validate input
-    if (!category || !title || !description || !max_participants || !datetime_event || !country || !city || !street || !zipcode ) {
+    if (!category || !title || !description || !max_participants || !datetime_event ) {
       return res.status(400).json({ message: 'Invalid input' });
     }
 
@@ -884,19 +919,17 @@ app.post('/create-event', authenticateToken, async (req, res) => {
         console.log('Address does not exist');
         return res.status(401).json({ message: 'Address could not be validated' });
       }
-      //print response
-      console.log(response[0].extra.confidence);
+
+      console.log(response);
       console.log('Address does exist');
-      
-    }
-    else {
-      
-      console.log('No response received');
-      return res.status(401).json({ message: 'Address could not be validated' });
     }
 
     // Create Event in Table
+<<<<<<< HEAD
     const [eventQuery] = await db.query('INSERT INTO Event (category, title, description, max_participants, datetime_created, datetime_event, price, creator_id, recurrence_type, recurrence_interval) VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?)', [
+=======
+    const [eventQuery] = await db.query('INSERT INTO Event (category, title, description, max_participants, datetime_created, datetime_event, price, creator_id, recurrence_interval, recurrence_type) VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, 0, ?)', [
+>>>>>>> 7ac5946d9d58974260ee1c544be70353a020e428
       category,
       title,
       description,
@@ -904,8 +937,12 @@ app.post('/create-event', authenticateToken, async (req, res) => {
       datetime_event,
       price,
       senderId,
+<<<<<<< HEAD
       recurrence,
       0
+=======
+      recurrence_type
+>>>>>>> 7ac5946d9d58974260ee1c544be70353a020e428
     ]);
 
     console.log(eventQuery);
@@ -1055,6 +1092,102 @@ function sendVerificationEmail(to, code) {
   });
 }
 
+function sendDeletionEmail(to, username) {
+  const mailOptions = {
+    from: 'Payfriendz App',
+    to: to,
+    subject: 'Payfriendz: Your account was successfully deleted',
+    html: `
+    <html>
+      <head>
+        <style>
+          /* Inline CSS for styling */
+          .container {
+            background-color: #f4f4f4;
+            padding: 20px;
+            border-radius: 5px;
+            font-family: Arial, sans-serif;
+            width: 80%;
+            max-width: 600px;
+            margin: 0 auto;
+          }
+          .header {
+            background-color: #007bff;
+            color: white;
+            padding: 20px;
+            border-top-left-radius: 5px;
+            border-top-right-radius: 5px;
+            text-align: center;
+          }
+          .header h1 {
+            margin: 0;
+          }
+          .verification-box {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+          }
+          .code {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+            text-align: center;
+            margin-top: 20px;
+          }
+          .text-size-14 {
+            font-size: 14px;
+            color: #555;
+            text-align: center;
+          }
+          .copyright {
+            font-size: 10px;
+            color: #777;
+            text-align: center;
+            margin-top: 20px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>Thank you for using Payfriendz!</h1>
+          </div>
+          <div class="del-box">
+            <h2 class="code">Goodbye!</h2>
+            <p class="text-size-14">Dear ${username},
+              <br><br>
+              We want to inform you that your account on Payfriendz has been successfully deleted. As a result, all of your personal data has been permanently removed from our database.
+              <br><br>
+              If you have any questions or concerns, please don't hesitate to contact us at <a href="mailto:payfriendzapp@gmail.com">payfriendzapp@gmail.com</a>.
+              <br><br>
+              Thank you for being a part of Payfriendz!
+              <br><br>
+              Best regards,
+              <br><br>
+              Your Payfriendz Team
+            </p>
+          </div>
+          <p class="copyright">
+            &copy; Payfriendz 2023.  Payfriendz is a registered trademark of Payfriendz.
+          </p>
+        </div>
+      </body>
+    </html>
+  `
+    
+    
+  }
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.error('Error sending email:', error);
+    } else {
+      console.log('Email sent:', info.response);
+    }
+  });
+}
+
 // Function to update user balance
 async function updateBalance(userId, amount) {
   try {
@@ -1110,7 +1243,7 @@ app.get('/events', authenticateToken, async (req, res) => {
         User_Event.user_id,
         User.username AS creator_username,
         User.picture AS creator_picture
-      FROM 
+      FROM
         Event 
       JOIN 
         Location ON Event.id = Location.event_id 

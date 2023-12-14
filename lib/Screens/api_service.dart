@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 
 class ApiService {
   // static const String serverUrl = 'http://10.0.2.2:3000';
-   static const String serverUrl = 'http://localhost:3000';
+  static const String serverUrl = 'http://localhost:3000';
   // const serverUrl = '192.168.56.1:3000';
 
   static Future<Map<String, dynamic>> fetchUserProfile() async {
@@ -75,6 +75,13 @@ class ApiService {
     final userId = await storage.read(key: 'user_id');
     print("APIService: user id = " + userId.toString());
     return userId.toString();
+  }
+
+  static Future<int> getUserId() async {
+    const storage = FlutterSecureStorage();
+    final userId = await storage.read(key: 'user_id');
+    print("APIService: user id = " + userId.toString());
+    return int.parse(userId!);
   }
 
   //async function to check user password

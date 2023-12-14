@@ -758,6 +758,8 @@ app.post('/request-money', authenticateToken, async (req, res) => {
   }
 });
 
+
+
 // Route to fetch transactions with JWT authentication
 app.get('/transactions', authenticateToken, async (req, res) => {
   try {
@@ -957,10 +959,6 @@ server = app.listen(port, () => {
     });
   });
 });
-
-
-
-
 
 
 

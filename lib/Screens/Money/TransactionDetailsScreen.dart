@@ -40,12 +40,12 @@ class TransactionDetailsScreen extends StatelessWidget {
 
     if (transaction.transactionType == 'Request') {
       if (isProcessed) {
-        iconColor = isReceived ? Colors.red[400] : Colors.green[400];
+        iconColor = isReceived ? Colors.red : Colors.green;
       } else {
         if (isDenied) {
           iconColor = null;
         } else {
-          iconColor = Colors.orange[200];
+          iconColor = Colors.orange;
         }
       }
     } else {

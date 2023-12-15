@@ -402,22 +402,22 @@ class TransactionItem extends StatelessWidget {
     transaction.transactionType == 'Request'
         ? isProcessed
             ? isReceived
-                ? (iconColor = Colors.red[400]!, textColor = null)
-                : (iconColor = Colors.green[400]!, textColor = null)
+                ? (iconColor = Colors.red, textColor = null)
+                : (iconColor = Colors.green, textColor = null)
             : isDenied
                 ? (iconColor = null, textColor = null)
                 : userIsSender
                     ? (
-                        iconColor = Colors.orange[200]!,
+                        iconColor = Colors.orange,
                         textColor = null,
                       )
                     : (
-                        iconColor = Colors.orange[200]!,
+                        iconColor = Colors.orange,
                         textColor = null,
                       )
         : isReceived
-            ? (iconColor = Colors.green[400]!, textColor = null)
-            : (iconColor = Colors.red[400]!, textColor = null);
+            ? (iconColor = Colors.green, textColor = null)
+            : (iconColor = Colors.red, textColor = null);
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 10),

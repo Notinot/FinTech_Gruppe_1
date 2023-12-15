@@ -7,9 +7,25 @@ import 'package:flutter_application_1/Screens/api_service.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
-class Notifications extends StatelessWidget {
+class Notifications extends StatefulWidget {
+  @override
+  _NotificationsState createState() => _NotificationsState();
+}
+
+class _NotificationsState extends State<Notifications> {
   final Future<Map<String, dynamic>> user = ApiService.fetchUserProfile();
-  final Future userid = ApiService.getUserId();
+  late int user_id;
+
+  void initState() {
+    super.initState();
+
+    // Use the user Future's result to initialize the controllers
+    user.then((userData) {
+      setState(() {
+        user_id = userData['user_id'];
+      });
+    });
+  }
 
   Future<List<Transaction>> fetchTransactions() async {
     try {
@@ -74,7 +90,9 @@ class Notifications extends StatelessWidget {
               .where((transaction) =>
                   transaction.createdAt.isAfter(startOfLastSevenDays) &&
                   transaction.createdAt.isBefore(endOfToday) &&
-                  transaction.transactionType != 'Deposit')
+                  transaction.transactionType != 'Deposit' &&
+                  !(transaction.processed == 1 &&
+                      transaction.transactionType == 'Request'))
               .toList();
           return Container(
             margin: const EdgeInsets.symmetric(vertical: 16),
@@ -106,14 +124,16 @@ class Notifications extends StatelessWidget {
   }
 
   String getNotificationText(Transaction transaction) {
+    final Future userid = ApiService.getUserId() as Future<int>;
+
     if (transaction.transactionType == 'Payment' &&
-        transaction.senderId != userid) {
-      return '${transaction.receiverUsername} sent you  ${transaction.amount}€.';
+        transaction.receiverId == user_id) {
+      return '${transaction.senderUsername} sent you  ${transaction.amount}€.';
     } else if (transaction.transactionType == 'Payment' &&
-        transaction.senderId == userid) {
+        transaction.senderId == user_id) {
       return 'Your Payment of ${transaction.amount}€ to ${transaction.receiverUsername} was successful';
     } else if (transaction.transactionType == 'Request' &&
-        transaction.senderId != userid) {
+        transaction.senderId != user_id) {
       return '${transaction.senderUsername} requested ${transaction.amount}€ from you.';
     } else {
       return 'Unknown notification';
@@ -121,6 +141,8 @@ class Notifications extends StatelessWidget {
   }
 
   IconData getNotificationIcon(Transaction transaction) {
+    final Future userid = ApiService.getUserId() as Future<int>;
+
     if (transaction.transactionType == 'Request') {
       return Icons.request_page;
     } else if (transaction.transactionType == 'Payment' &&

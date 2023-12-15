@@ -215,9 +215,9 @@ class _SearchBarState extends State<SearchBar> {
       decoration: InputDecoration(
         hintText: 'Search...',
         border: InputBorder.none,
-        hintStyle: TextStyle(color: Colors.white),
+        // hintStyle: TextStyle(color: Colors.white),
       ),
-      style: TextStyle(color: Colors.white),
+      //style: TextStyle(color: Colors.white),
       onChanged: (inputQuery) {
         //hier könnten Vorschläge gemacht werden
         print('Search query: $inputQuery');

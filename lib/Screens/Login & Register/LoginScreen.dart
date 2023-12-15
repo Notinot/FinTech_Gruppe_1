@@ -157,7 +157,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ElevatedButton(
                   onPressed: handleLogin,
                   style: ElevatedButton.styleFrom(
-                    primary: Colors.blue, // Button background color
+                    //        primary: Colors.blue, // Button background color
                     padding: const EdgeInsets.symmetric(
                         horizontal: 40, vertical: 16),
                   ),
@@ -165,7 +165,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     'Login',
                     style: TextStyle(
                       fontSize: 18.0,
-                      color: Colors.white, // Button text color
+                      //     color: Colors.white, // Button text color
                     ),
                   ),
                 ),
@@ -182,7 +182,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     "Don't have an account yet? Register here",
                     style: TextStyle(
                       fontSize: 16.0,
-                      color: Colors.blue,
+                      //     color: Colors.blue,
                     ),
                   ),
                 ),
@@ -197,7 +197,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: const Text(
                     "Forgot your password?",
                     style: TextStyle(
-                        fontSize: 16.0, color: Colors.blue, height: 2),
+                        fontSize: 16.0,
+                        //color: Colors.blue,
+                        height: 2),
                   ),
                 )
               ],

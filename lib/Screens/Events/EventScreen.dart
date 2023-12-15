@@ -233,7 +233,6 @@ class EventItem extends StatelessWidget {
 class EventDateSection extends StatelessWidget {
 
   final Event event;
-
   const EventDateSection({Key? key, required this.event})
       : super(key: key);
 
@@ -261,8 +260,8 @@ class EventDateSection extends StatelessWidget {
 
 
 class EventTimeSection extends StatelessWidget {
-  final Event event;
 
+  final Event event;
   const EventTimeSection({Key? key, required this.event})
       : super(key: key);
 
@@ -290,10 +289,15 @@ class EventTimeSection extends StatelessWidget {
 
 class EventInfoScreen extends StatelessWidget {
   final Event event;
-  const EventInfoScreen({super.key, required this.event});
+
+  const EventInfoScreen({Key? key, required this.event}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+
+    bool isEmpty = event.country == '' && event.city == '' &&  event.street == '' && event.zipcode == '';
+    bool isNull = event.price <= 0;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(event.title),
@@ -335,9 +339,45 @@ class EventInfoScreen extends StatelessWidget {
           ),
           EventDateSection(event: event),
           EventTimeSection(event: event),
+          isEmpty
+          ?
+          Container()
+          :
+        Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.add_location_alt_rounded),
           Text(
-              formatAmount(),
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)
+            'Location: ${event.country}, ${event.city}, ${event.zipcode}, ${event.street}',
+            style: TextStyle(fontSize: 18),
+          ),
+        ],
+        ),
+          isNull
+              ?
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.attach_money_rounded),
+              SizedBox(width: 8),
+              Text(
+                'Free',
+                style: TextStyle(fontSize: 18),
+              ),
+            ],
+          )
+              :
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.attach_money_rounded),
+              SizedBox(width: 8),
+              Text(
+                formatAmount(),
+                style:
+                TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ],
           )
         ],
       ),
@@ -345,9 +385,13 @@ class EventInfoScreen extends StatelessWidget {
   }
 
   String formatAmount() {
-    // Your logic to format the amount
     return '+${NumberFormat("#,##0.00", "de_DE").format(event.price)} €'; // Example
   }
+
 }
+
+
+
+
 
 

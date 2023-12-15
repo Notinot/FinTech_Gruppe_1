@@ -10,7 +10,7 @@ import 'package:flutter_application_1/Screens/Money/AddMoneyScreen.dart';
 import 'package:flutter_application_1/Screens/Friends/FriendsScreenTEMP.dart';
 
 import 'package:flutter_application_1/Screens/Money/TransactionHistoryScreen.dart';
-
+import 'package:flutter_application_1/assets/color_schemes.g.dart';
 import 'package:flutter_application_1/Screens/Login%20&%20Register/LoginScreen.dart';
 
 import 'package:flutter_application_1/Screens/EditUser/EditUserScreen.dart';
@@ -24,6 +24,8 @@ class AppDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
@@ -53,8 +55,8 @@ class AppDrawer extends StatelessWidget {
           ),
 
           ListTile(
-            leading: const Icon(Icons.history),
-            title: const Text('History'),
+            leading: const Icon(Icons.monetization_on),
+            title: const Text('Transactions'),
             onTap: () {
               Navigator.push(
                 context,
@@ -108,7 +110,18 @@ class AppDrawer extends StatelessWidget {
               );
             },
           ),
-
+          //ListTile to change theme from light to dark and vice versa
+          ListTile(
+              //change the icon depending on the theme
+              leading: isDarkMode
+                  ? const Icon(Icons.light_mode)
+                  : const Icon(Icons.dark_mode),
+              title: const Text('Change Theme'),
+              onTap: () {
+                // check if current theme is light or dark
+                // if light, change to dark
+                // if dark, change to light
+              }),
           const Divider(), // Add a divider to separate the top items from the bottom items
           ListTile(
             leading: const Icon(Icons.exit_to_app),

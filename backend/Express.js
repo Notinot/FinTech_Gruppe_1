@@ -860,6 +860,23 @@ app.post('/transactions/:transactionId', authenticateToken, async (req, res) => 
 );
 
 
+// Fetch Events
+app.post('/events', authenticateToken, async (req, res) => {
+
+    const senderId = req.user.userID;
+    console.log('senderId: ', senderId);
+
+    try{
+
+        const fetchEvents = await db.query('SELECT * FROM Event WHERE creator_id = ?', [sender_id]);
+        res.json(fetchEvents);
+
+    } catch (error) {
+         console.error('Error fetching events:', error);
+         res.status(500).json({ message: 'Internal server error' });
+       }
+
+});
 
 
 // Create Event
@@ -869,7 +886,8 @@ app.post('/create-event', authenticateToken, async (req, res) => {
 
   try {
     const senderId = req.user.userId;
-    console.log('senderId:', senderId);
+    console.log('senderId: ', senderId);
+
 
     const { category, title, description, max_participants, datetime_event, country, city, street, zipcode, price, recurrence_type } = req.body;
 
@@ -910,7 +928,8 @@ app.post('/create-event', authenticateToken, async (req, res) => {
       datetime_event,
       price,
       senderId,
-      recurrence_type
+      recurrence_type,
+      0
     ]);
 
     console.log(eventQuery);
@@ -1140,8 +1159,6 @@ function sendDeletionEmail(to, username) {
       </body>
     </html>
   `
-    
-    
   }
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
@@ -1226,3 +1243,36 @@ app.get('/events', authenticateToken, async (req, res) => {
   }
 });
 
+//  new route /addFriend?friendId=$friendId with JWT authentication
+app.post('/addFriendId', authenticateToken, async (req, res) => {
+  try{
+    const userId = req.user.userId;
+    const friendId = req.body.friendId;
+    console.log("user_id: ", userId, "- friendId: ", friendId);
+
+    //check if users are already friends
+    const [friends] = await db.query(
+      `SELECT * FROM Friendship 
+       WHERE (requester_id = ? AND addressee_id = ?)
+       OR    (requester_id = ? AND addressee_id = ?)`,
+      [userId, friendId, friendId, userId]
+    );
+
+        console.log(friends);
+      //when they are not already friends
+      if(friends[0] == null){
+        const query = `
+      INSERT INTO Friendship 
+      (requester_id, addressee_id, status, request_time) 
+      VALUES (?, ?, ?, NOW())`;
+       const [addingFriend] = await db.query(query, [userId, friendId, 'pending']);
+       res.status(200).json({addingFriend});
+      }else{
+        //res.status(500).json({message: 'Cannot add User'});
+        res.status(500).json('Cannot add User');
+      }
+    }catch (error) {
+      console.error('Error adding friend:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+});

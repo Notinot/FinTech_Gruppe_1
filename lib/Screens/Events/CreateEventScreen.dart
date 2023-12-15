@@ -34,10 +34,10 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   final TextEditingController zipcodeController = TextEditingController();
   final TextEditingController priceController = TextEditingController();
 
-  Color countryButton = Colors.grey;
-  Color datetimeButton = Colors.grey;
-  Color priceBorder = Colors.grey;
-  Color wrongDate = Colors.black;
+  late Color countryButton;
+  late Color datetimeButton;
+  late Color priceBorder;
+  late Color wrongDate;
 
   String? title;
   String? description;
@@ -126,6 +126,8 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     String? street = streetController.text;
     String? zipcode = zipcodeController.text;
     final String price = priceController.text;
+    String? recurrence;
+
     final int recurrence_type;
 
     try {
@@ -145,7 +147,8 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
           wrongDate = Colors.red;
         });
 
-        showErrorSnackBar(this.context, 'The time the event starts cannot be in the past');
+        showErrorSnackBar(
+            this.context, 'The time the event starts cannot be in the past');
 
         return;
       } else {
@@ -155,7 +158,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         });
       }
     } catch (e) {
-      print("error $e");
+      print("error {$e}");
     }
 
     // Remove euro sign, periods and spaces
@@ -180,16 +183,13 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       });
     }
 
-    if(weekly == true){
+    if (weekly == true) {
       recurrence_type = 1;
-    }
-    else if(monthly == true){
+    } else if (monthly == true) {
       recurrence_type = 2;
-    }
-    else if(yearly == true){
+    } else if (yearly == true) {
       recurrence_type = 3;
-    }
-    else{
+    } else {
       recurrence_type = 0;
     }
 
@@ -207,38 +207,33 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       print('token: $token');
     }
 
-
-      final createEventResponse =
-      await http.post(Uri.parse('${ApiService.serverUrl}/create-event'),
-          headers: {
-            'Content-Type': 'application/json; charset=UTF-8',
-            'Authorization': 'Bearer $token',
-          },
-
-          body: json.encode(<String, dynamic>{
-            'category': selectedCat,
-            'title': title,
-            'description': description,
-            'max_participants': selectedMaxParticipants,
-            'datetime_event': selectedTimestamp.toString(),
-            'country': selectedCountry,
-            'city': city,
-            'street': street,
-            'zipcode': zipcode,
-            'price': parsedPrice,
-            'recurrence_type': recurrence_type
-          })
-      );
+    final createEventResponse =
+        await http.post(Uri.parse('${ApiService.serverUrl}/create-event'),
+            headers: {
+              'Content-Type': 'application/json; charset=UTF-8',
+              'Authorization': 'Bearer $token',
+            },
+            body: json.encode(<String, dynamic>{
+              'category': selectedCat,
+              'title': title,
+              'description': description,
+              'max_participants': selectedMaxParticipants,
+              'datetime_event': selectedTimestamp.toString(),
+              'country': selectedCountry,
+              'city': city,
+              'street': street,
+              'zipcode': zipcode,
+              'price': parsedPrice,
+              'recurrence_type': recurrence_type
+            }));
 
     print(createEventResponse);
 
     if (createEventResponse.statusCode == 200) {
-
       Navigator.push(
         this.context,
         MaterialPageRoute(builder: (context) => const DashboardScreen()),
       );
-
     } else if (createEventResponse.statusCode == 401) {
       setState(() {
         selectedCountry = '';
@@ -250,9 +245,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
 
       print('The address does not exist');
       return;
-
     } else {
-
       print('Error creating the event: ${createEventResponse.body}');
       return;
     }

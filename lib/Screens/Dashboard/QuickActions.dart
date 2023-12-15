@@ -68,14 +68,14 @@ class QuickActionButton extends StatelessWidget {
         children: <Widget>[
           Container(
             decoration: const BoxDecoration(
-              color: Colors.blue,
+              //      color: Colors.blue,
               shape: BoxShape.circle,
             ),
             padding: const EdgeInsets.all(16),
             child: Icon(
               icon,
               size: 48,
-              color: Colors.white,
+              //   color: Colors.white,
             ),
           ),
           const SizedBox(height: 8),

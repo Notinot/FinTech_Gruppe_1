@@ -672,10 +672,10 @@ class _EditUserState extends State<EditUser> {
           title: Text('Enter verification code'),
           content: OtpTextField(
             numberOfFields: 6,
-            borderColor: Color(0xFF512DA8),
+            //       borderColor: Color(0xFF512DA8),
             showFieldAsBox: true,
             keyboardType: TextInputType.number,
-            focusedBorderColor: Colors.blue,
+            //       focusedBorderColor: Colors.blue,
             autoFocus: true,
             onSubmit: (String verificationCode) {
               if (double.tryParse(verificationCode) == null) {

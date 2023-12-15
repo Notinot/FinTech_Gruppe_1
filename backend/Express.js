@@ -509,6 +509,7 @@ console.log("needed input:",code[0].verification_code);
 }
 );
 
+
 app.post('/edit_user/send_code', async (req, res) => {
   const {userid,email} = req.body;
    code = Math.floor(100000 + Math.random() * 900000).toString();
@@ -1276,3 +1277,20 @@ app.post('/addFriendId', authenticateToken, async (req, res) => {
       res.status(500).json({ message: 'Internal server error' });
     }
 });
+
+
+app.get('/profilePicture', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.query.userId; // Use query instead of params
+    const [rows] = await db.query('SELECT picture FROM User WHERE user_id = ?', [userId]);
+    const picture = rows[0]?.picture; // Assuming picture is in the first row
+    console.log('picture:', picture);
+    res.json({ picture: picture }); // Send the picture as a JSON response
+  } catch (error) {
+    console.error('Error fetching profile picture:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+
+

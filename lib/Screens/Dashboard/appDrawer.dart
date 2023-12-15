@@ -117,11 +117,13 @@ class AppDrawer extends StatelessWidget {
           ),
           //ListTile to change theme from light to dark and vice versa
           ListTile(
-            //change the icon depending on the theme
-            leading: isDarkMode
+            //change the icon depending on the theme, make it a toggle button
+            leading: themeNotifier.darkTheme
                 ? const Icon(Icons.light_mode)
                 : const Icon(Icons.dark_mode),
-            title: const Text('Change Theme'),
+            title: themeNotifier.darkTheme
+                ? const Text('Light Mode')
+                : const Text('Dark Mode'),
             onTap: () {
               themeNotifier.darkTheme = !themeNotifier.darkTheme;
             },

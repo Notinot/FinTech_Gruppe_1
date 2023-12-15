@@ -310,7 +310,7 @@ class TransactionDetailsScreen extends StatelessWidget {
 
                                     // Display the amount of the transaction based on the transaction type and whether the user received or sent money
                                     Container(
-                                      padding: EdgeInsets.all(5),
+                                      // padding: EdgeInsets.all(5),
                                       decoration: BoxDecoration(
                                           // color:
                                           //     transaction.transactionType == 'Request'

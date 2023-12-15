@@ -94,28 +94,47 @@ class _NotificationsState extends State<Notifications> {
                   !(transaction.processed == 1 &&
                       transaction.transactionType == 'Request'))
               .toList();
-          return Container(
-            margin: const EdgeInsets.symmetric(vertical: 16),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              //     color: Colors.grey[200],
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Column(
-              children: <Widget>[
-                Text(
-                  'Notifications',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: 8),
-                for (var transaction in transactionsLastSevenDays)
-                  NotificationItem(
-                    icon: getNotificationIcon(transaction),
-                    text: getNotificationText(transaction),
-                    transaction: transaction,
-                    user: user,
+
+          return SingleChildScrollView(
+            child: Container(
+              margin: const EdgeInsets.symmetric(vertical: 16),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Column(
+                children: <Widget>[
+                  Text(
+                    'Notifications',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
-              ],
+                  SizedBox(height: 8),
+                  if (transactionsLastSevenDays.length > 6)
+                    LimitedBox(
+                      maxHeight: 100, // Adjust the height as needed
+                      child: ListView.builder(
+                        itemCount: transactionsLastSevenDays.length,
+                        itemBuilder: (context, index) {
+                          final transaction = transactionsLastSevenDays[index];
+                          return NotificationItem(
+                            icon: getNotificationIcon(transaction),
+                            text: getNotificationText(transaction),
+                            transaction: transaction,
+                            user: user,
+                          );
+                        },
+                      ),
+                    )
+                  else
+                    for (var transaction in transactionsLastSevenDays)
+                      NotificationItem(
+                        icon: getNotificationIcon(transaction),
+                        text: getNotificationText(transaction),
+                        transaction: transaction,
+                        user: user,
+                      ),
+                ],
+              ),
             ),
           );
         }
@@ -207,8 +226,7 @@ class NotificationItem extends StatelessWidget {
             },
             child: Row(
               children: <Widget>[
-                icon, //color: Colors.blue
-
+                icon,
                 const SizedBox(width: 8),
                 Text(text),
               ],

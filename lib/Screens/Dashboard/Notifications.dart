@@ -80,7 +80,7 @@ class Notifications extends StatelessWidget {
             margin: const EdgeInsets.symmetric(vertical: 16),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.grey[200],
+              //     color: Colors.grey[200],
               borderRadius: BorderRadius.circular(10),
             ),
             child: Column(
@@ -185,7 +185,9 @@ class NotificationItem extends StatelessWidget {
             },
             child: Row(
               children: <Widget>[
-                Icon(icon, color: Colors.blue),
+                Icon(
+                  icon, //color: Colors.blue
+                ),
                 const SizedBox(width: 8),
                 Text(text),
               ],

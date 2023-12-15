@@ -1,10 +1,12 @@
 //import 'dart:html';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/assets/color_schemes.g.dart';
 import 'Screens/Login & Register/LoginScreen.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'Screens/Dashboard/dashBoardScreen.dart';
 import 'Screens/api_service.dart';
+import 'package:flutter_application_1/assets/color_schemes.g.dart';
 
 void main() {
   runApp(PayfriendzApp());
@@ -48,21 +50,19 @@ class _PayfriendzAppState extends State<PayfriendzApp> {
 
   @override
   Widget build(BuildContext context) {
-    if (serverAvailable && isLoggedIn) {
-      return const MaterialApp(
-        home: DashboardScreen(),
-      );
-    } else if (serverAvailable) {
-      return const MaterialApp(
-        home: LoginScreen(),
-      );
-    } else {
-      return MaterialApp(
-        home: ServerUnavailableScreen(
-          onRetry: checkServerAvailability,
-        ),
-      );
-    }
+    return MaterialApp(
+      theme: ThemeData(useMaterial3: true, colorScheme: lightColorScheme),
+      darkTheme: ThemeData(useMaterial3: true, colorScheme: darkColorScheme),
+      home: serverAvailable
+          ? isLoggedIn
+              ? const DashboardScreen()
+              : const LoginScreen()
+          : ServerUnavailableScreen(
+              onRetry: () {
+                checkServerAvailability();
+              },
+            ),
+    );
   }
 }
 

@@ -19,7 +19,7 @@ class TransactionDetailScreenTEMP extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('Transaction Details'),
-        backgroundColor: Colors.blue,
+        //backgroundColor: Colors.blue,
       ),
       body: SingleChildScrollView(
         child: Padding(

@@ -255,12 +255,12 @@ class TransactionDetailsScreen extends StatelessWidget {
                                         transaction.transactionType == 'Request'
                                             ? isProcessed
                                                 ? isReceived
-                                                    ? Colors.black
-                                                    : Colors.black
-                                                : Colors.black
+                                                    ? null
+                                                    : null
+                                                : null
                                             : isReceived
-                                                ? Colors.black
-                                                : Colors.black,
+                                                ? null
+                                                : null,
                                     fontSize: 20),
                               ),
                             ],
@@ -560,11 +560,11 @@ class TransactionDetailsScreen extends StatelessWidget {
       } else if (transaction.processed == 0) {
         return Colors.orange;
       } else {
-        return Colors.black;
+        return null;
       }
     } else {
       // For money transactions, no additional status color needed
-      return Colors.black;
+      return null;
     }
   }
 

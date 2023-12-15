@@ -107,11 +107,11 @@ class _SendMoneyScreenState extends State<SendMoneyScreen> {
               decoration: const InputDecoration(
                 hintText: 'Enter a message for the recipient',
                 enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.grey),
-                ),
+                    //    borderSide: BorderSide(color: Colors.grey),
+                    ),
                 focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.grey),
-                ),
+                    //  borderSide: BorderSide(color: Colors.grey),
+                    ),
                 prefixIcon: Icon(Icons.chat),
               ),
             ),

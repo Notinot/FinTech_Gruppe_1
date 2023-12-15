@@ -136,7 +136,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             ElevatedButton(
               onPressed: handleForgotPassword,
               style: ElevatedButton.styleFrom(
-                primary: Colors.blue, // Button background color
+                //      primary: Colors.blue, // Button background color
                 padding:
                     const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
               ),
@@ -144,7 +144,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 'Send',
                 style: TextStyle(
                   fontSize: 18.0,
-                  color: Colors.white, // Button text color
+                  //      color: Colors.white, // Button text color
                 ),
               ),
             ),

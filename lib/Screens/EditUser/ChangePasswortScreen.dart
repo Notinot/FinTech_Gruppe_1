@@ -168,10 +168,10 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
             const SizedBox(height: 40.0),
             OtpTextField(
               numberOfFields: 6,
-              borderColor: Color(0xFF512DA8),
+              //      borderColor: Color(0xFF512DA8),
               showFieldAsBox: true,
               keyboardType: TextInputType.number,
-              focusedBorderColor: Colors.blue,
+              //       focusedBorderColor: Colors.blue,
               autoFocus: true,
               onSubmit: (String verifcationCode) {
                 if (double.tryParse(verifcationCode) == null) {
@@ -206,7 +206,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
             const SizedBox(height: 40.0),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                primary: Colors.blue, // Button background color
+                //     primary: Colors.blue, // Button background color
                 padding:
                     const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
               ),
@@ -215,7 +215,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 'Confirm',
                 style: TextStyle(
                   fontSize: 18.0,
-                  color: Colors.white, // Button text color
+                  //         color: Colors.white, // Button text color
                 ),
               ),
             ),

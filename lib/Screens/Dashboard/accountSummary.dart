@@ -22,7 +22,7 @@ class AccountSummary extends StatelessWidget {
               'Balance',
               style: TextStyle(
                 fontSize: 18,
-                color: Colors.grey,
+                //   color: Colors.grey,
               ),
             ),
             Text(

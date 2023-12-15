@@ -29,7 +29,8 @@ class UserProfileSection extends StatelessWidget {
                   Uint8List.fromList(user['picture']['data'].cast<int>()))
               : image.image,
           radius: 50,
-          backgroundColor: Colors.grey, // Fallback background color
+          //   backgroundColor: Colors.grey, // Fallback background color
+          //   backgroundColor: Theme.of(context).primaryColor,
         ),
         const SizedBox(height: 16),
         Text(

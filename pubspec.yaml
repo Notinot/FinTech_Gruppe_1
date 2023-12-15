@@ -42,6 +42,7 @@ dependencies:
   country_picker: ^2.0.22
   numberpicker: ^2.1.2
   flutter_search_bar: ^3.0.0-dev.1
+  provider: ^6.0.3
   #easy_search_bar: ^2.5.0
   
   

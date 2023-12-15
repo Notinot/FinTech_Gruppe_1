@@ -17,6 +17,9 @@ import 'package:flutter_application_1/Screens/EditUser/EditUserScreen.dart';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_application_1/Screens/Events/EventScreen.dart';
+import 'package:flutter_application_1/Screens/Dashboard/themeNotifier.dart';
+//import the provider package
+import 'package:provider/provider.dart';
 
 class AppDrawer extends StatelessWidget {
   final Map<String, dynamic> user;
@@ -24,7 +27,9 @@ class AppDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    // Get the instance of ThemeNotifier using Provider
+    final themeNotifier = Provider.of<ThemeNotifier>(context, listen: false);
+    bool isDarkMode = themeNotifier.darkTheme;
 
     return Drawer(
       child: ListView(
@@ -112,16 +117,15 @@ class AppDrawer extends StatelessWidget {
           ),
           //ListTile to change theme from light to dark and vice versa
           ListTile(
-              //change the icon depending on the theme
-              leading: isDarkMode
-                  ? const Icon(Icons.light_mode)
-                  : const Icon(Icons.dark_mode),
-              title: const Text('Change Theme'),
-              onTap: () {
-                // check if current theme is light or dark
-                // if light, change to dark
-                // if dark, change to light
-              }),
+            //change the icon depending on the theme
+            leading: isDarkMode
+                ? const Icon(Icons.light_mode)
+                : const Icon(Icons.dark_mode),
+            title: const Text('Change Theme'),
+            onTap: () {
+              themeNotifier.darkTheme = !themeNotifier.darkTheme;
+            },
+          ),
           const Divider(), // Add a divider to separate the top items from the bottom items
           ListTile(
             leading: const Icon(Icons.exit_to_app),

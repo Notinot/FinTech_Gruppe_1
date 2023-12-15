@@ -546,15 +546,6 @@ class TransactionItem extends StatelessWidget {
                           ? '+${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}\€'
                           : '-${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}\€',
                   style: TextStyle(
-                    color: transaction.transactionType == 'Request'
-                        ? isProcessed
-                            ? isReceived
-                                ? null
-                                : null
-                            : null
-                        : isReceived
-                            ? null
-                            : null,
                     fontWeight: FontWeight.bold,
                   ),
                 ),

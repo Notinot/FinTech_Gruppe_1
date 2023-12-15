@@ -1,6 +1,9 @@
 //import 'dart:html';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/Screens/Dashboard/appDrawer.dart';
+import 'package:flutter_application_1/Screens/Dashboard/themeNotifier.dart';
 import 'package:flutter_application_1/assets/color_schemes.g.dart';
+import 'package:provider/provider.dart';
 import 'Screens/Login & Register/LoginScreen.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -9,7 +12,12 @@ import 'Screens/api_service.dart';
 import 'package:flutter_application_1/assets/color_schemes.g.dart';
 
 void main() {
-  runApp(PayfriendzApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => ThemeNotifier(),
+      child: PayfriendzApp(),
+    ),
+  );
 }
 
 class PayfriendzApp extends StatefulWidget {
@@ -50,9 +58,12 @@ class _PayfriendzAppState extends State<PayfriendzApp> {
 
   @override
   Widget build(BuildContext context) {
+    final themeNotifier = Provider.of<ThemeNotifier>(context);
+
     return MaterialApp(
       theme: ThemeData(useMaterial3: true, colorScheme: lightColorScheme),
       darkTheme: ThemeData(useMaterial3: true, colorScheme: darkColorScheme),
+      themeMode: themeNotifier.darkTheme ? ThemeMode.dark : ThemeMode.light,
       home: serverAvailable
           ? isLoggedIn
               ? const DashboardScreen()

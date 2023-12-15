@@ -7,9 +7,25 @@ import 'package:flutter_application_1/Screens/api_service.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
-class Notifications extends StatelessWidget {
+class Notifications extends StatefulWidget {
+  @override
+  _NotificationsState createState() => _NotificationsState();
+}
+
+class _NotificationsState extends State<Notifications> {
   final Future<Map<String, dynamic>> user = ApiService.fetchUserProfile();
-  final Future userid = ApiService.getUserId();
+  late int user_id;
+
+  void initState() {
+    super.initState();
+
+    // Use the user Future's result to initialize the controllers
+    user.then((userData) {
+      setState(() {
+        user_id = userData['user_id'];
+      });
+    });
+  }
 
   Future<List<Transaction>> fetchTransactions() async {
     try {
@@ -74,30 +90,51 @@ class Notifications extends StatelessWidget {
               .where((transaction) =>
                   transaction.createdAt.isAfter(startOfLastSevenDays) &&
                   transaction.createdAt.isBefore(endOfToday) &&
-                  transaction.transactionType != 'Deposit')
+                  transaction.transactionType != 'Deposit' &&
+                  !(transaction.processed == 1 &&
+                      transaction.transactionType == 'Request'))
               .toList();
-          return Container(
-            margin: const EdgeInsets.symmetric(vertical: 16),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              //     color: Colors.grey[200],
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Column(
-              children: <Widget>[
-                Text(
-                  'Notifications',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: 8),
-                for (var transaction in transactionsLastSevenDays)
-                  NotificationItem(
-                    icon: getNotificationIcon(transaction),
-                    text: getNotificationText(transaction),
-                    transaction: transaction,
-                    user: user,
+
+          return SingleChildScrollView(
+            child: Container(
+              margin: const EdgeInsets.symmetric(vertical: 16),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Column(
+                children: <Widget>[
+                  Text(
+                    'Notifications',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
-              ],
+                  SizedBox(height: 8),
+                  if (transactionsLastSevenDays.length > 6)
+                    LimitedBox(
+                      maxHeight: 100, // Adjust the height as needed
+                      child: ListView.builder(
+                        itemCount: transactionsLastSevenDays.length,
+                        itemBuilder: (context, index) {
+                          final transaction = transactionsLastSevenDays[index];
+                          return NotificationItem(
+                            icon: getNotificationIcon(transaction),
+                            text: getNotificationText(transaction),
+                            transaction: transaction,
+                            user: user,
+                          );
+                        },
+                      ),
+                    )
+                  else
+                    for (var transaction in transactionsLastSevenDays)
+                      NotificationItem(
+                        icon: getNotificationIcon(transaction),
+                        text: getNotificationText(transaction),
+                        transaction: transaction,
+                        user: user,
+                      ),
+                ],
+              ),
             ),
           );
         }
@@ -106,31 +143,35 @@ class Notifications extends StatelessWidget {
   }
 
   String getNotificationText(Transaction transaction) {
+    final Future userid = ApiService.getUserId() as Future<int>;
+
     if (transaction.transactionType == 'Payment' &&
-        transaction.senderId != userid) {
-      return '${transaction.receiverUsername} sent you  ${transaction.amount}€.';
+        transaction.receiverId == user_id) {
+      return '${transaction.senderUsername} sent you  ${transaction.amount}€.';
     } else if (transaction.transactionType == 'Payment' &&
-        transaction.senderId == userid) {
+        transaction.senderId == user_id) {
       return 'Your Payment of ${transaction.amount}€ to ${transaction.receiverUsername} was successful';
     } else if (transaction.transactionType == 'Request' &&
-        transaction.senderId != userid) {
+        transaction.senderId != user_id) {
       return '${transaction.senderUsername} requested ${transaction.amount}€ from you.';
     } else {
       return 'Unknown notification';
     }
   }
 
-  IconData getNotificationIcon(Transaction transaction) {
+  Icon getNotificationIcon(Transaction transaction) {
+    final Future userid = ApiService.getUserId() as Future<int>;
+
     if (transaction.transactionType == 'Request') {
-      return Icons.request_page;
+      return Icon(Icons.request_page, color: Colors.orange);
     } else if (transaction.transactionType == 'Payment' &&
-        transaction.senderId != userid) {
-      return Icons.attach_money;
+        transaction.receiverId == user_id) {
+      return Icon(Icons.attach_money, color: Colors.green);
     } else if (transaction.transactionType == 'Payment' &&
-        transaction.senderId == userid) {
-      return Icons.money_sharp;
+        transaction.senderId == user_id) {
+      return Icon(Icons.attach_money, color: Colors.red);
     } else {
-      return Icons.info_sharp;
+      return Icon(Icons.info_sharp);
     }
   }
 }
@@ -140,7 +181,7 @@ class NotificationItem extends StatelessWidget {
   late final String username;
   late final int userId;
 
-  final IconData icon;
+  final Icon icon;
   final String text;
   final Transaction transaction;
 
@@ -185,9 +226,7 @@ class NotificationItem extends StatelessWidget {
             },
             child: Row(
               children: <Widget>[
-                Icon(
-                  icon, //color: Colors.blue
-                ),
+                icon,
                 const SizedBox(width: 8),
                 Text(text),
               ],

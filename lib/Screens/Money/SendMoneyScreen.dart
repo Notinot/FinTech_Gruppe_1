@@ -71,9 +71,9 @@ class _SendMoneyScreenState extends State<SendMoneyScreen> {
             TextFormField(
               controller: amountController,
               decoration: const InputDecoration(
-                hintText: '0,00 €', // Initial value
+                hintText: '0,00', // Initial value
                 border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.monetization_on),
+                prefixIcon: Icon(Icons.euro),
               ),
               keyboardType: const TextInputType.numberWithOptions(
                   decimal: true), // Allow decimals
@@ -169,8 +169,7 @@ class _SendMoneyScreenState extends State<SendMoneyScreen> {
                     builder: (context) {
                       return AlertDialog(
                         title: const Text('Confirm'),
-                        content: Text(
-                            'Are you sure you want to send \n€$parsedAmount to $recipient?'),
+                        content: Text('send \n€$parsedAmount to $recipient?'),
                         actions: [
                           TextButton(
                             onPressed: () {
@@ -192,7 +191,16 @@ class _SendMoneyScreenState extends State<SendMoneyScreen> {
                     // User cancelled the transaction
                     return;
                   }
+                  // check if user is sending money to himself
+                  final Map<String, dynamic> user =
+                      await ApiService.fetchUserProfile();
 
+                  if (recipient == user['username'] ||
+                      recipient == user['email']) {
+                    showErrorSnackBar(
+                        context, 'You cannot send money to yourself');
+                    return;
+                  }
                   // if user confirms the transaction, send the money
                   bool success =
                       await sendMoney(recipient, parsedAmount, message);
@@ -204,8 +212,8 @@ class _SendMoneyScreenState extends State<SendMoneyScreen> {
                     messageController.clear();
 
                     // Show success snackbar
-                    showSuccessSnackBar(
-                        context, 'Money sent successfully to $recipient');
+                    showSuccessSnackBar(context,
+                        '€$parsedAmount sent successfully to $recipient');
 
                     Navigator.pop(context);
                   } else {

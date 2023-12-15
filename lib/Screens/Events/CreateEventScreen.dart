@@ -34,10 +34,10 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   final TextEditingController zipcodeController = TextEditingController();
   final TextEditingController priceController = TextEditingController();
 
-  late Color countryButton;
-  late Color datetimeButton;
-  late Color priceBorder;
-  late Color wrongDate;
+  Color countryButton = Colors.grey;
+  Color datetimeButton = Colors.grey;
+  Color priceBorder = Colors.grey;
+  Color wrongDate = Colors.black;
 
   String? title;
   String? description;
@@ -126,8 +126,6 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     String? street = streetController.text;
     String? zipcode = zipcodeController.text;
     final String price = priceController.text;
-    String? recurrence;
-
     final int recurrence_type;
 
     try {

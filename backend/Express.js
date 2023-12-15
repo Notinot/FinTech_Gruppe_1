@@ -26,10 +26,14 @@ app.use(cors({
 // Create a connection pool to the MySQL database
 const db = mysql.createPool({
 
-
+  host: 'localhost',
+  user: 'root',
+  password: 'Italia_Union486',
+  /*
   host: 'btxppofwkgo3xl10tfwy-mysql.services.clever-cloud.com',
   user: 'ud86jc8auniwbfsm',
   password: 'ER0nIAbQy5qyAeSd4ZCV',
+  */
   database: 'btxppofwkgo3xl10tfwy',
 });
 let server; // Define the server variable at a higher scope
@@ -1209,6 +1213,9 @@ async function getBalance(userId) {
   }
 }
 
+
+
+
 //route to get the events the user is part of with JWT authentication
 app.get('/events', authenticateToken, async (req, res) => {
   try {
@@ -1218,22 +1225,41 @@ app.get('/events', authenticateToken, async (req, res) => {
     console.log('userId:', userId);
     // Fetch the user's events from the database based on the user ID
     const [events] = await db.query(`
-      SELECT 
-        Event.*, 
-        Location.*, 
+
+/*
+        SELECT
+        User.user_id AS creator_username,
+        Event.*,
+        Location.*,
+        FROM User
+        INNER JOIN
+            User ON Event.creator_id = User.user_id
+    	INNER JOIN
+    	    User_Event ON User.user_id = User_Event.user_id
+        INNER JOIN
+            Event On User_Event.event_id = Event.id
+        WHERE
+        User.user_id = ?;
+*/
+
+    // Select all Events the User interacts with
+    SELECT
+        Event.*,
+        Location.*,
         User_Event.user_id,
         User.username AS creator_username,
         User.picture AS creator_picture
-      FROM
-        Event 
-      JOIN 
-        Location ON Event.id = Location.event_id 
-      JOIN 
-        User_Event ON Event.id = User_Event.event_id 
-      JOIN 
-        User ON Event.creator_id = User.user_id 
-      WHERE 
-        User_Event.user_id = ?
+    FROM
+        Event
+    JOIN
+        User_Event ON User_Event.event_id = Event.id
+    JOIN
+        User ON Event.creator_id = User.user_id
+    LEFT JOIN
+        Location ON Event.id = Location.event_id
+    WHERE
+        User_Event.user_id = ?;
+
     `, [userId]);
     console.log('events:', events);
     res.json(events);

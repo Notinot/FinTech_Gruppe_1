@@ -233,6 +233,21 @@ app.get('/user/profile', authenticateToken, async (req, res) => {
   }
 });
 
+// route to get profile picture of a user with JWT authentication and query parameter
+app.get('/profilePicture', authenticateToken, async (req, res) => {
+  try {
+    const user_id = req.query.userId;
+    console.log('user_id:', user_id);
+    const query = `SELECT picture FROM User WHERE user_id = ?`;
+    const [picture] = await db.query(query, [user_id]);
+    console.log('picture:', picture);
+    res.json({ picture: picture[0].picture });
+  } catch (error) {
+    console.error('Error fetching profile picture:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+}
+);
 //get friends of specific user
 //returns JSON with: 
 app.get('/friends/:user_id', async(req, res) => {
@@ -1278,19 +1293,6 @@ app.post('/addFriendId', authenticateToken, async (req, res) => {
     }
 });
 
-
-app.get('/profilePicture', authenticateToken, async (req, res) => {
-  try {
-    const userId = req.query.userId; // Use query instead of params
-    const [rows] = await db.query('SELECT picture FROM User WHERE user_id = ?', [userId]);
-    const picture = rows[0]?.picture; // Assuming picture is in the first row
-    console.log('picture:', picture);
-    res.json({ picture: picture }); // Send the picture as a JSON response
-  } catch (error) {
-    console.error('Error fetching profile picture:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-});
 
 
 

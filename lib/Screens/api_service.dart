@@ -272,7 +272,6 @@ class ApiService {
           'Authorization': 'Bearer $token',
         },
       );
-
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['picture'] != null && data['picture']['data'] != null) {

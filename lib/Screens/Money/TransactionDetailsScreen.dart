@@ -31,13 +31,28 @@ class TransactionDetailsScreen extends StatelessWidget {
     bool userIsReceiver = transaction.receiverId == userId;
     bool isProcessed = transaction.processed == 1;
     bool isDenied = transaction.processed == 2;
-    int friendId = 0;
+    int? friendId;
     String friendUsername = '';
     Color? iconColor;
     Color? textColor;
     Icon? transactionIcon;
     bool isDeposit = transaction.transactionType == 'Deposit';
-
+    //get friendId and friendUsername based on transaction type and whether the user received or sent money
+    transaction.transactionType == 'Request'
+        ? isProcessed
+            ? isReceived
+                ? friendId = transaction.senderId
+                : friendId = transaction.receiverId
+            : userIsSender
+                ? friendId = transaction.receiverId
+                : friendId = transaction.senderId
+        : transaction.transactionType == 'Payment'
+            ? isReceived
+                ? friendId = transaction.senderId
+                : friendId = transaction.receiverId
+            : transaction.transactionType == 'Deposit'
+                ? friendId = userId
+                : friendId = userId;
     if (transaction.transactionType == 'Request') {
       if (isProcessed) {
         iconColor = isReceived ? Colors.red : Colors.green;
@@ -98,9 +113,69 @@ class TransactionDetailsScreen extends StatelessWidget {
                 ? friendUsername = ''
                 : SizedBox(height: 10);
 
+    // Add GestureDetector for the avatar
+    GestureDetector _buildAvatar(Uint8List? profilePictureData) {
+      return GestureDetector(
+        onTap: () {
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                content: Container(
+                  width: double.maxFinite,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      CircleAvatar(
+                        radius: 120, // Larger radius for enhanced view
+                        backgroundColor: Colors.white,
+                        backgroundImage: profilePictureData != null
+                            ? MemoryImage(profilePictureData)
+                            : null,
+                        child: profilePictureData == null
+                            ? Icon(Icons.person_rounded,
+                                size: 100) // Larger icon size
+                            : null,
+                      ),
+                      // SizedBox(height: 10),
+                      // Text(friendUsername,
+                      //     style: TextStyle(
+                      //         fontSize: 24)), // Optional: show username
+                    ],
+                  ),
+                ),
+                actions: <Widget>[
+                  TextButton(
+                    child: Text('Close'),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ],
+              );
+            },
+          );
+        },
+        child: CircleAvatar(
+          radius: 40,
+          backgroundColor: null,
+          child: CircleAvatar(
+            radius: 38,
+            backgroundColor: Colors.white,
+            backgroundImage: profilePictureData != null
+                ? MemoryImage(profilePictureData)
+                : null,
+            child: profilePictureData == null
+                ? Icon(Icons.person_rounded, size: 38)
+                : null,
+          ),
+        ),
+      );
+    }
+
     //check if the user is already a friend
     return FutureBuilder<bool>(
-        future: ApiService.checkIfFriends(friendId),
+        future: ApiService.checkIfFriends(friendId!),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             // Show loading indicator while fetching data
@@ -115,7 +190,7 @@ class TransactionDetailsScreen extends StatelessWidget {
 
             //fetch Profile picture of friend
             return FutureBuilder<Uint8List?>(
-                future: ApiService.fetchProfilePicture(friendId),
+                future: ApiService.fetchProfilePicture(friendId!),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     // Show loading indicator while fetching data
@@ -161,27 +236,9 @@ class TransactionDetailsScreen extends StatelessWidget {
                                       SizedBox(height: 5),
                                     Row(
                                       children: [
-                                        CircleAvatar(
-                                          radius: 40,
-                                          backgroundColor: Colors.grey,
-                                          child: CircleAvatar(
-                                            radius: 38,
-                                            backgroundColor: Colors.white,
-                                            backgroundImage: hasProfilePicture
-                                                ? MemoryImage(
-                                                    profilePictureData!)
-                                                : null,
-                                            child: hasProfilePicture
-                                                ? null
-                                                : Icon(
-                                                    Icons.person_rounded,
-                                                    size: 38,
-                                                  ),
-                                          ),
-                                        ),
-                                        SizedBox(
-                                          width: 10,
-                                        ),
+                                        _buildAvatar(
+                                            profilePictureData), // GestureDetector for the avatar
+                                        SizedBox(width: 10),
                                         Text(
                                           friendUsername,
                                           style: TextStyle(fontSize: 20),
@@ -476,7 +533,7 @@ class TransactionDetailsScreen extends StatelessWidget {
                               ? FloatingActionButton(
                                   onPressed: () {
                                     _showUserOptions(context, isFriend,
-                                        friendUsername, friendId);
+                                        friendUsername, friendId!);
                                   },
                                   child: Icon(Icons.more_horiz_rounded),
                                 )

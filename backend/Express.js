@@ -1218,22 +1218,23 @@ app.get('/events', authenticateToken, async (req, res) => {
     console.log('userId:', userId);
     // Fetch the user's events from the database based on the user ID
     const [events] = await db.query(`
-      SELECT 
-        Event.*, 
-        Location.*, 
-        User_Event.user_id,
-        User.username AS creator_username,
-        User.picture AS creator_picture
+      SELECT
+          Event.*,
+          Location.*,
+          User_Event.user_id,
+          User.username AS creator_username,
+          User.picture AS creator_picture
       FROM
-        Event 
-      JOIN 
-        Location ON Event.id = Location.event_id 
-      JOIN 
-        User_Event ON Event.id = User_Event.event_id 
-      JOIN 
-        User ON Event.creator_id = User.user_id 
-      WHERE 
-        User_Event.user_id = ?
+          Event
+      JOIN
+          User_Event ON User_Event.event_id = Event.id
+      JOIN
+          User ON Event.creator_id = User.user_id
+      LEFT JOIN
+          Location ON Event.id = Location.event_id
+      WHERE
+          User_Event.user_id = ?;
+
     `, [userId]);
     console.log('events:', events);
     res.json(events);

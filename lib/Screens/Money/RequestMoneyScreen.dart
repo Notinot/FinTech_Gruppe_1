@@ -51,12 +51,7 @@ class _RequestMoneyScreenState extends State<RequestMoneyScreen> {
               controller: requesterController,
               decoration: InputDecoration(
                 hintText: 'Enter your name or email',
-                enabledBorder: OutlineInputBorder(
-                    //     borderSide: BorderSide(color: requesterBorderColor),
-                    ),
-                focusedBorder: OutlineInputBorder(
-                    //     borderSide: BorderSide(color: requesterBorderColor),
-                    ),
+                border: OutlineInputBorder(),
                 prefixIcon: const Icon(Icons.person),
               ),
             ),
@@ -105,12 +100,7 @@ class _RequestMoneyScreenState extends State<RequestMoneyScreen> {
               controller: messageController,
               decoration: const InputDecoration(
                 hintText: 'Enter a message for the payer',
-                enabledBorder: OutlineInputBorder(
-                    //     borderSide: BorderSide(color: Colors.grey),
-                    ),
-                focusedBorder: OutlineInputBorder(
-                    //     borderSide: BorderSide(color: Colors.grey),
-                    ),
+                border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.chat),
               ),
             ),

@@ -53,12 +53,7 @@ class _SendMoneyScreenState extends State<SendMoneyScreen> {
               controller: recipientController,
               decoration: InputDecoration(
                 hintText: 'Enter recipient name or email',
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: recipientBorderColor),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: recipientBorderColor),
-                ),
+                border: OutlineInputBorder(),
                 prefixIcon: const Icon(Icons.person),
               ),
             ),
@@ -106,12 +101,7 @@ class _SendMoneyScreenState extends State<SendMoneyScreen> {
               controller: messageController,
               decoration: const InputDecoration(
                 hintText: 'Enter a message for the recipient',
-                enabledBorder: OutlineInputBorder(
-                    //    borderSide: BorderSide(color: Colors.grey),
-                    ),
-                focusedBorder: OutlineInputBorder(
-                    //  borderSide: BorderSide(color: Colors.grey),
-                    ),
+                border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.chat),
               ),
             ),

@@ -402,22 +402,22 @@ class TransactionItem extends StatelessWidget {
     transaction.transactionType == 'Request'
         ? isProcessed
             ? isReceived
-                ? (iconColor = Colors.red[400]!, textColor = null)
-                : (iconColor = Colors.green[400]!, textColor = null)
+                ? (iconColor = Colors.red, textColor = null)
+                : (iconColor = Colors.green, textColor = null)
             : isDenied
                 ? (iconColor = null, textColor = null)
                 : userIsSender
                     ? (
-                        iconColor = Colors.orange[200]!,
+                        iconColor = Colors.orange,
                         textColor = null,
                       )
                     : (
-                        iconColor = Colors.orange[200]!,
+                        iconColor = Colors.orange,
                         textColor = null,
                       )
         : isReceived
-            ? (iconColor = Colors.green[400]!, textColor = null)
-            : (iconColor = Colors.red[400]!, textColor = null);
+            ? (iconColor = Colors.green, textColor = null)
+            : (iconColor = Colors.red, textColor = null);
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 10),
@@ -516,23 +516,23 @@ class TransactionItem extends StatelessWidget {
               Container(
                 padding: EdgeInsets.all(5),
                 decoration: BoxDecoration(
-                  color: transaction.transactionType == 'Request'
-                      ? isProcessed
-                          ? isReceived
-                              ? Colors.red[300]
-                              : Colors.green[300]
-                          : isReceived
-                              ? isDenied
-                                  ? null
-                                  : Colors.orange[200]
-                              : isDenied
-                                  ? null
-                                  : Colors.orange[200]
-                      : isReceived
-                          ? Colors.green[300]
-                          : Colors.red[300],
-                  borderRadius: BorderRadius.circular(5),
-                ),
+                    // color: transaction.transactionType == 'Request'
+                    //     ? isProcessed
+                    //         ? isReceived
+                    //             ? Colors.red[300]
+                    //             : Colors.green[300]
+                    //         : isReceived
+                    //             ? isDenied
+                    //                 ? null
+                    //                 : Colors.orange[200]
+                    //             : isDenied
+                    //                 ? null
+                    //                 : Colors.orange[200]
+                    //     : isReceived
+                    //         ? Colors.green[300]
+                    //         : Colors.red[300],
+                    // borderRadius: BorderRadius.circular(5),
+                    ),
                 child: Text(
                   transaction.transactionType == 'Request'
                       ? isProcessed

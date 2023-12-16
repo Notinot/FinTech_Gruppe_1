@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
@@ -255,6 +256,35 @@ class ApiService {
     } catch (e) {
       print('addFriend function: Error fetching data: $e');
       return false;
+    }
+  }
+
+  static Future<Uint8List?> fetchProfilePicture(int userId) async {
+    try {
+      const storage = FlutterSecureStorage();
+      final token = await storage.read(key: 'token');
+      if (token == null) {
+        throw Exception('Token not found');
+      }
+
+      final response = await http.get(
+        Uri.parse('${ApiService.serverUrl}/profilePicture?userId=$userId'),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['picture'] != null && data['picture']['data'] != null) {
+          // Use the byte array from the 'data' field to create the Uint8List
+          return Uint8List.fromList(data['picture']['data'].cast<int>());
+        }
+      } else {
+        throw Exception('Failed to load profile picture');
+      }
+    } catch (e) {
+      print('fetchProfilePicture function: Error fetching data: $e');
+      return null;
     }
   }
 }

@@ -233,6 +233,21 @@ app.get('/user/profile', authenticateToken, async (req, res) => {
   }
 });
 
+// route to get profile picture of a user with JWT authentication and query parameter
+app.get('/profilePicture', authenticateToken, async (req, res) => {
+  try {
+    const user_id = req.query.userId;
+    console.log('user_id:', user_id);
+    const query = `SELECT picture FROM User WHERE user_id = ?`;
+    const [picture] = await db.query(query, [user_id]);
+    console.log('picture:', picture);
+    res.json({ picture: picture[0].picture });
+  } catch (error) {
+    console.error('Error fetching profile picture:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+}
+);
 //get friends of specific user
 //returns JSON with: 
 app.get('/friends/:user_id', async(req, res) => {
@@ -508,6 +523,7 @@ console.log("needed input:",code[0].verification_code);
   }
 }
 );
+
 
 app.post('/edit_user/send_code', async (req, res) => {
   const {userid,email} = req.body;
@@ -1277,3 +1293,7 @@ app.post('/addFriendId', authenticateToken, async (req, res) => {
       res.status(500).json({ message: 'Internal server error' });
     }
 });
+
+
+
+

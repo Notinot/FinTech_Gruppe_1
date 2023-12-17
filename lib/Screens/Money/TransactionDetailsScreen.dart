@@ -177,7 +177,9 @@ class TransactionDetailsScreen extends StatelessWidget {
     return FutureBuilder<bool>(
         future: ApiService.checkIfFriends(friendId!),
         builder: (context, snapshot) {
-          if (snapshot.hasError) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
             // Handle errors
             return Text('Error: ${snapshot.error}');
           } else {

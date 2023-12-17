@@ -7,7 +7,7 @@ class ApiService {
   static const String serverUrl = 'http://10.0.2.2:3000';
   // static const String serverUrl = 'http://localhost:3000';
   // const serverUrl = '192.168.56.1:3000';
-  //static const String serverUrl = 'http://192.168.178.33:3000';
+  // static const String serverUrl = 'http://192.168.178.33:3000';
 
   static Future<Map<String, dynamic>> fetchUserProfile() async {
     // Retrieve the token from secure storage

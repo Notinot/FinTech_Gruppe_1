@@ -14,7 +14,7 @@ class Notifications extends StatefulWidget {
 
 class _NotificationsState extends State<Notifications> {
   final Future<Map<String, dynamic>> user = ApiService.fetchUserProfile();
-  late int user_id;
+  int? user_id;
 
   void initState() {
     super.initState();

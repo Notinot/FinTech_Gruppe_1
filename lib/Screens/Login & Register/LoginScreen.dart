@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/gestures.dart';
 import 'package:flutter_application_1/Screens/Login%20&%20Register/ForgotPasswortScreen.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/material.dart';
@@ -15,6 +16,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController verificationCodeController =
@@ -44,167 +46,221 @@ class _LoginScreenState extends State<LoginScreen> {
   void handleLogin() async {
     final String email = emailController.text;
     final String password = passwordController.text;
+    if (_formKey.currentState!.validate()) {
+      // Call checkUserActiveStatus to determine if the user requires verification
+      await checkUserActiveStatus(email);
 
-    // Call checkUserActiveStatus to determine if the user requires verification
-    await checkUserActiveStatus(email);
+      if (requiresVerification) {
+        final verificationCode = verificationCodeController.text;
+        if (verificationCode.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Please enter the Verification code sent to you'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          return;
+        }
+      }
 
-    if (requiresVerification) {
-      final verificationCode = verificationCodeController.text;
-      if (verificationCode.isEmpty) {
+      final requestData = requiresVerification
+          ? {
+              'email': email,
+              'password': password,
+              'verificationCode': verificationCodeController.text,
+            }
+          : {
+              'email': email,
+              'password': password,
+            };
+
+      final response = await http.post(
+        // Uri.parse('http://192.168.178.28:3000/login'),
+        Uri.parse('${ApiService.serverUrl}/login'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(requestData),
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        final token = data['token'];
+        final userID = data['user_id'];
+        // Save the token securely
+        const storage = FlutterSecureStorage();
+        await storage.write(key: 'token', value: token);
+        //save the user id
+        await storage.write(key: 'user_id', value: userID.toString());
+        print("LoginScreen: user id = " + userID.toString());
+
+        // Navigate to the dashboard with the obtained token
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DashboardScreen(),
+          ),
+        );
+      } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Please enter the Verification code sent to you'),
+            content: Text(
+                'Invalid email, password, or verification code. Please try again.'),
             backgroundColor: Colors.red,
           ),
         );
-        return;
       }
-    }
-
-    final requestData = requiresVerification
-        ? {
-            'email': email,
-            'password': password,
-            'verificationCode': verificationCodeController.text,
-          }
-        : {
-            'email': email,
-            'password': password,
-          };
-
-    final response = await http.post(
-      // Uri.parse('http://192.168.178.28:3000/login'),
-      Uri.parse('${ApiService.serverUrl}/login'),
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode(requestData),
-    );
-
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> data = json.decode(response.body);
-      final token = data['token'];
-      final userID = data['user_id'];
-      // Save the token securely
-      const storage = FlutterSecureStorage();
-      await storage.write(key: 'token', value: token);
-      //save the user id
-      await storage.write(key: 'user_id', value: userID.toString());
-      print("LoginScreen: user id = " + userID.toString());
-
-      // Navigate to the dashboard with the obtained token
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => DashboardScreen(),
-        ),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-              'Invalid email, password, or verification code. Please try again.'),
-          backgroundColor: Colors.red,
-        ),
-      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // AssetImage payfriendzLogo = AssetImage('lib/assets/payfriendz_logo.png');
-
     return Scaffold(
         appBar: AppBar(
-          title: const Text('Login'),
+          // title: const Text("Login"),
+          // titleTextStyle:
+          //     const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          // // backgroundColor: Colors.blueAccent,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.info_outline),
+              onPressed: () {
+                showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: const Text("Info"),
+                        content: const Text(
+                            "This is the Login Screen. Here you can login with your email and password. If you don't have an account yet, you can register by clicking on the link below."),
+                        actions: [
+                          TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                              child: const Text("Close"))
+                        ],
+                      );
+                    });
+              },
+            )
+          ],
+          //  backgroundColor: Colors.blueGrey,
         ),
         body: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Center(
-                  child: Image.asset('lib/assets/payfriendz_logo.png',
-                      width: 300, height: 100),
-                ),
-                const SizedBox(height: 32.0),
-                TextField(
-                  controller: emailController,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 16.0),
-                TextField(
-                  controller: passwordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Password',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                if (requiresVerification) const SizedBox(height: 12.0),
-                if (requiresVerification)
-                  TextField(
-                    controller: verificationCodeController,
-                    obscureText: false,
-                    decoration: const InputDecoration(
-                      labelText: 'Verification Code',
-                      border: OutlineInputBorder(),
+            padding: const EdgeInsets.all(24.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  Image.asset('lib/assets/payfriendz_logo.png',
+                      width: 320, height: 320),
+                  //const SizedBox(height: 10.0),
+                  _buildTextFormField(emailController, 'Email', Icons.email,
+                      (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your email';
+                    }
+                    // if (!RegExp(r'\S+@\S+\.\S+').hasMatch(value)) {
+                    //   return 'Please enter a valid email address';
+                    // }
+                    return null;
+                  }),
+                  const SizedBox(height: 16.0),
+                  _buildTextFormField(
+                      passwordController, 'Password', Icons.lock, (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your password';
+                    }
+                    return null;
+                  }, isPassword: true),
+                  if (requiresVerification) const SizedBox(height: 12.0),
+                  if (requiresVerification)
+                    _buildTextFormField(verificationCodeController,
+                        'Verification Code', Icons.verified_user, (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter the verification code';
+                      }
+                      return null;
+                    }),
+                  const SizedBox(height: 30.0),
+                  ElevatedButton(
+                    onPressed: handleLogin,
+                    style: ElevatedButton.styleFrom(
+                      primary: Colors.blueAccent,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 40, vertical: 16),
+                    ),
+                    child: const Text(
+                      'Login',
+                      style: TextStyle(fontSize: 18.0, color: Colors.white),
                     ),
                   ),
-                const SizedBox(height: 24.0),
-                ElevatedButton(
-                  onPressed: handleLogin,
-                  style: ElevatedButton.styleFrom(
-                    //        primary: Colors.blue, // Button background color
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 40, vertical: 16),
-                  ),
-                  child: const Text(
-                    'Login',
-                    style: TextStyle(
-                      fontSize: 18.0,
-                      //     color: Colors.white, // Button text color
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12.0),
-                TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const RegistrationScreen()),
-                    );
-                  },
-                  child: const Text(
-                    "Don't have an account yet? Register here",
-                    style: TextStyle(
-                      fontSize: 16.0,
-                      //     color: Colors.blue,
-                    ),
-                  ),
-                ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const ForgotPasswordScreen()),
-                    );
-                  },
-                  child: const Text(
-                    "Forgot your password?",
-                    style: TextStyle(
-                        fontSize: 16.0,
-                        //color: Colors.blue,
-                        height: 2),
-                  ),
-                )
-              ],
+                  SizedBox(height: 50.0),
+                  _buildRichText("Don't have an account yet? ", "Register here",
+                      RegistrationScreen()),
+                  SizedBox(height: 12.0),
+                  _buildRichText("Forgot password? ", "Click here",
+                      ForgotPasswordScreen()),
+                ],
+              ),
             ),
           ),
         ));
+  }
+
+  Widget _buildTextFormField(TextEditingController controller, String label,
+      IconData icon, String? Function(String?)? validator,
+      {bool isPassword = false}) {
+    return TextFormField(
+      controller: controller,
+      obscureText: isPassword,
+      validator: validator,
+      decoration: InputDecoration(
+        prefixIcon: Icon(icon),
+        labelText: label,
+        border: OutlineInputBorder(),
+        fillColor: Colors.blueGrey[50],
+        filled: true,
+        errorStyle: const TextStyle(color: Colors.red),
+      ),
+    );
+  }
+
+  // Helper method for text fields
+  Widget _buildTextField(
+      TextEditingController controller, String label, IconData icon,
+      {bool isPassword = false}) {
+    return TextField(
+      controller: controller,
+      obscureText: isPassword,
+      decoration: InputDecoration(
+        prefixIcon: Icon(icon),
+        labelText: label,
+        border: OutlineInputBorder(),
+        fillColor: Colors.blueGrey[50],
+        filled: true,
+      ),
+    );
+  }
+
+  // Helper method for rich text
+  Widget _buildRichText(
+      String normalText, String clickableText, Widget destination) {
+    return RichText(
+      text: TextSpan(
+        style: const TextStyle(color: Colors.black, fontSize: 16.0),
+        children: [
+          TextSpan(text: normalText),
+          TextSpan(
+            text: clickableText,
+            style: const TextStyle(
+                color: Colors.blueAccent, fontWeight: FontWeight.bold),
+            recognizer: TapGestureRecognizer()
+              ..onTap = () => Navigator.push(context,
+                  MaterialPageRoute(builder: (context) => destination)),
+          ),
+        ],
+      ),
+    );
   }
 }

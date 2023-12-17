@@ -200,313 +200,320 @@ class TransactionDetailsScreen extends StatelessWidget {
                       appBar: AppBar(
                         title: Text('Transaction Details'),
                       ),
-
-                      // Display the transaction details
-                      body: Padding(
-                        padding: const EdgeInsets.all(10.0),
-                        child: Card(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(15.0),
-                          ),
-                          elevation: 20,
-                          child: Padding(
-                            padding: const EdgeInsets.all(5.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
+                      body: Align(
+                        alignment: Alignment
+                            .topCenter, // Align to the top of the screen
+                        child: Padding(
+                          padding: const EdgeInsets.all(10.0),
+                          child: Card(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15.0),
+                            ),
+                            elevation: 20,
+                            child: Padding(
+                              padding: const EdgeInsets.all(10.0),
+                              child: Column(
+                                mainAxisSize: MainAxisSize
+                                    .min, // Take minimum space as required
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
 //Display the profile picture of the friend, if the friend has no profile picture, display a placeholder.
 //if it is a deposit transaction, display no profile picture
-                                if (transaction.transactionType != 'Deposit')
-                                  SizedBox(height: 5),
-                                Row(
-                                  children: [
-                                    _buildAvatar(
-                                        profilePictureData), // GestureDetector for the avatar
-                                    SizedBox(width: 10),
-                                    Text(
-                                      friendUsername,
-                                      style: TextStyle(fontSize: 20),
-                                    ),
-                                  ],
-                                ),
-                                SizedBox(height: 15),
-                                // Display the date of the transaction with icon
-                                Row(
-                                  children: [
-                                    Icon(Icons.calendar_today_rounded),
-                                    SizedBox(width: 10),
-                                    Text(
-                                      '${DateFormat('dd.MM.yyyy').format(transaction.createdAt)}',
-                                      style: TextStyle(fontSize: 20),
-                                    ),
-                                  ],
-                                ),
-                                SizedBox(height: 10),
-
-                                // Display the time of the transaction
-                                Row(
-                                  children: [
-                                    Icon(Icons.access_time_rounded),
-                                    SizedBox(width: 10),
-                                    Text(
-                                      '${DateFormat('HH:mm').format(transaction.createdAt)}',
-                                      style: TextStyle(fontSize: 20),
-                                    ),
-                                  ],
-                                ),
-                                SizedBox(height: 10),
-
-                                // Display the type of the transaction
-                                Row(
-                                  children: [
-                                    transactionIcon!,
-                                    SizedBox(width: 10),
-                                    Text(
-                                      '${transaction.transactionType}',
-                                      style: TextStyle(fontSize: 20),
-                                    ),
-                                  ],
-                                ),
-                                //SizedBox(height: 10),
-
-                                // // Display the username of the sender or receiver based on the transaction type and whether the user received or sent money
-                                // Container(
-                                //   child: transaction.transactionType ==
-                                //           'Request'
-                                //       ? isProcessed
-                                //           ? isReceived
-                                //               ? Row(
-                                //                   children: [
-                                //                     Icon(Icons.person_rounded),
-                                //                     SizedBox(width: 10),
-                                //                     Text(
-                                //                       '${transaction.senderUsername}',
-                                //                       style: TextStyle(
-                                //                           fontSize: 20),
-                                //                     ),
-                                //                   ],
-                                //                 )
-                                //               : Row(
-                                //                   children: [
-                                //                     Icon(Icons.person_rounded),
-                                //                     SizedBox(width: 10),
-                                //                     Text(
-                                //                       '${transaction.receiverUsername}',
-                                //                       style: TextStyle(
-                                //                           fontSize: 20),
-                                //                     ),
-                                //                   ],
-                                //                 )
-                                //           : userIsSender
-                                //               ? Row(
-                                //                   children: [
-                                //                     Icon(Icons.person_rounded),
-                                //                     SizedBox(width: 10),
-                                //                     Text(
-                                //                       '${transaction.receiverUsername}',
-                                //                       style: TextStyle(
-                                //                           fontSize: 20),
-                                //                     ),
-                                //                   ],
-                                //                 )
-                                //               : Row(
-                                //                   children: [
-                                //                     Icon(Icons.person_rounded),
-                                //                     SizedBox(width: 10),
-                                //                     Text(
-                                //                       '${transaction.senderUsername}',
-                                //                       style: TextStyle(
-                                //                           fontSize: 20),
-                                //                     ),
-                                //                   ],
-                                //                 )
-                                //       : transaction.transactionType == 'Deposit'
-                                //           ? SizedBox(height: 10)
-                                //           : isReceived
-                                //               ? Row(
-                                //                   children: [
-                                //                     Icon(Icons.person_rounded),
-                                //                     SizedBox(width: 10),
-                                //                     Text(
-                                //                       '${transaction.senderUsername}',
-                                //                       style: TextStyle(
-                                //                           fontSize: 20),
-                                //                     ),
-                                //                   ],
-                                //                 )
-                                //               : Row(
-                                //                   children: [
-                                //                     Icon(Icons.person_rounded),
-                                //                     SizedBox(width: 10),
-                                //                     Text(
-                                //                       '${transaction.receiverUsername}',
-                                //                       style: TextStyle(
-                                //                           fontSize: 20),
-                                //                     ),
-                                //                   ],
-                                //                 ),
-                                // ),
-
-                                SizedBox(height: 10),
-
-                                // Display the amount of the transaction based on the transaction type and whether the user received or sent money
-                                Container(
-                                  // padding: EdgeInsets.all(5),
-                                  decoration: BoxDecoration(
-                                      // color:
-                                      //     transaction.transactionType == 'Request'
-                                      //         ? isProcessed
-                                      //             ? isReceived
-                                      //                 ? Colors.red[300]
-                                      //                 : Colors.green[300]
-                                      //             : isReceived
-                                      //                 ? isDenied
-                                      //                     ? Colors.grey[300]
-                                      //                     : Colors.orange[300]
-                                      //                 : isDenied
-                                      //                     ? Colors.grey[300]
-                                      //                     : Colors.orange[300]
-                                      //         : isReceived
-                                      //             ? Colors.green[300]
-                                      //             : Colors.red[300],
-                                      // borderRadius: BorderRadius.circular(5),
-                                      ),
-                                  child: Row(
+                                  if (transaction.transactionType != 'Deposit')
+                                    SizedBox(height: 5),
+                                  Row(
                                     children: [
-                                      Icon(Icons.euro_rounded),
+                                      _buildAvatar(
+                                          profilePictureData), // GestureDetector for the avatar
                                       SizedBox(width: 10),
                                       Text(
-                                        transaction.transactionType == 'Request'
-                                            ? isProcessed
-                                                ? isReceived
-                                                    ? '-${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}'
-                                                    : '+${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}'
-                                                : isReceived
-                                                    ? '-${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}'
-                                                    : '+${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}'
-                                            : isReceived
-                                                ? '+${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}'
-                                                : '-${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}',
-                                        style: TextStyle(
-                                            color:
-                                                transaction.transactionType ==
-                                                        'Request'
-                                                    ? isProcessed
-                                                        ? isReceived
-                                                            ? null
-                                                            : null
-                                                        : null
-                                                    : isReceived
-                                                        ? null
-                                                        : null,
-                                            fontSize: 20),
+                                        friendUsername,
+                                        style: TextStyle(fontSize: 20),
                                       ),
                                     ],
                                   ),
-                                ),
-                                SizedBox(height: 10),
 
-                                // Display the status if the transaction is a request
-                                if (transaction.transactionType == 'Request')
+                                  SizedBox(height: 15),
+                                  // Display the date of the transaction with icon
                                   Row(
                                     children: [
-                                      Icon(Icons.info_rounded),
+                                      Icon(Icons.calendar_today_rounded),
                                       SizedBox(width: 10),
                                       Text(
-                                        '${getStatusText(transaction)}',
-                                        style: TextStyle(
-                                          fontSize: 20,
-                                          color: getStatusColor(transaction),
+                                        '${DateFormat('dd.MM.yyyy').format(transaction.createdAt)}',
+                                        style: TextStyle(fontSize: 20),
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(height: 10),
+
+                                  // Display the time of the transaction
+                                  Row(
+                                    children: [
+                                      Icon(Icons.access_time_rounded),
+                                      SizedBox(width: 10),
+                                      Text(
+                                        '${DateFormat('HH:mm').format(transaction.createdAt)}',
+                                        style: TextStyle(fontSize: 20),
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(height: 10),
+
+                                  // Display the type of the transaction
+                                  Row(
+                                    children: [
+                                      transactionIcon!,
+                                      SizedBox(width: 10),
+                                      Text(
+                                        '${transaction.transactionType}',
+                                        style: TextStyle(fontSize: 20),
+                                      ),
+                                    ],
+                                  ),
+                                  //SizedBox(height: 10),
+
+                                  // // Display the username of the sender or receiver based on the transaction type and whether the user received or sent money
+                                  // Container(
+                                  //   child: transaction.transactionType ==
+                                  //           'Request'
+                                  //       ? isProcessed
+                                  //           ? isReceived
+                                  //               ? Row(
+                                  //                   children: [
+                                  //                     Icon(Icons.person_rounded),
+                                  //                     SizedBox(width: 10),
+                                  //                     Text(
+                                  //                       '${transaction.senderUsername}',
+                                  //                       style: TextStyle(
+                                  //                           fontSize: 20),
+                                  //                     ),
+                                  //                   ],
+                                  //                 )
+                                  //               : Row(
+                                  //                   children: [
+                                  //                     Icon(Icons.person_rounded),
+                                  //                     SizedBox(width: 10),
+                                  //                     Text(
+                                  //                       '${transaction.receiverUsername}',
+                                  //                       style: TextStyle(
+                                  //                           fontSize: 20),
+                                  //                     ),
+                                  //                   ],
+                                  //                 )
+                                  //           : userIsSender
+                                  //               ? Row(
+                                  //                   children: [
+                                  //                     Icon(Icons.person_rounded),
+                                  //                     SizedBox(width: 10),
+                                  //                     Text(
+                                  //                       '${transaction.receiverUsername}',
+                                  //                       style: TextStyle(
+                                  //                           fontSize: 20),
+                                  //                     ),
+                                  //                   ],
+                                  //                 )
+                                  //               : Row(
+                                  //                   children: [
+                                  //                     Icon(Icons.person_rounded),
+                                  //                     SizedBox(width: 10),
+                                  //                     Text(
+                                  //                       '${transaction.senderUsername}',
+                                  //                       style: TextStyle(
+                                  //                           fontSize: 20),
+                                  //                     ),
+                                  //                   ],
+                                  //                 )
+                                  //       : transaction.transactionType == 'Deposit'
+                                  //           ? SizedBox(height: 10)
+                                  //           : isReceived
+                                  //               ? Row(
+                                  //                   children: [
+                                  //                     Icon(Icons.person_rounded),
+                                  //                     SizedBox(width: 10),
+                                  //                     Text(
+                                  //                       '${transaction.senderUsername}',
+                                  //                       style: TextStyle(
+                                  //                           fontSize: 20),
+                                  //                     ),
+                                  //                   ],
+                                  //                 )
+                                  //               : Row(
+                                  //                   children: [
+                                  //                     Icon(Icons.person_rounded),
+                                  //                     SizedBox(width: 10),
+                                  //                     Text(
+                                  //                       '${transaction.receiverUsername}',
+                                  //                       style: TextStyle(
+                                  //                           fontSize: 20),
+                                  //                     ),
+                                  //                   ],
+                                  //                 ),
+                                  // ),
+
+                                  SizedBox(height: 10),
+
+                                  // Display the amount of the transaction based on the transaction type and whether the user received or sent money
+                                  Container(
+                                    // padding: EdgeInsets.all(5),
+                                    decoration: BoxDecoration(
+                                        // color:
+                                        //     transaction.transactionType == 'Request'
+                                        //         ? isProcessed
+                                        //             ? isReceived
+                                        //                 ? Colors.red[300]
+                                        //                 : Colors.green[300]
+                                        //             : isReceived
+                                        //                 ? isDenied
+                                        //                     ? Colors.grey[300]
+                                        //                     : Colors.orange[300]
+                                        //                 : isDenied
+                                        //                     ? Colors.grey[300]
+                                        //                     : Colors.orange[300]
+                                        //         : isReceived
+                                        //             ? Colors.green[300]
+                                        //             : Colors.red[300],
+                                        // borderRadius: BorderRadius.circular(5),
                                         ),
-                                      ),
-                                    ],
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.euro_rounded),
+                                        SizedBox(width: 10),
+                                        Text(
+                                          transaction.transactionType ==
+                                                  'Request'
+                                              ? isProcessed
+                                                  ? isReceived
+                                                      ? '-${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}'
+                                                      : '+${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}'
+                                                  : isReceived
+                                                      ? '-${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}'
+                                                      : '+${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}'
+                                              : isReceived
+                                                  ? '+${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}'
+                                                  : '-${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}',
+                                          style: TextStyle(
+                                              color:
+                                                  transaction.transactionType ==
+                                                          'Request'
+                                                      ? isProcessed
+                                                          ? isReceived
+                                                              ? null
+                                                              : null
+                                                          : null
+                                                      : isReceived
+                                                          ? null
+                                                          : null,
+                                              fontSize: 20),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                SizedBox(height: 10),
-// Display the message if the transaction has a message
-                                if (transaction.message.isEmpty == false)
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Icon(Icons.message_rounded),
-                                      SizedBox(width: 10),
-                                      Text(
-                                        '${transaction.message}',
-                                        style: TextStyle(fontSize: 20),
-                                      ),
-                                    ],
-                                  ),
+                                  SizedBox(height: 10),
 
-                                SizedBox(height: 10),
-                                // Display the event name if the transaction is associated with an event
-                                if (transaction.eventId != null)
-                                  Row(
-                                    children: [
-                                      Icon(Icons.event_rounded),
-                                      SizedBox(width: 10),
-                                      Text(
-                                        'Event:" transaction.eventName"',
-                                        style: TextStyle(fontSize: 20),
-                                      ),
-                                    ],
-                                  ),
-                                SizedBox(height: 10),
-                                // buttons for accepting and denying the request
-                                // buttons only appear when the transaction is a request and the transaction is unprocessed and the sender is not the current user
-                                if (transaction.transactionType == 'Request' &&
-                                    transaction.processed == 0 &&
-                                    transaction.senderId != userId)
-                                  Row(
-                                    children: [
-                                      ElevatedButton(
-                                        style: ElevatedButton.styleFrom(
-                                            primary: Colors.green[300],
-                                            textStyle: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 15,
-                                            )),
-                                        onPressed: () => acceptRequest(context),
-                                        child: Text('Accept Request'),
-                                      ),
-                                      SizedBox(width: 20),
-                                      ElevatedButton(
+                                  // Display the status if the transaction is a request
+                                  if (transaction.transactionType == 'Request')
+                                    Row(
+                                      children: [
+                                        Icon(Icons.info_rounded),
+                                        SizedBox(width: 10),
+                                        Text(
+                                          '${getStatusText(transaction)}',
+                                          style: TextStyle(
+                                            fontSize: 20,
+                                            color: getStatusColor(transaction),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  SizedBox(height: 10),
+// Display the message if the transaction has a message
+                                  if (transaction.message.isEmpty == false)
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Icon(Icons.message_rounded),
+                                        SizedBox(width: 10),
+                                        Text(
+                                          '${transaction.message}',
+                                          style: TextStyle(fontSize: 20),
+                                        ),
+                                      ],
+                                    ),
+
+                                  SizedBox(height: 10),
+                                  // Display the event name if the transaction is associated with an event
+                                  if (transaction.eventId != null)
+                                    Row(
+                                      children: [
+                                        Icon(Icons.event_rounded),
+                                        SizedBox(width: 10),
+                                        Text(
+                                          'Event:" transaction.eventName"',
+                                          style: TextStyle(fontSize: 20),
+                                        ),
+                                      ],
+                                    ),
+                                  SizedBox(height: 10),
+                                  // buttons for accepting and denying the request
+                                  // buttons only appear when the transaction is a request and the transaction is unprocessed and the sender is not the current user
+                                  if (transaction.transactionType ==
+                                          'Request' &&
+                                      transaction.processed == 0 &&
+                                      transaction.senderId != userId)
+                                    Row(
+                                      children: [
+                                        ElevatedButton(
                                           style: ElevatedButton.styleFrom(
-                                              primary: Colors.red[300],
+                                              primary: Colors.green[300],
                                               textStyle: TextStyle(
                                                 fontWeight: FontWeight.bold,
                                                 fontSize: 15,
                                               )),
-                                          onPressed: () => denyRequest(context),
-                                          child: Text('Deny Request')),
-                                    ],
-                                  ),
-                                // Add a link to the event details screen if the transaction is associated with an event and the event is not null (Go to dashboard while event details screen is not implemented)
-                                if (transaction.eventId != null)
-                                  Column(
-                                    children: [
-                                      SizedBox(height: 20),
-                                      ElevatedButton(
-                                        onPressed: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                                builder: (context) =>
-                                                    DashboardScreen()),
-                                          );
-                                        },
-                                        child: Text('View Event Details'),
-                                      ),
-                                    ],
-                                  ),
-                                // Additional UI elements for user interactions (sending money, requests, adding as friend)
-                                //_buildUserOptionsModal(context),
-                              ],
+                                          onPressed: () =>
+                                              acceptRequest(context),
+                                          child: Text('Accept Request'),
+                                        ),
+                                        SizedBox(width: 20),
+                                        ElevatedButton(
+                                            style: ElevatedButton.styleFrom(
+                                                primary: Colors.red[300],
+                                                textStyle: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 15,
+                                                )),
+                                            onPressed: () =>
+                                                denyRequest(context),
+                                            child: Text('Deny Request')),
+                                      ],
+                                    ),
+                                  // Add a link to the event details screen if the transaction is associated with an event and the event is not null (Go to dashboard while event details screen is not implemented)
+                                  if (transaction.eventId != null)
+                                    Column(
+                                      children: [
+                                        SizedBox(height: 20),
+                                        ElevatedButton(
+                                          onPressed: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      DashboardScreen()),
+                                            );
+                                          },
+                                          child: Text('View Event Details'),
+                                        ),
+                                      ],
+                                    ),
+                                  // Additional UI elements for user interactions (sending money, requests, adding as friend)
+                                  //_buildUserOptionsModal(context),
+                                ],
+                              ),
                             ),
                           ),
                         ),
-                        //Floating action button quickMenuTransaction
                       ),
-
                       floatingActionButton: friendUsername != ''
                           ? FloatingActionButton(
                               onPressed: () {

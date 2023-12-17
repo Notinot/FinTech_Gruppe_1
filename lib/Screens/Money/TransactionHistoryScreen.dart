@@ -37,7 +37,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     super.initState();
     transactionsFuture = fetchTransactions();
     searchBar = search_bar.SearchBar(
-      showClearButton: false,
+      showClearButton: true,
       inBar: true,
       setState: setState,
       onSubmitted: onSubmitted,

@@ -254,6 +254,7 @@ app.get('/friends/:user_id', async(req, res) => {
   const user_id = req.params.user_id;  
 const query =
 `SELECT
+  request_time,
 CASE
     WHEN f.requester_id = ? THEN u_addressee.username
     WHEN f.addressee_id = ? THEN u_requester.username

@@ -40,6 +40,7 @@ class PendingFriends extends StatelessWidget {
 
     for (var user in data['pendingFriends']) {
       final pendingFriendTemp = Friend(
+          requestTime: null,
           profileImage: null,
           username: user['username'],
           firstName: user['first_name'],
@@ -89,11 +90,14 @@ class Friends extends StatelessWidget {
 
     for (var user in data['friends']) {
       final friendTemp = Friend(
+          requestTime: user['request_time'],
           //profileImage: friend['friend_picture'], muss noch richtig decoded werden
           profileImage: null,
           username: user['friend_username'],
           firstName: user['friend_first_name'],
           lastName: user['friend_last_name']);
+      debugPrint('DASDASDASDASDASD');
+      debugPrint(user['request_time']);
 
       friends.add(friendTemp);
     }
@@ -132,10 +136,12 @@ class Friend {
   final String firstName;
   final String lastName;
   final Uint8List? profileImage;
+  final String? requestTime; //ALS DATE SPEICHERNNN
   //hier noch Timestamp von Friend table?
 
   Friend(
-      {required this.profileImage,
+      {this.requestTime,
+      required this.profileImage,
       required this.username,
       // required this.userID,
       required this.firstName,
@@ -281,7 +287,7 @@ class FriendInfoScreen extends StatelessWidget {
             ),
             SizedBox(height: 20),
             Text(
-              'Friends since: ',
+              'Friends since: ${friend.requestTime}',
               style: TextStyle(fontSize: 20),
             ),
             SizedBox(height: 20),

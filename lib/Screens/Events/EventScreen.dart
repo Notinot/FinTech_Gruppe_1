@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Screens/Dashboard/dashBoardScreen.dart';
 import 'package:flutter_application_1/Screens/api_service.dart'; // Assumed path
@@ -121,6 +122,32 @@ class Event {
   String? zipcode;
   final creator_username;
 
+
+
+  final Map<String, IconData> iconMap = {
+    'Book and Literature': Icons.menu_book_rounded,
+    'Cultural and Arts': Icons.panorama,
+    'Community': Icons.people_rounded,
+    'Enviromental': Icons.park_rounded,
+    'Fashion': Icons.local_mall_rounded,
+    'Film and Entertainment': Icons.movie_creation_rounded,
+    'Food and Drink': Icons.restaurant,
+    'Gaming': Icons.sports_esports_rounded,
+    'Health and Wellness': Icons.health_and_safety_rounded,
+    'Science': Icons.science_rounded,
+    'Sport': Icons.sports_martial_arts_rounded,
+    'Technology and Innovation': Icons.biotech_outlined,
+    'Travel and Adventure': Icons.travel_explore_rounded,
+    'Professional': Icons.business_center_rounded,
+  };
+
+
+  IconData getIconForCategory(String category) {
+    // Check if the category exists in the map, otherwise use a default icon
+    return iconMap.containsKey(category) ? iconMap[category]! : Icons.category;
+  }
+
+
   Event(
       {required this.eventID,
       required this.title,
@@ -139,6 +166,7 @@ class Event {
       required this.zipcode,
       required this.creator_username});
 
+
   factory Event.fromJson(Map<String, dynamic> json) {
     return Event(
         eventID: json['event_id'],
@@ -156,41 +184,48 @@ class Event {
         city: json['city'],
         street: json['street'],
         zipcode: json['zipcode'],
-        creator_username: json['creator_username']);
+        creator_username: json['creator_username'],
+    );
   }
 }
+
 
 //Display a single event object in a ListTile
 class EventItem extends StatelessWidget {
   final Event event;
-  const EventItem({super.key, required this.event});
+  EventItem({super.key, required this.event});
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: Icon(Icons.event),
+      leading: Icon(
+          event.getIconForCategory(event.category),
+      ),
       title: Text(event.title),
       subtitle: Text(event.creator_username),
       trailing: IconButton(
           onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => EventInfoScreen(
-                  event: event,
-                ),
-              ),
-            );
+
+            //Open Dialog to either Send or Request Money
+            requestOrSendDialog(context);
+
           },
           icon: Icon(Icons.info)),
       onTap: () {
-        //Open Dialog to either Send or Request Money
-        requestOrSendDialog(context);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => EventInfoScreen(
+              event: event,
+            ),
+          ),
+        );
       },
     );
   }
 
   Future<dynamic> requestOrSendDialog(BuildContext context) {
+
     return showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -202,13 +237,15 @@ class EventItem extends StatelessWidget {
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: Text('Cancel'),
+              child: Text('Back'),
             ),
             TextButton(
               onPressed: () {
+
+                ApiService.joinEvent(event.eventID);
                 Navigator.of(context).pop();
               },
-              child: Text('Join'),
+              child: Text('Join')
             ),
           ],
         );
@@ -217,55 +254,6 @@ class EventItem extends StatelessWidget {
   }
 }
 
-class EventDateSection extends StatelessWidget {
-  final Event event;
-  const EventDateSection({Key? key, required this.event}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            Icon(Icons.date_range_rounded),
-            SizedBox(width: 8),
-            Text(
-              DateFormat('dd.MM.yyyy').format(event.datetimeEvent),
-              style: TextStyle(fontSize: 18),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class EventTimeSection extends StatelessWidget {
-  final Event event;
-  const EventTimeSection({Key? key, required this.event}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            Icon(Icons.access_time_rounded),
-            SizedBox(width: 8),
-            Text(
-              DateFormat('HH:mm').format(event.datetimeEvent),
-              style: TextStyle(fontSize: 18),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
 
 class EventInfoScreen extends StatelessWidget {
   final Event event;
@@ -296,9 +284,10 @@ class EventInfoScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 SizedBox(height: 16),
-                Text('Event Information',
-                    style:
-                        TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+                Text(
+                  'Event Information',
+                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                ),
                 SizedBox(height: 12),
                 const Divider(height: 8, thickness: 2),
                 SizedBox(height: 12),
@@ -317,12 +306,13 @@ class EventInfoScreen extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: 4),
+                SizedBox(height: 4),
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
-                      Icon(Icons.format_list_bulleted_rounded),
+                      Icon(event.getIconForCategory(event.category)),
                       SizedBox(width: 8),
                       Text(
                         event.category,
@@ -339,7 +329,10 @@ class EventInfoScreen extends StatelessWidget {
                     children: [
                       Icon(Icons.description_rounded),
                       SizedBox(width: 8),
-                      Text('Description: ', style: TextStyle(fontSize: 18)),
+                      Text(
+                        'Description: ',
+                        style: TextStyle(fontSize: 18),
+                      ),
                     ],
                   ),
                 ),
@@ -386,61 +379,53 @@ class EventInfoScreen extends StatelessWidget {
                 isEmpty
                     ? Container()
                     : Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Icon(Icons.add_location_alt_rounded),
-                            SizedBox(width: 8),
-                            Text(
-                              ' ${event.country}, ${event.city}, \n ${event.zipcode}, ${event.street}',
-                              style: TextStyle(fontSize: 18),
-                            ),
-                          ],
-                        ),
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Icon(Icons.add_location_alt_rounded),
+                      SizedBox(width: 8),
+                      Text(
+                        ' ${event.country}, ${event.city}, \n ${event.zipcode}, ${event.street}',
+                        style: TextStyle(fontSize: 18),
                       ),
+                    ],
+                  ),
+                ),
                 SizedBox(height: 4),
                 isNull
                     ? Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Icon(Icons.money_off_csred_rounded),
-                            SizedBox(width: 8),
-                            Text(
-                              'Free',
-                              style: TextStyle(fontSize: 18),
-                            ),
-                          ],
-                        ),
-                      )
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Icon(Icons.money_off_csred_rounded),
+                      SizedBox(width: 8),
+                      Text(
+                        'Free',
+                        style: TextStyle(fontSize: 18),
+                      ),
+                    ],
+                  ),
+                )
                     : Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Icon(Icons.attach_money_rounded),
-                            SizedBox(width: 8),
-                            Text(
-                              formatAmount(),
-                              style: TextStyle(
-                                  fontSize: 18, fontWeight: FontWeight.bold),
-                            ),
-                          ],
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Icon(Icons.attach_money_rounded),
+                      SizedBox(width: 8),
+                      Text(
+                        formatAmount(),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: <Widget>[
-                    TextButton(
-                      child: const Text('Join', style: TextStyle(fontSize: 18)),
-                      onPressed: () {/* ... */},
-                    ),
-                    const SizedBox(width: 10),
-                  ],
+                    ],
+                  ),
                 ),
+                SizedBox(height: 16)
               ],
             ),
           ),
@@ -450,6 +435,64 @@ class EventInfoScreen extends StatelessWidget {
   }
 
   String formatAmount() {
-    return '${NumberFormat(" #,##0.00", "de_DE").format(event.price)} €'; // Example
+    return '${NumberFormat("#,##0.00", "de_DE").format(event.price)} €';
+  }
+}
+
+
+
+class EventDateSection extends StatelessWidget {
+
+  final Event event;
+  const EventDateSection({Key? key, required this.event})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            Icon(Icons.date_range_rounded),
+            SizedBox(width: 8),
+            Text(
+              DateFormat('dd.MM.yyyy').format(event.datetimeEvent),
+              style: TextStyle(fontSize: 18),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+
+
+class EventTimeSection extends StatelessWidget {
+
+  final Event event;
+  const EventTimeSection({Key? key, required this.event})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            Icon(Icons.access_time_rounded),
+            SizedBox(width: 8),
+            Text(
+              DateFormat('HH:mm').format(event.datetimeEvent),
+              style: TextStyle(fontSize: 18),
+            ),
+          ],
+        ),
+      ],
+    );
   }
 }

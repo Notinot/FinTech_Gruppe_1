@@ -877,22 +877,42 @@ app.post('/transactions/:transactionId', authenticateToken, async (req, res) => 
 );
 
 
-// Fetch Events
-app.post('/events', authenticateToken, async (req, res) => {
+//route to get the events the user is part of with JWT authentication
+app.get('/events', authenticateToken, async (req, res) => {
+  try {
+    console.log('Token:', req.headers['authorization']);
+    // Get the user ID from the authenticated token
+    const userId = req.user.userId;
+    console.log('userId:', userId);
 
-    const senderId = req.user.userID;
-    console.log('senderId: ', senderId);
+    // All Events the User interacted with (being Creator or joined the Event)
+    const [interactedEvents] = await db.query(`
+      SELECT
+          Event.*,
+          Location.*,
+          User_Event.user_id,
+          User.username AS creator_username
+      FROM
+          Event
+      JOIN
+          User_Event ON User_Event.event_id = Event.id
+      JOIN
+          User ON Event.creator_id = User.user_id
+      LEFT JOIN
+          Location ON Event.id = Location.event_id
+      WHERE
+          User_Event.user_id = ?;
 
-    try{
+    `, [userId]);
 
-        const fetchEvents = await db.query('SELECT * FROM Event WHERE creator_id = ?', [sender_id]);
-        res.json(fetchEvents);
 
-    } catch (error) {
-         console.error('Error fetching events:', error);
-         res.status(500).json({ message: 'Internal server error' });
-       }
+    console.log('events:', interactedEvents);
+    res.json(interactedEvents);
 
+  } catch (error) {
+    console.error('Error fetching Events:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
 });
 
 
@@ -972,6 +992,30 @@ app.post('/create-event', authenticateToken, async (req, res) => {
   }
 
 });
+
+app.post('/join-event', authenticateToken, async (req, res) => {
+
+    try{
+
+        const senderId = req.user.userId;
+        const eventId = req.query.eventId;
+
+        if(!event_id){
+            return res.status(400).json({message: 'Invalid input'});
+        }
+
+        const [joinQuery] = await db.query('INSERT INTO User_Event (event_id, user_id) VALUES (?, ?)',
+         [
+         eventId,
+         senderId
+         ]);
+
+        console.log(joinQuery);
+    }
+    catch (e){
+
+    }
+})
 
 
 
@@ -1226,40 +1270,7 @@ async function getBalance(userId) {
   }
 }
 
-//route to get the events the user is part of with JWT authentication
-app.get('/events', authenticateToken, async (req, res) => {
-  try {
-    console.log('Token:', req.headers['authorization']);
-    // Get the user ID from the authenticated token
-    const userId = req.user.userId;
-    console.log('userId:', userId);
-    // Fetch the user's events from the database based on the user ID
-    const [events] = await db.query(`
-      SELECT
-          Event.*,
-          Location.*,
-          User_Event.user_id,
-          User.username AS creator_username,
-          User.picture AS creator_picture
-      FROM
-          Event
-      JOIN
-          User_Event ON User_Event.event_id = Event.id
-      JOIN
-          User ON Event.creator_id = User.user_id
-      LEFT JOIN
-          Location ON Event.id = Location.event_id
-      WHERE
-          User_Event.user_id = ?;
 
-    `, [userId]);
-    console.log('events:', events);
-    res.json(events);
-  } catch (error) {
-    console.error('Error fetching Events:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-});
 
 //  new route /addFriend?friendId=$friendId with JWT authentication
 app.post('/addFriendId', authenticateToken, async (req, res) => {

@@ -287,4 +287,40 @@ class ApiService {
       return null;
     }
   }
+
+  static Future<bool> joinEvent(int event_id) async {
+
+    try {
+
+      const storage = FlutterSecureStorage();
+      final token = await storage.read(key: 'token');
+      if (token == null) {
+        throw Exception('Token not found');
+      }
+
+      final joinEventResponse =
+      await http.post(Uri.parse('${ApiService.serverUrl}/join-event?eventId=$event_id'),
+          headers: {
+            'Content-Type': 'application/json; charset=UTF-8',
+            'Authorization': 'Bearer $token',
+          }
+      );
+
+      print(joinEventResponse);
+
+      if(joinEventResponse.statusCode == 200){
+
+        print('joinEvent function: Joining Event was successful');
+        return true;
+      }
+
+      print('joinEvent function: Error joining Event');
+      return false;
+
+    } catch (e) {
+      print('joinEvent function: Error joining Event: $e');
+      return false;
+    }
+  }
+
 }

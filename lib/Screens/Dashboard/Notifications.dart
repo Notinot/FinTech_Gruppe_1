@@ -147,10 +147,10 @@ class _NotificationsState extends State<Notifications> {
 
     if (transaction.transactionType == 'Payment' &&
         transaction.receiverId == user_id) {
-      return '${transaction.senderUsername} sent you  ${transaction.amount}€.';
+      return '${transaction.amount}€ from ${transaction.senderUsername}';
     } else if (transaction.transactionType == 'Payment' &&
         transaction.senderId == user_id) {
-      return 'Your Payment of ${transaction.amount}€ to ${transaction.receiverUsername} was successful';
+      return 'Send ${transaction.amount}€ to ${transaction.receiverUsername}';
     } else if (transaction.transactionType == 'Request' &&
         transaction.senderId != user_id) {
       return '${transaction.senderUsername} requested ${transaction.amount}€ from you.';

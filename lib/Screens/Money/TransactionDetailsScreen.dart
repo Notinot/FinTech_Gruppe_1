@@ -11,6 +11,7 @@ import 'RequestMoneyScreen.dart';
 import 'SendMoneyScreen.dart';
 import 'package:flutter_application_1/Screens/Money/TransactionHistoryScreen.dart';
 import 'package:flutter_application_1/Screens/Friends/FriendsScreen.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class TransactionDetailsScreen extends StatelessWidget {
   final Transaction transaction;
@@ -120,38 +121,41 @@ class TransactionDetailsScreen extends StatelessWidget {
           showDialog(
             context: context,
             builder: (BuildContext context) {
-              return AlertDialog(
-                content: Container(
-                  width: double.maxFinite,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: <Widget>[
-                      CircleAvatar(
-                        radius: 120, // Larger radius for enhanced view
-                        backgroundColor: Colors.white,
-                        backgroundImage: profilePictureData != null
-                            ? MemoryImage(profilePictureData)
-                            : null,
-                        child: profilePictureData == null
-                            ? Icon(Icons.person_rounded,
-                                size: 100) // Larger icon size
-                            : null,
-                      ),
-                      // SizedBox(height: 10),
-                      // Text(friendUsername,
-                      //     style: TextStyle(
-                      //         fontSize: 24)), // Optional: show username
-                    ],
+              return Animate(
+                effects: [FadeEffect()],
+                child: AlertDialog(
+                  content: Container(
+                    width: double.maxFinite,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        CircleAvatar(
+                          radius: 120, // Larger radius for enhanced view
+                          backgroundColor: Colors.white,
+                          backgroundImage: profilePictureData != null
+                              ? MemoryImage(profilePictureData)
+                              : null,
+                          child: profilePictureData == null
+                              ? Icon(Icons.person_rounded,
+                                  size: 100) // Larger icon size
+                              : null,
+                        ),
+                        // SizedBox(height: 10),
+                        // Text(friendUsername,
+                        //     style: TextStyle(
+                        //         fontSize: 24)), // Optional: show username
+                      ],
+                    ),
                   ),
+                  actions: <Widget>[
+                    TextButton(
+                      child: Text('Close'),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                  ],
                 ),
-                actions: <Widget>[
-                  TextButton(
-                    child: Text('Close'),
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                  ),
-                ],
               );
             },
           );
@@ -177,9 +181,7 @@ class TransactionDetailsScreen extends StatelessWidget {
     return FutureBuilder<bool>(
         future: ApiService.checkIfFriends(friendId!),
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
+          if (snapshot.hasError) {
             // Handle errors
             return Text('Error: ${snapshot.error}');
           } else {
@@ -200,18 +202,16 @@ class TransactionDetailsScreen extends StatelessWidget {
                       appBar: AppBar(
                         title: Text('Transaction Details'),
                       ),
-                      body: Align(
-                        alignment: Alignment
-                            .topCenter, // Align to the top of the screen
-                        child: Padding(
-                          padding: const EdgeInsets.all(10.0),
-                          child: Card(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15.0),
-                            ),
-                            elevation: 20,
-                            child: Padding(
-                              padding: const EdgeInsets.all(10.0),
+                      body: Hero(
+                        tag: 'transaction_${transaction.transactionId}',
+                        child: Card(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15.0),
+                          ),
+                          elevation: 20,
+                          child: Padding(
+                            padding: const EdgeInsets.all(10.0),
+                            child: SingleChildScrollView(
                               child: Column(
                                 mainAxisSize: MainAxisSize
                                     .min, // Take minimum space as required
@@ -531,7 +531,7 @@ class TransactionDetailsScreen extends StatelessWidget {
   }
 
   // Function to accept a request
-  Future<void> acceptRequest(BuildContext context) async {
+  acceptRequest(BuildContext context) async {
     // wait for user to confirm the transaction
     final confirmed = await showDialog(
       context: context,
@@ -604,7 +604,7 @@ class TransactionDetailsScreen extends StatelessWidget {
   }
 
   // Function to deny a request
-  Future<void> denyRequest(BuildContext context) async {
+  denyRequest(BuildContext context) async {
     // wait for user to confirm the transaction
     final confirmed = await showDialog(
       context: context,

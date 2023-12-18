@@ -421,156 +421,161 @@ class TransactionItem extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 10),
-      child: Card(
-        elevation: 2.0, // Adjust elevation for shadow effect
-        child: ListTile(
-          onTap: () {
-            // Navigate to the transaction details screen when the transaction is tapped
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => TransactionDetailsScreen(
-                    transaction: transaction,
-                    userId: userId,
-                    username: username),
-              ),
-            );
-          },
-          contentPadding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          key: ValueKey<int>(transaction.transactionId), // Add a key
-          //Add a divider between each transaction. Remove the divider for the last transaction
+      child: Hero(
+        tag:
+            'transaction_${transaction.transactionId}', // Unique tag for Hero transition
+        child: Card(
+          elevation: 2.0, // Adjust elevation for shadow effect
+          child: ListTile(
+            onTap: () {
+              // Navigate to the transaction details screen when the transaction is tapped
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => TransactionDetailsScreen(
+                      transaction: transaction,
+                      userId: userId,
+                      username: username),
+                ),
+              );
+            },
+            contentPadding:
+                EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            key: ValueKey<int>(transaction.transactionId), // Add a key
+            //Add a divider between each transaction. Remove the divider for the last transaction
 
-          // Display the icon based on the transaction type and whether the user received or sent money
-          leading: transaction.transactionType == 'Request'
-              ? isProcessed
-                  ? isReceived
-                      ? Icon(
-                          Icons.request_page_outlined,
-                          color: iconColor,
-                        )
-                      : Icon(
-                          Icons.request_page_outlined,
-                          color: iconColor,
-                        )
-                  : Icon(
-                      Icons.request_page_outlined,
-                      color: iconColor,
-                    )
-              : isDeposit
-                  ? Icon(
-                      Icons.add,
-                      color: Colors.green[400],
-                    )
-                  : isReceived
-                      ? Icon(
-                          Icons.monetization_on_rounded,
-                          color: iconColor,
-                        )
-                      : Icon(
-                          Icons.monetization_on_rounded,
-                          color: iconColor,
-                        ),
+            // Display the icon based on the transaction type and whether the user received or sent money
+            leading: transaction.transactionType == 'Request'
+                ? isProcessed
+                    ? isReceived
+                        ? Icon(
+                            Icons.request_page_outlined,
+                            color: iconColor,
+                          )
+                        : Icon(
+                            Icons.request_page_outlined,
+                            color: iconColor,
+                          )
+                    : Icon(
+                        Icons.request_page_outlined,
+                        color: iconColor,
+                      )
+                : isDeposit
+                    ? Icon(
+                        Icons.add,
+                        color: Colors.green[400],
+                      )
+                    : isReceived
+                        ? Icon(
+                            Icons.monetization_on_rounded,
+                            color: iconColor,
+                          )
+                        : Icon(
+                            Icons.monetization_on_rounded,
+                            color: iconColor,
+                          ),
 
-          // Display the username of the sender or receiver based on the transaction type.
-          title: transaction.transactionType == 'Request'
-              ? isProcessed
-                  ? isReceived
-                      ? Text(
-                          '${transaction.senderUsername}',
-                          style: TextStyle(color: textColor),
-                        )
-                      : Text(
-                          '${transaction.receiverUsername}',
-                          style: TextStyle(color: textColor),
-                        )
-                  : userIsSender
-                      ? Text(
-                          '${transaction.receiverUsername}',
-                          //'To: ${transaction.receiverUsername}', // Display receiver's username if the user is the sender
-                          style: TextStyle(color: textColor),
-                        )
-                      : Text(
-                          '${transaction.senderUsername}', // Display sender's username if the user is the receiver
-                          // 'From: ${transaction.senderUsername}',
-                          style: TextStyle(color: textColor),
-                        )
-              : isDeposit
-                  ? Text(
-                      'Deposit',
-                      style: TextStyle(color: textColor),
-                    )
-                  : isReceived
-                      ? Text(
-                          '${transaction.senderUsername}',
-                          style: TextStyle(color: textColor),
-                        )
-                      : Text(
-                          '${transaction.receiverUsername}',
-                          style: TextStyle(color: textColor),
-                        ),
+            // Display the username of the sender or receiver based on the transaction type.
+            title: transaction.transactionType == 'Request'
+                ? isProcessed
+                    ? isReceived
+                        ? Text(
+                            '${transaction.senderUsername}',
+                            style: TextStyle(color: textColor),
+                          )
+                        : Text(
+                            '${transaction.receiverUsername}',
+                            style: TextStyle(color: textColor),
+                          )
+                    : userIsSender
+                        ? Text(
+                            '${transaction.receiverUsername}',
+                            //'To: ${transaction.receiverUsername}', // Display receiver's username if the user is the sender
+                            style: TextStyle(color: textColor),
+                          )
+                        : Text(
+                            '${transaction.senderUsername}', // Display sender's username if the user is the receiver
+                            // 'From: ${transaction.senderUsername}',
+                            style: TextStyle(color: textColor),
+                          )
+                : isDeposit
+                    ? Text(
+                        'Deposit',
+                        style: TextStyle(color: textColor),
+                      )
+                    : isReceived
+                        ? Text(
+                            '${transaction.senderUsername}',
+                            style: TextStyle(color: textColor),
+                          )
+                        : Text(
+                            '${transaction.receiverUsername}',
+                            style: TextStyle(color: textColor),
+                          ),
 
-          // Display the amount, event name and message in the subtitle position
-          subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: EdgeInsets.all(5),
-                decoration: BoxDecoration(
-                    // color: transaction.transactionType == 'Request'
-                    //     ? isProcessed
-                    //         ? isReceived
-                    //             ? Colors.red[300]
-                    //             : Colors.green[300]
-                    //         : isReceived
-                    //             ? isDenied
-                    //                 ? null
-                    //                 : Colors.orange[200]
-                    //             : isDenied
-                    //                 ? null
-                    //                 : Colors.orange[200]
-                    //     : isReceived
-                    //         ? Colors.green[300]
-                    //         : Colors.red[300],
-                    // borderRadius: BorderRadius.circular(5),
+            // Display the amount, event name and message in the subtitle position
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: EdgeInsets.all(5),
+                  decoration: BoxDecoration(
+                      // color: transaction.transactionType == 'Request'
+                      //     ? isProcessed
+                      //         ? isReceived
+                      //             ? Colors.red[300]
+                      //             : Colors.green[300]
+                      //         : isReceived
+                      //             ? isDenied
+                      //                 ? null
+                      //                 : Colors.orange[200]
+                      //             : isDenied
+                      //                 ? null
+                      //                 : Colors.orange[200]
+                      //     : isReceived
+                      //         ? Colors.green[300]
+                      //         : Colors.red[300],
+                      // borderRadius: BorderRadius.circular(5),
+                      ),
+                  child: Text(
+                    transaction.transactionType == 'Request'
+                        ? isProcessed
+                            ? isReceived
+                                ? '-${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}\€'
+                                : '+${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}\€'
+                            : isReceived
+                                ? '-${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}\€'
+                                : '+${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}\€'
+                        : isReceived
+                            ? '+${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}\€'
+                            : '-${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}\€',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
                     ),
-                child: Text(
-                  transaction.transactionType == 'Request'
-                      ? isProcessed
-                          ? isReceived
-                              ? '-${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}\€'
-                              : '+${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}\€'
-                          : isReceived
-                              ? '-${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}\€'
-                              : '+${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}\€'
-                      : isReceived
-                          ? '+${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}\€'
-                          : '-${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}\€',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
                   ),
                 ),
-              ),
-              // Display the event name if the transaction is associated with an event
-              if (transaction.eventId != null)
-                Text(
-                  'Event: ${transaction.eventId}',
-                  style: TextStyle(color: textColor),
-                ),
+                // Display the event name if the transaction is associated with an event
+                if (transaction.eventId != null)
+                  Text(
+                    'Event: ${transaction.eventId}',
+                    style: TextStyle(color: textColor),
+                  ),
 
-              // Display the message if the transaction has a message. If the message is too long, display only the first 30 characters
-              if (transaction.message.isNotEmpty)
-                Text(
-                  '${transaction.message.length > 30 ? transaction.message.substring(0, 30) + '...' : transaction.message}',
-                  style:
-                      TextStyle(color: textColor, fontStyle: FontStyle.italic),
-                ),
-            ],
-          ),
-          // Display the date and time of the transaction in the trailing position
-          trailing: Text(
-            '${DateFormat('dd/MM/yyyy').format(transaction.createdAt)}\n${DateFormat('HH:mm').format(transaction.createdAt)}',
-            textAlign: TextAlign.right,
-            style: TextStyle(color: textColor),
+                // Display the message if the transaction has a message. If the message is too long, display only the first 30 characters
+                if (transaction.message.isNotEmpty)
+                  Text(
+                    '${transaction.message.length > 30 ? transaction.message.substring(0, 30) + '...' : transaction.message}',
+                    style: TextStyle(
+                        color: textColor, fontStyle: FontStyle.italic),
+                  ),
+              ],
+            ),
+            // Display the date and time of the transaction in the trailing position
+            trailing: Text(
+              '${DateFormat('dd/MM/yyyy').format(transaction.createdAt)}\n${DateFormat('HH:mm').format(transaction.createdAt)}',
+              textAlign: TextAlign.right,
+              style: TextStyle(color: textColor),
+            ),
           ),
         ),
       ),

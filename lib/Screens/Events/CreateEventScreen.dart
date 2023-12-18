@@ -205,6 +205,8 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       print('token: $token');
     }
 
+    print(selectedTimestamp);
+
     final createEventResponse =
     await http.post(Uri.parse('${ApiService.serverUrl}/create-event'),
         headers: {

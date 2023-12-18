@@ -19,10 +19,7 @@ class DashboardScreen extends StatelessWidget {
       future: ApiService.fetchUserProfile(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          // Show loading indicator while fetching data
-          return CircularProgressIndicator(
-            value: 0.5,
-          );
+          return const Center(child: CircularProgressIndicator());
         } else if (snapshot.hasError) {
           // Handle errors
           return Text('Error: ${snapshot.error}');

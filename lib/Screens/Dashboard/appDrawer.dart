@@ -87,8 +87,8 @@ class AppDrawer extends StatelessWidget {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => FriendsScreen()),
-                // MaterialPageRoute(builder: (context) => FriendsScreenTEMP()),
+                //MaterialPageRoute(builder: (context) => FriendsScreen()),
+                MaterialPageRoute(builder: (context) => FriendsScreenTEMP()),
               );
             },
           ),

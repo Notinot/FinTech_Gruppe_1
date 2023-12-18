@@ -37,29 +37,36 @@ class PendingFriends extends StatelessWidget {
     var response = await http
         .get(Uri.parse('${ApiService.serverUrl}/friends/pending/$user_id'));
     Map<String, dynamic> data = jsonDecode(response.body);
-    //debugPrint('data[pendingFriends] ${data["pendingFriends"]}');
+
     for (var user in data['pendingFriends']) {
       final pendingFriendTemp = Friend(
           profileImage: null,
           username: user['username'],
           firstName: user['first_name'],
           lastName: user['last_name']);
-      debugPrint('pending Friend username ${user["username"]}');
-
       pendingFriends.add(pendingFriendTemp);
     }
-    //  debugPrint('pending friends legnth: ${pendingFriends.length}');
   }
 
   @override
   Widget build(BuildContext context) {
-    getPendingFriends();
-    debugPrint('PendingFriends length: ${pendingFriends.length}');
-    return Column(
-      children: [
-        Text('Pending friends:'),
-        for (Friend pFriend in pendingFriends) FriendItem(friend: pFriend),
-      ],
+    return FutureBuilder(
+      future: getPendingFriends(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done) {
+          return Column(
+            children: [
+              Text('Pending Friends', style: TextStyle(fontSize: 25)),
+              for (Friend pendingFriend in pendingFriends)
+                PendingFriendItem(friend: pendingFriend), //
+            ],
+          );
+        } else {
+          return Center(
+            child: CircularProgressIndicator(),
+          );
+        }
+      },
     );
   }
 }
@@ -101,7 +108,9 @@ class Friends extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.done) {
           return Column(
             children: [
-              Text("Your Friends"), //hier noch n List View Builder??
+              Text("Your Friends",
+                  style: TextStyle(
+                      fontSize: 25)), //hier noch n List View Builder??
               for (Friend friend in friends) FriendItem(friend: friend),
               //FriendItem(friend: friends[1]),
             ],
@@ -207,6 +216,36 @@ class FriendItem extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+}
+
+class PendingFriendItem extends StatelessWidget {
+  final Friend friend;
+  const PendingFriendItem({super.key, required this.friend});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: Icon(Icons.person),
+      title: Text(friend.username),
+      subtitle: Text('${friend.firstName} ${friend.lastName}'),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ElevatedButton(
+            onPressed: () {
+              //acceptPendingFriend();
+            },
+            child: Text('Accept'),
+          ),
+          TextButton(
+              onPressed: () {
+                //declinePendingFriend();
+              },
+              child: Text('Decline'))
+        ],
+      ),
     );
   }
 }

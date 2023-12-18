@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Screens/Money/RequestMoneyScreen.dart';
 import 'package:flutter_application_1/Screens/Money/SendMoneyScreen.dart';
+import 'package:intl/intl.dart';
 import '../api_service.dart';
 
 class FriendsScreenTEMP extends StatelessWidget {
@@ -90,15 +91,13 @@ class Friends extends StatelessWidget {
 
     for (var user in data['friends']) {
       final friendTemp = Friend(
-          requestTime: user['request_time'],
+          requestTime: DateTime.parse(user['request_time']).toLocal(),
           //profileImage: friend['friend_picture'], muss noch richtig decoded werden
           profileImage: null,
           username: user['friend_username'],
           firstName: user['friend_first_name'],
           lastName: user['friend_last_name']);
-      debugPrint('DASDASDASDASDASD');
-      debugPrint(user['request_time']);
-
+      // debugPrint(user['request_time']);
       friends.add(friendTemp);
     }
   }
@@ -136,7 +135,7 @@ class Friend {
   final String firstName;
   final String lastName;
   final Uint8List? profileImage;
-  final String? requestTime; //ALS DATE SPEICHERNNN
+  final DateTime? requestTime; //ALS DATE SPEICHERNNN
   //hier noch Timestamp von Friend table?
 
   Friend(
@@ -287,7 +286,7 @@ class FriendInfoScreen extends StatelessWidget {
             ),
             SizedBox(height: 20),
             Text(
-              'Friends since: ${friend.requestTime}',
+              'Friends since: ${friend.requestTime?.month}-${friend.requestTime?.day}-${friend.requestTime?.year}',
               style: TextStyle(fontSize: 20),
             ),
             SizedBox(height: 20),

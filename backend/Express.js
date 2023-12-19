@@ -685,15 +685,21 @@ app.post('/send-money', authenticateToken, async (req, res) => {
       return res.status(400).json({ message: 'Invalid input' });
     }
 
+    //Fetch sender username and email
+    const [senderData] = await db.query('SELECT username, email FROM User WHERE user_id = ?', [senderId]);
+    const senderUsername = senderData[0].username;
+    const senderEmail = senderData[0].email;
+
     // Fetch recipient ID based on the recipient username or email
-    const [recipientData] = await db.query('SELECT user_id FROM User WHERE username = ? OR email = ?', [recipient, recipient]);
+    const [recipientData] = await db.query('SELECT user_id, username, email FROM User WHERE username = ? OR email = ?', [recipient, recipient]);
 
     if (recipientData.length === 0) {
       return res.status(404).json({ message: 'Recipient not found' });
     }
 
     const recipientId = recipientData[0].user_id;
-
+    const recipientUsername = recipientData[0].username;
+    const recipientEmail = recipientData[0].email;
     // Insert transaction with message and event_id
     await db.query('INSERT INTO Transaction (sender_id, receiver_id, amount, transaction_type, created_at, message, processed, event_id) VALUES (?, ?, ?, ?, NOW(), ?, 1, ?)', [
       senderId,
@@ -717,6 +723,8 @@ app.post('/send-money', authenticateToken, async (req, res) => {
     await updateBalance(senderId, -amount);
     await updateBalance(recipientId, +amount);
 
+    sendConfirmationEmail(senderEmail, senderUsername,recipientUsername, "Payment", amount, recipientEmail);
+
     res.json({ message: 'Money transfer successful' });
   } catch (error) {
     console.error('Error transferring money:', error);
@@ -731,6 +739,14 @@ app.post('/request-money', authenticateToken, async (req, res) => {
     const requesterId = req.user.userId;
     console.log('requesterId:', requesterId);
 
+    //Get onyl the users email and username
+    const [requesterData] = await db.query('SELECT email, username FROM User WHERE user_id = ?', [requesterId]);
+    const requesterEmail = requesterData[0].email;
+    const requesterUsername = requesterData[0].username;
+
+    console.log('requesterEmail:', requesterEmail);
+    console.log('requesterUsername:', requesterUsername);
+
     // Extract other information from the request body
     const { recipient, amount, message } = req.body;
 
@@ -740,14 +756,15 @@ app.post('/request-money', authenticateToken, async (req, res) => {
     }
 
     // Fetch recipient ID based on the recipient username or email
-    const [recipientData] = await db.query('SELECT user_id FROM User WHERE username = ? OR email = ?', [recipient, recipient]);
+    const [recipientData] = await db.query('SELECT user_id, username, email FROM User WHERE username = ? OR email = ?', [recipient, recipient]);
 
     if (recipientData.length === 0) {
       return res.status(404).json({ message: 'Recipient not found' });
     }
 
     const recipientId = recipientData[0].user_id;
-
+    const recipientUsername = recipientData[0].username;
+    const recipientEmail = recipientData[0].email;
     // Insert transaction with message and set transaction_type to "Request"
     await db.query('INSERT INTO Transaction (sender_id, receiver_id, amount, transaction_type, created_at, message, processed) VALUES (?, ?, ?, ?, NOW(), ?, 0)', [
       requesterId,
@@ -756,8 +773,11 @@ app.post('/request-money', authenticateToken, async (req, res) => {
       'Request',
       message,
     ]);
+    sendConfirmationEmail(requesterEmail, requesterUsername,recipientUsername, "Request", amount, recipientEmail);
 
     res.json({ message: 'Money request sent successfully' });
+    
+
   } catch (error) {
     console.error('Error requesting money:', error);
     res.status(500).json({ message: 'Internal server error' });
@@ -1226,6 +1246,193 @@ function sendDeletionEmail(to, username) {
   `
   }
   transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.error('Error sending email:', error);
+    } else {
+      console.log('Email sent:', info.response);
+    }
+  });
+}
+
+function sendConfirmationEmail(to, username,receiver, requestType, amount, recipientEmail) {
+
+  const mailOptions = {
+    from: 'Payfriendz App',
+    to: to,
+    subject: 'Payfriendz: Your ' + requestType + ' to ' + receiver +  ' was successfully send',
+    html: `
+    <html>
+      <head>
+        <style>
+          /* Inline CSS for styling */
+          .container {
+            background-color: #f4f4f4;
+            padding: 20px;
+            border-radius: 5px;
+            font-family: Arial, sans-serif;
+            width: 80%;
+            max-width: 600px;
+            margin: 0 auto;
+          }
+          .header {
+            background-color: #007bff;
+            color: white;
+            padding: 20px;
+            border-top-left-radius: 5px;
+            border-top-right-radius: 5px;
+            text-align: center;
+          }
+          .header h1 {
+            margin: 0;
+          }
+          .verification-box {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+          }
+          .code {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+            text-align: center;
+            margin-top: 20px;
+          }
+          .text-size-14 {
+            font-size: 14px;
+            color: #555;
+            text-align: center;
+          }
+          .copyright {
+            font-size: 10px;
+            color: #777;
+            text-align: center;
+            margin-top: 20px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>Thank you for using Payfriendz!</h1>
+          </div>
+          <div class="del-box">
+            <h2 class="code">${requestType} send!</h2>
+            <p class="text-size-14">Dear ${username},
+              <br><br>
+              Your ${requestType} of ${amount} € was successfully send to ${receiver}. For more information, please check your transaction history.
+              <br><br>
+              If you have any questions or concerns, please don't hesitate to contact us at <a href="mailto:payfriendzapp@gmail.com">payfriendzapp@gmail.com</a>.
+              <br><br>
+              Thank you for being a part of Payfriendz!
+              <br><br>
+              Best regards,
+              <br><br>
+              Your Payfriendz Team
+            </p>
+          </div>
+          <p class="copyright">
+            &copy; Payfriendz 2023.  Payfriendz is a registered trademark of Payfriendz.
+          </p>
+        </div>
+      </body>
+    </html>
+  `
+  }
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.error('Error sending email:', error);
+    } else {
+      console.log('Email sent:', info.response);
+    }
+  });
+
+  const mailToRecipient = {
+    from: 'Payfriendz App',
+    to: recipientEmail,
+    subject: 'Payfriendz: You received a ' + requestType + ' from ' + username +  '',
+    html: `
+    <html>
+      <head>
+        <style>
+          /* Inline CSS for styling */
+          .container {
+            background-color: #f4f4f4;
+            padding: 20px;
+            border-radius: 5px;
+            font-family: Arial, sans-serif;
+            width: 80%;
+            max-width: 600px;
+            margin: 0 auto;
+          }
+          .header {
+            background-color: #007bff;
+            color: white;
+            padding: 20px;
+            border-top-left-radius: 5px;
+            border-top-right-radius: 5px;
+            text-align: center;
+          }
+          .header h1 {
+            margin: 0;
+          }
+          .verification-box {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+          }
+          .code {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+            text-align: center;
+            margin-top: 20px;
+          }
+          .text-size-14 {
+            font-size: 14px;
+            color: #555;
+            text-align: center;
+          }
+          .copyright {
+            font-size: 10px;
+            color: #777;
+            text-align: center;
+            margin-top: 20px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>Thank you for using Payfriendz!</h1>
+          </div>
+          <div class="del-box">
+            <h2 class="code">${requestType} received!</h2>
+            <p class="text-size-14">Dear ${receiver},
+              <br><br>
+              You received a ${requestType} of ${amount} € from ${username}. For more information, please check your transaction history.
+              <br><br>
+              If you have any questions or concerns, please don't hesitate to contact us at <a href="mailto:payfriendzapp@gmail.com">payfriendzapp@gmail.com</a>.
+              <br><br>
+              Thank you for being a part of Payfriendz!
+              <br><br>
+              Best regards,
+              <br><br>
+              Your Payfriendz Team
+            </p>
+          </div>
+          <p class="copyright">
+            &copy; Payfriendz 2023.  Payfriendz is a registered trademark of Payfriendz.
+          </p>
+        </div>
+      </body>
+    </html>
+  `
+  }
+  transporter.sendMail(mailToRecipient, (error, info) => {
     if (error) {
       console.error('Error sending email:', error);
     } else {

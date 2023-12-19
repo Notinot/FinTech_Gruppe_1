@@ -51,6 +51,37 @@ function generateSalt() {
 
   return salt;
 }
+// Route for health check
+app.get('/health', (req, res) => {
+  res.sendStatus(200); // Send a 200 OK response when the server is healthy
+});
+
+
+// Start the server and handle graceful shutdown on SIGINT signal
+server = app.listen(port, () => {
+  process.on('SIGINT', () => {
+    console.log('Shutting down the server...');
+    server.close(() => {
+      console.log('Server has been shut down.');
+      process.exit(0); // Exit the process gracefully
+    });
+  });
+});
+
+
+
+// Import the required nodemailer library
+const nodemailer = require('nodemailer');
+const { stat } = require('fs');
+
+const transporter = nodemailer.createTransport({
+  service: 'Gmail',
+  auth: {
+    user: 'payfriendzapp@gmail.com',
+    pass: 'fmvnkjmnpdmuabcd'
+  }
+});
+
 
 // Forgot Password
 app.post('/forgotpassword', async (req, res) =>{
@@ -847,15 +878,14 @@ app.post('/transactions/:transactionId', authenticateToken, async (req, res) => 
       return res.status(400).json({ message: 'Invalid input' });
     }
 
+
     // Fetch the transaction from the database based on the transaction ID
     const [transactionData] = await db.query('SELECT * FROM Transaction WHERE transaction_id = ?', [transactionId]);
     console.log('transactionData:', transactionData);
     if (transactionData.length === 0) {
       return res.status(404).json({ message: 'Transaction not found' });
     }
-
-    const transaction = transactionData[0];
-
+    const transaction = transactionData[0];      
     // Check if the transaction has already been processed
     if (transaction.processed === 1) {
       return res.status(400).json({ message: 'Transaction has already been processed' });
@@ -879,18 +909,39 @@ app.post('/transactions/:transactionId', authenticateToken, async (req, res) => 
       // Update the transaction status to "accepted"
       await db.query('UPDATE Transaction SET processed = 1 WHERE transaction_id = ?', [transactionId]);
 
+      // Fetch sender username and email
+      const [senderData] = await db.query('SELECT username, email FROM User WHERE user_id = ?', [transaction.sender_id]);
+      const senderUsername = senderData[0].username;
+      const senderEmail = senderData[0].email;
+
+      // Fetch recipient username and email
+      const [recipientData] = await db.query('SELECT username, email FROM User WHERE user_id = ?', [transaction.receiver_id]);
+      const recipientUsername = recipientData[0].username;
+      const recipientEmail = recipientData[0].email;
     
       // Update balances in the database
       await updateBalance(transaction.sender_id, +transaction.amount);
       await updateBalance(transaction.receiver_id, -transaction.amount);
 
+      // Send confirmation emails to sender and recipient
+      sendRequestConfirmationEmail(senderEmail, senderUsername, recipientUsername, 'Request' , transaction.amount, "accepted");
+
       res.json({ message: 'Transaction accepted successfully' });
     }
 
     if (action === 'decline') {
+      const [senderData] = await db.query('SELECT username, email FROM User WHERE user_id = ?', [transaction.sender_id]);
+      const senderUsername = senderData[0].username;
+      const senderEmail = senderData[0].email;
+
+      // Fetch recipient username and email
+      const [recipientData] = await db.query('SELECT username, email FROM User WHERE user_id = ?', [transaction.receiver_id]);
+      const recipientUsername = recipientData[0].username;
+      const recipientEmail = recipientData[0].email;
+    
       // Update the transaction status to "declined"
       await db.query('UPDATE Transaction SET processed = 2 WHERE transaction_id = ?', [transactionId]);
-
+      sendRequestConfirmationEmail(senderEmail, senderUsername, recipientUsername, 'Request' , transaction.amount, "declined");
       res.json({ message: 'Transaction declined successfully' });
     }
   } catch (error) {
@@ -1043,35 +1094,6 @@ app.post('/join-event', authenticateToken, async (req, res) => {
 
 
 
-// Route for health check
-app.get('/health', (req, res) => {
-  res.sendStatus(200); // Send a 200 OK response when the server is healthy
-});
-
-
-// Start the server and handle graceful shutdown on SIGINT signal
-server = app.listen(port, () => {
-  process.on('SIGINT', () => {
-    console.log('Shutting down the server...');
-    server.close(() => {
-      console.log('Server has been shut down.');
-      process.exit(0); // Exit the process gracefully
-    });
-  });
-});
-
-
-
-// Import the required nodemailer library
-const nodemailer = require('nodemailer');
-
-const transporter = nodemailer.createTransport({
-  service: 'Gmail',
-  auth: {
-    user: 'payfriendzapp@gmail.com',
-    pass: 'fmvnkjmnpdmuabcd'
-  }
-});
 
 // Define your email sending function
 function sendVerificationEmail(to, code) {
@@ -1254,11 +1276,11 @@ function sendDeletionEmail(to, username) {
   });
 }
 
-function sendConfirmationEmail(to, username,receiver, requestType, amount, recipientEmail) {
+function sendConfirmationEmail(senderEmail, username, receiver, requestType, amount, recipientEmail) {
 
   const mailOptions = {
     from: 'Payfriendz App',
-    to: to,
+    to: senderEmail,
     subject: 'Payfriendz: Your ' + requestType + ' to ' + receiver +  ' was successfully send',
     html: `
     <html>
@@ -1340,6 +1362,8 @@ function sendConfirmationEmail(to, username,receiver, requestType, amount, recip
     </html>
   `
   }
+
+  
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
       console.error('Error sending email:', error);
@@ -1440,6 +1464,103 @@ function sendConfirmationEmail(to, username,receiver, requestType, amount, recip
     }
   });
 }
+
+function sendRequestConfirmationEmail(senderEmail, username, receiver, requestType, amount, status) {
+  const mailOptions = {
+    from: 'Payfriendz App',
+    to: senderEmail,
+    subject: 'Payfriendz: Your ' +requestType+ ' to ' + receiver +  ' has been ' + status,
+    html: `
+    <html>
+      <head>
+        <style>
+          /* Inline CSS for styling */
+          .container {
+            background-color: #f4f4f4;
+            padding: 20px;
+            border-radius: 5px;
+            font-family: Arial, sans-serif;
+            width: 80%;
+            max-width: 600px;
+            margin: 0 auto;
+          }
+          .header {
+            background-color: #007bff;
+            color: white;
+            padding: 20px;
+            border-top-left-radius: 5px;
+            border-top-right-radius: 5px;
+            text-align: center;
+          }
+          .header h1 {
+            margin: 0;
+          }
+          .verification-box {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+          }
+          .code {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+            text-align: center;
+            margin-top: 20px;
+          }
+          .text-size-14 {
+            font-size: 14px;
+            color: #555;
+            text-align: center;
+          }
+          .copyright {
+            font-size: 10px;
+            color: #777;
+            text-align: center;
+            margin-top: 20px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>Request ${status}</h1>
+          </div>
+          <div class="del-box">
+            <h2 class="code">${amount}€ from ${receiver}</h2>
+            <p class="text-size-14">Dear ${username},
+              <br><br>
+              Your ${requestType} of ${amount} € to ${receiver} has been ${status}. For more information, please check your transaction history.
+              <br><br>
+              If you have any questions or concerns, please don't hesitate to contact us at <a href="mailto:payfriendzapp@gmail.com">payfriendzapp@gmail.com</a>.
+              <br><br>
+              Thank you for being a part of Payfriendz!
+              <br><br>
+              Best regards,
+              <br><br>
+              Your Payfriendz Team
+            </p>
+          </div>
+          <p class="copyright">
+            &copy; Payfriendz 2023.  Payfriendz is a registered trademark of Payfriendz.
+          </p>
+        </div>
+      </body>
+    </html>
+  `
+  }
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.error('Error sending email:', error);
+    } else {
+      console.log('Email sent:', info.response);
+    }
+  });
+
+}
+
+
 
 // Function to update user balance
 async function updateBalance(userId, amount) {

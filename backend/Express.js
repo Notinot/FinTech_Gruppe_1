@@ -31,7 +31,7 @@ const db = mysql.createPool({
   // user: 'ud86jc8auniwbfsm',
   // password: 'ER0nIAbQy5qyAeSd4ZCV',
   // database: 'btxppofwkgo3xl10tfwy',
-  host: '192.168.178.58',
+  host: '87.144.241.181', 
   user: 'payfriendz',
   password: 'payfriendz',
   database: 'Payfriendz',

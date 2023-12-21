@@ -283,6 +283,20 @@ app.get('/profilePicture', authenticateToken, async (req, res) => {
   }
 }
 );
+
+app.post('/friendName', authenticateToken, async (req, res) => {
+  const { friend: friendId } = req.body; // Rename the variable here
+  try {
+    const query = 'SELECT username FROM User WHERE user_id = ?';
+    const [friend] = await db.query(query, friendId); 
+    console.log(friend[0].username );
+    res.json({ friendname: friend[0].username });
+  } catch (error) {
+    console.error('Error fetching profile:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 //get friends of specific user
 //returns JSON with: 
 app.get('/friends/:user_id', async(req, res) => {
@@ -451,7 +465,7 @@ app.post('/verify', async (req, res) => {
 });
 
 //delete user
-app.post('/delete_user', async (req, res) => {
+app.post('/delete_user', authenticateToken,async (req, res) => {
   const{userid} = req.body;
   try{
     const [userInfo] = await db.query('SELECT username, email FROM User WHERE user_id = ?', [userid]);
@@ -470,7 +484,7 @@ app.post('/delete_user', async (req, res) => {
 
 
 //editing user
-app.post('/edit_user', async (req, res) => {
+app.post('/edit_user',authenticateToken, async (req, res) => {
   const { email, firstname, lastname,new_password, userid,pw_change,picture } = req.body;
   emailChange = false;
 
@@ -542,7 +556,7 @@ app.post('/edit_user', async (req, res) => {
   }
 });
 
-app.post('/edit_user/verify', async (req, res) => {
+app.post('/edit_user/verify', authenticateToken,async (req, res) => {
   const { userid, verificationCode } = req.body;
   console.log('Received userid:', userid);
   console.log('Received verificationCode:', verificationCode);
@@ -561,7 +575,7 @@ console.log("needed input:",code[0].verification_code);
 );
 
 
-app.post('/edit_user/send_code', async (req, res) => {
+app.post('/edit_user/send_code',authenticateToken, async (req, res) => {
   const {userid,email} = req.body;
    code = Math.floor(100000 + Math.random() * 900000).toString();
    query = 'UPDATE User SET verification_code = ? WHERE user_id = ? ';
@@ -573,7 +587,7 @@ app.post('/edit_user/send_code', async (req, res) => {
   }
    );
 
-app.post('/verifyPassword', async (req, res) => {
+app.post('/verifyPassword',authenticateToken, async (req, res) => {
   try {
     const { userid, password } = req.body;
     console.log(userid)

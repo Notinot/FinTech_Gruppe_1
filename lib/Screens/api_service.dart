@@ -4,8 +4,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  static const String serverUrl = 'http://10.0.2.2:3000';
-  // static const String serverUrl = 'http://localhost:3000';
+  //static const String serverUrl = 'http://10.0.2.2:3000';
+  static const String serverUrl = 'http://localhost:3000';
   // const serverUrl = '192.168.56.1:3000';
   // static const String serverUrl = 'http://192.168.178.33:3000';
 
@@ -35,7 +35,7 @@ class ApiService {
   }
 
   //fetch username of the user
-  Future<String> fetchUsername(int senderId) async {
+  static Future<String> fetchUsername(int senderId) async {
     try {
       // Retrieve the user's authentication token from secure storage
       const storage = FlutterSecureStorage();
@@ -150,6 +150,43 @@ class ApiService {
     } catch (e) {
       print('fetchUserBalance: Error fetching data: $e');
       return 0;
+    }
+  }
+
+  static Future<String> fetchFriendUsername(int friendId) async {
+    try {
+      // Retrieve the user's authentication token from secure storage
+      const storage = FlutterSecureStorage();
+      final token = await storage.read(key: 'token');
+
+      // Handle the case where the token is not available
+      if (token == null) {
+        throw Exception('Token not found');
+      }
+
+      // Make an HTTP GET request to fetch transactions
+      final response =
+          await http.post(Uri.parse('${ApiService.serverUrl}/friendName'),
+              headers: {
+                'Content-Type': 'application/json; charset=UTF-8',
+                'Authorization': 'Bearer $token',
+              },
+              body: json.encode(<String, dynamic>{
+                'friend': friendId,
+              }));
+
+      // Check if the request was successful
+      if (response.statusCode == 200) {
+        // Parse the JSON response and create a list of Transaction objects
+        final Map<String, dynamic> data = json.decode(response.body);
+        return data['friendname'];
+      } else {
+        // Handle errors if the request is not successful
+        throw Exception(
+            'Error fetching transactions. Status Code: ${response.statusCode}');
+      }
+    } catch (error) {
+      rethrow;
     }
   }
 
@@ -288,38 +325,32 @@ class ApiService {
   }
 
   static Future<bool> joinEvent(int event_id) async {
-
     try {
-
       const storage = FlutterSecureStorage();
       final token = await storage.read(key: 'token');
       if (token == null) {
         throw Exception('Token not found');
       }
 
-      final joinEventResponse =
-      await http.post(Uri.parse('${ApiService.serverUrl}/join-event?eventId=$event_id'),
+      final joinEventResponse = await http.post(
+          Uri.parse('${ApiService.serverUrl}/join-event?eventId=$event_id'),
           headers: {
             'Content-Type': 'application/json; charset=UTF-8',
             'Authorization': 'Bearer $token',
-          }
-      );
+          });
 
       print(joinEventResponse);
 
-      if(joinEventResponse.statusCode == 200){
-
+      if (joinEventResponse.statusCode == 200) {
         print('joinEvent function: Joining Event was successful');
         return true;
       }
 
       print('joinEvent function: Error joining Event');
       return false;
-
     } catch (e) {
       print('joinEvent function: Error joining Event: $e');
       return false;
     }
   }
-
 }

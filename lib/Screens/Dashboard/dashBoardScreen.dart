@@ -1,13 +1,15 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Screens/Dashboard/appDrawer.dart';
 import 'package:flutter_application_1/Screens/Dashboard/Notifications.dart';
 import 'package:flutter_application_1/Screens/Dashboard/accountSummary.dart';
+import 'package:flutter_application_1/Screens/Friends/FriendsScreen.dart';
+import 'package:flutter_application_1/Screens/Friends/FriendsScreenTEMP.dart';
 import 'package:flutter_application_1/Screens/api_service.dart';
-import 'package:flutter_application_1/Screens/Events/CreateEventScreen.dart';
 import 'package:flutter_application_1/Screens/Dashboard/quickActionsMenu.dart';
-import 'package:flutter_application_1/Screens/Money/RequestMoneyScreen.dart';
-import 'package:flutter_application_1/Screens/Money/SendMoneyScreen.dart';
 import 'package:flutter_application_1/Screens/Dashboard/userProfileSection.dart';
+import 'package:flutter_application_1/Screens/dashBoardScreen.dart';
+import 'package:http/http.dart' as http;
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({Key? key}) : super(key: key);
@@ -26,10 +28,25 @@ class DashboardScreen extends StatelessWidget {
         } else {
           // Once data is loaded, display the dashboard
           final Map<String, dynamic> user = snapshot.data!;
+          List<Map<String, dynamic>> PendingFriends = [];
+          // Fetch pending friends asynchronously
+          fetchPendingFriends(user['user_id']).then((friends) {
+            PendingFriends = friends;
+          });
 
           return Scaffold(
             appBar: AppBar(
               title: const Text('Dashboard'),
+              actions: [
+                // Bell icon to trigger notifications menu
+                IconButton(
+                  icon: Icon(Icons.notifications),
+                  onPressed: () {
+                    // Fetch and show notifications menu
+                    fetchAndBuildNotifications(context, user);
+                  },
+                ),
+              ],
             ),
             body: SingleChildScrollView(
               child: Center(
@@ -56,67 +73,123 @@ class DashboardScreen extends StatelessWidget {
             ),
             // Add the AppDrawer to the dashboard screen
             drawer: AppDrawer(user: user),
-            //floatingActionButton: Positioned(
-            //bottom: 16.0,
-            //right: 16.0,
-            //child: QuickMenu(user: user),
-            //)
             floatingActionButton: QuickMenu(
-                user: user), //somehow The Positioned Widget made some problems
+              user: user,
+            ),
           );
         }
       },
     );
   }
-}
 
-class UpcomingEvents extends StatelessWidget {
-  final List<Event> events;
+  void fetchAndBuildNotifications(
+      BuildContext context, Map<String, dynamic> user) async {
+    List<Map<String, dynamic>> pendingFriends =
+        await fetchPendingFriends(user['user_id']);
+    List<PopupMenuItem<String>> items = [];
 
-  const UpcomingEvents({Key? key, required this.events}) : super(key: key);
+    for (int i = 0; i < pendingFriends.length; i++) {
+      PopupMenuItem<String> item =
+          await buildNotificationItem(context, pendingFriends[i], user);
+      items.add(item);
+    }
 
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: <Widget>[
-        const Text(
-          'Upcoming Events:',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 8),
-        ListView.builder(
-          shrinkWrap: true,
-          itemCount: events.length,
-          itemBuilder: (context, index) {
-            return EventItem(event: events[index]);
-          },
-        ),
-      ],
+    // Display notifications in the AppBar
+    showNotificationsMenu(context, items);
+  }
+
+  void showNotificationsMenu(
+      BuildContext context, List<PopupMenuItem<String>> items) {
+    // Use a PopupMenuButton for the notifications
+    showMenu<String>(
+      context: context,
+      position: RelativeRect.fromLTRB(10, 10, 0, 0),
+      items: items,
     );
   }
-}
 
-class Event {
-  final String title;
-  final String date;
+  void handleFriendRequest(int friendId, bool accepted, int user_id) async {
+    try {
+      Map<String, dynamic> requestBody = {
+        'friendId': friendId,
+        'accepted': accepted,
+      };
 
-  Event({required this.title, required this.date});
-}
+      final response = await http.post(
+        Uri.parse('${ApiService.serverUrl}/friends/request/$user_id'),
+        body: json.encode(requestBody),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      );
 
-class EventItem extends StatelessWidget {
-  final Event event;
+      if (response.statusCode == 200) {
+        // Fetch pending friends after handling the request
+        await fetchPendingFriends(user_id);
+      } else {
+        print(
+            'Failed to accept friend request. Status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error accepting friend request: $e');
+    }
+  }
 
-  const EventItem({Key? key, required this.event}) : super(key: key);
+  Future<List<Map<String, dynamic>>> fetchPendingFriends(int user_id) async {
+    try {
+      final response = await http
+          .get(Uri.parse('${ApiService.serverUrl}/friends/pending/$user_id'));
 
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 10),
-      child: ListTile(
-        title: Text(event.title),
-        subtitle: Text(
-          'Date: ${event.date}',
-        ),
+      if (response.statusCode == 200) {
+        Map<String, dynamic> data = json.decode(response.body);
+        List<dynamic> pending = data['pendingFriends'];
+        List<Map<String, dynamic>> pendingFriends =
+            pending.cast<Map<String, dynamic>>();
+        print('Pending Friends: $pendingFriends');
+        return pendingFriends;
+      } else {
+        throw Exception('Failed to load pending friend requests');
+      }
+    } catch (e) {
+      print('Error fetching pending friend requests: $e');
+      // Return an empty list to handle the error case
+      return [];
+    }
+  }
+
+  Future<PopupMenuItem<String>> buildNotificationItem(BuildContext context,
+      Map<String, dynamic> friendRequest, Map<String, dynamic> user) async {
+    String requesterName =
+        await ApiService.fetchFriendUsername(friendRequest['requester_id']);
+
+    return PopupMenuItem<String>(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: ListTile(
+              title: Text('Friend request from $requesterName'),
+            ),
+          ),
+          IconButton(
+            icon: Icon(Icons.check, color: Colors.green),
+            onPressed: () {
+              // Handle green tick action
+              handleFriendRequest(
+                  friendRequest['requester_id'], true, user['user_id']);
+              Navigator.pop(context); // Close the menu
+            },
+          ),
+          IconButton(
+            icon: Icon(Icons.close, color: Colors.red),
+            onPressed: () {
+              // Handle green tick action
+              handleFriendRequest(
+                  friendRequest['requester_id'], false, user['user_id']);
+              Navigator.pop(context); // Close the menu
+            },
+          ),
+        ],
       ),
     );
   }

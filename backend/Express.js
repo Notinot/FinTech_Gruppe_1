@@ -283,6 +283,20 @@ app.get('/profilePicture', authenticateToken, async (req, res) => {
   }
 }
 );
+
+app.post('/friendName', authenticateToken, async (req, res) => {
+  const { friend: friendId } = req.body; // Rename the variable here
+  try {
+    const query = 'SELECT username FROM User WHERE user_id = ?';
+    const [friend] = await db.query(query, friendId); 
+    console.log(friend[0].username );
+    res.json({ friendname: friend[0].username });
+  } catch (error) {
+    console.error('Error fetching profile:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 //get friends of specific user
 //returns JSON with: 
 app.get('/friends/:user_id', async(req, res) => {

@@ -27,14 +27,14 @@ app.use(cors({
 const db = mysql.createPool({
 
 
-  // host: 'btxppofwkgo3xl10tfwy-mysql.services.clever-cloud.com',
-  // user: 'ud86jc8auniwbfsm',
-  // password: 'ER0nIAbQy5qyAeSd4ZCV',
-  // database: 'btxppofwkgo3xl10tfwy',
-  host: '192.168.178.58',
-  user: 'payfriendz',
-  password: 'payfriendz',
-  database: 'Payfriendz',
+   host: 'btxppofwkgo3xl10tfwy-mysql.services.clever-cloud.com',
+   user: 'ud86jc8auniwbfsm',
+   password: 'ER0nIAbQy5qyAeSd4ZCV',
+   database: 'btxppofwkgo3xl10tfwy',
+  // host: '192.168.178.58',
+  //user: 'payfriendz',
+  //password: 'payfriendz',
+  //database: 'Payfriendz',
 });
 let server; // Define the server variable at a higher scope
 
@@ -451,7 +451,7 @@ app.post('/verify', async (req, res) => {
 });
 
 //delete user
-app.post('/delete_user', async (req, res) => {
+app.post('/delete_user', authenticateToken,async (req, res) => {
   const{userid} = req.body;
   try{
     const [userInfo] = await db.query('SELECT username, email FROM User WHERE user_id = ?', [userid]);
@@ -470,7 +470,7 @@ app.post('/delete_user', async (req, res) => {
 
 
 //editing user
-app.post('/edit_user', async (req, res) => {
+app.post('/edit_user',authenticateToken, async (req, res) => {
   const { email, firstname, lastname,new_password, userid,pw_change,picture } = req.body;
   emailChange = false;
 
@@ -542,7 +542,7 @@ app.post('/edit_user', async (req, res) => {
   }
 });
 
-app.post('/edit_user/verify', async (req, res) => {
+app.post('/edit_user/verify', authenticateToken,async (req, res) => {
   const { userid, verificationCode } = req.body;
   console.log('Received userid:', userid);
   console.log('Received verificationCode:', verificationCode);
@@ -561,7 +561,7 @@ console.log("needed input:",code[0].verification_code);
 );
 
 
-app.post('/edit_user/send_code', async (req, res) => {
+app.post('/edit_user/send_code',authenticateToken, async (req, res) => {
   const {userid,email} = req.body;
    code = Math.floor(100000 + Math.random() * 900000).toString();
    query = 'UPDATE User SET verification_code = ? WHERE user_id = ? ';
@@ -573,7 +573,7 @@ app.post('/edit_user/send_code', async (req, res) => {
   }
    );
 
-app.post('/verifyPassword', async (req, res) => {
+app.post('/verifyPassword',authenticateToken, async (req, res) => {
   try {
     const { userid, password } = req.body;
     console.log(userid)

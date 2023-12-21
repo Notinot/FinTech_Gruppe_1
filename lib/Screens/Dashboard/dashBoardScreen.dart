@@ -10,42 +10,53 @@ import 'package:flutter_application_1/Screens/Dashboard/quickActionsMenu.dart';
 import 'package:flutter_application_1/Screens/Dashboard/userProfileSection.dart';
 import 'package:flutter_application_1/Screens/dashBoardScreen.dart';
 import 'package:http/http.dart' as http;
+import 'package:badges/badges.dart' as Badge;
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({Key? key}) : super(key: key);
+
+  @override
+  _DashboardScreenState createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  late List<Map<String, dynamic>> pendingFriends = [];
+  late Future<Map<String, dynamic>> userProfileFuture;
   static List<PopupMenuItem<String>> items = [];
+  @override
+  void initState() {
+    super.initState();
+    userProfileFuture = ApiService.fetchUserProfile();
+    fetchPendingFriends();
+  }
 
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<Map<String, dynamic>>(
-      // Fetch user profile data here
-      future: ApiService.fetchUserProfile(),
+      future: userProfileFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         } else if (snapshot.hasError) {
-          // Handle errors
           return Text('Error: ${snapshot.error}');
         } else {
-          // Once data is loaded, display the dashboard
           final Map<String, dynamic> user = snapshot.data!;
-          List<Map<String, dynamic>> PendingFriends = [];
-          // Fetch pending friends asynchronously
-          fetchPendingFriends(user['user_id']).then((friends) {
-            PendingFriends = friends;
-          });
-
           return Scaffold(
             appBar: AppBar(
               title: const Text('Dashboard'),
               actions: [
-                // Bell icon to trigger notifications menu
-                IconButton(
-                  icon: Icon(Icons.notifications),
-                  onPressed: () {
-                    // Fetch and show notifications menu
-                    fetchAndBuildNotifications(context, user);
-                  },
+                Badge.Badge(
+                  badgeContent: Text(
+                    pendingFriends.length.toString(),
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  position: Badge.BadgePosition.topEnd(top: 5, end: 5),
+                  child: IconButton(
+                    icon: Icon(Icons.notifications, size: 30),
+                    onPressed: () {
+                      fetchAndBuildNotifications(context, user);
+                    },
+                  ),
                 ),
               ],
             ),
@@ -54,13 +65,9 @@ class DashboardScreen extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
-                    // Display user's profile information
                     UserProfileSection(user),
-                    // Display user's account summary
                     AccountSummary(user['balance'].toDouble()),
-                    // Show user notifications
                     Notifications(),
-                    // Display upcoming events
                     UpcomingEvents(
                       events: [
                         Event(title: 'Meeting', date: '2023-11-01'),
@@ -72,18 +79,16 @@ class DashboardScreen extends StatelessWidget {
                 ),
               ),
             ),
-            // Add the AppDrawer to the dashboard screen
             drawer: AppDrawer(user: user),
-            floatingActionButton: QuickMenu(
-              user: user,
-            ),
+            floatingActionButton: QuickMenu(user: user),
           );
         }
       },
     );
   }
 
-  void handleFriendRequest(int friendId, bool accepted, int user_id) async {
+  Future<void> handleFriendRequest(
+      int friendId, bool accepted, int user_id) async {
     try {
       Map<String, dynamic> requestBody = {
         'friendId': friendId,
@@ -99,44 +104,46 @@ class DashboardScreen extends StatelessWidget {
       );
 
       if (response.statusCode == 200) {
-        // Fetch pending friends after handling the request
-        await fetchPendingFriends(user_id);
+        await fetchPendingFriends();
       } else {
         print(
             'Failed to accept friend request. Status code: ${response.statusCode}');
       }
     } catch (e) {
       print('Error accepting friend request: $e');
+      // You may want to throw an exception here or handle the error accordingly
     }
   }
 
-  Future<List<Map<String, dynamic>>> fetchPendingFriends(int user_id) async {
+  Future<void> fetchPendingFriends() async {
     try {
-      final response = await http
-          .get(Uri.parse('${ApiService.serverUrl}/friends/pending/$user_id'));
+      final userProfile = await userProfileFuture;
+      final response = await http.get(
+        Uri.parse(
+            '${ApiService.serverUrl}/friends/pending/${userProfile['user_id']}'),
+      );
 
       if (response.statusCode == 200) {
         Map<String, dynamic> data = json.decode(response.body);
         List<dynamic> pending = data['pendingFriends'];
-        List<Map<String, dynamic>> pendingFriends =
-            pending.cast<Map<String, dynamic>>();
-        print('Pending Friends: $pendingFriends');
-        return pendingFriends;
+        setState(() {
+          pendingFriends = pending.cast<Map<String, dynamic>>();
+        });
       } else {
         throw Exception('Failed to load pending friend requests');
       }
     } catch (e) {
       print('Error fetching pending friend requests: $e');
-      // Return an empty list to handle the error case
-      return [];
+      setState(() {
+        pendingFriends = [];
+      });
     }
   }
 
-  void fetchAndBuildNotifications(
+  Future<void> fetchAndBuildNotifications(
       BuildContext context, Map<String, dynamic> user) async {
-    List<Map<String, dynamic>> pendingFriends =
-        await fetchPendingFriends(user['user_id']);
-    List<PopupMenuItem<String>> items = [];
+    await fetchPendingFriends();
+    items.clear(); // Clear the existing items list
 
     for (int i = 0; i < pendingFriends.length; i++) {
       PopupMenuItem<String> item =
@@ -144,32 +151,32 @@ class DashboardScreen extends StatelessWidget {
       items.add(item);
     }
 
-    // Display notifications in the AppBar
     showNotificationsMenu(context, items, user);
   }
 
   void showNotificationsMenu(BuildContext context,
       List<PopupMenuItem<String>> items, Map<String, dynamic> user) {
-    // Use a PopupMenuButton for the notifications
     showMenu<String>(
       context: context,
       position: RelativeRect.fromLTRB(10, 10, 0, 0),
       items: items,
     ).then((String? value) {
-      // Handle menu item selection if needed
       if (value != null) {
-        // You can perform additional actions based on the selected value
+        // Handle menu item selection if needed
       }
     });
   }
 
-  Future<PopupMenuItem<String>> buildNotificationItem(BuildContext context,
-      Map<String, dynamic> friendRequest, Map<String, dynamic> user) async {
+  Future<PopupMenuItem<String>> buildNotificationItem(
+    BuildContext context,
+    Map<String, dynamic> friendRequest,
+    Map<String, dynamic> user,
+  ) async {
     String requesterName =
         await ApiService.fetchFriendUsername(friendRequest['requester_id']);
 
     return PopupMenuItem<String>(
-      key: Key(friendRequest['requester_id'].toString()), // Add a unique key
+      key: Key(friendRequest['requester_id'].toString()),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -181,27 +188,31 @@ class DashboardScreen extends StatelessWidget {
           IconButton(
             icon: Icon(Icons.check, color: Colors.green),
             onPressed: () {
-              // Handle green tick action
               handleFriendRequest(
-                  friendRequest['requester_id'], true, user['user_id']);
-              // Remove the item from the list
-              items.removeWhere((item) =>
-                  item.key == Key(friendRequest['requester_id'].toString()));
-              Navigator.pop(context);
-              fetchAndBuildNotifications(context, user);
+                friendRequest['requester_id'],
+                true,
+                user['user_id'],
+              ).then((_) {
+                items.removeWhere((item) =>
+                    item.key == Key(friendRequest['requester_id'].toString()));
+                Navigator.pop(context);
+                fetchAndBuildNotifications(context, user);
+              });
             },
           ),
           IconButton(
             icon: Icon(Icons.close, color: Colors.red),
             onPressed: () {
-              // Handle red cross action
               handleFriendRequest(
-                  friendRequest['requester_id'], false, user['user_id']);
-              // Remove the item from the list
-              items.removeWhere((item) =>
-                  item.key == Key(friendRequest['requester_id'].toString()));
-              Navigator.pop(context);
-              fetchAndBuildNotifications(context, user);
+                friendRequest['requester_id'],
+                false,
+                user['user_id'],
+              ).then((_) {
+                items.removeWhere((item) =>
+                    item.key == Key(friendRequest['requester_id'].toString()));
+                Navigator.pop(context);
+                fetchAndBuildNotifications(context, user);
+              });
             },
           ),
         ],

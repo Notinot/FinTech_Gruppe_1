@@ -61,6 +61,7 @@ class _PayfriendzAppState extends State<PayfriendzApp> {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
 
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(useMaterial3: true, colorScheme: lightColorScheme),
       darkTheme: ThemeData(useMaterial3: true, colorScheme: darkColorScheme),
       themeMode: themeNotifier.darkTheme ? ThemeMode.dark : ThemeMode.light,

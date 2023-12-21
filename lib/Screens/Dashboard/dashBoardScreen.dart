@@ -145,13 +145,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
     await fetchPendingFriends();
     items.clear(); // Clear the existing items list
 
-    for (int i = 0; i < pendingFriends.length; i++) {
-      PopupMenuItem<String> item =
-          await buildNotificationItem(context, pendingFriends[i], user);
-      items.add(item);
+    if (pendingFriends.isEmpty) {
+      items.add(buildNoNotificationsItem());
+    } else {
+      for (int i = 0; i < pendingFriends.length; i++) {
+        PopupMenuItem<String> item =
+            await buildNotificationItem(context, pendingFriends[i], user);
+        items.add(item);
+      }
     }
 
     showNotificationsMenu(context, items, user);
+  }
+
+  PopupMenuItem<String> buildNoNotificationsItem() {
+    return PopupMenuItem<String>(
+      key: Key('noNotifications'),
+      child: ListTile(
+        title: Text('No notifications'),
+      ),
+    );
   }
 
   void showNotificationsMenu(BuildContext context,

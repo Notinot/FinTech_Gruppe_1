@@ -511,12 +511,7 @@ class _EditUserState extends State<EditUser> {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           // Show loading indicator while fetching data
-          return Transform.scale(
-              scale: 0.2,
-              child: CircularProgressIndicator(
-                value: 0.4,
-                strokeWidth: 1.5,
-              ));
+          return const Center(child: CircularProgressIndicator());
         } else if (snapshot.hasError) {
           // Handle errors
           return Text('Error: ${snapshot.error}');

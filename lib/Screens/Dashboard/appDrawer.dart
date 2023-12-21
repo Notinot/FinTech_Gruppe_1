@@ -87,8 +87,8 @@ class AppDrawer extends StatelessWidget {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => FriendsScreen()),
-                // MaterialPageRoute(builder: (context) => FriendsScreenTEMP()),
+                //MaterialPageRoute(builder: (context) => FriendsScreen()),
+                MaterialPageRoute(builder: (context) => FriendsScreenTEMP()),
               );
             },
           ),
@@ -116,17 +116,23 @@ class AppDrawer extends StatelessWidget {
             },
           ),
           //ListTile to change theme from light to dark and vice versa
+
+          const Divider(), // Add a divider to separate the top items from the bottom items
           ListTile(
-            //change the icon depending on the theme
-            leading: isDarkMode
+            //change the icon depending on the theme, make it a toggle button
+            leading: themeNotifier.darkTheme
                 ? const Icon(Icons.light_mode)
                 : const Icon(Icons.dark_mode),
-            title: const Text('Change Theme'),
+            title: themeNotifier.darkTheme
+                ? const Text('Light Theme')
+                : const Text('Dark Theme'),
             onTap: () {
               themeNotifier.darkTheme = !themeNotifier.darkTheme;
             },
           ),
-          const Divider(), // Add a divider to separate the top items from the bottom items
+          const Divider(),
+
+          SizedBox(height: 170),
           ListTile(
             leading: const Icon(Icons.exit_to_app),
             title: const Text('Sign Out'),

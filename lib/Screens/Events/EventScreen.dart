@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Screens/Dashboard/dashBoardScreen.dart';
 import 'package:flutter_application_1/Screens/api_service.dart'; // Assumed path
@@ -6,13 +7,11 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 
-
 class EventScreen extends StatefulWidget {
   const EventScreen({Key? key}) : super(key: key);
   @override
   _EventScreenState createState() => _EventScreenState();
 }
-
 
 class _EventScreenState extends State<EventScreen> {
   late Future<List<Event>> eventsFuture;
@@ -23,7 +22,6 @@ class _EventScreenState extends State<EventScreen> {
     super.initState();
     eventsFuture = fetchEvents();
   }
-
 
   // Fetch events from the backend
   Future<List<Event>> fetchEvents() async {
@@ -47,8 +45,7 @@ class _EventScreenState extends State<EventScreen> {
         final List<dynamic> data = jsonDecode(response.body);
         final List<dynamic> eventsData = data;
 
-        List<Event> events =
-        eventsData.map((eventData) {
+        List<Event> events = eventsData.map((eventData) {
           return Event.fromJson(eventData as Map<String, dynamic>);
         }).toList();
 
@@ -63,7 +60,6 @@ class _EventScreenState extends State<EventScreen> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -75,7 +71,7 @@ class _EventScreenState extends State<EventScreen> {
         future: ApiService.fetchUserProfile(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return CircularProgressIndicator();
+            return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
             return Text('Error: ${snapshot.error}');
           } else {
@@ -108,9 +104,7 @@ class _EventScreenState extends State<EventScreen> {
   }
 }
 
-
 class Event {
-
   final int eventID;
   final String title;
   final String category;
@@ -146,61 +140,92 @@ class Event {
         required this.city,
         required this.street,
         required this.zipcode,
-        required this.creator_username
+        required this.creator_username}
+      );
 
-      });
+
+
+  final Map<String, IconData> iconMap = {
+    'Book and Literature': Icons.menu_book_rounded,
+    'Cultural and Arts': Icons.panorama,
+    'Community': Icons.people_rounded,
+    'Enviromental': Icons.park_rounded,
+    'Fashion': Icons.local_mall_rounded,
+    'Film and Entertainment': Icons.movie_creation_rounded,
+    'Food and Drink': Icons.restaurant,
+    'Gaming': Icons.sports_esports_rounded,
+    'Health and Wellness': Icons.health_and_safety_rounded,
+    'Science': Icons.science_rounded,
+    'Sport': Icons.sports_martial_arts_rounded,
+    'Technology and Innovation': Icons.biotech_outlined,
+    'Travel and Adventure': Icons.travel_explore_rounded,
+    'Professional': Icons.business_center_rounded,
+  };
+
+
+  IconData getIconForCategory(String category) {
+    // Check if the category exists in the map, otherwise use a default icon
+    return iconMap.containsKey(category) ? iconMap[category]! : Icons.category;
+  }
+
+
 
   factory Event.fromJson(Map<String, dynamic> json) {
     return Event(
-      eventID: json['event_id'],
-      category: json['category'],
-      title: json['title'],
-      description: json['description'],
-      max_Participants: json['max_participants'],
-      datetimeCreated: DateTime.parse(json['datetime_created']),
-      datetimeEvent: DateTime.parse(json['datetime_event']),
-      price: (json['price'] as num).toDouble(),
-      status: json['status'],
-      recurrence_type: json['recurrence_type'],
-      recurrence_interval: json['recurrence_interval'],
-      country: json['country'],
-      city: json['city'],
-      street: json['street'],
-      zipcode: json['zipcode'],
-      creator_username: json['creator_username']
+        eventID: json['event_id'],
+        category: json['category'],
+        title: json['title'],
+        description: json['description'],
+        max_Participants: json['max_participants'],
+        datetimeCreated: DateTime.parse(json['datetime_created']),
+        datetimeEvent: DateTime.parse(json['datetime_event']),
+        price: (json['price'] as num).toDouble(),
+        status: json['status'],
+        recurrence_type: json['recurrence_type'],
+        recurrence_interval: json['recurrence_interval'],
+        country: json['country'],
+        city: json['city'],
+        street: json['street'],
+        zipcode: json['zipcode'],
+        creator_username: json['creator_username'],
+
     );
   }
 }
 
+
 //Display a single event object in a ListTile
 class EventItem extends StatelessWidget {
 
-
   final Event event;
-  const EventItem({super.key, required this.event});
+  EventItem({super.key, required this.event});
 
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: Icon(Icons.event),
+      leading: Icon(
+          event.getIconForCategory(event.category),
+      ),
       title: Text(event.title),
       subtitle: Text(event.creator_username),
       trailing: IconButton(
           onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => EventInfoScreen(
-                  event: event,
-                ),
-              ),
-            );
+
+            //Open Dialog to either Send or Request Money
+            requestOrSendDialog(context);
+
           },
           icon: Icon(Icons.info)),
       onTap: () {
-        //Open Dialog to either Send or Request Money
-        requestOrSendDialog(context);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => EventInfoScreen(
+              event: event,
+            ),
+          ),
+        );
       },
     );
   }
@@ -208,6 +233,7 @@ class EventItem extends StatelessWidget {
 
 
   Future<dynamic> requestOrSendDialog(BuildContext context) {
+
     return showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -219,18 +245,206 @@ class EventItem extends StatelessWidget {
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: Text('Cancel'),
+              child: Text('Back'),
             ),
             TextButton(
               onPressed: () {
+
+                ApiService.joinEvent(event.eventID);
                 Navigator.of(context).pop();
               },
-              child: Text('Join'),
+              child: Text('Join')
             ),
           ],
         );
       },
     );
+  }
+}
+
+
+
+class EventInfoScreen extends StatelessWidget {
+  final Event event;
+
+  const EventInfoScreen({Key? key, required this.event}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    bool isEmpty = event.country == '' &&
+        event.city == '' &&
+        event.street == '' &&
+        event.zipcode == '';
+    bool isNull = event.price <= 0;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(event.title),
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Card(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16.0),
+            ),
+            elevation: 20,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                SizedBox(height: 16),
+                Text(
+                  'Event Information',
+                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 12),
+                const Divider(height: 8, thickness: 2),
+                SizedBox(height: 12),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Icon(Icons.person_rounded),
+                      SizedBox(width: 8),
+                      Text(
+                        'Creator: ${event.creator_username}',
+                        style: TextStyle(fontSize: 18),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 4),
+                SizedBox(height: 4),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Icon(event.getIconForCategory(event.category)),
+                      SizedBox(width: 8),
+                      Text(
+                        event.category,
+                        style: TextStyle(fontSize: 18),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 12),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Icon(Icons.description_rounded),
+                      SizedBox(width: 8),
+                      Text(
+                        'Description: ',
+                        style: TextStyle(fontSize: 18),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 3),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 50),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          event.description,
+                          style: TextStyle(fontSize: 18),
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+                SizedBox(height: 12),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Icon(Icons.supervised_user_circle_rounded),
+                      Text(
+                        '  Participants: ${event.max_Participants.toString()}',
+                        style: TextStyle(fontSize: 18),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 4),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: EventDateSection(event: event),
+                ),
+                SizedBox(height: 4),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: EventTimeSection(event: event),
+                ),
+                SizedBox(height: 4),
+                isEmpty
+                    ? Container()
+                    : Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Icon(Icons.add_location_alt_rounded),
+                      SizedBox(width: 8),
+                      Text(
+                        ' ${event.country}, ${event.city}, \n ${event.zipcode}, ${event.street}',
+                        style: TextStyle(fontSize: 18),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 4),
+                isNull
+                    ? Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Icon(Icons.money_off_csred_rounded),
+                      SizedBox(width: 8),
+                      Text(
+                        'Free',
+                        style: TextStyle(fontSize: 18),
+                      ),
+                    ],
+                  ),
+                )
+                    : Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Icon(Icons.attach_money_rounded),
+                      SizedBox(width: 8),
+                      Text(
+                        formatAmount(),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 16)
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  String formatAmount() {
+    return '${NumberFormat("#,##0.00", "de_DE").format(event.price)} €';
   }
 }
 
@@ -291,205 +505,3 @@ class EventTimeSection extends StatelessWidget {
     );
   }
 }
-
-
-class EventInfoScreen extends StatelessWidget {
-  final Event event;
-
-  const EventInfoScreen({Key? key, required this.event}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-
-    bool isEmpty = event.country == '' && event.city == '' &&  event.street == '' && event.zipcode == '';
-    bool isNull = event.price <= 0;
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(event.title),
-      ),
-      body: SingleChildScrollView(
-        child:Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Card(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16.0),
-
-            ),
-            elevation: 20,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                SizedBox(height: 16),
-                Text(
-                    'Event Information',
-                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)
-                ),
-                SizedBox(height: 12),
-                const Divider(
-                    height: 8,
-                    thickness: 2
-                ),
-                SizedBox(height: 12),
-                Padding(padding:
-                EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Icon(Icons.person_rounded),
-                      SizedBox(width: 8),
-                      Text(
-                        'Creator: ${event.creator_username}',
-                        style: TextStyle(fontSize: 18),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 4),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Icon(Icons.format_list_bulleted_rounded),
-                      SizedBox(width: 8),
-                      Text(
-                        event.category,
-                        style: TextStyle(fontSize: 18),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 12),
-                Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                    child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Icon(Icons.description_rounded),
-                        SizedBox(width: 8),
-                        Text('Description: ',
-                            style: TextStyle(fontSize: 18)),
-                      ],
-                  ),
-                ),
-                SizedBox(height: 3),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 50),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Flexible(child:
-                      Text(
-                        event.description,
-                        style: TextStyle(fontSize: 18),
-                      ),
-                      )
-                    ],
-                  ),
-                ),
-                SizedBox(height: 12),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Icon(Icons.supervised_user_circle_rounded),
-                      Text(
-                        '  Participants: ${event.max_Participants.toString()}',
-                        style: TextStyle(fontSize: 18),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 4),
-                Padding(padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: EventDateSection(event: event),
-                ),
-                SizedBox(height: 4),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: EventTimeSection(event: event),
-                ),
-                SizedBox(height: 4),
-                isEmpty
-                    ?
-                Container()
-                    :
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Icon(Icons.add_location_alt_rounded),
-                          SizedBox(width: 8),
-                          Text(
-                            ' ${event.country}, ${event.city}, \n ${event.zipcode}, ${event.street}',
-                            style: TextStyle(fontSize: 18),
-                          ),
-                        ],
-                      ),
-                    ),
-                SizedBox(height: 4),
-                isNull
-                    ?
-                    Padding(padding: EdgeInsets.symmetric(horizontal: 16),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Icon(Icons.money_off_csred_rounded),
-                            SizedBox(width: 8),
-                            Text(
-                              'Free',
-                              style: TextStyle(fontSize: 18),
-                            ),
-                          ],
-                        ),
-                    )
-                    :
-                    Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16),
-                        child: Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Icon(Icons.attach_money_rounded),
-                          SizedBox(width: 8),
-                          Text(
-                            formatAmount(),
-                            style:
-                            TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                    ),
-                SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: <Widget>[
-                    TextButton(
-                      child: const Text('Join',
-                      style: TextStyle(fontSize: 18)),
-                      onPressed: () {/* ... */},
-                    ),
-                    const SizedBox(width: 10),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  String formatAmount() {
-    return '${NumberFormat(" #,##0.00", "de_DE").format(event.price)} €'; // Example
-  }
-
-}
-
-
-
-
-
-

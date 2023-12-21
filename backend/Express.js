@@ -35,6 +35,7 @@ const db = mysql.createPool({
   password: 'ER0nIAbQy5qyAeSd4ZCV',
   */
   database: 'btxppofwkgo3xl10tfwy',
+
 });
 let server; // Define the server variable at a higher scope
 
@@ -51,6 +52,37 @@ function generateSalt() {
 
   return salt;
 }
+// Route for health check
+app.get('/health', (req, res) => {
+  res.sendStatus(200); // Send a 200 OK response when the server is healthy
+});
+
+
+// Start the server and handle graceful shutdown on SIGINT signal
+server = app.listen(port, () => {
+  process.on('SIGINT', () => {
+    console.log('Shutting down the server...');
+    server.close(() => {
+      console.log('Server has been shut down.');
+      process.exit(0); // Exit the process gracefully
+    });
+  });
+});
+
+
+
+// Import the required nodemailer library
+const nodemailer = require('nodemailer');
+const { stat } = require('fs');
+
+const transporter = nodemailer.createTransport({
+  service: 'Gmail',
+  auth: {
+    user: 'payfriendzapp@gmail.com',
+    pass: 'fmvnkjmnpdmuabcd'
+  }
+});
+
 
 // Forgot Password
 app.post('/forgotpassword', async (req, res) =>{
@@ -237,12 +269,28 @@ app.get('/user/profile', authenticateToken, async (req, res) => {
   }
 });
 
+// route to get profile picture of a user with JWT authentication and query parameter
+app.get('/profilePicture', authenticateToken, async (req, res) => {
+  try {
+    const user_id = req.query.userId;
+    console.log('user_id:', user_id);
+    const query = `SELECT picture FROM User WHERE user_id = ?`;
+    const [picture] = await db.query(query, [user_id]);
+    console.log('picture:', picture);
+    res.json({ picture: picture[0].picture });
+  } catch (error) {
+    console.error('Error fetching profile picture:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+}
+);
 //get friends of specific user
 //returns JSON with: 
 app.get('/friends/:user_id', async(req, res) => {
   const user_id = req.params.user_id;  
 const query =
 `SELECT
+  request_time,
 CASE
     WHEN f.requester_id = ? THEN u_addressee.username
     WHEN f.addressee_id = ? THEN u_requester.username
@@ -513,6 +561,7 @@ console.log("needed input:",code[0].verification_code);
 }
 );
 
+
 app.post('/edit_user/send_code', async (req, res) => {
   const {userid,email} = req.body;
    code = Math.floor(100000 + Math.random() * 900000).toString();
@@ -668,15 +717,21 @@ app.post('/send-money', authenticateToken, async (req, res) => {
       return res.status(400).json({ message: 'Invalid input' });
     }
 
+    //Fetch sender username and email
+    const [senderData] = await db.query('SELECT username, email FROM User WHERE user_id = ?', [senderId]);
+    const senderUsername = senderData[0].username;
+    const senderEmail = senderData[0].email;
+
     // Fetch recipient ID based on the recipient username or email
-    const [recipientData] = await db.query('SELECT user_id FROM User WHERE username = ? OR email = ?', [recipient, recipient]);
+    const [recipientData] = await db.query('SELECT user_id, username, email FROM User WHERE username = ? OR email = ?', [recipient, recipient]);
 
     if (recipientData.length === 0) {
       return res.status(404).json({ message: 'Recipient not found' });
     }
 
     const recipientId = recipientData[0].user_id;
-
+    const recipientUsername = recipientData[0].username;
+    const recipientEmail = recipientData[0].email;
     // Insert transaction with message and event_id
     await db.query('INSERT INTO Transaction (sender_id, receiver_id, amount, transaction_type, created_at, message, processed, event_id) VALUES (?, ?, ?, ?, NOW(), ?, 1, ?)', [
       senderId,
@@ -700,6 +755,8 @@ app.post('/send-money', authenticateToken, async (req, res) => {
     await updateBalance(senderId, -amount);
     await updateBalance(recipientId, +amount);
 
+    sendConfirmationEmail(senderEmail, senderUsername,recipientUsername, "Payment", amount, recipientEmail);
+
     res.json({ message: 'Money transfer successful' });
   } catch (error) {
     console.error('Error transferring money:', error);
@@ -714,6 +771,14 @@ app.post('/request-money', authenticateToken, async (req, res) => {
     const requesterId = req.user.userId;
     console.log('requesterId:', requesterId);
 
+    //Get onyl the users email and username
+    const [requesterData] = await db.query('SELECT email, username FROM User WHERE user_id = ?', [requesterId]);
+    const requesterEmail = requesterData[0].email;
+    const requesterUsername = requesterData[0].username;
+
+    console.log('requesterEmail:', requesterEmail);
+    console.log('requesterUsername:', requesterUsername);
+
     // Extract other information from the request body
     const { recipient, amount, message } = req.body;
 
@@ -723,14 +788,15 @@ app.post('/request-money', authenticateToken, async (req, res) => {
     }
 
     // Fetch recipient ID based on the recipient username or email
-    const [recipientData] = await db.query('SELECT user_id FROM User WHERE username = ? OR email = ?', [recipient, recipient]);
+    const [recipientData] = await db.query('SELECT user_id, username, email FROM User WHERE username = ? OR email = ?', [recipient, recipient]);
 
     if (recipientData.length === 0) {
       return res.status(404).json({ message: 'Recipient not found' });
     }
 
     const recipientId = recipientData[0].user_id;
-
+    const recipientUsername = recipientData[0].username;
+    const recipientEmail = recipientData[0].email;
     // Insert transaction with message and set transaction_type to "Request"
     await db.query('INSERT INTO Transaction (sender_id, receiver_id, amount, transaction_type, created_at, message, processed) VALUES (?, ?, ?, ?, NOW(), ?, 0)', [
       requesterId,
@@ -739,8 +805,11 @@ app.post('/request-money', authenticateToken, async (req, res) => {
       'Request',
       message,
     ]);
+    sendConfirmationEmail(requesterEmail, requesterUsername,recipientUsername, "Request", amount, recipientEmail);
 
     res.json({ message: 'Money request sent successfully' });
+    
+
   } catch (error) {
     console.error('Error requesting money:', error);
     res.status(500).json({ message: 'Internal server error' });
@@ -810,15 +879,14 @@ app.post('/transactions/:transactionId', authenticateToken, async (req, res) => 
       return res.status(400).json({ message: 'Invalid input' });
     }
 
+
     // Fetch the transaction from the database based on the transaction ID
     const [transactionData] = await db.query('SELECT * FROM Transaction WHERE transaction_id = ?', [transactionId]);
     console.log('transactionData:', transactionData);
     if (transactionData.length === 0) {
       return res.status(404).json({ message: 'Transaction not found' });
     }
-
-    const transaction = transactionData[0];
-
+    const transaction = transactionData[0];      
     // Check if the transaction has already been processed
     if (transaction.processed === 1) {
       return res.status(400).json({ message: 'Transaction has already been processed' });
@@ -842,18 +910,39 @@ app.post('/transactions/:transactionId', authenticateToken, async (req, res) => 
       // Update the transaction status to "accepted"
       await db.query('UPDATE Transaction SET processed = 1 WHERE transaction_id = ?', [transactionId]);
 
+      // Fetch sender username and email
+      const [senderData] = await db.query('SELECT username, email FROM User WHERE user_id = ?', [transaction.sender_id]);
+      const senderUsername = senderData[0].username;
+      const senderEmail = senderData[0].email;
+
+      // Fetch recipient username and email
+      const [recipientData] = await db.query('SELECT username, email FROM User WHERE user_id = ?', [transaction.receiver_id]);
+      const recipientUsername = recipientData[0].username;
+      const recipientEmail = recipientData[0].email;
     
       // Update balances in the database
       await updateBalance(transaction.sender_id, +transaction.amount);
       await updateBalance(transaction.receiver_id, -transaction.amount);
 
+      // Send confirmation emails to sender and recipient
+      sendRequestConfirmationEmail(senderEmail, senderUsername, recipientUsername, 'Request' , transaction.amount, "accepted");
+
       res.json({ message: 'Transaction accepted successfully' });
     }
 
     if (action === 'decline') {
+      const [senderData] = await db.query('SELECT username, email FROM User WHERE user_id = ?', [transaction.sender_id]);
+      const senderUsername = senderData[0].username;
+      const senderEmail = senderData[0].email;
+
+      // Fetch recipient username and email
+      const [recipientData] = await db.query('SELECT username, email FROM User WHERE user_id = ?', [transaction.receiver_id]);
+      const recipientUsername = recipientData[0].username;
+      const recipientEmail = recipientData[0].email;
+    
       // Update the transaction status to "declined"
       await db.query('UPDATE Transaction SET processed = 2 WHERE transaction_id = ?', [transactionId]);
-
+      sendRequestConfirmationEmail(senderEmail, senderUsername, recipientUsername, 'Request' , transaction.amount, "declined");
       res.json({ message: 'Transaction declined successfully' });
     }
   } catch (error) {
@@ -864,22 +953,42 @@ app.post('/transactions/:transactionId', authenticateToken, async (req, res) => 
 );
 
 
-// Fetch Events
-app.post('/events', authenticateToken, async (req, res) => {
+//route to get the events the user is part of with JWT authentication
+app.get('/events', authenticateToken, async (req, res) => {
+  try {
+    console.log('Token:', req.headers['authorization']);
+    // Get the user ID from the authenticated token
+    const userId = req.user.userId;
+    console.log('userId:', userId);
 
-    const senderId = req.user.userID;
-    console.log('senderId: ', senderId);
+    // All Events the User interacted with (being Creator or joined the Event)
+    const [interactedEvents] = await db.query(`
+      SELECT
+          Event.*,
+          Location.*,
+          User_Event.user_id,
+          User.username AS creator_username
+      FROM
+          Event
+      JOIN
+          User_Event ON User_Event.event_id = Event.id
+      JOIN
+          User ON Event.creator_id = User.user_id
+      LEFT JOIN
+          Location ON Event.id = Location.event_id
+      WHERE
+          User_Event.user_id = ?;
 
-    try{
+    `, [userId]);
 
-        const fetchEvents = await db.query('SELECT * FROM Event WHERE creator_id = ?', [sender_id]);
-        res.json(fetchEvents);
 
-    } catch (error) {
-         console.error('Error fetching events:', error);
-         res.status(500).json({ message: 'Internal server error' });
-       }
+    console.log('events:', interactedEvents);
+    res.json(interactedEvents);
 
+  } catch (error) {
+    console.error('Error fetching Events:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
 });
 
 
@@ -960,37 +1069,32 @@ app.post('/create-event', authenticateToken, async (req, res) => {
 
 });
 
+app.post('/join-event', authenticateToken, async (req, res) => {
+
+    try{
+
+        const senderId = req.user.userId;
+        const eventId = req.query.eventId;
+
+        if(!event_id){
+            return res.status(400).json({message: 'Invalid input'});
+        }
+
+        const [joinQuery] = await db.query('INSERT INTO User_Event (event_id, user_id) VALUES (?, ?)',
+         [
+         eventId,
+         senderId
+         ]);
+
+        console.log(joinQuery);
+    }
+    catch (e){
+
+    }
+})
 
 
-// Route for health check
-app.get('/health', (req, res) => {
-  res.sendStatus(200); // Send a 200 OK response when the server is healthy
-});
 
-
-// Start the server and handle graceful shutdown on SIGINT signal
-server = app.listen(port, () => {
-  process.on('SIGINT', () => {
-    console.log('Shutting down the server...');
-    server.close(() => {
-      console.log('Server has been shut down.');
-      process.exit(0); // Exit the process gracefully
-    });
-  });
-});
-
-
-
-// Import the required nodemailer library
-const nodemailer = require('nodemailer');
-
-const transporter = nodemailer.createTransport({
-  service: 'Gmail',
-  auth: {
-    user: 'payfriendzapp@gmail.com',
-    pass: 'fmvnkjmnpdmuabcd'
-  }
-});
 
 // Define your email sending function
 function sendVerificationEmail(to, code) {
@@ -1173,6 +1277,292 @@ function sendDeletionEmail(to, username) {
   });
 }
 
+function sendConfirmationEmail(senderEmail, username, receiver, requestType, amount, recipientEmail) {
+
+  const mailOptions = {
+    from: 'Payfriendz App',
+    to: senderEmail,
+    subject: 'Payfriendz: Your ' + requestType + ' to ' + receiver +  ' was successfully send',
+    html: `
+    <html>
+      <head>
+        <style>
+          /* Inline CSS for styling */
+          .container {
+            background-color: #f4f4f4;
+            padding: 20px;
+            border-radius: 5px;
+            font-family: Arial, sans-serif;
+            width: 80%;
+            max-width: 600px;
+            margin: 0 auto;
+          }
+          .header {
+            background-color: #007bff;
+            color: white;
+            padding: 20px;
+            border-top-left-radius: 5px;
+            border-top-right-radius: 5px;
+            text-align: center;
+          }
+          .header h1 {
+            margin: 0;
+          }
+          .verification-box {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+          }
+          .code {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+            text-align: center;
+            margin-top: 20px;
+          }
+          .text-size-14 {
+            font-size: 14px;
+            color: #555;
+            text-align: center;
+          }
+          .copyright {
+            font-size: 10px;
+            color: #777;
+            text-align: center;
+            margin-top: 20px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>Thank you for using Payfriendz!</h1>
+          </div>
+          <div class="del-box">
+            <h2 class="code">${requestType} send!</h2>
+            <p class="text-size-14">Dear ${username},
+              <br><br>
+              Your ${requestType} of ${amount} € was successfully send to ${receiver}. For more information, please check your transaction history.
+              <br><br>
+              If you have any questions or concerns, please don't hesitate to contact us at <a href="mailto:payfriendzapp@gmail.com">payfriendzapp@gmail.com</a>.
+              <br><br>
+              Thank you for being a part of Payfriendz!
+              <br><br>
+              Best regards,
+              <br><br>
+              Your Payfriendz Team
+            </p>
+          </div>
+          <p class="copyright">
+            &copy; Payfriendz 2023.  Payfriendz is a registered trademark of Payfriendz.
+          </p>
+        </div>
+      </body>
+    </html>
+  `
+  }
+
+  
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.error('Error sending email:', error);
+    } else {
+      console.log('Email sent:', info.response);
+    }
+  });
+
+  const mailToRecipient = {
+    from: 'Payfriendz App',
+    to: recipientEmail,
+    subject: 'Payfriendz: You received a ' + requestType + ' from ' + username +  '',
+    html: `
+    <html>
+      <head>
+        <style>
+          /* Inline CSS for styling */
+          .container {
+            background-color: #f4f4f4;
+            padding: 20px;
+            border-radius: 5px;
+            font-family: Arial, sans-serif;
+            width: 80%;
+            max-width: 600px;
+            margin: 0 auto;
+          }
+          .header {
+            background-color: #007bff;
+            color: white;
+            padding: 20px;
+            border-top-left-radius: 5px;
+            border-top-right-radius: 5px;
+            text-align: center;
+          }
+          .header h1 {
+            margin: 0;
+          }
+          .verification-box {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+          }
+          .code {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+            text-align: center;
+            margin-top: 20px;
+          }
+          .text-size-14 {
+            font-size: 14px;
+            color: #555;
+            text-align: center;
+          }
+          .copyright {
+            font-size: 10px;
+            color: #777;
+            text-align: center;
+            margin-top: 20px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>Thank you for using Payfriendz!</h1>
+          </div>
+          <div class="del-box">
+            <h2 class="code">${requestType} received!</h2>
+            <p class="text-size-14">Dear ${receiver},
+              <br><br>
+              You received a ${requestType} of ${amount} € from ${username}. For more information, please check your transaction history.
+              <br><br>
+              If you have any questions or concerns, please don't hesitate to contact us at <a href="mailto:payfriendzapp@gmail.com">payfriendzapp@gmail.com</a>.
+              <br><br>
+              Thank you for being a part of Payfriendz!
+              <br><br>
+              Best regards,
+              <br><br>
+              Your Payfriendz Team
+            </p>
+          </div>
+          <p class="copyright">
+            &copy; Payfriendz 2023.  Payfriendz is a registered trademark of Payfriendz.
+          </p>
+        </div>
+      </body>
+    </html>
+  `
+  }
+  transporter.sendMail(mailToRecipient, (error, info) => {
+    if (error) {
+      console.error('Error sending email:', error);
+    } else {
+      console.log('Email sent:', info.response);
+    }
+  });
+}
+
+function sendRequestConfirmationEmail(senderEmail, username, receiver, requestType, amount, status) {
+  const mailOptions = {
+    from: 'Payfriendz App',
+    to: senderEmail,
+    subject: 'Payfriendz: Your ' +requestType+ ' to ' + receiver +  ' has been ' + status,
+    html: `
+    <html>
+      <head>
+        <style>
+          /* Inline CSS for styling */
+          .container {
+            background-color: #f4f4f4;
+            padding: 20px;
+            border-radius: 5px;
+            font-family: Arial, sans-serif;
+            width: 80%;
+            max-width: 600px;
+            margin: 0 auto;
+          }
+          .header {
+            background-color: #007bff;
+            color: white;
+            padding: 20px;
+            border-top-left-radius: 5px;
+            border-top-right-radius: 5px;
+            text-align: center;
+          }
+          .header h1 {
+            margin: 0;
+          }
+          .verification-box {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+          }
+          .code {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+            text-align: center;
+            margin-top: 20px;
+          }
+          .text-size-14 {
+            font-size: 14px;
+            color: #555;
+            text-align: center;
+          }
+          .copyright {
+            font-size: 10px;
+            color: #777;
+            text-align: center;
+            margin-top: 20px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>Request ${status}</h1>
+          </div>
+          <div class="del-box">
+            <h2 class="code">${amount}€ from ${receiver}</h2>
+            <p class="text-size-14">Dear ${username},
+              <br><br>
+              Your ${requestType} of ${amount} € to ${receiver} has been ${status}. For more information, please check your transaction history.
+              <br><br>
+              If you have any questions or concerns, please don't hesitate to contact us at <a href="mailto:payfriendzapp@gmail.com">payfriendzapp@gmail.com</a>.
+              <br><br>
+              Thank you for being a part of Payfriendz!
+              <br><br>
+              Best regards,
+              <br><br>
+              Your Payfriendz Team
+            </p>
+          </div>
+          <p class="copyright">
+            &copy; Payfriendz 2023.  Payfriendz is a registered trademark of Payfriendz.
+          </p>
+        </div>
+      </body>
+    </html>
+  `
+  }
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.error('Error sending email:', error);
+    } else {
+      console.log('Email sent:', info.response);
+    }
+  });
+
+}
+
+
+
 // Function to update user balance
 async function updateBalance(userId, amount) {
   try {
@@ -1212,7 +1602,6 @@ async function getBalance(userId) {
     return 0; // Return 0 in case of an error
   }
 }
-
 
 
 
@@ -1269,6 +1658,8 @@ app.get('/events', authenticateToken, async (req, res) => {
   }
 });
 
+
+
 //  new route /addFriend?friendId=$friendId with JWT authentication
 app.post('/addFriendId', authenticateToken, async (req, res) => {
   try{
@@ -1302,3 +1693,7 @@ app.post('/addFriendId', authenticateToken, async (req, res) => {
       res.status(500).json({ message: 'Internal server error' });
     }
 });
+
+
+
+

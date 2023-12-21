@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
@@ -7,7 +8,7 @@ class ApiService {
    static const String serverUrl = 'http://10.0.2.2:3000';
   // static const String serverUrl = 'http://localhost:3000';
   // const serverUrl = '192.168.56.1:3000';
-  //static const String serverUrl = 'http://192.168.178.33:3000';
+  // static const String serverUrl = 'http://192.168.178.33:3000';
 
   static Future<Map<String, dynamic>> fetchUserProfile() async {
     // Retrieve the token from secure storage
@@ -257,4 +258,69 @@ class ApiService {
       return false;
     }
   }
+
+  static Future<Uint8List?> fetchProfilePicture(int userId) async {
+    try {
+      const storage = FlutterSecureStorage();
+      final token = await storage.read(key: 'token');
+      if (token == null) {
+        throw Exception('Token not found');
+      }
+
+      final response = await http.get(
+        Uri.parse('${ApiService.serverUrl}/profilePicture?userId=$userId'),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['picture'] != null && data['picture']['data'] != null) {
+          // Use the byte array from the 'data' field to create the Uint8List
+          return Uint8List.fromList(data['picture']['data'].cast<int>());
+        }
+      } else {
+        throw Exception('Failed to load profile picture');
+      }
+    } catch (e) {
+      print('fetchProfilePicture function: Error fetching data: $e');
+      return null;
+    }
+  }
+
+  static Future<bool> joinEvent(int event_id) async {
+
+    try {
+
+      const storage = FlutterSecureStorage();
+      final token = await storage.read(key: 'token');
+      if (token == null) {
+        throw Exception('Token not found');
+      }
+
+      final joinEventResponse =
+      await http.post(Uri.parse('${ApiService.serverUrl}/join-event?eventId=$event_id'),
+          headers: {
+            'Content-Type': 'application/json; charset=UTF-8',
+            'Authorization': 'Bearer $token',
+          }
+      );
+
+      print(joinEventResponse);
+
+      if(joinEventResponse.statusCode == 200){
+
+        print('joinEvent function: Joining Event was successful');
+        return true;
+      }
+
+      print('joinEvent function: Error joining Event');
+      return false;
+
+    } catch (e) {
+      print('joinEvent function: Error joining Event: $e');
+      return false;
+    }
+  }
+
 }

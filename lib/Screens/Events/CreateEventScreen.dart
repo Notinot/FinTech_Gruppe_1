@@ -28,7 +28,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   final TextEditingController titleController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
   final TextEditingController maxParticipantsController =
-      TextEditingController();
+  TextEditingController();
   final TextEditingController cityController = TextEditingController();
   final TextEditingController streetController = TextEditingController();
   final TextEditingController zipcodeController = TextEditingController();
@@ -113,7 +113,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     return selectedTime == null
         ? selectedDate
         : DateTime(selectedDate.year, selectedDate.month, selectedDate.day,
-            selectedTime.hour, selectedTime.minute);
+        selectedTime.hour, selectedTime.minute);
   }
 
   Future<void> handleCreateEvent() async {
@@ -161,7 +161,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
 
     // Remove euro sign, periods and spaces
     final cleanedAmountText =
-        price.replaceAll('€', '').replaceAll(' ', '').replaceAll('.', '');
+    price.replaceAll('€', '').replaceAll(' ', '').replaceAll('.', '');
 
     // Replace commas with periods
     final normalizedAmountText = cleanedAmountText.replaceAll(',', '.');
@@ -205,25 +205,27 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       print('token: $token');
     }
 
+    print(selectedTimestamp);
+
     final createEventResponse =
-        await http.post(Uri.parse('${ApiService.serverUrl}/create-event'),
-            headers: {
-              'Content-Type': 'application/json; charset=UTF-8',
-              'Authorization': 'Bearer $token',
-            },
-            body: json.encode(<String, dynamic>{
-              'category': selectedCat,
-              'title': title,
-              'description': description,
-              'max_participants': selectedMaxParticipants,
-              'datetime_event': selectedTimestamp.toString(),
-              'country': selectedCountry,
-              'city': city,
-              'street': street,
-              'zipcode': zipcode,
-              'price': parsedPrice,
-              'recurrence_type': recurrence_type
-            }));
+    await http.post(Uri.parse('${ApiService.serverUrl}/create-event'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $token',
+        },
+        body: json.encode(<String, dynamic>{
+          'category': selectedCat,
+          'title': title,
+          'description': description,
+          'max_participants': selectedMaxParticipants,
+          'datetime_event': selectedTimestamp.toString(),
+          'country': selectedCountry,
+          'city': city,
+          'street': street,
+          'zipcode': zipcode,
+          'price': parsedPrice,
+          'recurrence_type': recurrence_type
+        }));
 
     print(createEventResponse);
 
@@ -294,7 +296,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                   });
                 },
                 dropdownMenuEntries:
-                    categories.map<DropdownMenuEntry<String>>((String value) {
+                categories.map<DropdownMenuEntry<String>>((String value) {
                   return DropdownMenuEntry<String>(value: value, label: value);
                 }).toList(),
               ),
@@ -347,7 +349,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                   maxValue: 100,
                   value: selectedMaxParticipants,
                   onChanged: (value) =>
-                      (setState(() => selectedMaxParticipants = value))),
+                  (setState(() => selectedMaxParticipants = value))),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -381,7 +383,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: countryButton, // Button background color
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 35, vertical: 16),
+                  const EdgeInsets.symmetric(horizontal: 35, vertical: 16),
                 ),
                 onPressed: () {
                   showCountryPicker(
@@ -449,7 +451,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                   if (value.isNotEmpty) {
                     // Remove any non-numeric characters
                     final cleanedValue =
-                        value.replaceAll(RegExp(r'[^0-9]'), '');
+                    value.replaceAll(RegExp(r'[^0-9]'), '');
 
                     // Convert the cleaned value to an integer
                     final intValue = int.tryParse(cleanedValue) ?? 0;
@@ -512,7 +514,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue, // Button background color
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+                  const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
                 ),
                 onPressed: handleCreateEvent,
                 child: const Text(

@@ -13,6 +13,7 @@ import 'package:http/http.dart' as http;
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({Key? key}) : super(key: key);
+  static List<PopupMenuItem<String>> items = [];
 
   @override
   Widget build(BuildContext context) {
@@ -82,32 +83,6 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  void fetchAndBuildNotifications(
-      BuildContext context, Map<String, dynamic> user) async {
-    List<Map<String, dynamic>> pendingFriends =
-        await fetchPendingFriends(user['user_id']);
-    List<PopupMenuItem<String>> items = [];
-
-    for (int i = 0; i < pendingFriends.length; i++) {
-      PopupMenuItem<String> item =
-          await buildNotificationItem(context, pendingFriends[i], user);
-      items.add(item);
-    }
-
-    // Display notifications in the AppBar
-    showNotificationsMenu(context, items);
-  }
-
-  void showNotificationsMenu(
-      BuildContext context, List<PopupMenuItem<String>> items) {
-    // Use a PopupMenuButton for the notifications
-    showMenu<String>(
-      context: context,
-      position: RelativeRect.fromLTRB(10, 10, 0, 0),
-      items: items,
-    );
-  }
-
   void handleFriendRequest(int friendId, bool accepted, int user_id) async {
     try {
       Map<String, dynamic> requestBody = {
@@ -157,12 +132,44 @@ class DashboardScreen extends StatelessWidget {
     }
   }
 
+  void fetchAndBuildNotifications(
+      BuildContext context, Map<String, dynamic> user) async {
+    List<Map<String, dynamic>> pendingFriends =
+        await fetchPendingFriends(user['user_id']);
+    List<PopupMenuItem<String>> items = [];
+
+    for (int i = 0; i < pendingFriends.length; i++) {
+      PopupMenuItem<String> item =
+          await buildNotificationItem(context, pendingFriends[i], user);
+      items.add(item);
+    }
+
+    // Display notifications in the AppBar
+    showNotificationsMenu(context, items, user);
+  }
+
+  void showNotificationsMenu(BuildContext context,
+      List<PopupMenuItem<String>> items, Map<String, dynamic> user) {
+    // Use a PopupMenuButton for the notifications
+    showMenu<String>(
+      context: context,
+      position: RelativeRect.fromLTRB(10, 10, 0, 0),
+      items: items,
+    ).then((String? value) {
+      // Handle menu item selection if needed
+      if (value != null) {
+        // You can perform additional actions based on the selected value
+      }
+    });
+  }
+
   Future<PopupMenuItem<String>> buildNotificationItem(BuildContext context,
       Map<String, dynamic> friendRequest, Map<String, dynamic> user) async {
     String requesterName =
         await ApiService.fetchFriendUsername(friendRequest['requester_id']);
 
     return PopupMenuItem<String>(
+      key: Key(friendRequest['requester_id'].toString()), // Add a unique key
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -177,16 +184,24 @@ class DashboardScreen extends StatelessWidget {
               // Handle green tick action
               handleFriendRequest(
                   friendRequest['requester_id'], true, user['user_id']);
-              Navigator.pop(context); // Close the menu
+              // Remove the item from the list
+              items.removeWhere((item) =>
+                  item.key == Key(friendRequest['requester_id'].toString()));
+              Navigator.pop(context);
+              fetchAndBuildNotifications(context, user);
             },
           ),
           IconButton(
             icon: Icon(Icons.close, color: Colors.red),
             onPressed: () {
-              // Handle green tick action
+              // Handle red cross action
               handleFriendRequest(
                   friendRequest['requester_id'], false, user['user_id']);
-              Navigator.pop(context); // Close the menu
+              // Remove the item from the list
+              items.removeWhere((item) =>
+                  item.key == Key(friendRequest['requester_id'].toString()));
+              Navigator.pop(context);
+              fetchAndBuildNotifications(context, user);
             },
           ),
         ],

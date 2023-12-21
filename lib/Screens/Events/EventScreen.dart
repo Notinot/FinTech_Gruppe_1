@@ -92,7 +92,9 @@ class _EventScreenState extends State<EventScreen> {
                     return ListView.builder(
                       itemCount: events.length,
                       itemBuilder: (context, index) {
-                        return EventItem(event: events[index]);
+                        return EventItem(
+                            event: events[index]
+                        );
                       },
                     );
                   }
@@ -121,7 +123,6 @@ class Event {
   String? city;
   String? zipcode;
   final creator_username;
-
 
   Event(
       {
@@ -203,6 +204,8 @@ class EventItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
+
     return ListTile(
       leading: Icon(
           event.getIconForCategory(event.category),

@@ -26,16 +26,18 @@ app.use(cors({
 // Create a connection pool to the MySQL database
 const db = mysql.createPool({
 
-  host: 'localhost',
-  user: 'root',
-  password: 'Italia_Union486',
-  /*
-  host: 'btxppofwkgo3xl10tfwy-mysql.services.clever-cloud.com',
-  user: 'ud86jc8auniwbfsm',
-  password: 'ER0nIAbQy5qyAeSd4ZCV',
-  */
-  database: 'btxppofwkgo3xl10tfwy',
 
+
+   host: 'btxppofwkgo3xl10tfwy-mysql.services.clever-cloud.com',
+   user: 'ud86jc8auniwbfsm',
+   password: 'ER0nIAbQy5qyAeSd4ZCV',
+   database: 'btxppofwkgo3xl10tfwy',
+  /*
+  host: '87.144.241.181',
+  user: 'payfriendz',
+  password: 'payfriendz',
+  database: 'Payfriendz',
+  */
 });
 let server; // Define the server variable at a higher scope
 

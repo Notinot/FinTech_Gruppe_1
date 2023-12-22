@@ -28,16 +28,17 @@ const db = mysql.createPool({
 
 
 
+    /*
    host: 'btxppofwkgo3xl10tfwy-mysql.services.clever-cloud.com',
    user: 'ud86jc8auniwbfsm',
    password: 'ER0nIAbQy5qyAeSd4ZCV',
    database: 'btxppofwkgo3xl10tfwy',
-  /*
+  */
   host: '87.144.241.181',
   user: 'payfriendz',
   password: 'payfriendz',
   database: 'Payfriendz',
-  */
+
 });
 let server; // Define the server variable at a higher scope
 
@@ -454,7 +455,7 @@ app.post('/verify', async (req, res) => {
 });
 
 //delete user
-app.post('/delete_user', async (req, res) => {
+app.post('/delete_user', authenticateToken,async (req, res) => {
   const{userid} = req.body;
   try{
     const [userInfo] = await db.query('SELECT username, email FROM User WHERE user_id = ?', [userid]);
@@ -473,7 +474,7 @@ app.post('/delete_user', async (req, res) => {
 
 
 //editing user
-app.post('/edit_user', async (req, res) => {
+app.post('/edit_user',authenticateToken, async (req, res) => {
   const { email, firstname, lastname,new_password, userid,pw_change,picture } = req.body;
   emailChange = false;
 
@@ -545,7 +546,7 @@ app.post('/edit_user', async (req, res) => {
   }
 });
 
-app.post('/edit_user/verify', async (req, res) => {
+app.post('/edit_user/verify', authenticateToken,async (req, res) => {
   const { userid, verificationCode } = req.body;
   console.log('Received userid:', userid);
   console.log('Received verificationCode:', verificationCode);
@@ -564,7 +565,7 @@ console.log("needed input:",code[0].verification_code);
 );
 
 
-app.post('/edit_user/send_code', async (req, res) => {
+app.post('/edit_user/send_code',authenticateToken, async (req, res) => {
   const {userid,email} = req.body;
    code = Math.floor(100000 + Math.random() * 900000).toString();
    query = 'UPDATE User SET verification_code = ? WHERE user_id = ? ';
@@ -576,7 +577,7 @@ app.post('/edit_user/send_code', async (req, res) => {
   }
    );
 
-app.post('/verifyPassword', async (req, res) => {
+app.post('/verifyPassword',authenticateToken, async (req, res) => {
   try {
     const { userid, password } = req.body;
     console.log(userid)
@@ -969,7 +970,8 @@ app.get('/events', authenticateToken, async (req, res) => {
           Event.*,
           Location.*,
           User_Event.user_id,
-          User.username AS creator_username
+          User.username AS creator_username,
+          User.user_id AS creator_id
       FROM
           Event
       JOIN
@@ -1072,28 +1074,31 @@ app.post('/create-event', authenticateToken, async (req, res) => {
 });
 
 app.post('/join-event', authenticateToken, async (req, res) => {
-
     try{
-
         const senderId = req.user.userId;
         const eventId = req.query.eventId;
 
-        if(!event_id){
+        if(!eventId){
+            console.log('Invalid Event Id');
             return res.status(400).json({message: 'Invalid input'});
         }
 
         const [joinQuery] = await db.query('INSERT INTO User_Event (event_id, user_id) VALUES (?, ?)',
          [
-         eventId,
-         senderId
+             eventId,
+             senderId
          ]);
 
         console.log(joinQuery);
-    }
-    catch (e){
+        res.status(200).json({ message: 'Event successfully joined' });
 
     }
-})
+    catch (error){
+
+        console.error('Error creating event:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
 
 
 

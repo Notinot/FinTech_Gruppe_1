@@ -18,7 +18,7 @@ class CreateEventScreen extends StatefulWidget {
 }
 
 class _CreateEventScreenState extends State<CreateEventScreen> {
-  var selectedCat = 'Book and Literature';
+  var selectedCategory = 'Book and Literature';
   var selectedCountry = '';
   var selectedMaxParticipants = 1;
   var selectedTimestamp;
@@ -34,9 +34,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   final TextEditingController zipcodeController = TextEditingController();
   final TextEditingController priceController = TextEditingController();
 
-  Color countryButton = Colors.grey;
-  Color datetimeButton = Colors.grey;
-  Color priceBorder = Colors.grey;
+  Color countryButton = Colors.white;
+  Color datetimeButton = Colors.white;
+  Color priceBorder = Colors.white;
   Color wrongDate = Colors.black;
 
   String? title;
@@ -126,7 +126,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     String? street = streetController.text;
     String? zipcode = zipcodeController.text;
     final String price = priceController.text;
-    final int recurrence_type;
+    final int recurrenceType;
 
     try {
       if (unixTimestamp == null || unixTimestamp == '') {
@@ -182,13 +182,13 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     }
 
     if (weekly == true) {
-      recurrence_type = 1;
+      recurrenceType = 1;
     } else if (monthly == true) {
-      recurrence_type = 2;
+      recurrenceType = 2;
     } else if (yearly == true) {
-      recurrence_type = 3;
+      recurrenceType = 3;
     } else {
-      recurrence_type = 0;
+      recurrenceType = 0;
     }
 
     // Start for request
@@ -214,7 +214,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
           'Authorization': 'Bearer $token',
         },
         body: json.encode(<String, dynamic>{
-          'category': selectedCat,
+          'category': selectedCategory,
           'title': title,
           'description': description,
           'max_participants': selectedMaxParticipants,
@@ -224,7 +224,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
           'street': street,
           'zipcode': zipcode,
           'price': parsedPrice,
-          'recurrence_type': recurrence_type
+          'recurrence_type': recurrenceType
         }));
 
     print(createEventResponse);
@@ -292,7 +292,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 requestFocusOnTap: false,
                 onSelected: (String? newValue) {
                   setState(() {
-                    selectedCat = newValue!;
+                    selectedCategory = newValue!;
                   });
                 },
                 dropdownMenuEntries:

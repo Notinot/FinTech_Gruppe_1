@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_application_1/Screens/Dashboard/dashBoardScreen.dart';
 import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
 import 'package:flutter_application_1/Screens/Login & Register/LoginScreen.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'package:http/http.dart' as http;
 import 'dart:io' as io;
@@ -187,10 +188,14 @@ class _EditUserState extends State<EditUser> {
     if (confirmDelete == true) {
       // User confirmed, proceed with the account deletion
       final Map<String, dynamic> request = {'userid': user_id};
+      const storage = FlutterSecureStorage();
+      final token = await storage.read(key: 'token');
+
       final response = await http.post(
         Uri.parse('${ApiService.serverUrl}/delete_user'),
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token'
         },
         body: json.encode(request),
       );
@@ -384,11 +389,14 @@ class _EditUserState extends State<EditUser> {
     if (email.isNotEmpty && email != email_old) {
       email_change = true;
       Map<String, dynamic> request;
+      const storage = FlutterSecureStorage();
+      final token = await storage.read(key: 'token');
       request = {'userid': user_id, 'email': email};
       resp = await http.post(
         Uri.parse('${ApiService.serverUrl}/edit_user/send_code'),
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
         },
         body: json.encode(request),
       );
@@ -396,10 +404,13 @@ class _EditUserState extends State<EditUser> {
       try {
         code = await verify();
         request = {'userid': user_id, 'verificationCode': code};
+        const storage = FlutterSecureStorage();
+        final token = await storage.read(key: 'token');
         resp = await http.post(
           Uri.parse('${ApiService.serverUrl}/edit_user/verify'),
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
           },
           body: json.encode(request),
         );
@@ -448,11 +459,14 @@ class _EditUserState extends State<EditUser> {
       }
 
       print('Picture data: $requestBody');
+      const storage = FlutterSecureStorage();
+      final token = await storage.read(key: 'token');
       // Make an HTTP POST request to your backend API
       final response = await http.post(
         Uri.parse('${ApiService.serverUrl}/edit_user'),
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
         },
         body: json.encode(requestBody),
       );
@@ -738,10 +752,14 @@ class _EditUserState extends State<EditUser> {
                     'password': currentPasswordController.text,
                   };
 
+                  const storage = FlutterSecureStorage();
+                  final token = await storage.read(key: 'token');
+
                   final response = await http.post(
                     Uri.parse('${ApiService.serverUrl}/verifyPassword'),
                     headers: {
                       'Content-Type': 'application/json',
+                      'Authorization': 'Bearer $token',
                     },
                     body: json.encode(request),
                   );

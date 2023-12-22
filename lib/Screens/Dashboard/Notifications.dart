@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/Screens/Dashboard/dashBoardScreen.dart';
+//import 'package:flutter_application_1/Screens/Dashboard/dashBoardScreen.dart';
 import 'package:flutter_application_1/Screens/Money/TransactionHistoryScreen.dart';
 import 'package:flutter_application_1/Screens/Money/TransactionDetailsScreen.dart';
 import 'package:flutter_application_1/Screens/api_service.dart';
@@ -143,7 +143,7 @@ class _NotificationsState extends State<Notifications> {
   }
 
   String getNotificationText(Transaction transaction) {
-    final Future userid = ApiService.getUserId() as Future<int>;
+    //final Future userid = ApiService.getUserId() as Future<int>;
 
     if (transaction.transactionType == 'Payment' &&
         transaction.receiverId == user_id) {
@@ -160,7 +160,7 @@ class _NotificationsState extends State<Notifications> {
   }
 
   Icon getNotificationIcon(Transaction transaction) {
-    final Future userid = ApiService.getUserId() as Future<int>;
+    //final Future userid = ApiService.getUserId() as Future<int>;
 
     if (transaction.transactionType == 'Request') {
       return Icon(Icons.request_page, color: Colors.orange);

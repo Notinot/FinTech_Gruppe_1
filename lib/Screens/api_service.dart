@@ -38,7 +38,7 @@ class ApiService {
   }
 
   //fetch username of the user
-  Future<String> fetchUsername(int senderId) async {
+  static Future<String> fetchUsername(int senderId) async {
     try {
       // Retrieve the user's authentication token from secure storage
       const storage = FlutterSecureStorage();
@@ -153,6 +153,43 @@ class ApiService {
     } catch (e) {
       print('fetchUserBalance: Error fetching data: $e');
       return 0;
+    }
+  }
+
+  static Future<String> fetchFriendUsername(int friendId) async {
+    try {
+      // Retrieve the user's authentication token from secure storage
+      const storage = FlutterSecureStorage();
+      final token = await storage.read(key: 'token');
+
+      // Handle the case where the token is not available
+      if (token == null) {
+        throw Exception('Token not found');
+      }
+
+      // Make an HTTP GET request to fetch transactions
+      final response =
+          await http.post(Uri.parse('${ApiService.serverUrl}/friendName'),
+              headers: {
+                'Content-Type': 'application/json; charset=UTF-8',
+                'Authorization': 'Bearer $token',
+              },
+              body: json.encode(<String, dynamic>{
+                'friend': friendId,
+              }));
+
+      // Check if the request was successful
+      if (response.statusCode == 200) {
+        // Parse the JSON response and create a list of Transaction objects
+        final Map<String, dynamic> data = json.decode(response.body);
+        return data['friendname'];
+      } else {
+        // Handle errors if the request is not successful
+        throw Exception(
+            'Error fetching transactions. Status Code: ${response.statusCode}');
+      }
+    } catch (error) {
+      rethrow;
     }
   }
 

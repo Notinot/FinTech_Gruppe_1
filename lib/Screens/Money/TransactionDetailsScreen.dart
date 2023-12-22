@@ -576,15 +576,12 @@ class TransactionDetailsScreen extends StatelessWidget {
       );
 
       if (response.statusCode == 200) {
-        // Request successful, you can update the UI or navigate to a different screen
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Request accepted successfully')),
-        );
+        // Request successful
+        showSuccessSnackBar(context, 'Request accepted successfully');
       } else {
         // Request failed, handle the error
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error accepting request')),
-        );
+
+        showErrorSnackBar(context, 'Error accepting request, please try again');
       }
     } catch (error) {
       // Handle exceptions
@@ -650,14 +647,10 @@ class TransactionDetailsScreen extends StatelessWidget {
       print('Response: ${response.body}');
       if (response.statusCode == 200) {
         // Request successful, you can update the UI or navigate to a different screen
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Request denied successfully')),
-        );
+        showSuccessSnackBar(context, 'Request denied successfully');
       } else {
         // Request failed, handle the error
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${response.body}')),
-        );
+        showErrorSnackBar(context, 'Error denying request, please try again');
       }
     } catch (error) {
       // Handle exceptions

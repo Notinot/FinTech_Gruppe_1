@@ -105,7 +105,7 @@ class _NotificationsState extends State<Notifications> {
               child: Column(
                 children: <Widget>[
                   Text(
-                    'Notifications',
+                    'Recent Transactions',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   SizedBox(height: 8),

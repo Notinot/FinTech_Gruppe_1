@@ -10,6 +10,43 @@ import 'package:http/http.dart' as http;
 class Notifications extends StatefulWidget {
   @override
   _NotificationsState createState() => _NotificationsState();
+
+  static Future<List<Transaction>> fetchTransactions() async {
+    try {
+      const storage = FlutterSecureStorage();
+      final token = await storage.read(key: 'token');
+
+      if (token == null) {
+        throw Exception('Token not found');
+      }
+
+      final response = await http.get(
+        Uri.parse('${ApiService.serverUrl}/transactions'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        final List<dynamic> transactionsData = data[0];
+        List<Transaction> transactions =
+            transactionsData.map((transactionData) {
+          return Transaction.fromJson(transactionData as Map<String, dynamic>);
+        }).toList();
+
+        transactions.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+        return transactions;
+      } else {
+        throw Exception(
+            'Error fetching transactions. Status Code: ${response.statusCode}');
+      }
+    } catch (error) {
+      rethrow;
+    }
+  }
 }
 
 class _NotificationsState extends State<Notifications> {
@@ -27,7 +64,7 @@ class _NotificationsState extends State<Notifications> {
     });
   }
 
-  Future<List<Transaction>> fetchTransactions() async {
+  static Future<List<Transaction>> fetchTransactions() async {
     try {
       const storage = FlutterSecureStorage();
       final token = await storage.read(key: 'token');

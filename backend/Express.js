@@ -883,7 +883,7 @@ app.post('/transactions/:transactionId', authenticateToken, async (req, res) => 
     console.log('userId:', userId);
     // Get the transaction ID from the request parameters
     const transactionId = req.params.transactionId;
-    console.log('transactionId:', transactionId);
+    console.log('transactionId YOUR ARE LOOKING FOR:', transactionId);
     // Extract the action from the request body
     const { action } = req.body;
     console.log('action:', action);

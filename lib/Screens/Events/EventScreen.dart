@@ -6,6 +6,7 @@ import 'package:flutter_application_1/Screens/api_service.dart'; // Assumed path
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:flutter_search_bar/flutter_search_bar.dart' as search_bar;
 
 class EventScreen extends StatefulWidget {
   const EventScreen({Key? key}) : super(key: key);
@@ -14,14 +15,37 @@ class EventScreen extends StatefulWidget {
 }
 
 class _EventScreenState extends State<EventScreen> {
+
   late Future<List<Event>> eventsFuture;
+  late search_bar.SearchBar searchBar;
 
   List<Event> events = [];
   @override
   void initState() {
     super.initState();
     eventsFuture = fetchEvents();
+    searchBar = search_bar.SearchBar(
+      showClearButton: true,
+      inBar: true,
+      setState: setState,
+      onSubmitted: onSubmitted,
+      /*
+      onChanged: onChanged,
+      onCleared: onCleared,
+      onClosed: onClosed,
+      */
+      buildDefaultAppBar: buildAppBar,
+      hintText: "Search",
+    );
   }
+
+
+  final List<String> possibleFilters = ['All events', 'My events'];
+  String eventFilter = 'All events';
+
+  final List<String> possibleCategories = [];
+  String categoryFilter = 'Category';
+
 
   // Fetch events from the backend
   Future<List<Event>> fetchEvents() async {
@@ -41,17 +65,72 @@ class _EventScreenState extends State<EventScreen> {
         },
       );
 
+
       if (response.statusCode == 200) {
+
+        String userId = await ApiService.fetchUserId();
         final List<dynamic> data = jsonDecode(response.body);
         final List<dynamic> eventsData = data;
+
+        List<Event> filteredEvents = [];
 
         List<Event> events = eventsData.map((eventData) {
           return Event.fromJson(eventData as Map<String, dynamic>);
         }).toList();
 
-        events.sort((a, b) => b.datetimeCreated.compareTo(a.datetimeCreated));
+        events.sort((a, b) => b.datetimeEvent.compareTo(a.datetimeEvent));
+
+
+        // Fill list for category list
+        for(var event in events){
+          if(!possibleCategories.contains(event.category)){
+            possibleCategories.add(event.category);
+          }
+        }
+
+
+        // My Events with special category
+        if(eventFilter != 'All events' && categoryFilter != 'Category'){
+
+          for(var event in events){
+
+              if(userId == event.creatorId.toString() && categoryFilter == event.category && !filteredEvents.contains(event)){
+                  filteredEvents.add(event);
+              }
+          }
+          return filteredEvents;
+
+        }
+        // My events without special Category
+        else if(eventFilter != 'All events' && categoryFilter == 'Category'){
+
+          for(var event in events){
+
+            if(userId == event.creatorId.toString() && !filteredEvents.contains(event)){
+              filteredEvents.add(event);
+            }
+          }
+          return filteredEvents;
+
+        }
+        // All events with special category
+        else if (eventFilter == 'All events' && categoryFilter != 'Category') {
+
+          for(var event in events){
+            if(categoryFilter == event.category && !filteredEvents.contains(event)){
+              filteredEvents.add(event);
+            }
+          }
+          return filteredEvents;
+
+        }
+        // All events without special category
+        else if (eventFilter == 'All events' && categoryFilter == 'Category'){
+          return events;
+        }
 
         return events;
+
       } else {
         throw Exception('Failed to load events. Error: ${response.statusCode}');
       }
@@ -60,12 +139,45 @@ class _EventScreenState extends State<EventScreen> {
     }
   }
 
+  // Function to build the AppBar
+  AppBar buildAppBar(BuildContext context) {
+    return AppBar(
+      title: Text('Events'),
+      actions: [searchBar.getSearchAction(context)],
+    );
+  }
+
+  Future<void> onSubmitted(String value) async{
+
+    if (value.isNotEmpty) {
+      List<Event> filteredEvents = events
+          .where((events) =>
+      events.title
+          .toLowerCase()
+          .contains(value.toLowerCase()) ||
+          events.creatorUsername
+              .toLowerCase()
+              .contains(value.toLowerCase()))
+          .toList();
+      setState(() {
+        eventsFuture = Future.value(filteredEvents);
+      });
+    } else {
+      setState(() {
+        eventsFuture = fetchEvents();
+      });
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Events'),
+        actions: []
       ),
+
       // FutureBuilder to display the events
       body: FutureBuilder<Map<String, dynamic>>(
         future: ApiService.fetchUserProfile(),
@@ -92,35 +204,133 @@ class _EventScreenState extends State<EventScreen> {
                     return ListView.builder(
                       itemCount: events.length,
                       itemBuilder: (context, index) {
-                        return EventItem(event: events[index]);
+                        return EventItem(
+                            event: events[index]
+                        );
                       },
                     );
                   }
                 });
+            }
+          },
+      ),
+
+      bottomNavigationBar: BottomAppBar(
+        child: FutureBuilder<Map<String, dynamic>>(
+
+          future: ApiService.fetchUserProfile(),
+          builder: (context, snapshot){
+
+            if(snapshot.connectionState == ConnectionState.waiting){
+              return const Center(
+                child: CircularProgressIndicator()
+              );
+            }
+            else if(snapshot.hasError){
+              return Text('Error:  ${snapshot.error}');
+            }
+            else{
+              final Map<String, dynamic> user = snapshot.data!;
+              return Container(
+                height: 20,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 32.0),
+                        child: DropdownMenu<String>(
+                          width: 140,
+                          initialSelection: eventFilter,
+                          hintText: eventFilter,
+                          requestFocusOnTap: false,
+                          onSelected: (String? newValue) {
+                            setState(() {
+                              eventFilter = newValue!;
+                              eventsFuture = fetchEvents();
+                            });
+                          },
+                          dropdownMenuEntries:
+                          possibleFilters.map<DropdownMenuEntry<String>>((String value) {
+                            return DropdownMenuEntry<String>(value: value, label: value);
+                          }).toList(),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 32.0),
+                        child: DropdownMenu<String>(
+                          width: 140,
+                          initialSelection: categoryFilter,
+                          hintText: categoryFilter,
+                          requestFocusOnTap: false,
+                          onSelected: (String? newValue) {
+                            setState(() {
+                              categoryFilter = newValue!;
+                              eventsFuture = fetchEvents();
+                            });
+                          },
+                          dropdownMenuEntries:
+                          possibleCategories.map<DropdownMenuEntry<String>>((String value) {
+                            return DropdownMenuEntry<String>(value: value, label: value);
+                          }).toList(),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
           }
-        },
+        ),
+
       ),
     );
   }
 }
+
+
 
 class Event {
   final int eventID;
   final String title;
   final String category;
   final String description;
-  final int max_Participants;
+  final int maxParticipants;
   DateTime datetimeCreated;
   DateTime datetimeEvent;
   final double price;
   final int status;
-  int? recurrence_type;
-  int? recurrence_interval;
+  int? recurrenceType;
+  int? recurrenceInterval;
   String? country;
   String? street;
   String? city;
   String? zipcode;
-  final creator_username;
+  final creatorUsername;
+  final creatorId;
+
+  Event(
+      {
+        required this.eventID,
+        required this.title,
+        required this.description,
+        required this.category,
+        required this.maxParticipants,
+        required this.datetimeCreated,
+        required this.datetimeEvent,
+        required this.price,
+        required this.status,
+        required this.recurrenceType,
+        required this.recurrenceInterval,
+        required this.country,
+        required this.city,
+        required this.street,
+        required this.zipcode,
+        required this.creatorUsername,
+        required this.creatorId
+      });
 
 
 
@@ -141,31 +351,10 @@ class Event {
     'Professional': Icons.business_center_rounded,
   };
 
-
   IconData getIconForCategory(String category) {
     // Check if the category exists in the map, otherwise use a default icon
     return iconMap.containsKey(category) ? iconMap[category]! : Icons.category;
   }
-
-
-  Event(
-      {required this.eventID,
-      required this.title,
-      required this.description,
-      required this.category,
-      required this.max_Participants,
-      required this.datetimeCreated,
-      required this.datetimeEvent,
-      required this.price,
-      required this.status,
-      required this.recurrence_type,
-      required this.recurrence_interval,
-      required this.country,
-      required this.city,
-      required this.street,
-      required this.zipcode,
-      required this.creator_username});
-
 
   factory Event.fromJson(Map<String, dynamic> json) {
     return Event(
@@ -173,18 +362,19 @@ class Event {
         category: json['category'],
         title: json['title'],
         description: json['description'],
-        max_Participants: json['max_participants'],
+        maxParticipants: json['max_participants'],
         datetimeCreated: DateTime.parse(json['datetime_created']),
         datetimeEvent: DateTime.parse(json['datetime_event']),
         price: (json['price'] as num).toDouble(),
         status: json['status'],
-        recurrence_type: json['recurrence_type'],
-        recurrence_interval: json['recurrence_interval'],
+        recurrenceType: json['recurrence_type'],
+        recurrenceInterval: json['recurrence_interval'],
         country: json['country'],
         city: json['city'],
         street: json['street'],
         zipcode: json['zipcode'],
-        creator_username: json['creator_username'],
+        creatorUsername: json['creator_username'],
+        creatorId: json['creator_id']
     );
   }
 }
@@ -192,40 +382,76 @@ class Event {
 
 //Display a single event object in a ListTile
 class EventItem extends StatelessWidget {
+
   final Event event;
   EventItem({super.key, required this.event});
 
+  bool isFree() {
+    return event.price <= 0;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      leading: Icon(
-          event.getIconForCategory(event.category),
-      ),
-      title: Text(event.title),
-      subtitle: Text(event.creator_username),
-      trailing: IconButton(
-          onPressed: () {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 10),
+      child: Hero(
+        tag:
+        'event_${event.eventID}',
+        child: Card(
+          elevation: 2.0,
+          child: ListTile(
 
-            //Open Dialog to either Send or Request Money
-            requestOrSendDialog(context);
-
-          },
-          icon: Icon(Icons.info)),
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => EventInfoScreen(
-              event: event,
+            leading: Icon(
+              event.getIconForCategory(event.category),
             ),
+            title: Text(event.title),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: EdgeInsets.all(2),
+                  child:
+                  isFree()
+                  ?
+                  Text(
+                    'Free',
+                      style: TextStyle(fontWeight: FontWeight.bold)
+                  )
+                  :
+                      Text(
+                          '${NumberFormat("#,##0.00", "de_DE").format(event.price)}\€',
+                      )
+                ),
+                Container(
+                  padding: EdgeInsets.all(2),
+                  child: Text(
+                      event.creatorUsername
+                  ),
+                ),
+              ],
+            ),
+            trailing: Text(
+              '${DateFormat('dd/MM/yyyy').format(event.datetimeEvent)}\n${DateFormat('HH:mm').format(event.datetimeEvent)}',
+              textAlign: TextAlign.right,
+              style: TextStyle(color: Colors.black),
+            ),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => EventInfoScreen(
+                    event: event,
+                  ),
+                ),
+              );
+            },
           ),
-        );
-      },
+        ),
+      )
     );
   }
 
   Future<dynamic> requestOrSendDialog(BuildContext context) {
-
     return showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -255,6 +481,7 @@ class EventItem extends StatelessWidget {
 }
 
 
+
 class EventInfoScreen extends StatelessWidget {
   final Event event;
 
@@ -267,6 +494,7 @@ class EventInfoScreen extends StatelessWidget {
         event.street == '' &&
         event.zipcode == '';
     bool isNull = event.price <= 0;
+
 
     return Scaffold(
       appBar: AppBar(
@@ -299,7 +527,7 @@ class EventInfoScreen extends StatelessWidget {
                       Icon(Icons.person_rounded),
                       SizedBox(width: 8),
                       Text(
-                        'Creator: ${event.creator_username}',
+                        'Creator: ${event.creatorUsername}',
                         style: TextStyle(fontSize: 18),
                       ),
                     ],
@@ -359,7 +587,7 @@ class EventInfoScreen extends StatelessWidget {
                     children: [
                       Icon(Icons.supervised_user_circle_rounded),
                       Text(
-                        '  Participants: ${event.max_Participants.toString()}',
+                        '  Participants: ${event.maxParticipants.toString()}',
                         style: TextStyle(fontSize: 18),
                       ),
                     ],
@@ -425,7 +653,32 @@ class EventInfoScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-                SizedBox(height: 16)
+                SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: Text(
+                          'Back',
+                          style: TextStyle(fontSize: 16),
+                      )
+                    ),
+                    SizedBox(width: 20),
+                    TextButton(
+                        onPressed: () {
+                          ApiService.joinEvent(event.eventID);
+                          Navigator.of(context).pop();
+                        },
+                        child: Text(
+                            'Join',
+                          style: TextStyle(fontSize: 16),
+                        )
+                    ),
+                  ],
+                ),
               ],
             ),
           ),

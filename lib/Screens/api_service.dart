@@ -5,7 +5,8 @@ import 'package:http/http.dart' as http;
 
 class ApiService {
   static const String serverUrl = 'http://10.0.2.2:3000';
-  //static const String serverUrl = 'http://localhost:3000';
+  // static const String serverUrl = 'http://localhost:3000';
+
   // const serverUrl = '192.168.56.1:3000';
   // static const String serverUrl = 'http://192.168.178.33:3000';
 
@@ -324,7 +325,7 @@ class ApiService {
     }
   }
 
-  static Future<bool> joinEvent(int event_id) async {
+  static Future<bool> joinEvent(int eventId) async {
     try {
       const storage = FlutterSecureStorage();
       final token = await storage.read(key: 'token');
@@ -333,13 +334,11 @@ class ApiService {
       }
 
       final joinEventResponse = await http.post(
-          Uri.parse('${ApiService.serverUrl}/join-event?eventId=$event_id'),
+          Uri.parse('${ApiService.serverUrl}/join-event?eventId=$eventId'),
           headers: {
             'Content-Type': 'application/json; charset=UTF-8',
             'Authorization': 'Bearer $token',
           });
-
-      print(joinEventResponse);
 
       if (joinEventResponse.statusCode == 200) {
         print('joinEvent function: Joining Event was successful');

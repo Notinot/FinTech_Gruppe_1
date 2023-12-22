@@ -27,14 +27,17 @@ app.use(cors({
 const db = mysql.createPool({
 
 
-  // host: 'btxppofwkgo3xl10tfwy-mysql.services.clever-cloud.com',
-  // user: 'ud86jc8auniwbfsm',
-  // password: 'ER0nIAbQy5qyAeSd4ZCV',
-  // database: 'btxppofwkgo3xl10tfwy',
-  host: '87.144.241.181', 
+  /*
+   host: 'btxppofwkgo3xl10tfwy-mysql.services.clever-cloud.com',
+   user: 'ud86jc8auniwbfsm',
+   password: 'ER0nIAbQy5qyAeSd4ZCV',
+   database: 'btxppofwkgo3xl10tfwy',
+  */
+  host: '87.144.241.181',
   user: 'payfriendz',
   password: 'payfriendz',
   database: 'Payfriendz',
+
 });
 let server; // Define the server variable at a higher scope
 
@@ -980,7 +983,8 @@ app.get('/events', authenticateToken, async (req, res) => {
           Event.*,
           Location.*,
           User_Event.user_id,
-          User.username AS creator_username
+          User.username AS creator_username,
+          User.user_id AS creator_id
       FROM
           Event
       JOIN
@@ -1083,28 +1087,31 @@ app.post('/create-event', authenticateToken, async (req, res) => {
 });
 
 app.post('/join-event', authenticateToken, async (req, res) => {
-
     try{
-
         const senderId = req.user.userId;
         const eventId = req.query.eventId;
 
-        if(!event_id){
+        if(!eventId){
+            console.log('Invalid Event Id');
             return res.status(400).json({message: 'Invalid input'});
         }
 
         const [joinQuery] = await db.query('INSERT INTO User_Event (event_id, user_id) VALUES (?, ?)',
          [
-         eventId,
-         senderId
+             eventId,
+             senderId
          ]);
 
         console.log(joinQuery);
-    }
-    catch (e){
+        res.status(200).json({ message: 'Event successfully joined' });
 
     }
-})
+    catch (error){
+
+        console.error('Error creating event:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
 
 
 
@@ -1615,6 +1622,61 @@ async function getBalance(userId) {
     return 0; // Return 0 in case of an error
   }
 }
+
+
+
+//route to get the events the user is part of with JWT authentication
+app.get('/events', authenticateToken, async (req, res) => {
+  try {
+    console.log('Token:', req.headers['authorization']);
+    // Get the user ID from the authenticated token
+    const userId = req.user.userId;
+    console.log('userId:', userId);
+    // Fetch the user's events from the database based on the user ID
+    const [events] = await db.query(`
+
+/*
+        SELECT
+        User.user_id AS creator_username,
+        Event.*,
+        Location.*,
+        FROM User
+        INNER JOIN
+            User ON Event.creator_id = User.user_id
+    	INNER JOIN
+    	    User_Event ON User.user_id = User_Event.user_id
+        INNER JOIN
+            Event On User_Event.event_id = Event.id
+        WHERE
+        User.user_id = ?;
+*/
+
+    // Select all Events the User interacts with
+    SELECT
+        Event.*,
+        Location.*,
+        User_Event.user_id,
+        User.username AS creator_username,
+        User.picture AS creator_picture
+    FROM
+        Event
+    JOIN
+        User_Event ON User_Event.event_id = Event.id
+    JOIN
+        User ON Event.creator_id = User.user_id
+    LEFT JOIN
+        Location ON Event.id = Location.event_id
+    WHERE
+        User_Event.user_id = ?;
+
+    `, [userId]);
+    console.log('events:', events);
+    res.json(events);
+  } catch (error) {
+    console.error('Error fetching Events:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
 
 
 

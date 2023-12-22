@@ -27,8 +27,7 @@ app.use(cors({
 const db = mysql.createPool({
 
 
-
-    /*
+  /*
    host: 'btxppofwkgo3xl10tfwy-mysql.services.clever-cloud.com',
    user: 'ud86jc8auniwbfsm',
    password: 'ER0nIAbQy5qyAeSd4ZCV',

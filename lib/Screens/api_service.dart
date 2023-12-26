@@ -354,6 +354,31 @@ class ApiService {
   }
 
   static Future<bool> cancelEvent (int eventId) async {
-    return true;
+
+    try {
+      const storage = FlutterSecureStorage();
+      final token = await storage.read(key: 'token');
+      if (token == null) {
+        throw Exception('Token not found');
+      }
+
+      final cancelEventResponse = await http.post(
+          Uri.parse('${ApiService.serverUrl}/cancel-event?eventId=$eventId'),
+          headers: {
+            'Content-Type': 'application/json; charset=UTF-8',
+            'Authorization': 'Bearer $token',
+          });
+
+      if (cancelEventResponse.statusCode == 200) {
+        print('cancelEvent function: Canceling Event was successful');
+        return true;
+      }
+
+      print('cancelEvent function: Error canceling Event');
+      return false;
+    } catch (e) {
+      print('cancelEvent function: Error canceling Event');
+      return false;
+    }
   }
 }

@@ -27,17 +27,17 @@ app.use(cors({
 const db = mysql.createPool({
 
 
-  /*
+
    host: 'btxppofwkgo3xl10tfwy-mysql.services.clever-cloud.com',
    user: 'ud86jc8auniwbfsm',
    password: 'ER0nIAbQy5qyAeSd4ZCV',
    database: 'btxppofwkgo3xl10tfwy',
-  */
+    /*
   host: '87.144.241.181',
   user: 'payfriendz',
   password: 'payfriendz',
   database: 'Payfriendz',
-
+    */
 });
 let server; // Define the server variable at a higher scope
 
@@ -1086,6 +1086,7 @@ app.post('/create-event', authenticateToken, async (req, res) => {
 
 });
 
+// Join event
 app.post('/join-event', authenticateToken, async (req, res) => {
     try{
         const senderId = req.user.userId;
@@ -1113,7 +1114,33 @@ app.post('/join-event', authenticateToken, async (req, res) => {
     }
 });
 
+// Cancel event
+app.post('/cancel-event', authenticateToken, async (req, res) => {
+    try{
+        const senderId = req.user.userId;
+        const eventId = req.query.eventId;
 
+        if(!eventId){
+            console.log('Invalid Event Id');
+            return res.status(400).json({message: 'Invalid input'});
+        }
+
+        const [joinQuery] = await db.query('INSERT INTO User_Event (event_id, user_id) VALUES (?, ?)',
+         [
+             eventId,
+             senderId
+         ]);
+
+        console.log(joinQuery);
+        res.status(200).json({ message: 'Event successfully joined' });
+
+    }
+    catch (error){
+
+        console.error('Error creating event:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
 
 
 // Define your email sending function

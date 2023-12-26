@@ -93,15 +93,12 @@ class _EventScreenState extends State<EventScreen> {
             setState(() {
               event.isCreator = true;
             });
-
           }
         }
 
         // My Events with special category
         if(eventFilter != 'All events' && categoryFilter != 'Category'){
-
           for(var event in events){
-
               if(userId == event.creatorId.toString() && categoryFilter == event.category && !filteredEvents.contains(event)){
                 filteredEvents.add(event);
               }
@@ -111,9 +108,7 @@ class _EventScreenState extends State<EventScreen> {
         }
         // My events without special Category
         else if(eventFilter != 'All events' && categoryFilter == 'Category'){
-
           for(var event in events){
-
             if(userId == event.creatorId.toString() && !filteredEvents.contains(event)){
               filteredEvents.add(event);
             }
@@ -123,7 +118,6 @@ class _EventScreenState extends State<EventScreen> {
         }
         // All events with special category
         else if (eventFilter == 'All events' && categoryFilter != 'Category') {
-
           for(var event in events){
             if(categoryFilter == event.category && !filteredEvents.contains(event)){
               filteredEvents.add(event);
@@ -134,10 +128,8 @@ class _EventScreenState extends State<EventScreen> {
         }
         // All events without special category
         else if (eventFilter == 'All events' && categoryFilter == 'Category'){
-
           return events;
         }
-
         return events;
 
       } else {
@@ -363,6 +355,7 @@ class Event {
   final creatorUsername;
   final creatorId;
   bool isCreator;
+  bool isActive;
 
   Event(
       {
@@ -383,7 +376,8 @@ class Event {
         required this.zipcode,
         required this.creatorUsername,
         required this.creatorId,
-        required this.isCreator
+        required this.isCreator,
+        required this.isActive,
       });
 
 
@@ -430,7 +424,8 @@ class Event {
         zipcode: json['zipcode'],
         creatorUsername: json['creator_username'],
         creatorId: json['creator_id'],
-        isCreator: false
+        isCreator: false,
+        isActive: true,
     );
   }
 }
@@ -505,45 +500,6 @@ class EventItem extends StatelessWidget {
           ),
         ),
       )
-    );
-  }
-
-  Future<dynamic> requestOrSendDialog(BuildContext context) {
-    return showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(event.title),
-          content: Text(event.description),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('Back'),
-            ),
-            event.isCreator
-            ?
-            TextButton(
-              onPressed: () {
-
-                ApiService.joinEvent(event.eventID);
-                Navigator.of(context).pop();
-              },
-              child: Text('Join')
-            )
-            :
-            TextButton(
-                onPressed: () {
-
-                  ApiService.cancelEvent(event.eventID);
-                  Navigator.of(context).pop();
-                },
-                child: Text('Cancel Event')
-            ),
-          ],
-        );
-      },
     );
   }
 }
@@ -735,16 +691,24 @@ class EventInfoScreen extends StatelessWidget {
                       )
                     ),
                     SizedBox(width: 20),
+                    event.isCreator
+                        ?
+                    TextButton(
+
+                        onPressed: () {
+
+                          ApiService.cancelEvent(event.eventID);
+                          Navigator.of(context).pop();
+                      },
+                        child: Text('Cancel Event'))
+                        :
                     TextButton(
                         onPressed: () {
+
                           ApiService.joinEvent(event.eventID);
                           Navigator.of(context).pop();
                         },
-                        child: Text(
-                            'Join',
-                          style: TextStyle(fontSize: 16),
-                        )
-                    ),
+                        child: Text('Join')),
                   ],
                 ),
               ],

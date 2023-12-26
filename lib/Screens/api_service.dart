@@ -4,9 +4,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-
-
-   static const String serverUrl = 'http://10.0.2.2:3000';
+  static const String serverUrl = 'http://10.0.2.2:3000';
   // static const String serverUrl = 'http://localhost:3000';
 
   // const serverUrl = '192.168.56.1:3000';
@@ -342,7 +340,6 @@ class ApiService {
             'Authorization': 'Bearer $token',
           });
 
-
       if (joinEventResponse.statusCode == 200) {
         print('joinEvent function: Joining Event was successful');
         return true;
@@ -350,9 +347,7 @@ class ApiService {
 
       print('joinEvent function: Error joining Event');
       return false;
-
     } catch (e) {
-
       print('joinEvent function: Error joining Event: $e');
       return false;
     }

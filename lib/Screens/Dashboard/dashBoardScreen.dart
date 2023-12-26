@@ -1,14 +1,19 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Screens/Dashboard/appDrawer.dart';
 import 'package:flutter_application_1/Screens/Dashboard/Notifications.dart';
 import 'package:flutter_application_1/Screens/Dashboard/accountSummary.dart';
+import 'package:flutter_application_1/Screens/Events/CreateEventScreen.dart';
 import 'package:flutter_application_1/Screens/Friends/FriendsScreen.dart';
 import 'package:flutter_application_1/Screens/Friends/FriendsScreenTEMP.dart';
+import 'package:flutter_application_1/Screens/Dashboard/Notifications.dart';
+import 'package:flutter_application_1/Screens/Money/TransactionHistoryScreen.dart';
 import 'package:flutter_application_1/Screens/api_service.dart';
 import 'package:flutter_application_1/Screens/Dashboard/quickActionsMenu.dart';
 import 'package:flutter_application_1/Screens/Dashboard/userProfileSection.dart';
 import 'package:flutter_application_1/Screens/dashBoardScreen.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:badges/badges.dart' as Badge;
 
@@ -23,11 +28,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
   late List<Map<String, dynamic>> pendingFriends = [];
   late Future<Map<String, dynamic>> userProfileFuture;
   static List<PopupMenuItem<String>> items = [];
+  late List<Map<String, dynamic>> TransactionRequests = [];
   @override
   void initState() {
     super.initState();
     userProfileFuture = ApiService.fetchUserProfile();
     fetchPendingFriends();
+    Notifications.fetchTransactions().then((List<Transaction>? transactions) {
+      if (transactions != null) {
+        TransactionRequests = transactions
+            .where((transaction) =>
+                transaction.processed == 0 &&
+                transaction.senderId != transaction.receiverId)
+            .map((Transaction transaction) {
+          return {
+            'sender_id': transaction.senderId,
+            'amount': transaction.amount,
+            'transaction_id': transaction.transactionId,
+            'senderName': transaction.senderUsername,
+            'createdAt': transaction.createdAt
+            // Add more fields as needed
+          };
+        }).toList();
+      } else {
+        TransactionRequests = [];
+      }
+    });
   }
 
   @override
@@ -47,12 +73,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
               actions: [
                 Badge.Badge(
                   badgeContent: Text(
-                    pendingFriends.length.toString(),
+                    (pendingFriends.length + TransactionRequests.length)
+                        .toString(),
                     style: TextStyle(color: Colors.white),
                   ),
                   position: Badge.BadgePosition.topEnd(top: 5, end: 5),
                   child: IconButton(
-                    icon: Icon(Icons.notifications, size: 30),
+                    icon: Icon(Icons.notifications, size: 40),
                     onPressed: () {
                       fetchAndBuildNotifications(context, user);
                     },
@@ -115,6 +142,35 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  Future<void> handleTransactionRequest(
+      int TransactionId, String action) async {
+    try {
+      const storage = FlutterSecureStorage();
+      final token = await storage.read(key: 'token');
+      // Make a request to your backend API to accept the request
+      final response = await http.post(
+        Uri.parse('${ApiService.serverUrl}/transactions/$TransactionId'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $token',
+        },
+        body: json.encode({'action': action}),
+      );
+
+      if (response.statusCode == 200) {
+        // Request successful
+        showSuccessSnackBar(context, 'Request accepted successfully');
+      } else {
+        // Request failed, handle the error
+
+        showErrorSnackBar(context, 'Error accepting request, please try again');
+      }
+    } catch (error) {
+      // Handle exceptions
+      print('Error accepting request: $error');
+    }
+  }
+
   Future<void> fetchPendingFriends() async {
     try {
       final userProfile = await userProfileFuture;
@@ -143,15 +199,47 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> fetchAndBuildNotifications(
       BuildContext context, Map<String, dynamic> user) async {
     await fetchPendingFriends();
+    await Notifications.fetchTransactions()
+        .then((List<Transaction>? transactions) {
+      if (transactions != null) {
+        TransactionRequests = transactions
+            .where((transaction) =>
+                transaction.processed == 0 &&
+                transaction.senderId != transaction.receiverId)
+            .map((Transaction transaction) {
+          return {
+            'sender_id': transaction.senderId,
+            'amount': transaction.amount,
+            'transaction_id': transaction.transactionId,
+            'senderName': transaction.senderUsername,
+            'createdAt': transaction.createdAt
+            // Add more fields as needed
+          };
+        }).toList();
+      } else {
+        TransactionRequests = [];
+      }
+    });
+
     items.clear(); // Clear the existing items list
 
-    if (pendingFriends.isEmpty) {
+    if (pendingFriends.isEmpty && TransactionRequests.isEmpty) {
       items.add(buildNoNotificationsItem());
     } else {
       for (int i = 0; i < pendingFriends.length; i++) {
         PopupMenuItem<String> item =
             await buildNotificationItem(context, pendingFriends[i], user);
         items.add(item);
+      }
+      if (TransactionRequests.isNotEmpty) {
+        for (int i = 0; i < TransactionRequests.length; i++) {
+          PopupMenuItem<String> item = await buildNotificationItemTransaction(
+            context,
+            TransactionRequests[i],
+            user,
+          );
+          items.add(item);
+        }
       }
     }
 
@@ -223,6 +311,62 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ).then((_) {
                 items.removeWhere((item) =>
                     item.key == Key(friendRequest['requester_id'].toString()));
+                Navigator.pop(context);
+                fetchAndBuildNotifications(context, user);
+              });
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<PopupMenuItem<String>> buildNotificationItemTransaction(
+    BuildContext context,
+    Map<String, dynamic> transactionRequest,
+    Map<String, dynamic> user,
+  ) async {
+    String requesterName = transactionRequest['senderName'];
+    //await ApiService.fetchFriendUsername(transactionRequest['sender_id']);
+
+    double requestAmount = transactionRequest['amount'];
+
+    return PopupMenuItem<String>(
+      key: Key(transactionRequest['transaction_id'].toString()),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: ListTile(
+              title: Text('$requesterName requested $requestAmount€'),
+            ),
+          ),
+          IconButton(
+            icon: Icon(Icons.check, color: Colors.green),
+            onPressed: () {
+              handleTransactionRequest(
+                transactionRequest['transaction_id'],
+                'accept',
+              ).then((_) {
+                items.removeWhere((item) =>
+                    item.key ==
+                    Key(transactionRequest['transaction_id'].toString()));
+
+                Navigator.pop(context);
+                fetchAndBuildNotifications(context, user);
+              });
+            },
+          ),
+          IconButton(
+            icon: Icon(Icons.close, color: Colors.red),
+            onPressed: () {
+              handleTransactionRequest(
+                transactionRequest['transaction_id'],
+                'decline',
+              ).then((_) {
+                items.removeWhere((item) =>
+                    item.key ==
+                    Key(transactionRequest['transaction_id'].toString()));
                 Navigator.pop(context);
                 fetchAndBuildNotifications(context, user);
               });

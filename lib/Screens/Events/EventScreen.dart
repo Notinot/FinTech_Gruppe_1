@@ -29,11 +29,9 @@ class _EventScreenState extends State<EventScreen> {
       inBar: true,
       setState: setState,
       onSubmitted: onSubmitted,
-      /*
       onChanged: onChanged,
       onCleared: onCleared,
       onClosed: onClosed,
-      */
       buildDefaultAppBar: buildAppBar,
       hintText: "Search",
     );
@@ -88,6 +86,16 @@ class _EventScreenState extends State<EventScreen> {
           }
         }
 
+        // Set if User is Creator
+        for(var event in events){
+          if(userId == event.creatorId.toString()){
+
+            setState(() {
+              event.isCreator = true;
+            });
+
+          }
+        }
 
         // My Events with special category
         if(eventFilter != 'All events' && categoryFilter != 'Category'){
@@ -95,7 +103,7 @@ class _EventScreenState extends State<EventScreen> {
           for(var event in events){
 
               if(userId == event.creatorId.toString() && categoryFilter == event.category && !filteredEvents.contains(event)){
-                  filteredEvents.add(event);
+                filteredEvents.add(event);
               }
           }
           return filteredEvents;
@@ -126,6 +134,7 @@ class _EventScreenState extends State<EventScreen> {
         }
         // All events without special category
         else if (eventFilter == 'All events' && categoryFilter == 'Category'){
+
           return events;
         }
 
@@ -169,13 +178,56 @@ class _EventScreenState extends State<EventScreen> {
     }
   }
 
+  Future<void> onChanged(String value) async{
+
+    if (value.isNotEmpty) {
+      List<Event> filteredEvents = events
+          .where((events) =>
+      events.title
+          .toLowerCase()
+          .contains(value.toLowerCase()) ||
+          events.creatorUsername
+              .toLowerCase()
+              .contains(value.toLowerCase()))
+          .toList();
+      setState(() {
+        eventsFuture = Future.value(filteredEvents);
+      });
+    } else {
+      setState(() {
+        eventsFuture = fetchEvents();
+      });
+    }
+  }
+
+  Future<void> onCleared() async {
+    // Handle search bar cleared
+    // Update the UI to show the original list without filtering
+    setState(() {
+      eventsFuture = fetchEvents();
+    });
+  }
+
+  Future<void> onClosed() async {
+    //update the UI to show the original list without filtering
+    setState(() {
+      eventsFuture = fetchEvents();
+    });
+  }
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Events'),
-        actions: []
+      appBar: searchBar.build(context),
+      //floating action button to refresh the transaction history screen
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          setState(() {
+            eventsFuture = fetchEvents();
+          });
+        },
+        child: const Icon(Icons.refresh),
       ),
 
       // FutureBuilder to display the events
@@ -310,6 +362,7 @@ class Event {
   String? zipcode;
   final creatorUsername;
   final creatorId;
+  bool isCreator;
 
   Event(
       {
@@ -329,7 +382,8 @@ class Event {
         required this.street,
         required this.zipcode,
         required this.creatorUsername,
-        required this.creatorId
+        required this.creatorId,
+        required this.isCreator
       });
 
 
@@ -350,6 +404,7 @@ class Event {
     'Travel and Adventure': Icons.travel_explore_rounded,
     'Professional': Icons.business_center_rounded,
   };
+
 
   IconData getIconForCategory(String category) {
     // Check if the category exists in the map, otherwise use a default icon
@@ -374,7 +429,8 @@ class Event {
         street: json['street'],
         zipcode: json['zipcode'],
         creatorUsername: json['creator_username'],
-        creatorId: json['creator_id']
+        creatorId: json['creator_id'],
+        isCreator: false
     );
   }
 }
@@ -392,6 +448,7 @@ class EventItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 10),
       child: Hero(
@@ -400,7 +457,6 @@ class EventItem extends StatelessWidget {
         child: Card(
           elevation: 2.0,
           child: ListTile(
-
             leading: Icon(
               event.getIconForCategory(event.category),
             ),
@@ -430,11 +486,12 @@ class EventItem extends StatelessWidget {
                 ),
               ],
             ),
-            trailing: Text(
-              '${DateFormat('dd/MM/yyyy').format(event.datetimeEvent)}\n${DateFormat('HH:mm').format(event.datetimeEvent)}',
-              textAlign: TextAlign.right,
-              style: TextStyle(color: Colors.black),
-            ),
+            trailing:
+                Text(
+                  '${DateFormat('dd/MM/yyyy').format(event.datetimeEvent)}\n${DateFormat('HH:mm').format(event.datetimeEvent)}',
+                  textAlign: TextAlign.right,
+                  style: TextStyle(color: Colors.black),
+                ),
             onTap: () {
               Navigator.push(
                 context,
@@ -465,6 +522,8 @@ class EventItem extends StatelessWidget {
               },
               child: Text('Back'),
             ),
+            event.isCreator
+            ?
             TextButton(
               onPressed: () {
 
@@ -472,6 +531,15 @@ class EventItem extends StatelessWidget {
                 Navigator.of(context).pop();
               },
               child: Text('Join')
+            )
+            :
+            TextButton(
+                onPressed: () {
+
+                  ApiService.cancelEvent(event.eventID);
+                  Navigator.of(context).pop();
+                },
+                child: Text('Cancel Event')
             ),
           ],
         );

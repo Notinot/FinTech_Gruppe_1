@@ -357,4 +357,8 @@ class ApiService {
       return false;
     }
   }
+
+  static Future<bool> cancelEvent (int eventId) async {
+    return true;
+  }
 }

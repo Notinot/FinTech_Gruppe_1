@@ -994,6 +994,8 @@ app.get('/events', authenticateToken, async (req, res) => {
       LEFT JOIN
           Location ON Event.id = Location.event_id
       WHERE
+          User_Event.status = 1
+          AND
           User_Event.user_id = ?;
 
     `, [userId]);
@@ -1102,8 +1104,11 @@ app.post('/join-event', authenticateToken, async (req, res) => {
              eventId,
              senderId
          ]);
-
         console.log(joinQuery);
+
+        const [increaseParticipantsQuery] = await db.query('UPDATE Event SET participants = participants + 1 WHERE id = ?', [eventId]);
+        console.log(increaseParticipantsQuery)
+
         res.status(200).json({ message: 'Event successfully joined' });
 
     }
@@ -1114,30 +1119,73 @@ app.post('/join-event', authenticateToken, async (req, res) => {
     }
 });
 
-// Cancel event
-app.post('/cancel-event', authenticateToken, async (req, res) => {
-    try{
+// leave event
+app.post('/leave-event', authenticateToken, async (req, res) => {
+    try {
         const senderId = req.user.userId;
         const eventId = req.query.eventId;
 
-        if(!eventId){
-            console.log('Invalid Event Id');
-            return res.status(400).json({message: 'Invalid input'});
+        if (!eventId || !senderId) {
+            console.log('Invalid Event Id or Sender Id');
+            return res.status(400).json({ message: 'Invalid input' });
         }
 
-        const [joinQuery] = await db.query('INSERT INTO User_Event (event_id, user_id) VALUES (?, ?)',
-         [
-             eventId,
-             senderId
-         ]);
+        // Additional validation if needed
+        const [checkStatus] = await db.query('SELECT * FROM User_Event WHERE event_id = ? AND user_id = ?', [eventId, senderId]);
 
-        console.log(joinQuery);
-        res.status(200).json({ message: 'Event successfully joined' });
+        if (checkStatus.length === 0) {
+            return res.status(404).json({ message: 'Event not found' });
+        }
 
+        if (checkStatus[0].status === 0) {
+            return res.status(401).json({ message: 'Event is already leaved' });
+        }
+
+        const [leaveQuery] = await db.query('UPDATE User_Event SET status = 0 WHERE event_id = ? AND user_id = ?', [eventId, senderId]);
+
+        console.log(leaveQuery);
+        res.status(200).json({ message: 'Event successfully leaved' });
+
+    } catch (error) {
+        console.error('Error leaving event:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
-    catch (error){
+});
 
-        console.error('Error creating event:', error);
+
+
+// Cancel event
+app.post('/cancel-event', authenticateToken, async (req, res) => {
+    try {
+        const senderId = req.user.userId;
+        const eventId = req.query.eventId;
+
+        if (!eventId) {
+            console.log('Invalid Event Id');
+            return res.status(400).json({ message: 'Invalid input' });
+        }
+
+        const [event] = await db.query('SELECT * FROM Event WHERE id = ?', eventId);
+
+        if (event.length === 0) {
+            return res.status(404).json({ message: 'Event not found' });
+        }
+
+        if (event[0].status === 0) {
+            return res.status(401).json({ message: 'Event is already canceled' });
+        }
+
+        const [cancelQuery] = await db.query('UPDATE Event SET status = 0 WHERE id = ? AND creator_id = ?',
+            [
+                eventId,
+                senderId
+            ]);
+
+        console.log(cancelQuery);
+        res.status(200).json({ message: 'Event successfully canceled' });
+
+    } catch (error) {
+        console.error('Error canceling event:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
 });

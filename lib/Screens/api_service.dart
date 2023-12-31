@@ -347,13 +347,50 @@ class ApiService {
 
       print('joinEvent function: Error joining Event');
       return false;
+
     } catch (e) {
       print('joinEvent function: Error joining Event: $e');
       return false;
     }
   }
 
-  static Future<bool> cancelEvent (int eventId) async {
+  static Future<int> leaveEvent (int eventId) async {
+
+    try {
+      const storage = FlutterSecureStorage();
+      final token = await storage.read(key: 'token');
+      if (token == null) {
+        throw Exception('Token not found');
+      }
+
+      final leaveEventResponse = await http.post(
+          Uri.parse('${ApiService.serverUrl}/leave-event?eventId=$eventId'),
+          headers: {
+            'Content-Type': 'application/json; charset=UTF-8',
+            'Authorization': 'Bearer $token',
+          });
+
+      if (leaveEventResponse.statusCode == 200) {
+        print('leaveEvent function: Leaving Event was successful');
+        return 1;
+      }
+
+      if (leaveEventResponse.statusCode == 401){
+
+        print('leaveEvent function: Event was already canceled');
+        return 401;
+      }
+
+      print('leaveEvent function: Error canceling Event');
+      return 0;
+
+    } catch (e) {
+      print('cancelEvent function: Error canceling Event');
+      return 0;
+    }
+  }
+
+  static Future<int> cancelEvent (int eventId) async {
 
     try {
       const storage = FlutterSecureStorage();
@@ -371,14 +408,21 @@ class ApiService {
 
       if (cancelEventResponse.statusCode == 200) {
         print('cancelEvent function: Canceling Event was successful');
-        return true;
+        return 1;
+      }
+
+      if (cancelEventResponse.statusCode == 401){
+
+        print('cancelEvent function: Event was already canceled');
+        return 401;
       }
 
       print('cancelEvent function: Error canceling Event');
-      return false;
+      return 0;
+
     } catch (e) {
       print('cancelEvent function: Error canceling Event');
-      return false;
+      return 0;
     }
   }
 }

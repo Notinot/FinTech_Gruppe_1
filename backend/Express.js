@@ -32,12 +32,12 @@ const db = mysql.createPool({
    user: 'ud86jc8auniwbfsm',
    password: 'ER0nIAbQy5qyAeSd4ZCV',
    database: 'btxppofwkgo3xl10tfwy',
-    /*
-  host: '87.144.241.181',
-  user: 'payfriendz',
-  password: 'payfriendz',
-  database: 'Payfriendz',
-    */
+    
+  // host: '87.144.241.181',
+  // user: 'payfriendz',
+  // password: 'payfriendz',
+  // database: 'Payfriendz',
+    
 });
 let server; // Define the server variable at a higher scope
 
@@ -308,6 +308,10 @@ const query =
 `SELECT
   request_time,
 CASE
+    WHEN f.requester_id = ? THEN u_addressee.user_id
+    WHEN f.addressee_id = ? THEN u_requester.user_id
+END AS friend_user_id,
+CASE
     WHEN f.requester_id = ? THEN u_addressee.username
     WHEN f.addressee_id = ? THEN u_requester.username
 END AS friend_username,
@@ -333,7 +337,7 @@ WHERE
 f.status = 'accepted'
 AND (f.requester_id = ? OR f.addressee_id = ?);
 `;
-const [friends] = await db.query(query, [user_id, user_id, user_id, user_id, user_id, user_id, user_id, user_id,user_id, user_id]);
+const [friends] = await db.query(query, [user_id, user_id, user_id, user_id, user_id, user_id, user_id, user_id,user_id, user_id, user_id, user_id]);
 res.json({friends}); 
 });
 

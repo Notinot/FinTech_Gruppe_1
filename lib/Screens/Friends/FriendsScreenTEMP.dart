@@ -7,7 +7,6 @@ import 'package:flutter_application_1/Screens/Money/SendMoneyScreen.dart';
 import 'package:intl/intl.dart';
 import '../api_service.dart';
 
-//WIDGETS REDUZIEREN UND HELPER METHODS BENUTZEN????
 class FriendsScreenTEMP extends StatefulWidget {
   const FriendsScreenTEMP({super.key});
 
@@ -16,6 +15,8 @@ class FriendsScreenTEMP extends StatefulWidget {
 }
 
 class _FriendsScreenTEMPState extends State<FriendsScreenTEMP> {
+  //anstatt alles neuzuladen gucken ob man einfach aus der ListView eins entfernt
+  //und in die andere ListView hinzufügt (ohne http request)
   callback() {
     setState(() {});
   }
@@ -23,11 +24,10 @@ class _FriendsScreenTEMPState extends State<FriendsScreenTEMP> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false, //avoids overflow when keyboard is opened
       appBar: AppBar(
         titleSpacing: 15.0,
-        title: SearchBar(
-            hintText:
-                "Search..."), //Funktionalität muss noch implementiert werden
+        title: FriendsSearchBar(),
       ),
       body: Column(
         children: [
@@ -176,7 +176,7 @@ class Friends extends StatelessWidget {
   }
 }
 
-//contains all relevant user information of a friend
+///contains all relevant user information of a friend
 class Friend {
   final int userID;
   final String username;
@@ -197,7 +197,7 @@ class Friend {
 }
 //factory constructor for json?
 
-//displays a single friend object in a ListTile
+/// displays a single friend object in a ListTile
 class FriendItem extends StatelessWidget {
   final Friend friend;
   final bool isStillPending;
@@ -403,5 +403,73 @@ class FriendInfoScreen extends StatelessWidget {
   }
   void blockFriend(String username) async {
     //DialogShow to Block Friend
+  }
+}
+
+class FriendsSearchBar extends StatefulWidget {
+  const FriendsSearchBar({super.key});
+
+  @override
+  State<FriendsSearchBar> createState() => _FriendsSearchBarState();
+}
+
+class _FriendsSearchBarState extends State<FriendsSearchBar> {
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      decoration: InputDecoration(
+        hintText: 'Search...',
+        border: InputBorder.none,
+      ),
+      onChanged: (query) {
+        debugPrint('search query $query');
+      },
+      onSubmitted: (query) {
+        debugPrint('submitted: $query');
+        handleAddFriend(username: query);
+      },
+    );
+  }
+
+  void handleAddFriend({required String username}) async {
+    try {
+      //reads JWT again (need to be updated)
+      Map<String, dynamic> user = await ApiService.fetchUserProfile();
+      int user_id = user['user_id'];
+
+      Map<String, dynamic> requestBody = {
+        'friendUsername': username,
+      };
+      final response = await http.post(
+        Uri.parse('${ApiService.serverUrl}/friends/add/$user_id'),
+        body: json.encode(requestBody),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      );
+      if (response.statusCode == 200) {
+        showSuccessSnackBar(
+            context, 'Friend request sended to User: $username');
+      } else {
+        print('Error MEssaage: ${response.body}');
+        showErrorSnackBar(context, json.decode(response.body));
+      }
+    } catch (e) {
+      print('Error accepting friend request: $e');
+    }
+  }
+
+  void showSuccessSnackBar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(message),
+      backgroundColor: Colors.green,
+    ));
+  }
+
+  void showErrorSnackBar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(message),
+      backgroundColor: Colors.red,
+    ));
   }
 }

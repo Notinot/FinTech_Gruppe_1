@@ -7,8 +7,18 @@ import 'package:flutter_application_1/Screens/Money/SendMoneyScreen.dart';
 import 'package:intl/intl.dart';
 import '../api_service.dart';
 
-class FriendsScreenTEMP extends StatelessWidget {
+//WIDGETS REDUZIEREN UND HELPER METHODS BENUTZEN????
+class FriendsScreenTEMP extends StatefulWidget {
   const FriendsScreenTEMP({super.key});
+
+  @override
+  State<FriendsScreenTEMP> createState() => _FriendsScreenTEMPState();
+}
+
+class _FriendsScreenTEMPState extends State<FriendsScreenTEMP> {
+  callback() {
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,8 +31,8 @@ class FriendsScreenTEMP extends StatelessWidget {
       ),
       body: Column(
         children: [
-          PendingFriends(),
-          Friends(),
+          PendingFriends(callbackFunction: callback),
+          Friends(callbackFunction: callback),
         ],
       ),
     );
@@ -30,11 +40,14 @@ class FriendsScreenTEMP extends StatelessWidget {
 }
 
 class PendingFriends extends StatelessWidget {
-  PendingFriends({super.key});
+  final Function callbackFunction;
+  PendingFriends({super.key, required this.callbackFunction});
 
   List<Friend> pendingFriends = [];
 
   Future getPendingFriends() async {
+    pendingFriends = [];
+
     //fetch user id
     Map<String, dynamic> user = await ApiService.fetchUserProfile();
     int user_id = user['user_id'];
@@ -73,14 +86,14 @@ class PendingFriends extends StatelessWidget {
                     debugPrint(
                         'pendingFriendslength: ${pendingFriends.length}');
                     return Card(
-                        child: PendingFriendItem(
+                        child: FriendItem(
+                      callbackFunction: callbackFunction,
+                      isStillPending: true,
                       friend: pendingFriends[index],
                     ));
                   },
                 ),
               )
-              // for (Friend pendingFriend in pendingFriends) //hier noch ListView.builder
-              //   PendingFriendItem(friend: pendingFriend),
             ],
           );
         } else {
@@ -93,69 +106,9 @@ class PendingFriends extends StatelessWidget {
   }
 }
 
-class PendingFriendItem extends StatelessWidget {
-  final Friend friend;
-  const PendingFriendItem({super.key, required this.friend});
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: Icon(Icons.person), //insert profile pic later on
-      title: Text(friend.username),
-      subtitle: Text('${friend.firstName} ${friend.lastName}'),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ElevatedButton(
-            onPressed: () {
-              handleFriendRequest(friend.userID, true);
-            },
-            child: Text('Accept'),
-          ),
-          TextButton(
-              onPressed: () {
-                handleFriendRequest(friend.userID, false);
-              },
-              child: Text('Decline'))
-        ],
-      ),
-    );
-  }
-
-  void handleFriendRequest(int userID, bool accepted) async {
-    //fetch user id
-    Map<String, dynamic> user = await ApiService.fetchUserProfile();
-    int user_id = user['user_id'];
-    try {
-      Map<String, dynamic> requestBody = {
-        'friendId': userID, //hier friendID senden
-        'accepted': accepted,
-      };
-      final response = await http.post(
-        Uri.parse('${ApiService.serverUrl}/friends/request/$user_id'),
-        body: json.encode(requestBody),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      );
-
-//needs to be updated
-      if (response.statusCode == 200) {
-        //fetchPendingFriends();
-        //fetch friends as well
-        // fetchData(); //reads JWT again which is kinda unnecessary
-      } else {
-        print(
-            'Failed to accept friend request. Status code: ${response.statusCode}');
-      }
-    } catch (e) {
-      print('Error handling friend request: $e');
-    }
-  }
-}
-
 class Friends extends StatelessWidget {
-  Friends({super.key});
+  final Function callbackFunction;
+  Friends({super.key, required this.callbackFunction});
 
   List<Friend> friends = [];
 
@@ -181,7 +134,6 @@ class Friends extends StatelessWidget {
           lastName: user['friend_last_name']);
       // debugPrint(user['request_time']);
       friends.add(friendTemp);
-      debugPrint(friendTemp.toString());
     }
   }
 
@@ -203,7 +155,10 @@ class Friends extends StatelessWidget {
                   itemCount: friends.length,
                   itemBuilder: (context, index) {
                     return Card(
-                      child: FriendItem(friend: friends[index]),
+                      child: FriendItem(
+                          callbackFunction: callbackFunction,
+                          friend: friends[index],
+                          isStillPending: false),
                     );
                   },
                 ),
@@ -245,31 +200,91 @@ class Friend {
 //displays a single friend object in a ListTile
 class FriendItem extends StatelessWidget {
   final Friend friend;
-  const FriendItem({super.key, required this.friend});
+  final bool isStillPending;
+  final Function callbackFunction;
+  const FriendItem(
+      {super.key,
+      required this.friend,
+      required this.isStillPending,
+      required this.callbackFunction});
 
   @override
   Widget build(BuildContext context) {
+    var trailing = isStillPending
+        //build item with accept and decline buttons
+        ? Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ElevatedButton(
+                onPressed: () {
+                  handleFriendRequest(friend.userID, true);
+                  callbackFunction();
+                },
+                child: Text('Accept'),
+              ),
+              TextButton(
+                  onPressed: () {
+                    handleFriendRequest(friend.userID, false);
+                    callbackFunction();
+                  },
+                  child: Text('Decline'))
+            ],
+          )
+        //build item without accept and decline buttons
+        : IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => FriendInfoScreen(
+                    friend: friend,
+                  ),
+                ),
+              );
+            },
+            icon: Icon(Icons.info));
+
     return ListTile(
       leading: Icon(Icons.person_sharp),
       title: Text(friend.username),
       subtitle: Text('${friend.firstName} ${friend.lastName}'),
-      trailing: IconButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => FriendInfoScreen(
-                  friend: friend,
-                ),
-              ),
-            );
-          },
-          icon: Icon(Icons.info)),
+      trailing: trailing,
       onTap: () {
         //Open Dialog to either Send or Request Money
         requestOrSendMoneyDialog(context);
       },
     );
+  }
+
+  void handleFriendRequest(int userID, bool accepted) async {
+    //fetch user id
+    Map<String, dynamic> user = await ApiService.fetchUserProfile();
+    int user_id = user['user_id'];
+    try {
+      Map<String, dynamic> requestBody = {
+        'friendId': userID, //hier friendID senden
+        'accepted': accepted,
+      };
+      final response = await http.post(
+        Uri.parse('${ApiService.serverUrl}/friends/request/$user_id'),
+        body: json.encode(requestBody),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      );
+
+      //needs to be updated
+      if (response.statusCode == 200) {
+        //fetchPendingFriends();
+        //fetch friends as well
+        // fetchData(); //reads JWT again which is kinda unnecessary
+      } else {
+        print(
+            'Failed to accept friend request. Status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error handling friend request: $e');
+    }
   }
 
   Future<dynamic> requestOrSendMoneyDialog(BuildContext context) {

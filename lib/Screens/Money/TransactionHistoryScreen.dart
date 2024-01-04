@@ -12,7 +12,7 @@ import 'package:flutter_application_1/Screens/Money/quickMenuTransaction.dart';
 
 import 'package:flutter_application_1/Screens/Dashboard/quickActionsMenu.dart';
 import 'package:flutter_application_1/Screens/Money/TransactionHistoryScreen.dart';
-import 'package:flutter_application_1/Screens/Friends/FriendsScreen.dart';
+import 'package:flutter_application_1/Screens/Friends/FriendsScreen_old.dart';
 import 'package:flutter_application_1/Screens/Money/TransactionDetailsScreenTEMP.dart';
 import 'package:flutter_application_1/Screens/Money/TransactionDetailsScreen.dart';
 

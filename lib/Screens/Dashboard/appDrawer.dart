@@ -7,7 +7,6 @@ import 'package:flutter_application_1/Screens/Events/CreateEventScreen.dart';
 
 import 'package:flutter_application_1/Screens/Friends/FriendsScreen.dart';
 import 'package:flutter_application_1/Screens/Money/AddMoneyScreen.dart';
-import 'package:flutter_application_1/Screens/Friends/FriendsScreenTEMP.dart';
 
 import 'package:flutter_application_1/Screens/Money/TransactionHistoryScreen.dart';
 import 'package:flutter_application_1/assets/color_schemes.g.dart';
@@ -87,8 +86,7 @@ class AppDrawer extends StatelessWidget {
             onTap: () {
               Navigator.push(
                 context,
-                //MaterialPageRoute(builder: (context) => FriendsScreen()),
-                MaterialPageRoute(builder: (context) => FriendsScreenTEMP()),
+                MaterialPageRoute(builder: (context) => FriendsScreen()),
               );
             },
           ),

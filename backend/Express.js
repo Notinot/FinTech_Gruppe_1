@@ -342,7 +342,6 @@ res.json({friends});
 });
 
 //get pending friend requests of specific user
-//returns JSON with: 
 app.get('/friends/pending/:user_id', async(req, res) => {
   const user_id = req.params.user_id;  
 const query =
@@ -366,6 +365,7 @@ app.post('/friends/request/:user_id', async (req, res) => {
   const user_id = req.params.user_id;  
   const{friendId, accepted} = req.body;
   var query = '';
+  //hier noch überprüfen, dass Status auf "pending" ist?
   if(accepted){
      query =
     `Update Friendship
@@ -431,17 +431,39 @@ app.post('/friends/request/:user_id', async (req, res) => {
 
     const query = `
     DELETE FROM Friendship
-    WHERE (requester_id = ? AND addressee_id = ?) OR (requester_id = ? AND addressee_id = ?)
+    WHERE (requester_id = ? AND addressee_id = ?) 
+        OR (requester_id = ? AND addressee_id = ?)
     `;
 
     try {
-        const [deletingFriend] = await db.query(query, [user_id, friendId, friend_id, user_id]);
+        const [deletingFriend] = await db.query(query, [user_id, friendId, friendId, user_id]);
 
         res.json({ success: true, message: 'Friend deleted successfully.' });
     } catch (error) {
         console.error('Error deleting friend:', error);
         res.status(500).json({ success: false, message: 'Internal server error' });
     }
+});
+
+//blocking user
+app.post('/friends/block/:user_id', async (req, res) => {
+  const user_id = req.params.user_id;
+  const{friendId} = req.body;
+  //so weiß man im Nachhinein aber nicht mehr wer wen blockiert hat...
+  const query = `
+  UPDATE Friendship
+  SET status = 'blocked' 
+  WHERE (requester_id = ? AND addressee_id = ?) 
+      OR (requester_id = ? AND addressee_id = ?)
+  `;
+  try {
+      const [deletingFriend] = await db.query(query, [user_id, friendId, friendId, user_id]);
+
+      res.json({ success: true, message: 'Friend deleted successfully.' });
+  } catch (error) {
+      console.error('Error deleting friend:', error);
+      res.status(500).json({ success: false, message: 'Internal server error' });
+  }
 });
 
 

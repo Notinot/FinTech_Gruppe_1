@@ -83,7 +83,10 @@ class PendingFriends extends StatelessWidget {
       final pendingFriendTemp = Friend(
           userID: user['requester_id'],
           requestTime: null,
-          profileImage: null,
+          profileImage:
+              (user['picture'] != null && user['picture']['data'] != null)
+                  ? Uint8List.fromList(user['picture']['data'].cast<int>())
+                  : null,
           username: user['username'],
           firstName: user['first_name'],
           lastName: user['last_name']);
@@ -93,7 +96,7 @@ class PendingFriends extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('pendingFriends length: ${pendingFriends.length}');
+    //debugPrint('pendingFriends length: ${pendingFriends.length}');
     return FutureBuilder(
       future: getPendingFriends(),
       builder: (context, snapshot) {
@@ -110,8 +113,7 @@ class PendingFriends extends StatelessWidget {
                         shrinkWrap: true, //WICHTIG,
                         itemCount: pendingFriends.length,
                         itemBuilder: (context, index) {
-                          debugPrint(
-                              'pendingFriendslength: ${pendingFriends.length}');
+                          //debugPrint('pendingFriendslength: ${pendingFriends.length}');
                           return Card(
                               child: FriendItem(
                             callbackFunction: callbackFunction,
@@ -154,12 +156,14 @@ class Friends extends StatelessWidget {
       final friendTemp = Friend(
           userID: user['friend_user_id'],
           requestTime: DateTime.parse(user['request_time']).toLocal(),
-          //profileImage: friend['friend_picture'], muss noch richtig decoded werden
-          profileImage: null,
+          profileImage: (user['friend_picture'] != null &&
+                  user['friend_picture']['data'] !=
+                      null) //idk if this is necessary
+              ? Uint8List.fromList(user['friend_picture']['data'].cast<int>())
+              : null,
           username: user['friend_username'],
           firstName: user['friend_first_name'],
           lastName: user['friend_last_name']);
-      // debugPrint(user['request_time']);
       friends.add(friendTemp);
     }
   }
@@ -272,7 +276,16 @@ class FriendItem extends StatelessWidget {
             icon: Icon(Icons.info));
 
     return ListTile(
-      leading: Icon(Icons.person_sharp),
+      leading: friend.profileImage != null
+          ? ClipOval(
+              child: Image.memory(
+                friend.profileImage!,
+                width: 40,
+                height: 40,
+                fit: BoxFit.cover,
+              ),
+            )
+          : Icon(Icons.person_sharp, size: 40),
       title: Text(friend.username),
       subtitle: Text('${friend.firstName} ${friend.lastName}'),
       trailing: trailing,
@@ -365,6 +378,7 @@ class FriendInfoScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    //debugPrint('profile picture: ${friend.profileImage?.length}');
     return Scaffold(
       appBar: AppBar(
         title: Text('Friend Details'),
@@ -374,10 +388,17 @@ class FriendInfoScreen extends StatelessWidget {
         height: double.infinity,
         child: Column(
           children: [
-            Icon(
-              Icons.person_sharp,
-              size: 150,
-            ),
+            friend.profileImage != null
+                ? ClipOval(
+                    child: Image.memory(
+                      friend.profileImage!,
+                      width: 150,
+                      height: 150,
+                      fit: BoxFit.cover,
+                    ),
+                  )
+                : Icon(Icons.person_sharp, size: 150),
+            SizedBox(height: 20),
             Text(
               friend.username,
               style: TextStyle(fontSize: 30),
@@ -533,6 +554,7 @@ class _FriendsSearchBarState extends State<FriendsSearchBar> {
         },
       );
       if (response.statusCode == 200) {
+        //hier lieber true/false mit message return?
         showSuccessSnackBar(
             context, 'Friend request sended to User: $username');
       } else {

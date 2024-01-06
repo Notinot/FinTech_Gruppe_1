@@ -382,8 +382,8 @@ app.post('/friends/request/:user_id', async (req, res) => {
    res.json({friendRequest});
     });
 
-  //add friend (sending friend request)
-      //names of routes are kinda misleading
+  ///add friend (sending friend request)
+      //names of routes are kinda misleading, needs to be updated
   app.post('/friends/add/:user_id', async (req, res) => {
     const user_id = req.params.user_id;  
     const{friendUsername} = req.body;
@@ -392,19 +392,20 @@ app.post('/friends/request/:user_id', async (req, res) => {
     const [temp] = await db.query('SELECT user_id FROM User WHERE username = ?', [friendUsername]);
 
     //checks if username even exists
-    if(temp[0] != undefined){
+    if(temp[0] != undefined && temp[0].user_id != user_id){
       const friendId = temp[0].user_id; 
-    //check if users are already friends
-    const[friends] = await db.query(
-      ` 
-      SELECT * 
-      FROM Friendship 
-      WHERE (requester_id = ? AND addressee_id = ?)
-      OR    (requester_id = ? AND addressee_id = ?)
-      `
-      ,[user_id,friendId,
-        friendId,user_id]);
-
+      
+        //check if users are already friends
+        const[friends] = await db.query(
+          ` 
+          SELECT * 
+          FROM Friendship 
+          WHERE (requester_id = ? AND addressee_id = ?)
+          OR    (requester_id = ? AND addressee_id = ?)
+          `
+          ,[user_id,friendId,
+            friendId,user_id]);
+            
       //when they are not already friends
       if(friends[0] == null){
         const query = `
@@ -419,11 +420,10 @@ app.post('/friends/request/:user_id', async (req, res) => {
       }
     }else{
       //res.status(500).json({message: 'Username not found'});
-      res.status(500).json('Username not found');
+      res.status(500).json('Username not found'); //kommt auch wenn man versucht sich selbst zu adden
     }
-      });
-     
-
+  });
+  
   //removing friend
   app.delete('/friends/:user_id', async (req, res) => {
     const user_id = req.params.user_id;

@@ -6,15 +6,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Screens/Money/RequestMoneyScreen.dart';
 import 'package:flutter_application_1/Screens/Money/SendMoneyScreen.dart';
 import 'package:intl/intl.dart';
+import '../Money/TransactionHistoryScreen.dart';
 import '../api_service.dart';
 /* Things to do:
+
+  Dynamic pending Friends length? oder zwischen 0-80-160 und 240?
+
   -search 
     -show recommendation after typing 3-4 characters in
     -Filter Friends as well?
 
-  -Display Profile Picture of Friends and Pending Friends
-
-  -Display Friends correctly (when there are no pending friends)
+  -Profile Picture als Avatar oder so? 
+  -dynamic spacing, width, heigth etc
 
   -Adding Friends
     -only when not declined? cooldown?
@@ -24,10 +27,7 @@ import '../api_service.dart';
     -Block or Delete Friends (block pending Friends as well?)
     -show transaction history of Friend and yourself
 
-  -Try Catch blocks everywhere
-
-  -man darf sich nicht selber adden,löschen, blockieren können
-    
+  -Try Catch blocks everywhere    
 */
 
 class FriendsScreen extends StatefulWidget {
@@ -92,6 +92,8 @@ class PendingFriends extends StatelessWidget {
           lastName: user['last_name']);
       pendingFriends.add(pendingFriendTemp);
     }
+    pendingFriends.sort(
+        (a, b) => a.username.toLowerCase().compareTo(b.username.toLowerCase()));
   }
 
   @override
@@ -101,6 +103,11 @@ class PendingFriends extends StatelessWidget {
       future: getPendingFriends(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.done) {
+          double height = 80;
+          // if (pendingFriends.length >= 4) height = 320;
+          if (pendingFriends.length >= 3) height = 240;
+          if (pendingFriends.length == 2) height = 160;
+
           return pendingFriends
                   .isEmpty //only display Pending Friends when there are any
               ? Container()
@@ -108,7 +115,7 @@ class PendingFriends extends StatelessWidget {
                   children: [
                     Text('Pending Friends', style: TextStyle(fontSize: 25)),
                     SizedBox(
-                      height: 250, //only three friend requests are displayed
+                      height: height,
                       child: ListView.builder(
                         shrinkWrap: true, //WICHTIG,
                         itemCount: pendingFriends.length,
@@ -166,6 +173,8 @@ class Friends extends StatelessWidget {
           lastName: user['friend_last_name']);
       friends.add(friendTemp);
     }
+    friends.sort(
+        (a, b) => a.username.toLowerCase().compareTo(b.username.toLowerCase()));
   }
 
   @override
@@ -175,27 +184,26 @@ class Friends extends StatelessWidget {
       builder: (context, snapshot) {
         //if friends are loaded
         if (snapshot.connectionState == ConnectionState.done) {
-          return Column(
-            children: [
-              Text("Your Friends", style: TextStyle(fontSize: 25)),
-              // for (Friend friend in friends) FriendItem(friend: friend),
-              SizedBox(
-                height: 400, //VLLT NOCH ANPASSEN
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: friends.length,
-                  itemBuilder: (context, index) {
-                    return Card(
-                      child: FriendItem(
-                          callbackFunction: callbackFunction,
-                          friend: friends[index],
-                          isStillPending: false),
-                    );
-                  },
-                ),
-              )
-              //FriendItem(friend: friends[1]),
-            ],
+          return Expanded(
+            child: Column(
+              children: [
+                Text("Your Friends", style: TextStyle(fontSize: 25)),
+                Expanded(
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: friends.length,
+                    itemBuilder: (context, index) {
+                      return Card(
+                        child: FriendItem(
+                            callbackFunction: callbackFunction,
+                            friend: friends[index],
+                            isStillPending: false),
+                      );
+                    },
+                  ),
+                )
+              ],
+            ),
           );
         } else {
           return Center(
@@ -247,18 +255,19 @@ class FriendItem extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               ElevatedButton(
+                child: Text('Accept'),
                 onPressed: () {
                   handleFriendRequestResponse(friend.userID, true);
                   callbackFunction();
                 },
-                child: Text('Accept'),
               ),
               TextButton(
-                  onPressed: () {
-                    handleFriendRequestResponse(friend.userID, false);
-                    callbackFunction();
-                  },
-                  child: Text('Decline'))
+                child: Text('Decline'),
+                onPressed: () {
+                  handleFriendRequestResponse(friend.userID, false);
+                  callbackFunction();
+                },
+              )
             ],
           )
         //build item without accept and decline buttons
@@ -269,6 +278,7 @@ class FriendItem extends StatelessWidget {
                 MaterialPageRoute(
                   builder: (context) => FriendInfoScreen(
                     friend: friend,
+                    callbackFunction: callbackFunction,
                   ),
                 ),
               );
@@ -373,8 +383,10 @@ class FriendItem extends StatelessWidget {
 
 class FriendInfoScreen extends StatelessWidget {
   final Friend friend;
+  final Function callbackFunction; // not necessary?
 
-  const FriendInfoScreen({super.key, required this.friend});
+  const FriendInfoScreen(
+      {super.key, required this.friend, required this.callbackFunction});
 
   @override
   Widget build(BuildContext context) {
@@ -429,14 +441,28 @@ class FriendInfoScreen extends StatelessWidget {
                             "Do you want to remove ${friend.username} as your friend?"),
                         actions: [
                           TextButton(
-                              onPressed: () {
-                                deleteFriend(friend.userID);
-                                Navigator.pop(context);
-                              },
-                              child: Text('Cancel')),
+                            child: Text('Cancel'),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                          ),
                           ElevatedButton(
-                            onPressed: () => Navigator.pop(context),
                             child: Text('Delete'),
+                            onPressed: () {
+                              deleteFriend(friend.userID);
+                              //I mean, dadurch wird das Pop up , der Info Screen geschlossen
+                              //und der Context für navigation ist wieder richtig. Gibt vllt ne bessere Lösung
+                              Navigator.of(context).pop();
+                              Navigator.of(context).pop();
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => FriendsScreen(),
+                                ),
+                              );
+
+                              //callbackFunction();
+                            },
                           ),
                         ],
                       ),
@@ -456,6 +482,11 @@ class FriendInfoScreen extends StatelessWidget {
               'Transaction History: ',
               style: TextStyle(fontSize: 30),
             ),
+            // Container(
+            //   child: TransactionHistoryScreen(),
+            //   height: 100,
+            //   width: 100,
+            // ),
           ],
         ),
       ),
@@ -463,6 +494,7 @@ class FriendInfoScreen extends StatelessWidget {
   }
 
   void deleteFriend(int userID) async {
+    //snackbar anzeigen mit deleted/error?
     //delete Friend and return to FriendScreen with updated List
     //fetch user id
     Map<String, dynamic> user = await ApiService.fetchUserProfile();

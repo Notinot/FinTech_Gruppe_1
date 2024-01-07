@@ -82,7 +82,8 @@ class _FriendsScreenState extends State<FriendsScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => BlockedUserScreen(),
+                    builder: (context) =>
+                        BlockedUsersScreen(), //idk ob man das braucht
                   ),
                 );
               },
@@ -96,16 +97,6 @@ class _FriendsScreenState extends State<FriendsScreen> {
         ],
       ),
     );
-  }
-}
-
-///Gets all blocked users from backend and displays them with option to un-block them again
-class BlockedUserScreen extends StatelessWidget {
-  const BlockedUserScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Placeholder();
   }
 }
 
@@ -262,7 +253,109 @@ class Friends extends StatelessWidget {
   }
 }
 
-///contains all relevant user information of a friend
+class BlockedUsersScreen extends StatefulWidget {
+  const BlockedUsersScreen({super.key});
+
+  @override
+  State<BlockedUsersScreen> createState() => _BlockedUsersScreenState();
+}
+
+class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
+  callback() {
+    setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      resizeToAvoidBottomInset: false, //avoids overflow when keyboard is opened
+      appBar: AppBar(
+        titleSpacing: 15.0,
+        title: Text('Blocked Users'),
+      ),
+      body: Column(
+        children: [
+          BlockedUsers(),
+        ],
+      ),
+    );
+  }
+}
+
+///Gets all blocked users from backend and displays them with option to un-block them again
+class BlockedUsers extends StatelessWidget {
+  BlockedUsers({super.key});
+
+  List<Friend> blockedUsers = [];
+
+  //get blocked users from DB and saves into List
+  Future getBlockedUsers() async {
+    //read jwt
+    Map<String, dynamic> user = await ApiService.fetchUserProfile();
+    int user_id = user['user_id'];
+
+    var response = //hier einfach jwt mitgeben anstatt user id auslesen??
+        await http
+            .get(Uri.parse('${ApiService.serverUrl}/friends/block/$user_id'));
+
+    Map<String, dynamic> data = jsonDecode(response.body);
+
+    for (var user in data['blockedUsers']) {
+      final blockedUserTemp = Friend(
+          userID: user['addressee_id'],
+          requestTime: DateTime.parse(user['request_time']).toLocal(),
+          profileImage: (user['picture'] != null &&
+                  user['picture']['data'] != null) //idk if this is necessary
+              ? Uint8List.fromList(user['picture']['data'].cast<int>())
+              : null,
+          username: user['username'],
+          firstName: user['first_name'],
+          lastName: user['last_name']);
+      blockedUsers.add(blockedUserTemp);
+    }
+    blockedUsers.sort(
+        //vllt nach time sorten? so dass neuster block ganz oben ist
+        (a, b) => a.username.toLowerCase().compareTo(b.username.toLowerCase()));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder(
+      future: getBlockedUsers(),
+      builder: (context, snapshot) {
+        //if users are loaded
+        if (snapshot.connectionState == ConnectionState.done) {
+          return Expanded(
+            child: Column(
+              children: [
+                //Text("Blocked Users", style: TextStyle(fontSize: 25)),
+                Expanded(
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: blockedUsers.length,
+                    itemBuilder: (context, index) {
+                      return Card(
+                        child: BlockedUserItem(
+                          user: blockedUsers[index],
+                        ),
+                      );
+                    },
+                  ),
+                )
+              ],
+            ),
+          );
+        } else {
+          return Center(
+            child: CircularProgressIndicator(),
+          );
+        }
+      },
+    );
+  }
+}
+
+///contains all relevant user information of a user
 class Friend {
   final int userID;
   final String username;
@@ -281,7 +374,6 @@ class Friend {
       required this.firstName,
       required this.lastName});
 }
-//factory constructor for json?
 
 /// displays a single friend object in a ListTile
 class FriendItem extends StatelessWidget {
@@ -425,6 +517,98 @@ class FriendItem extends StatelessWidget {
         );
       },
     );
+  }
+}
+
+//PendingFriendItem
+class BlockedUserItem extends StatelessWidget {
+  final Friend user;
+  const BlockedUserItem({super.key, required this.user});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: user.profileImage != null
+          ? ClipOval(
+              child: Image.memory(
+                user.profileImage!,
+                width: 40,
+                height: 40,
+                fit: BoxFit.cover,
+              ),
+            )
+          : Icon(Icons.person_sharp, size: 40),
+      title: Text(user.username),
+      subtitle: Text('${user.firstName} ${user.lastName}'),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          //Text('Hier Werbung'), //blocked at hier anzeigen?
+          ElevatedButton(
+            child: Text('Unblock'),
+            onPressed: () {
+              //Dialog -> nav pop
+              // handleUnblockUser(user.userID);
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: Text('Block'),
+                  content: Text("Do you want to unblock ${user.username}?"),
+                  actions: [
+                    TextButton(
+                      child: Text('Cancel'),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                    ElevatedButton(
+                      child: Text('Unblock'),
+                      onPressed: () {
+                        handleUnblockUser(user.userID);
+                        //I mean, dadurch wird das Pop up & der Info Screen geschlossen
+                        //und der Context für navigation ist wieder richtig. Gibt vllt ne bessere Lösung
+                        Navigator.of(context).pop();
+                        Navigator.of(context).pop();
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => FriendsScreen(),
+                          ),
+                        );
+                        //callbackFunction();
+                      },
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void handleUnblockUser(int userID) async {
+    Map<String, dynamic> user = await ApiService.fetchUserProfile();
+    int user_id = user['user_id'];
+
+    try {
+      Map<String, dynamic> requestBody = {'friendId': userID};
+      final response = await http.post(
+        Uri.parse('${ApiService.serverUrl}/friends/unblock/$user_id'),
+        body: json.encode(requestBody),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      );
+      if (response.statusCode == 200) {
+        debugPrint('Friend $userID unblocked');
+      } else {
+        debugPrint('Friend unblocking FAILED ${response.body}');
+      }
+    } catch (e) {
+      print('Error unblocking friend: $e');
+    }
   }
 }
 

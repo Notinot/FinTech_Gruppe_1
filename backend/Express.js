@@ -479,6 +479,40 @@ app.post('/friends/block/:user_id', async (req, res) => {
   }
 });
 
+//unblocking user
+app.post('/friends/unblock/:user_id', async (req, res) => {
+  const user_id = req.params.user_id; //person who blocked - requester
+  const{friendId} = req.body; //person who got blocked - addressee
+  console.error(user_id);
+  console.error(friendId);
+  //delete entry
+  const delQuery = `
+  DELETE FROM Friendship
+  WHERE (requester_id = ? AND addressee_id = ?) 
+      OR (requester_id = ? AND addressee_id = ?)`; //and status = blocked
+  try{
+    await db.query(delQuery, [user_id, friendId, friendId, user_id]);
+
+  }catch(e){
+    console.error('Error deleting friends entry', e);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+//get users that are blocked
+app.get('/friends/block/:user_id', async (req, res) => {
+  const user_id = req.params.user_id; //person who blocked - requester
+
+  const query =
+  `SELECT  f.addressee_id, f.request_time, u.username, u.first_name, u.last_name, u.picture
+  FROM Friendship f
+  JOIN User u ON f.addressee_id = u.user_id
+  WHERE f.requester_id = ? AND f.status = 'blocked';
+  `;
+  const [blockedUsers] = await db.query(query, [user_id]);
+    res.json({blockedUsers}); //!
+  });
+
 app.post('/verify', async (req, res) => {
   const { email, verificationCode } = req.body;
 

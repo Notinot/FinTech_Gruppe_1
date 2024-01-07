@@ -8,9 +8,31 @@ import 'package:flutter_application_1/Screens/Money/SendMoneyScreen.dart';
 import 'package:intl/intl.dart';
 import '../Money/TransactionHistoryScreen.dart';
 import '../api_service.dart';
-/* Things to do:
 
-  Dynamic pending Friends length? oder zwischen 0-80-160 und 240?
+/* ---------- Change Log since last lecture -------------------------------
+ - Searchbar is working again
+ - Profile Pictures are displayed at the FriendsScreen
+ - Profile Pictures are displayed at the FriendInfoScreen
+
+ - Accepting or declining request will refresh the screen
+ - PendingFriends screen dynamically adjusts size depending on amount of requests
+ - When there are no pedning friends, the Widget is not displayed at all
+ - Friends are displayed alphabetically (username)
+ - Deleting a friend is possible now
+
+  Other:
+  Bug fixes 
+    -navigation
+    -self add
+    -pixel overflow caused by pending friends and friends
+  Merged some Widgets into one and changed some processes
+  Changed ways of managing states
+
+---------------------------------------------------------------------------*/
+
+/* To-do:
+  -when a pending friend is pressed - send moneyScreen is opened
+    -> change that to InfoScreen?
 
   -search 
     -show recommendation after typing 3-4 characters in
@@ -24,10 +46,13 @@ import '../api_service.dart';
     -dont consider blocked users !! (in searchbar as well)
 
   -FriendInfoScreen
-    -Block or Delete Friends (block pending Friends as well?)
+    -Block Friend
+      -wie wird das in db gemacht?
+      -Button wo man blocked users sieht und wieder entblocken kann?
     -show transaction history of Friend and yourself
 
-  -Try Catch blocks everywhere    
+  -Correct use of jwt everywhere
+  -Check for correct error handling everywhere    
 */
 
 class FriendsScreen extends StatefulWidget {
@@ -51,6 +76,18 @@ class _FriendsScreenState extends State<FriendsScreen> {
       appBar: AppBar(
         titleSpacing: 15.0,
         title: FriendsSearchBar(),
+        actions: [
+          IconButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => BlockedUserScreen(),
+                  ),
+                );
+              },
+              icon: Icon(Icons.person_off))
+        ],
       ),
       body: Column(
         children: [
@@ -59,6 +96,16 @@ class _FriendsScreenState extends State<FriendsScreen> {
         ],
       ),
     );
+  }
+}
+
+///Gets all blocked users from backend and displays them with option to un-block them again
+class BlockedUserScreen extends StatelessWidget {
+  const BlockedUserScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Placeholder();
   }
 }
 
@@ -450,7 +497,7 @@ class FriendInfoScreen extends StatelessWidget {
                             child: Text('Delete'),
                             onPressed: () {
                               deleteFriend(friend.userID);
-                              //I mean, dadurch wird das Pop up , der Info Screen geschlossen
+                              //I mean, dadurch wird das Pop up & der Info Screen geschlossen
                               //und der Context für navigation ist wieder richtig. Gibt vllt ne bessere Lösung
                               Navigator.of(context).pop();
                               Navigator.of(context).pop();
@@ -460,7 +507,6 @@ class FriendInfoScreen extends StatelessWidget {
                                   builder: (context) => FriendsScreen(),
                                 ),
                               );
-
                               //callbackFunction();
                             },
                           ),
@@ -468,12 +514,44 @@ class FriendInfoScreen extends StatelessWidget {
                       ),
                     );
                   },
-                ),
+                ), //repetitive code - make a widget out of this?
                 OutlinedButton(
-                  onPressed: () {
-                    blockFriend(friend.userID);
-                  },
                   child: Text("Block"),
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: Text('Block'),
+                        content:
+                            Text("Do you want to block ${friend.username}?"),
+                        actions: [
+                          TextButton(
+                            child: Text('Cancel'),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                          ElevatedButton(
+                            child: Text('Block'),
+                            onPressed: () {
+                              blockFriend(friend.userID);
+                              //I mean, dadurch wird das Pop up & der Info Screen geschlossen
+                              //und der Context für navigation ist wieder richtig. Gibt vllt ne bessere Lösung
+                              Navigator.of(context).pop();
+                              Navigator.of(context).pop();
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => FriendsScreen(),
+                                ),
+                              );
+                              //callbackFunction();
+                            },
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
               ],
             ),
@@ -520,7 +598,7 @@ class FriendInfoScreen extends StatelessWidget {
   }
 
   void blockFriend(int userID) async {
-    //DialogShow to Block Friend
+    //insert here DialogShow to Block Friend?
     Map<String, dynamic> user = await ApiService.fetchUserProfile();
     int user_id = user['user_id'];
 

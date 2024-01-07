@@ -447,30 +447,37 @@ app.post('/friends/request/:user_id', async (req, res) => {
 
 //blocking user
 app.post('/friends/block/:user_id', async (req, res) => {
-  const user_id = req.params.user_id;
-  const{friendId} = req.body;
-  //so weiß man im Nachhinein aber nicht mehr wer wen blockiert hat...
-  const query = `
-  UPDATE Friendship
-  SET status = 'blocked' 
-  WHERE (requester_id = ? AND addressee_id = ?) 
-      OR (requester_id = ? AND addressee_id = ?)
-  `;
-  try {
-      const [deletingFriend] = await db.query(query, [user_id, friendId, friendId, user_id]);
+  const user_id = req.params.user_id; //person who blocks - requester
+  const{friendId} = req.body; //person who gets blocked - addressee
 
-      res.json({ success: true, message: 'Friend deleted successfully.' });
+  //delete friends entry first
+  const delQuery = `
+  DELETE FROM Friendship
+  WHERE (requester_id = ? AND addressee_id = ?) 
+      OR (requester_id = ? AND addressee_id = ?)`;
+  try{
+    await db.query(delQuery, [user_id, friendId, friendId, user_id]);
+
+  }catch(e){
+    console.error('Error deleting friends entry', e);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+
+    //REQUESTER = PERSON WHO BLOCKs
+   const blockQuery = `
+      INSERT INTO Friendship 
+      (requester_id, addressee_id, status, request_time) 
+      VALUES (?, ?, ?, NOW())`;
+      
+      try {
+    await db.query(blockQuery, [user_id, friendId, 'blocked']);
+
+      res.json({ success: true, message: 'User blocked successfully.' });
   } catch (error) {
-      console.error('Error deleting friend:', error);
+      console.error('Error blocking friend:', error);
       res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
-
-
-/*
---add BLOCKED functionality? 
-
-*/
 
 app.post('/verify', async (req, res) => {
   const { email, verificationCode } = req.body;

@@ -11,14 +11,13 @@ import '../api_service.dart';
 
 /* ---------- Change Log since last lecture -------------------------------
  - Searchbar is working again
- - Profile Pictures are displayed at the FriendsScreen
- - Profile Pictures are displayed at the FriendInfoScreen
+ - Profile Pictures are displayed at the FriendsScreen & FriendInfoScreen
 
  - Accepting or declining request will refresh the screen
  - PendingFriends screen dynamically adjusts size depending on amount of requests
- - When there are no pedning friends, the Widget is not displayed at all
- - Friends are displayed alphabetically (username)
+ - Friends are displayed alphabetically (by username)
  - Deleting a friend is possible now
+ -Blocking and unblocking someone is possbible now
 
   Other:
   Bug fixes 
@@ -46,9 +45,6 @@ import '../api_service.dart';
     -dont consider blocked users !! (in searchbar as well)
 
   -FriendInfoScreen
-    -Block Friend
-      -wie wird das in db gemacht?
-      -Button wo man blocked users sieht und wieder entblocken kann?
     -show transaction history of Friend and yourself
 
   -Correct use of jwt everywhere
@@ -64,7 +60,7 @@ class FriendsScreen extends StatefulWidget {
 
 class _FriendsScreenState extends State<FriendsScreen> {
   //anstatt alles neuzuladen gucken ob man einfach aus der ListView eins entfernt
-  //und in die andere ListView hinzufügt (ohne http request)
+  //und in die andere ListView hinzufügt
   callback() {
     setState(() {});
   }
@@ -82,8 +78,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) =>
-                        BlockedUsersScreen(), //idk ob man das braucht
+                    builder: (context) => BlockedUsersScreen(),
                   ),
                 );
               },
@@ -528,6 +523,7 @@ class BlockedUserItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
+      //if no blocked users display -> "You have no blocked users"?
       leading: user.profileImage != null
           ? ClipOval(
               child: Image.memory(

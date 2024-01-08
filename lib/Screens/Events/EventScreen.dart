@@ -94,14 +94,14 @@ class _EventScreenState extends State<EventScreen> {
 
         // Sort by status and datetime
         events.sort((a, b) {
-
-          int statusCheck = b.status.compareTo(a.status);
-
-          if(statusCheck == 0){
+          // First, sort by status (active events first)
+          if (a.status == 1 && b.status != 1) {
+            return -1; // a is active, b is not; move a up
+          } else if (a.status != 1 && b.status == 1) {
+            return 1; // b is active, a is not; move b up
+          } else {
+            // Both events have the same status, sort by datetimeEvent
             return b.datetimeEvent.compareTo(a.datetimeEvent);
-          }
-          else{
-            return statusCheck;
           }
         });
 
@@ -168,7 +168,7 @@ class _EventScreenState extends State<EventScreen> {
           case 'Inactive':
             if(categoryFilter == 'Category'){
               for(var event in events){
-                if(event.status == 0 || event.datetimeEvent.millisecondsSinceEpoch < DateTime.now().millisecondsSinceEpoch){
+                if(event.status != 1 || event.datetimeEvent.millisecondsSinceEpoch < DateTime.now().millisecondsSinceEpoch){
                   if(!filteredEvents.contains(event)){
                     filteredEvents.add(event);
                   }
@@ -178,7 +178,7 @@ class _EventScreenState extends State<EventScreen> {
             }
             else if(categoryFilter != 'Category'){
               for(var event in events){
-                if(event.status == 0 ||  event.datetimeEvent.millisecondsSinceEpoch < DateTime.now().millisecondsSinceEpoch){
+                if(event.status != 1 || event.datetimeEvent.millisecondsSinceEpoch < DateTime.now().millisecondsSinceEpoch){
                   if(categoryFilter == event.category && !filteredEvents.contains(event)){
                     filteredEvents.add(event);
                   }
@@ -572,7 +572,9 @@ class EventItem extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => DashboardScreen(),
+                  builder: (context) => EventInfoScreen(
+                    event: event,
+                  ),
                 ),
               );
             },

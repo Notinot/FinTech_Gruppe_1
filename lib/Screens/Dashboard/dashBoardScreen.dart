@@ -55,6 +55,54 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
+  // Fetch events from the backend
+  Future<List<Event>> fetchEvents() async {
+    try {
+      const storage = FlutterSecureStorage();
+      final token = await storage.read(key: 'token');
+
+      if (token == null) {
+        throw Exception('Token not found');
+      }
+
+      final response = await http.get(
+        Uri.parse('${ApiService.serverUrl}/events'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+
+      if (response.statusCode == 200) {
+
+        final List<dynamic> data = jsonDecode(response.body);
+        final List<dynamic> eventsData = data;
+
+        List<Event> filteredEvents = [];
+
+        List<Event> events = eventsData.map((eventData) {
+          return Event.fromJson(eventData as Map<String, dynamic>);
+        }).toList();
+
+
+        for(var event in events){
+          if(event.status == 1){
+            filteredEvents.add(event);
+          }
+        }
+
+        filteredEvents.sort((a, b) => b.datetimeEvent.compareTo(a.datetimeEvent));
+
+        return filteredEvents;
+      } else {
+        throw Exception('Failed to load events. Error: ${response.statusCode}');
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<Map<String, dynamic>>(
@@ -94,13 +142,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     UserProfileSection(user),
                     AccountSummary(user['balance'].toDouble()),
                     Notifications(),
-                    UpcomingEvents(
-                      events: [
-                        Event(title: 'Meeting', date: '2023-11-01'),
-                        Event(title: 'Workshop', date: '2023-11-05'),
-                        Event(title: 'Conference', date: '2023-11-10'),
-                      ],
-                    ),
+                    UpcomingEvents(fetchEventsFunction: fetchEvents),
                   ],
                 ),
               ),

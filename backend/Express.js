@@ -1258,6 +1258,48 @@ app.post('/cancel-event', authenticateToken, async (req, res) => {
 });
 
 
+
+// Fetch pending events
+app.post('/pending-events', authenticateToken, async (req, res) => {
+    try {
+        console.log('Token:', req.headers['authorization']);
+        // Get the user ID from the authenticated token
+        const userId = req.user.userId;
+        console.log('userId:', userId);
+
+        const [pendingEvents] = await db.query(`
+             SELECT
+                        Event.*,
+                        Location.*,
+                        User_Event.user_id,
+                        User.username AS creator_username,
+                        User.user_id AS creator_id
+                    FROM
+                        Event
+                    JOIN
+                        User_Event ON User_Event.event_id = Event.id
+                    JOIN
+                        User ON Event.creator_id = User.user_id
+                    LEFT JOIN
+                        Location ON Event.id = Location.event_id
+                    WHERE
+                        User_Event.status = 2
+                        AND
+                        User_Event.user_id = ?;
+
+        `, [userId]);
+
+
+        console.log('events:', pendingEvents);
+        res.json(pendingEvents);
+
+      } catch (error) {
+        console.error('Error fetching pending Events:', error);
+        res.status(500).json({ message: 'Internal server error' });
+      }
+});
+
+
 // Define your email sending function
 function sendVerificationEmail(to, code) {
   const mailOptions = {
@@ -1767,58 +1809,6 @@ async function getBalance(userId) {
 
 
 
-//route to get the events the user is part of with JWT authentication
-app.get('/events', authenticateToken, async (req, res) => {
-  try {
-    console.log('Token:', req.headers['authorization']);
-    // Get the user ID from the authenticated token
-    const userId = req.user.userId;
-    console.log('userId:', userId);
-    // Fetch the user's events from the database based on the user ID
-    const [events] = await db.query(`
-
-/*
-        SELECT
-        User.user_id AS creator_username,
-        Event.*,
-        Location.*,
-        FROM User
-        INNER JOIN
-            User ON Event.creator_id = User.user_id
-    	INNER JOIN
-    	    User_Event ON User.user_id = User_Event.user_id
-        INNER JOIN
-            Event On User_Event.event_id = Event.id
-        WHERE
-        User.user_id = ?;
-*/
-
-    // Select all Events the User interacts with
-    SELECT
-        Event.*,
-        Location.*,
-        User_Event.user_id,
-        User.username AS creator_username,
-        User.picture AS creator_picture
-    FROM
-        Event
-    JOIN
-        User_Event ON User_Event.event_id = Event.id
-    JOIN
-        User ON Event.creator_id = User.user_id
-    LEFT JOIN
-        Location ON Event.id = Location.event_id
-    WHERE
-        User_Event.user_id = ?;
-
-    `, [userId]);
-    console.log('events:', events);
-    res.json(events);
-  } catch (error) {
-    console.error('Error fetching Events:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-});
 
 
 

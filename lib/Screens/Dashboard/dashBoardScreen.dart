@@ -28,6 +28,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   late Future<Map<String, dynamic>> userProfileFuture;
   static List<PopupMenuItem<String>> items = [];
   late List<Map<String, dynamic>> TransactionRequests = [];
+  late List<Map<String, dynamic>> EventRequests = [];
   @override
   void initState() {
     super.initState();
@@ -85,9 +86,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           return Event.fromJson(eventData as Map<String, dynamic>);
         }).toList();
 
+        events.sort((a, b) => b.datetimeEvent.compareTo(a.datetimeEvent));
 
         for(var event in events){
-          if(event.status == 1){
+          if(event.status == 1 && filteredEvents.length <= 3){
             filteredEvents.add(event);
           }
         }
@@ -237,9 +239,60 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  Future<List<Event>> fetchPendingEventRequests() async {
+
+    try {
+      const storage = FlutterSecureStorage();
+      final token = await storage.read(key: 'token');
+
+      if (token == null) {
+        throw Exception('Token not found');
+      }
+
+      final response = await http.get(
+        Uri.parse('${ApiService.serverUrl}/pending-events'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+
+      if (response.statusCode == 200) {
+
+        final List<dynamic> data = jsonDecode(response.body);
+        final List<dynamic> eventsData = data;
+
+        List<Event> pendingEvents = [];
+
+        List<Event> events = eventsData.map((eventData) {
+          return Event.fromJson(eventData as Map<String, dynamic>);
+        }).toList();
+
+        events.sort((a, b) => b.datetimeEvent.compareTo(a.datetimeEvent));
+
+        for(var event in events){
+          if(event.status == 2){
+            pendingEvents.add(event);
+          }
+        }
+
+        pendingEvents.sort((a, b) => b.datetimeEvent.compareTo(a.datetimeEvent));
+
+        return pendingEvents;
+      } else {
+        throw Exception('Failed to load pending events. Error: ${response.statusCode}');
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+
   Future<void> fetchAndBuildNotifications(
       BuildContext context, Map<String, dynamic> user) async {
     await fetchPendingFriends();
+    await fetchPendingEventRequests();
     await Notifications.fetchTransactions()
         .then((List<Transaction>? transactions) {
       if (transactions != null) {
@@ -264,7 +317,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     items.clear(); // Clear the existing items list
 
-    if (pendingFriends.isEmpty && TransactionRequests.isEmpty) {
+    if (pendingFriends.isEmpty && TransactionRequests.isEmpty && EventRequests.isEmpty) {
       items.add(buildNoNotificationsItem());
     } else {
       for (int i = 0; i < pendingFriends.length; i++) {
@@ -277,6 +330,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
           PopupMenuItem<String> item = await buildNotificationItemTransaction(
             context,
             TransactionRequests[i],
+            user,
+          );
+          items.add(item);
+        }
+      }
+      if (EventRequests.isNotEmpty) {
+        for (int i = 0; i < EventRequests.length; i++) {
+          PopupMenuItem<String> item = await buildNotificationItemTransaction(
+            context,
+            EventRequests[i],
             user,
           );
           items.add(item);
@@ -417,4 +480,61 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
+
+  Future<PopupMenuItem<String>> buildNotificationItemEvent(
+
+      BuildContext context,
+      Map<String, dynamic> eventRequest,
+      Map<String, dynamic> user,
+      ) async {
+
+    String creator = eventRequest['creator_username'];
+    String eventTitle = eventRequest['title'];
+
+
+    return PopupMenuItem<String>(
+      key: Key(eventRequest['event_id'].toString()),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: ListTile(
+              title: Text('Invited to $eventTitle from $creator'),
+            ),
+          ),
+          IconButton(
+            icon: Icon(Icons.check, color: Colors.green),
+            onPressed: () {
+              ApiService.joinEvent(
+                eventRequest['event_id'],
+              ).then((_) {
+                items.removeWhere((item) =>
+                item.key ==
+                    Key(eventRequest['event_id'].toString()));
+
+                Navigator.pop(context);
+                fetchAndBuildNotifications(context, user);
+              });
+            },
+          ),
+          IconButton(
+            icon: Icon(Icons.close, color: Colors.red),
+            onPressed: () {
+              ApiService.leaveEvent(
+                eventRequest['event_id'],
+              ).then((_) {
+                items.removeWhere((item) =>
+                item.key ==
+                    Key(eventRequest['event_id'].toString()));
+                Navigator.pop(context);
+                fetchAndBuildNotifications(context, user);
+              });
+            },
+          ),
+        ],
+      ),
+    );
+
+  }
+
 }

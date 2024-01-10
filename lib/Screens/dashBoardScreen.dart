@@ -28,7 +28,7 @@ class DashboardScreen extends StatelessWidget {
       }
 
       final response = await http.get(
-        Uri.parse('${ApiService.serverUrl}/events'),
+        Uri.parse('${ApiService.serverUrl}/dashboard-events'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
           'Authorization': 'Bearer $token',
@@ -613,6 +613,8 @@ class EventInfoScreen extends StatelessWidget {
                         :
                     Container()
                         :
+                        event.notOutDatedEvent(event.datetimeEvent)
+                    ?
                     TextButton(
                       onPressed: () {
                         showDialog(
@@ -652,7 +654,9 @@ class EventInfoScreen extends StatelessWidget {
                         );
                       },
                       child: Text('Leave event'),
-                    ),
+                    )
+                            :
+                            Container()
                   ],
                 ),
                 SizedBox(height: 24),

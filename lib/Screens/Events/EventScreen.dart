@@ -480,6 +480,13 @@ class Event {
     return false;
   }
 
+  bool notFullEvent(){
+    if(participants < maxParticipants){
+      return true;
+    }
+    return false;
+  }
+
   factory Event.fromJson(Map<String, dynamic> json) {
     return Event(
         eventID: json['event_id'],
@@ -749,7 +756,7 @@ class EventInfoScreen extends StatelessWidget {
                     children: [
                       Icon(Icons.supervised_user_circle_rounded),
                       Text(
-                        '  Participants: ${event.participants.toString()}',
+                        '  Participants: ${event.participants.toString()} / ${event.maxParticipants.toString()}',
                         style: TextStyle(fontSize: 18),
                       ),
                     ],
@@ -837,25 +844,31 @@ class EventInfoScreen extends StatelessWidget {
                         ?
                         event.notOutDatedEvent(event.datetimeEvent)
                             ?
-                        ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                              textStyle: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 15
-                              )),
-                          onPressed: (){
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => DashboardScreen(),
-                              ),
-                            );
-                          }, icon: Icon(Icons.emoji_people_rounded),
-                          label: Text('Invite'),
-                        )
+                            event.notFullEvent()
+                              ?
+                            ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                  textStyle: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15
+                                  )),
+                              onPressed: (){
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => DashboardScreen(),
+                                  ),
+                                );
+                              }, icon: Icon(Icons.emoji_people_rounded),
+                              label: Text('Invite'),
+                            )
+                              :
+                            Container()
                         :
                             Container()
                         :
+                        event.notOutDatedEvent(event.datetimeEvent)
+                    ?
                     TextButton(
                       onPressed: () {
                         showDialog(
@@ -895,7 +908,9 @@ class EventInfoScreen extends StatelessWidget {
                         );
                       },
                       child: Text('Leave event'),
-                    ),
+                    )
+                            :
+                            Container()
                   ],
                 ),
                 SizedBox(height: 24),

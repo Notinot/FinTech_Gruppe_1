@@ -29,6 +29,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   static List<PopupMenuItem<String>> items = [];
   late List<Map<String, dynamic>> TransactionRequests = [];
   late List<Map<String, dynamic>> EventRequests = [];
+
   @override
   void initState() {
     super.initState();
@@ -54,6 +55,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
         TransactionRequests = [];
       }
     });
+    fetchPendingEventRequests()
+        .then((List<Event>? events) {
+      if (events != null) {
+        EventRequests = events.map((Event event) {
+          return {
+            'event_id': event.eventID,
+            'title': event.title,
+            'category': event.category,
+            'description': event.description,
+            'participants': event.participants,
+            'max_participants': event.maxParticipants,
+            'datetime_event': event.datetimeEvent,
+            'price' : event.price,
+            'status': event.status,
+            'creator_username': event.creatorUsername,
+            'county': event.country,
+            'city': event.city,
+            'street': event.street,
+            'zipcode': event.zipcode
+          };
+        }).toList();
+      } else {
+        EventRequests = [];
+      }
+    });
   }
 
   // Fetch events from the backend
@@ -67,7 +93,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       }
 
       final response = await http.get(
-        Uri.parse('${ApiService.serverUrl}/events'),
+        Uri.parse('${ApiService.serverUrl}/dashboard-events'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
           'Authorization': 'Bearer $token',
@@ -122,7 +148,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               actions: [
                 Badge.Badge(
                   badgeContent: Text(
-                    (pendingFriends.length + TransactionRequests.length)
+                    (pendingFriends.length + TransactionRequests.length + EventRequests.length)
                         .toString(),
                     style: TextStyle(color: Colors.white),
                   ),
@@ -214,6 +240,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  Future<void> handleEventRequest(
+      int eventId, String action) async {
+    try {
+
+      // Make a request to your backend API to accept the request
+      if(await ApiService.joinEvent(eventId)){
+
+        showSuccessSnackBar(context, 'Request accepted successfully');
+      } else {
+
+        // Request failed, handle the error
+        showErrorSnackBar(context, 'Error accepting request, please try again');
+      }
+    } catch (error) {
+      // Handle exceptions
+      print('Error accepting request: $error');
+    }
+  }
+
   Future<void> fetchPendingFriends() async {
     try {
       final userProfile = await userProfileFuture;
@@ -263,23 +308,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
         final List<dynamic> data = jsonDecode(response.body);
         final List<dynamic> eventsData = data;
 
-        List<Event> pendingEvents = [];
-
         List<Event> events = eventsData.map((eventData) {
           return Event.fromJson(eventData as Map<String, dynamic>);
         }).toList();
 
         events.sort((a, b) => b.datetimeEvent.compareTo(a.datetimeEvent));
 
-        for(var event in events){
-          if(event.status == 2){
-            pendingEvents.add(event);
-          }
-        }
-
-        pendingEvents.sort((a, b) => b.datetimeEvent.compareTo(a.datetimeEvent));
-
-        return pendingEvents;
+        return events;
       } else {
         throw Exception('Failed to load pending events. Error: ${response.statusCode}');
       }
@@ -292,7 +327,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> fetchAndBuildNotifications(
       BuildContext context, Map<String, dynamic> user) async {
     await fetchPendingFriends();
-    await fetchPendingEventRequests();
+    await fetchPendingEventRequests()
+        .then((List<Event>? events) {
+      if (events != null) {
+        EventRequests = events.map((Event event) {
+          return {
+            'event_id': event.eventID,
+            'title': event.title,
+            'category': event.category,
+            'description': event.description,
+            'participants': event.participants,
+            'max_participants': event.maxParticipants,
+            'datetime_event': event.datetimeEvent,
+            'price' : event.price,
+            'status': event.status,
+            'creator_username': event.creatorUsername,
+            'county': event.country,
+            'city': event.city,
+            'street': event.street,
+            'zipcode': event.zipcode
+          };
+        }).toList();
+      } else {
+        EventRequests = [];
+      }
+    });
     await Notifications.fetchTransactions()
         .then((List<Transaction>? transactions) {
       if (transactions != null) {
@@ -337,7 +396,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       }
       if (EventRequests.isNotEmpty) {
         for (int i = 0; i < EventRequests.length; i++) {
-          PopupMenuItem<String> item = await buildNotificationItemTransaction(
+          PopupMenuItem<String> item = await buildNotificationItemEvent(
             context,
             EventRequests[i],
             user,

@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-//import 'package:flutter_application_1/Screens/Dashboard/dashBoardScreen.dart';
 import 'package:flutter_application_1/Screens/Money/TransactionHistoryScreen.dart';
 import 'package:flutter_application_1/Screens/Money/TransactionDetailsScreen.dart';
 import 'package:flutter_application_1/Screens/api_service.dart';
@@ -125,11 +124,12 @@ class _NotificationsState extends State<Notifications> {
 
           final List<Transaction> transactionsLastSevenDays = transactions
               .where((transaction) =>
-                  transaction.createdAt.isAfter(startOfLastSevenDays) &&
-                  transaction.createdAt.isBefore(endOfToday) &&
-                  transaction.transactionType != 'Deposit' &&
-                  !(transaction.processed == 1 &&
-                      transaction.transactionType == 'Request'))
+                      transaction.createdAt.isAfter(startOfLastSevenDays) &&
+                      transaction.createdAt.isBefore(endOfToday) &&
+                      transaction.transactionType != 'Deposit'
+                  /* && !(transaction.processed == 1 &&
+                      transaction.transactionType == 'Request')*/
+                  )
               .toList();
 
           return SingleChildScrollView(
@@ -180,30 +180,67 @@ class _NotificationsState extends State<Notifications> {
   }
 
   String getNotificationText(Transaction transaction) {
-    //final Future userid = ApiService.getUserId() as Future<int>;
-
     if (transaction.transactionType == 'Payment' &&
         transaction.receiverId == user_id) {
-      return '${transaction.amount}€ from ${transaction.senderUsername}';
-    } else if (transaction.transactionType == 'Payment' &&
-        transaction.senderId == user_id) {
-      return 'Send ${transaction.amount}€ to ${transaction.receiverUsername}';
+      return 'Received ${transaction.amount}€ from ${transaction.senderUsername}';
+    } else if ((transaction.transactionType == 'Payment' &&
+            transaction.senderId == user_id) ||
+        (transaction.transactionType == 'Request' &&
+            transaction.senderId == user_id &&
+            transaction.processed == 1)) {
+      return 'Sent ${transaction.amount}€ to ${transaction.receiverUsername}';
     } else if (transaction.transactionType == 'Request' &&
-        transaction.senderId != user_id) {
+        transaction.senderId != user_id &&
+        transaction.processed == 0) {
       return '${transaction.senderUsername} requested ${transaction.amount}€ from you.';
+    } else if (transaction.transactionType == 'Request' &&
+        transaction.senderId == user_id &&
+        transaction.processed == 0) {
+      return 'You requested ${transaction.amount}€ from ${transaction.receiverUsername}.';
+    } else if (transaction.transactionType == 'Request' &&
+        transaction.senderId != user_id &&
+        transaction.processed == 1) {
+      return '${transaction.senderUsername} accepted your request and sent ${transaction.amount}€';
+    } else if (transaction.transactionType == 'Request' &&
+        transaction.receiverId == user_id &&
+        transaction.processed == 2) {
+      return '${transaction.senderUsername} rejected your request';
+    } else if (transaction.transactionType == 'Request' &&
+        transaction.senderId == user_id &&
+        transaction.processed == 2) {
+      return 'You rejected the request from ${transaction.receiverUsername}';
     } else {
       return 'Unknown notification';
     }
   }
 
   Icon getNotificationIcon(Transaction transaction) {
-    //final Future userid = ApiService.getUserId() as Future<int>;
-
-    if (transaction.transactionType == 'Request') {
+    if (transaction.transactionType == 'Request' &&
+        transaction.processed == 0) {
       return Icon(Icons.request_page, color: Colors.orange);
+    } else if (transaction.transactionType == 'Request' &&
+        transaction.receiverId == user_id &&
+        transaction.processed == 1) {
+      return Icon(Icons.request_page, color: Colors.green);
+    } else if (transaction.transactionType == 'Request' &&
+        transaction.senderId == user_id &&
+        transaction.processed == 1) {
+      return Icon(Icons.request_page, color: Colors.red);
+    } else if (transaction.transactionType == 'Request' &&
+        transaction.senderId == user_id &&
+        transaction.processed == 1) {
+      return Icon(Icons.request_page, color: Colors.red);
+    } else if (transaction.transactionType == 'Request' &&
+        transaction.senderId == user_id &&
+        transaction.processed == 2) {
+      return Icon(Icons.request_page, color: Colors.black);
     } else if (transaction.transactionType == 'Payment' &&
         transaction.receiverId == user_id) {
       return Icon(Icons.attach_money, color: Colors.green);
+    } else if (transaction.transactionType == 'Request' &&
+        transaction.receiverId == user_id &&
+        transaction.processed == 2) {
+      return Icon(Icons.request_page, color: Colors.black);
     } else if (transaction.transactionType == 'Payment' &&
         transaction.senderId == user_id) {
       return Icon(Icons.attach_money, color: Colors.red);
@@ -215,9 +252,6 @@ class _NotificationsState extends State<Notifications> {
 
 class NotificationItem extends StatelessWidget {
   final Future<Map<String, dynamic>> user;
-  late final String username;
-  late final int userId;
-
   final Icon icon;
   final String text;
   final Transaction transaction;
@@ -245,8 +279,8 @@ class NotificationItem extends StatelessWidget {
           );
         } else {
           final userData = snapshot.data!;
-          userId = userData['user_id'];
-          username = userData['username'];
+          final userId = userData['user_id'];
+          final username = userData['username'];
 
           return GestureDetector(
             onTap: () {

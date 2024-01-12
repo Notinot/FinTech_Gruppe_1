@@ -1036,6 +1036,38 @@ app.post('/transactions/:transactionId', authenticateToken, async (req, res) => 
 );
 
 
+app.post('/event-service', async (req, res) => {
+    try{
+
+        events = req.body;
+
+        for(let i = 0; i < events.length; i++){
+
+            await db.query('UPDATE Event SET datetime_event = ?, recurrence_interval = 1 WHERE id = ?',
+             [
+                events[i].datetime_event,
+                events[i].recurrence_interval,
+                events[i].event_id
+             ]);
+        }
+
+        const [updateEventStatusToActive] = await db.query(`
+            UPDATE Event SET status = 1 WHERE datetime_event > NOW()
+        `);
+
+        const [updateEventStatusToInactive] = await db.query(`
+            UPDATE Event SET status = 2 WHERE datetime_event < NOW()
+        `);
+
+
+        res.status(200).json({ message: 'Event Service successfully finished' });
+    }
+    catch(e){
+        console.log(e);
+        res.status(500).json({message: 'Event Service failed'});
+    }
+});
+
 //route to get the events the user is part of with JWT authentication
 app.get('/events', authenticateToken, async (req, res) => {
   try {
@@ -1068,7 +1100,6 @@ app.get('/events', authenticateToken, async (req, res) => {
     `, [userId]);
 
 
-    console.log('events:', interactedEvents);
     res.json(interactedEvents);
 
   } catch (error) {
@@ -1077,6 +1108,45 @@ app.get('/events', authenticateToken, async (req, res) => {
   }
 });
 
+
+// Get the tree soonest events for the dashboard
+app.get('/dashboard-events', authenticateToken, async(req, res) => {
+
+    try{
+
+        const senderId = req.user.userId;
+
+        const [dashboardEventQuery] = await db.query(
+            `SELECT
+             Event.*,
+                       Location.*,
+                       User_Event.user_id,
+                       User.username AS creator_username,
+                       User.user_id AS creator_id
+             FROM Event
+             JOIN
+                       User_Event ON User_Event.event_id = Event.id
+                   JOIN
+                       User ON Event.creator_id = User.user_id
+                   LEFT JOIN
+                       Location ON Event.id = Location.event_id
+             WHERE User_Event.status = 1
+             AND
+             datetime_event > NOW()
+             AND
+             User_Event.user_id = ?
+             ORDER BY ABS(UNIX_TIMESTAMP(datetime_event) - UNIX_TIMESTAMP(NOW()))
+             LIMIT 3`,
+             [senderId]
+        );
+
+        res.json(dashboardEventQuery);
+    }
+    catch(error){
+       console.error('Error fetching Events:', error);
+       res.status(500).json({ message: 'Internal server error' });
+    }
+});
 
 // Create Event
 app.post('/create-event', authenticateToken, async (req, res) => {
@@ -1155,6 +1225,37 @@ app.post('/create-event', authenticateToken, async (req, res) => {
 
 });
 
+// Invite to event
+app.post('/invite-event', authenticateToken, async (req, res) => {
+    try{
+        const senderId = req.user.userId;
+        const {eventId, recipient} = req.body;
+
+        if(!eventId || !recipient){
+            return res.status(400).json({message: 'Invalid Event Id or Recipient'});
+        }
+
+        const [recipientData] = await db.query('SELECT user_id FROM User WHERE username = ? OR email = ?', [recipient, recipient]);
+        const recipientId = recipientData[0].user_id;
+
+        const [checkForSpam] = await db.query('SELECT * FROM User_Event WHERE event_id = ? and user_id = ?', [eventId, recipientId]);
+        if(checkForSpam.length > 0){
+
+            return res.status(401).json({message: 'User already interacted with the Event'});
+        }
+
+        const [inviteQuery] = await db.query('INSERT INTO User_Event (event_id, user_id, status) VALUES (?, ?, 2)', [eventId, recipientId]);
+        console.log(inviteQuery);
+
+        res.status(200).json({ message: 'Successfully invited to Event' });
+
+    }
+    catch (error){
+        console.error('Error sending invite to Event:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
 // Join event
 app.post('/join-event', authenticateToken, async (req, res) => {
     try{
@@ -1166,18 +1267,13 @@ app.post('/join-event', authenticateToken, async (req, res) => {
             return res.status(400).json({message: 'Invalid input'});
         }
 
-        const [joinQuery] = await db.query('INSERT INTO User_Event (event_id, user_id) VALUES (?, ?)',
-         [
-             eventId,
-             senderId
-         ]);
+        const [joinQuery] = await db.query('UPDATE User_Event SET status = 1 WHERE event_id = ? AND user_id = ?', [eventId, senderId]);
         console.log(joinQuery);
 
         const [increaseParticipantsQuery] = await db.query('UPDATE Event SET participants = participants + 1 WHERE id = ?', [eventId]);
         console.log(increaseParticipantsQuery)
 
         res.status(200).json({ message: 'Event successfully joined' });
-
     }
     catch (error){
 
@@ -1186,7 +1282,7 @@ app.post('/join-event', authenticateToken, async (req, res) => {
     }
 });
 
-// leave event
+// Leave event
 app.post('/leave-event', authenticateToken, async (req, res) => {
     try {
         const senderId = req.user.userId;
@@ -1209,8 +1305,11 @@ app.post('/leave-event', authenticateToken, async (req, res) => {
         }
 
         const [leaveQuery] = await db.query('UPDATE User_Event SET status = 0 WHERE event_id = ? AND user_id = ?', [eventId, senderId]);
-
         console.log(leaveQuery);
+
+        const [decreaseParticipants] = await db.query('UPDATE Event SET participants = participants - 1 WHERE event_id = ?', [eventId]);
+        console.log(decreaseParticipants);
+
         res.status(200).json({ message: 'Event successfully leaved' });
 
     } catch (error) {
@@ -1255,6 +1354,45 @@ app.post('/cancel-event', authenticateToken, async (req, res) => {
         console.error('Error canceling event:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
+});
+
+
+
+// Fetch pending events
+app.get('/pending-events', authenticateToken, async (req, res) => {
+    try {
+
+        const userId = req.user.userId;
+
+        const [pendingEvents] = await db.query(`
+             SELECT
+                        Event.*,
+                        Location.*,
+                        User_Event.user_id,
+                        User.username AS creator_username,
+                        User.user_id AS creator_id
+                    FROM
+                        Event
+                    JOIN
+                        User_Event ON User_Event.event_id = Event.id
+                    JOIN
+                        User ON Event.creator_id = User.user_id
+                    LEFT JOIN
+                        Location ON Event.id = Location.event_id
+                    WHERE
+                        User_Event.status = 2
+                        AND
+                        User_Event.user_id = ?;
+        `, [userId]);
+
+
+        console.log('events:', pendingEvents);
+        res.json(pendingEvents);
+
+      } catch (error) {
+        console.error('Error fetching pending Events:', error);
+        res.status(500).json({ message: 'Internal server error' });
+      }
 });
 
 
@@ -1767,58 +1905,6 @@ async function getBalance(userId) {
 
 
 
-//route to get the events the user is part of with JWT authentication
-app.get('/events', authenticateToken, async (req, res) => {
-  try {
-    console.log('Token:', req.headers['authorization']);
-    // Get the user ID from the authenticated token
-    const userId = req.user.userId;
-    console.log('userId:', userId);
-    // Fetch the user's events from the database based on the user ID
-    const [events] = await db.query(`
-
-/*
-        SELECT
-        User.user_id AS creator_username,
-        Event.*,
-        Location.*,
-        FROM User
-        INNER JOIN
-            User ON Event.creator_id = User.user_id
-    	INNER JOIN
-    	    User_Event ON User.user_id = User_Event.user_id
-        INNER JOIN
-            Event On User_Event.event_id = Event.id
-        WHERE
-        User.user_id = ?;
-*/
-
-    // Select all Events the User interacts with
-    SELECT
-        Event.*,
-        Location.*,
-        User_Event.user_id,
-        User.username AS creator_username,
-        User.picture AS creator_picture
-    FROM
-        Event
-    JOIN
-        User_Event ON User_Event.event_id = Event.id
-    JOIN
-        User ON Event.creator_id = User.user_id
-    LEFT JOIN
-        Location ON Event.id = Location.event_id
-    WHERE
-        User_Event.user_id = ?;
-
-    `, [userId]);
-    console.log('events:', events);
-    res.json(events);
-  } catch (error) {
-    console.error('Error fetching Events:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-});
 
 
 

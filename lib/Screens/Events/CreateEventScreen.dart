@@ -10,6 +10,14 @@ import 'package:http/http.dart' as http;
 import 'package:path/path.dart';
 import '../api_service.dart';
 
+/*
+ Recurrence Type
+ None = 0
+ Weekly = 1
+ Monthly = 2
+ Yearly = 3
+*/
+
 class CreateEventScreen extends StatefulWidget {
   CreateEventScreen({super.key});
 

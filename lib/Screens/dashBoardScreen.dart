@@ -11,6 +11,7 @@ import 'package:flutter_application_1/Screens/Money/SendMoneyScreen.dart';
 import 'package:flutter_application_1/Screens/Dashboard/userProfileSection.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_application_1/Screens/Events/EventScreen.dart';
+import 'package:flutter_application_1/Screens/Events/InviteToEventScreen.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 
@@ -20,6 +21,7 @@ class DashboardScreen extends StatelessWidget {
   // Fetch events from the backend
   Future<List<Event>> fetchEvents() async {
     try {
+
       const storage = FlutterSecureStorage();
       final token = await storage.read(key: 'token');
 
@@ -28,7 +30,7 @@ class DashboardScreen extends StatelessWidget {
       }
 
       final response = await http.get(
-        Uri.parse('${ApiService.serverUrl}/events'),
+        Uri.parse('${ApiService.serverUrl}/dashboard-events'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
           'Authorization': 'Bearer $token',
@@ -41,22 +43,24 @@ class DashboardScreen extends StatelessWidget {
         final List<dynamic> data = jsonDecode(response.body);
         final List<dynamic> eventsData = data;
 
-        List<Event> filteredEvents = [];
-
 
         List<Event> events = eventsData.map((eventData) {
           return Event.fromJson(eventData as Map<String, dynamic>);
         }).toList();
 
+        /*
+        List<Event> filteredEvents = [];
         for(var event in events){
           if(event.status == 1){
             filteredEvents.add(event);
+            print(event.isCreator);
           }
         }
+        */
 
-        filteredEvents.sort((a, b) => b.datetimeEvent.compareTo(a.datetimeEvent));
+        events.sort((a, b) => b.datetimeEvent.compareTo(a.datetimeEvent));
 
-        return filteredEvents;
+        return events;
 
       } else {
         throw Exception('Failed to load events. Error: ${response.statusCode}');
@@ -240,6 +244,20 @@ class Event {
     return false;
   }
 
+  bool notFullEvent(){
+    if(participants < maxParticipants){
+      return true;
+    }
+    return false;
+  }
+
+  Future<void> checkIfCreator() async {
+    String userId = await ApiService.fetchUserId();
+    if(creatorId.toString() == userId){
+        isCreator = true;
+    }
+  }
+
   factory Event.fromJson(Map<String, dynamic> json) {
     return Event(
       eventID: json['event_id'],
@@ -262,6 +280,14 @@ class Event {
       creatorId: json['creator_id'],
       isCreator: false,
     );
+  }
+
+  Map<String, dynamic> toJson(){
+    return{
+      'event_id': this.eventID,
+      'datetime_event': this.datetimeEvent.toString().substring(0, this.datetimeEvent.toString().length - 5), // Use UTC time
+      'recurrence_interval': this.recurrenceInterval,
+    };
   }
 }
 
@@ -356,7 +382,6 @@ class EventInfoScreen extends StatelessWidget {
         event.street == '' &&
         event.zipcode == '';
     bool isNull = event.price <= 0;
-
 
     return Scaffold(
       appBar: AppBar(
@@ -506,7 +531,7 @@ class EventInfoScreen extends StatelessWidget {
                     children: [
                       Icon(Icons.supervised_user_circle_rounded),
                       Text(
-                        '  Participants: ${event.participants.toString()}',
+                        '  Participants: ${event.participants.toString()} / ${event.maxParticipants.toString()}',
                         style: TextStyle(fontSize: 18),
                       ),
                     ],
@@ -594,6 +619,8 @@ class EventInfoScreen extends StatelessWidget {
                         ?
                     event.notOutDatedEvent(event.datetimeEvent)
                         ?
+                    event.notFullEvent()
+                        ?
                     ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
                           textStyle: TextStyle(
@@ -604,7 +631,7 @@ class EventInfoScreen extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => DashboardScreen(),
+                            builder: (context) => InviteToEventScreen(eventId: event.eventID),
                           ),
                         );
                       }, icon: Icon(Icons.emoji_people_rounded),
@@ -613,6 +640,10 @@ class EventInfoScreen extends StatelessWidget {
                         :
                     Container()
                         :
+                    Container()
+                        :
+                    event.notOutDatedEvent(event.datetimeEvent)
+                        ?
                     TextButton(
                       onPressed: () {
                         showDialog(
@@ -652,7 +683,9 @@ class EventInfoScreen extends StatelessWidget {
                         );
                       },
                       child: Text('Leave event'),
-                    ),
+                    )
+                        :
+                    Container()
                   ],
                 ),
                 SizedBox(height: 24),

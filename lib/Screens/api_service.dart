@@ -325,6 +325,93 @@ class ApiService {
     }
   }
 
+
+  static Future<bool> EventService(String body) async{
+
+    try{
+
+      print(body);
+      const storage = FlutterSecureStorage();
+      final token = await storage.read(key: 'token');
+      if (token == null) {
+        throw Exception('Token not found');
+      }
+
+      final EventServiceResponse = await  http.post(
+          Uri.parse('${ApiService.serverUrl}/event-service'),
+          headers: {
+            'Content-Type': 'application/json; charset=UTF-8',
+            'Authorization': 'Bearer $token',
+          },
+          body:
+            body
+
+      );
+
+      if(EventServiceResponse.statusCode == 200){
+
+        print('EventService: Call was successful');
+
+        return true;
+      }
+      else{
+        print(EventServiceResponse.statusCode);
+        return false;
+      }
+    }
+    catch(e){
+
+      print(e);
+      return false;
+    }
+
+
+    return false;
+  }
+
+  static Future<int> inviteEvent(int eventId, String recipient) async {
+    try{
+
+      const storage = FlutterSecureStorage();
+      final token = await storage.read(key: 'token');
+      if (token == null) {
+        throw Exception('Token not found');
+      }
+
+
+      final inviteEventResponse = await http.post(
+        Uri.parse('${ApiService.serverUrl}/invite-event?'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'eventId': eventId,
+          'recipient': recipient,
+        }),
+      );
+
+      if(inviteEventResponse.statusCode == 200){
+        print('inviteEvent function: Inviting to Event was successful');
+        return 200;
+      }
+
+      if(inviteEventResponse.statusCode == 401){
+        print('inviteEvent function: $recipient already interacted with the event');
+        return 401;
+      }
+
+      print('inviteEvent function: Error inviting to Event');
+      print('StatusCode: ${inviteEventResponse.statusCode}');
+      return 400;
+    }
+    catch(e){
+
+      print('inviteEvent function error: $e');
+      return 500;
+    }
+  }
+
   static Future<bool> joinEvent(int eventId) async {
     try {
       const storage = FlutterSecureStorage();
@@ -333,6 +420,8 @@ class ApiService {
         throw Exception('Token not found');
       }
 
+      print(eventId);
+
       final joinEventResponse = await http.post(
           Uri.parse('${ApiService.serverUrl}/join-event?eventId=$eventId'),
           headers: {
@@ -340,16 +429,18 @@ class ApiService {
             'Authorization': 'Bearer $token',
           });
 
+
       if (joinEventResponse.statusCode == 200) {
         print('joinEvent function: Joining Event was successful');
         return true;
       }
-
+      print(joinEventResponse.statusCode);
       print('joinEvent function: Error joining Event');
       return false;
 
     } catch (e) {
       print('joinEvent function: Error joining Event: $e');
+      print(e);
       return false;
     }
   }

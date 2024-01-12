@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Screens/Dashboard/dashBoardScreen.dart';
+import 'package:flutter_application_1/Screens/Events/InviteToEventScreen.dart';
 import 'package:flutter_application_1/Screens/api_service.dart'; // Assumed path
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
@@ -53,7 +54,7 @@ class _EventScreenState extends State<EventScreen> {
   }
 
 
-  final List<String> possibleFilters = ['All events', 'My events', 'Active', 'Inactive'];
+  final List<String> possibleFilters = ['All events', 'My events', 'Pending', 'Active', 'Inactive'];
   String eventFilter = 'All events';
 
   final List<String> possibleCategories = [];
@@ -487,6 +488,7 @@ class Event {
     return false;
   }
 
+
   factory Event.fromJson(Map<String, dynamic> json) {
     return Event(
         eventID: json['event_id'],
@@ -510,6 +512,99 @@ class Event {
         isCreator: false,
     );
   }
+
+  Future eventService() async {
+    try{
+
+      const storage = FlutterSecureStorage();
+      final token = await storage.read(key: 'token');
+
+      if (token == null) {
+        throw Exception('Token not found');
+      }
+
+      final fetchEvents = await http.get(
+        Uri.parse('${ApiService.serverUrl}/events'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if(fetchEvents.statusCode == 200){
+
+        final List<dynamic> data = jsonDecode(fetchEvents.body);
+        final List<dynamic> eventsData = data;
+
+        List<Event> events = eventsData.map((eventData) {
+          return Event.fromJson(eventData as Map<String, dynamic>);
+        }).toList();
+
+        print('fetchEvents: Call was successful');
+
+        List<Event> checkingEvents = [];
+
+        // Get all repeatable Events
+        for(var event in events){
+          if(event.recurrenceType != 0 && !checkingEvents.contains(event)){
+            checkingEvents.add(event);
+          }
+        }
+
+
+        for(var event in checkingEvents){
+
+          if(event.datetimeEvent.compareTo(DateTime.now()) < 0){
+
+            switch(event.recurrenceType) {
+              case 1:
+                event.datetimeEvent =
+                    event.datetimeEvent.add(Duration(days: 7));
+                event.recurrenceInterval = (event.recurrenceInterval! + 1)!;
+              case 2:
+              // Needs to be improved
+                event.datetimeEvent =
+                    event.datetimeEvent.add(Duration(days: 30));
+                event.recurrenceInterval = (event.recurrenceInterval! + 1)!;
+              case 3:
+                event.datetimeEvent =
+                    event.datetimeEvent.add(Duration(days: 365));
+                event.recurrenceInterval = (event.recurrenceInterval! + 1)!;
+            }
+          }
+        }
+
+        try{
+
+          List<Map<String, dynamic>> eventsJson =
+          checkingEvents.map((i) => i.toJson()).toList();
+
+          String body = jsonEncode(eventsJson);
+
+          ApiService.EventService(body);
+
+        }catch(e){
+          print(e);
+        }
+      }
+      else{
+        print("/events error");
+        print(fetchEvents.statusCode);
+      }
+    }
+    catch(e){
+      return e.toString();
+    }
+  }
+
+  Map<String, dynamic> toJson(){
+    return{
+      'event_id': this.eventID,
+      'datetime_event': this.datetimeEvent.toString().substring(0, this.datetimeEvent.toString().length - 4), // Use UTC time
+      'recurrence_interval': this.recurrenceInterval,
+    };
+  }
+
 }
 
 
@@ -606,7 +701,6 @@ class EventInfoScreen extends StatelessWidget {
         event.street == '' &&
         event.zipcode == '';
     bool isNull = event.price <= 0;
-
 
     return Scaffold(
       appBar: AppBar(
@@ -856,7 +950,7 @@ class EventInfoScreen extends StatelessWidget {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => DashboardScreen(),
+                                    builder: (context) => InviteToEventScreen(eventId: event.eventID),
                                   ),
                                 );
                               }, icon: Icon(Icons.emoji_people_rounded),

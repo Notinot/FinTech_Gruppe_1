@@ -1036,6 +1036,38 @@ app.post('/transactions/:transactionId', authenticateToken, async (req, res) => 
 );
 
 
+app.post('/event-service', async (req, res) => {
+    try{
+
+        events = req.body;
+
+        for(let i = 0; i < events.length; i++){
+
+            await db.query('UPDATE Event SET datetime_event = ?, recurrence_interval = 1 WHERE id = ?',
+             [
+                events[i].datetime_event,
+                events[i].recurrence_interval,
+                events[i].event_id
+             ]);
+        }
+
+        const [updateEventStatusToActive] = await db.query(`
+            UPDATE Event SET status = 1 WHERE datetime_event > NOW()
+        `);
+
+        const [updateEventStatusToInactive] = await db.query(`
+            UPDATE Event SET status = 2 WHERE datetime_event < NOW()
+        `);
+
+
+        res.status(200).json({ message: 'Event Service successfully finished' });
+    }
+    catch(e){
+        console.log(e);
+        res.status(500).json({message: 'Event Service failed'});
+    }
+});
+
 //route to get the events the user is part of with JWT authentication
 app.get('/events', authenticateToken, async (req, res) => {
   try {
@@ -1068,7 +1100,6 @@ app.get('/events', authenticateToken, async (req, res) => {
     `, [userId]);
 
 
-    console.log('events:', interactedEvents);
     res.json(interactedEvents);
 
   } catch (error) {
@@ -1109,7 +1140,6 @@ app.get('/dashboard-events', authenticateToken, async(req, res) => {
              [senderId]
         );
 
-        console.log('events:', dashboardEventQuery);
         res.json(dashboardEventQuery);
     }
     catch(error){
@@ -1195,6 +1225,37 @@ app.post('/create-event', authenticateToken, async (req, res) => {
 
 });
 
+// Invite to event
+app.post('/invite-event', authenticateToken, async (req, res) => {
+    try{
+        const senderId = req.user.userId;
+        const {eventId, recipient} = req.body;
+
+        if(!eventId || !recipient){
+            return res.status(400).json({message: 'Invalid Event Id or Recipient'});
+        }
+
+        const [recipientData] = await db.query('SELECT user_id FROM User WHERE username = ? OR email = ?', [recipient, recipient]);
+        const recipientId = recipientData[0].user_id;
+
+        const [checkForSpam] = await db.query('SELECT * FROM User_Event WHERE event_id = ? and user_id = ?', [eventId, recipientId]);
+        if(checkForSpam.length > 0){
+
+            return res.status(401).json({message: 'User already interacted with the Event'});
+        }
+
+        const [inviteQuery] = await db.query('INSERT INTO User_Event (event_id, user_id, status) VALUES (?, ?, 2)', [eventId, recipientId]);
+        console.log(inviteQuery);
+
+        res.status(200).json({ message: 'Successfully invited to Event' });
+
+    }
+    catch (error){
+        console.error('Error sending invite to Event:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
 // Join event
 app.post('/join-event', authenticateToken, async (req, res) => {
     try{
@@ -1213,7 +1274,6 @@ app.post('/join-event', authenticateToken, async (req, res) => {
         console.log(increaseParticipantsQuery)
 
         res.status(200).json({ message: 'Event successfully joined' });
-
     }
     catch (error){
 

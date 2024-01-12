@@ -16,6 +16,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:badges/badges.dart' as Badge;
 
+
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({Key? key}) : super(key: key);
 
@@ -85,6 +86,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // Fetch events from the backend
   Future<List<Event>> fetchEvents() async {
     try {
+
       const storage = FlutterSecureStorage();
       final token = await storage.read(key: 'token');
 
@@ -107,22 +109,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
         final List<dynamic> eventsData = data;
 
         List<Event> filteredEvents = [];
-
         List<Event> events = eventsData.map((eventData) {
           return Event.fromJson(eventData as Map<String, dynamic>);
         }).toList();
 
-        events.sort((a, b) => b.datetimeEvent.compareTo(a.datetimeEvent));
-
         for(var event in events){
           if(event.status == 1 && filteredEvents.length <= 3){
+            event.checkIfCreator();
             filteredEvents.add(event);
           }
         }
 
         filteredEvents.sort((a, b) => b.datetimeEvent.compareTo(a.datetimeEvent));
 
-        return filteredEvents;
+        return filteredEvents.reversed.toList();
       } else {
         throw Exception('Failed to load events. Error: ${response.statusCode}');
       }
@@ -243,8 +243,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> handleEventRequest(
       int eventId, String action) async {
     try {
-
+      const storage = FlutterSecureStorage();
+      final token = await storage.read(key: 'token');
       // Make a request to your backend API to accept the request
+
       if(await ApiService.joinEvent(eventId)){
 
         showSuccessSnackBar(context, 'Request accepted successfully');

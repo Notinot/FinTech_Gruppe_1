@@ -588,8 +588,20 @@ class TransactionDetailsScreen extends StatelessWidget {
       print('Error accepting request: $error');
     }
 
+    if (Navigator.canPop(context)) {
+      // Pop until the root screen
+      Navigator.popUntil(context, (route) => !Navigator.canPop(context));
+    }
+
+    // Push a new instance of TransactionHistoryScreen to refresh
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => TransactionHistoryScreen(),
+      ),
+    );
     //navigate back to transaction history screen
-    Navigator.pop(context);
+    /*Navigator.pop(context);
 
     //refresh transaction history screen
     Navigator.pushReplacement(
@@ -597,7 +609,7 @@ class TransactionDetailsScreen extends StatelessWidget {
       MaterialPageRoute(
         builder: (context) => TransactionHistoryScreen(),
       ),
-    );
+    );*/
   }
 
   // Function to deny a request
@@ -657,8 +669,21 @@ class TransactionDetailsScreen extends StatelessWidget {
       print('Error denying request: $error');
     }
 
+    if (Navigator.canPop(context)) {
+      // Pop until the root screen
+      Navigator.popUntil(context, (route) => !Navigator.canPop(context));
+    }
+
+    // Push a new instance of TransactionHistoryScreen to refresh
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => TransactionHistoryScreen(),
+      ),
+    );
+
     //navigate back to transaction history screen
-    Navigator.pop(context);
+    /*Navigator.pop(context);
 
     //refresh transaction history screen
     Navigator.pushReplacement(
@@ -666,7 +691,7 @@ class TransactionDetailsScreen extends StatelessWidget {
       MaterialPageRoute(
         builder: (context) => TransactionHistoryScreen(),
       ),
-    );
+    );*/
   }
 
   getStatusText(Transaction transaction) {

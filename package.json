@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "geocoder": "^0.2.3",
     "jsonwebtoken": "^9.0.2"
   }
 }

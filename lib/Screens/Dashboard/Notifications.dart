@@ -186,7 +186,7 @@ class _NotificationsState extends State<Notifications> {
     } else if ((transaction.transactionType == 'Payment' &&
             transaction.senderId == user_id) ||
         (transaction.transactionType == 'Request' &&
-            transaction.senderId == user_id &&
+            transaction.receiverId == user_id &&
             transaction.processed == 1)) {
       return 'Sent ${transaction.amount}€ to ${transaction.receiverUsername}';
     } else if (transaction.transactionType == 'Request' &&
@@ -198,17 +198,17 @@ class _NotificationsState extends State<Notifications> {
         transaction.processed == 0) {
       return 'You requested ${transaction.amount}€ from ${transaction.receiverUsername}.';
     } else if (transaction.transactionType == 'Request' &&
-        transaction.senderId != user_id &&
+        transaction.senderId == user_id &&
         transaction.processed == 1) {
-      return '${transaction.senderUsername} accepted your request and sent ${transaction.amount}€';
-    } else if (transaction.transactionType == 'Request' &&
-        transaction.receiverId == user_id &&
-        transaction.processed == 2) {
-      return '${transaction.senderUsername} rejected your request';
+      return '${transaction.receiverUsername} accepted your request and sent ${transaction.amount}€';
     } else if (transaction.transactionType == 'Request' &&
         transaction.senderId == user_id &&
         transaction.processed == 2) {
-      return 'You rejected the request from ${transaction.receiverUsername}';
+      return '${transaction.receiverUsername} rejected your request';
+    } else if (transaction.transactionType == 'Request' &&
+        transaction.receiverId == user_id &&
+        transaction.processed == 2) {
+      return 'You rejected the request from ${transaction.senderUsername}';
     } else {
       return 'Unknown notification';
     }
@@ -219,11 +219,11 @@ class _NotificationsState extends State<Notifications> {
         transaction.processed == 0) {
       return Icon(Icons.request_page, color: Colors.orange);
     } else if (transaction.transactionType == 'Request' &&
-        transaction.receiverId == user_id &&
+        transaction.senderId == user_id &&
         transaction.processed == 1) {
       return Icon(Icons.request_page, color: Colors.green);
     } else if (transaction.transactionType == 'Request' &&
-        transaction.senderId == user_id &&
+        transaction.receiverId == user_id &&
         transaction.processed == 1) {
       return Icon(Icons.request_page, color: Colors.red);
     } else if (transaction.transactionType == 'Request' &&

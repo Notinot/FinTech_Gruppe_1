@@ -30,31 +30,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
   static List<PopupMenuItem<String>> items = [];
   late List<Map<String, dynamic>> TransactionRequests = [];
   late List<Map<String, dynamic>> EventRequests = [];
+  late Map<String, dynamic> user;
+
 
   @override
   void initState() {
     super.initState();
     userProfileFuture = ApiService.fetchUserProfile();
     fetchPendingFriends();
-    Notifications.fetchTransactions().then((List<Transaction>? transactions) {
-      if (transactions != null) {
-        TransactionRequests = transactions
-            .where((transaction) =>
-                transaction.processed == 0 &&
-                transaction.senderId != transaction.receiverId)
-            .map((Transaction transaction) {
-          return {
-            'sender_id': transaction.senderId,
-            'amount': transaction.amount,
-            'transaction_id': transaction.transactionId,
-            'senderName': transaction.senderUsername,
-            'createdAt': transaction.createdAt
-            // Add more fields as needed
-          };
-        }).toList();
-      } else {
-        TransactionRequests = [];
-      }
+    userProfileFuture.then((userData) {
+      user = userData;
+
+      Notifications.fetchTransactions().then((List<Transaction>? transactions) {
+        if (transactions != null) {
+          TransactionRequests = transactions
+              .where((transaction) =>
+                  transaction.processed == 0 &&
+                  transaction.senderId != transaction.receiverId &&
+                  transaction.senderId != user['user_id'])
+              .map((Transaction transaction) {
+            return {
+              'sender_id': transaction.senderId,
+              'amount': transaction.amount,
+              'transaction_id': transaction.transactionId,
+              'senderName': transaction.senderUsername,
+              'createdAt': transaction.createdAt
+              // Add more fields as needed
+            };
+          }).toList();
+        } else {
+          TransactionRequests = [];
+        }
+      });
     });
     fetchPendingEventRequests()
         .then((List<Event>? events) {
@@ -102,9 +109,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         },
       );
 
-
       if (response.statusCode == 200) {
-
         final List<dynamic> data = jsonDecode(response.body);
         final List<dynamic> eventsData = data;
 
@@ -120,7 +125,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           }
         }
 
-        filteredEvents.sort((a, b) => b.datetimeEvent.compareTo(a.datetimeEvent));
+        filteredEvents
+            .sort((a, b) => b.datetimeEvent.compareTo(a.datetimeEvent));
 
         return filteredEvents.reversed.toList();
       } else {
@@ -360,7 +366,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         TransactionRequests = transactions
             .where((transaction) =>
                 transaction.processed == 0 &&
-                transaction.senderId != transaction.receiverId)
+                transaction.senderId != transaction.receiverId &&
+                transaction.senderId != user['user_id'])
             .map((Transaction transaction) {
           return {
             'sender_id': transaction.senderId,
@@ -368,7 +375,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             'transaction_id': transaction.transactionId,
             'senderName': transaction.senderUsername,
             'createdAt': transaction.createdAt
-            // Add more fields as needed
           };
         }).toList();
       } else {

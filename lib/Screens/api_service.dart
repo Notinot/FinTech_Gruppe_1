@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 
 class ApiService {
   static const String serverUrl = 'http://10.0.2.2:3000';
-  // static const String serverUrl = 'http://localhost:3000';
+  //static const String serverUrl = 'http://localhost:3000';
 
   // const serverUrl = '192.168.56.1:3000';
   // static const String serverUrl = 'http://192.168.178.33:3000';
@@ -437,7 +437,6 @@ class ApiService {
       print(joinEventResponse.statusCode);
       print('joinEvent function: Error joining Event');
       return false;
-
     } catch (e) {
       print('joinEvent function: Error joining Event: $e');
       print(e);
@@ -445,8 +444,7 @@ class ApiService {
     }
   }
 
-  static Future<int> leaveEvent (int eventId) async {
-
+  static Future<int> leaveEvent(int eventId) async {
     try {
       const storage = FlutterSecureStorage();
       final token = await storage.read(key: 'token');
@@ -466,23 +464,20 @@ class ApiService {
         return 1;
       }
 
-      if (leaveEventResponse.statusCode == 401){
-
+      if (leaveEventResponse.statusCode == 401) {
         print('leaveEvent function: Event was already canceled');
         return 401;
       }
 
       print('leaveEvent function: Error canceling Event');
       return 0;
-
     } catch (e) {
       print('cancelEvent function: Error canceling Event');
       return 0;
     }
   }
 
-  static Future<int> cancelEvent (int eventId) async {
-
+  static Future<int> cancelEvent(int eventId) async {
     try {
       const storage = FlutterSecureStorage();
       final token = await storage.read(key: 'token');
@@ -502,15 +497,13 @@ class ApiService {
         return 1;
       }
 
-      if (cancelEventResponse.statusCode == 401){
-
+      if (cancelEventResponse.statusCode == 401) {
         print('cancelEvent function: Event was already canceled');
         return 401;
       }
 
       print('cancelEvent function: Error canceling Event');
       return 0;
-
     } catch (e) {
       print('cancelEvent function: Error canceling Event');
       return 0;

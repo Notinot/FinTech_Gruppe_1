@@ -16,6 +16,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:badges/badges.dart' as Badge;
 
+
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({Key? key}) : super(key: key);
 
@@ -28,7 +29,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   late Future<Map<String, dynamic>> userProfileFuture;
   static List<PopupMenuItem<String>> items = [];
   late List<Map<String, dynamic>> TransactionRequests = [];
+  late List<Map<String, dynamic>> EventRequests = [];
   late Map<String, dynamic> user;
+
 
   @override
   void initState() {
@@ -60,11 +63,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
         }
       });
     });
+    fetchPendingEventRequests()
+        .then((List<Event>? events) {
+      if (events != null) {
+        EventRequests = events.map((Event event) {
+          return {
+            'event_id': event.eventID,
+            'title': event.title,
+            'category': event.category,
+            'description': event.description,
+            'participants': event.participants,
+            'max_participants': event.maxParticipants,
+            'datetime_event': event.datetimeEvent,
+            'price' : event.price,
+            'status': event.status,
+            'creator_username': event.creatorUsername,
+            'county': event.country,
+            'city': event.city,
+            'street': event.street,
+            'zipcode': event.zipcode
+          };
+        }).toList();
+      } else {
+        EventRequests = [];
+      }
+    });
   }
 
   // Fetch events from the backend
   Future<List<Event>> fetchEvents() async {
     try {
+
       const storage = FlutterSecureStorage();
       final token = await storage.read(key: 'token');
 
@@ -73,7 +102,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       }
 
       final response = await http.get(
-        Uri.parse('${ApiService.serverUrl}/events'),
+        Uri.parse('${ApiService.serverUrl}/dashboard-events'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
           'Authorization': 'Bearer $token',
@@ -85,13 +114,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
         final List<dynamic> eventsData = data;
 
         List<Event> filteredEvents = [];
-
         List<Event> events = eventsData.map((eventData) {
           return Event.fromJson(eventData as Map<String, dynamic>);
         }).toList();
 
-        for (var event in events) {
-          if (event.status == 1) {
+        for(var event in events){
+          if(event.status == 1 && filteredEvents.length <= 3){
+            event.checkIfCreator();
             filteredEvents.add(event);
           }
         }
@@ -99,7 +128,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         filteredEvents
             .sort((a, b) => b.datetimeEvent.compareTo(a.datetimeEvent));
 
-        return filteredEvents;
+        return filteredEvents.reversed.toList();
       } else {
         throw Exception('Failed to load events. Error: ${response.statusCode}');
       }
@@ -125,7 +154,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               actions: [
                 Badge.Badge(
                   badgeContent: Text(
-                    (pendingFriends.length + TransactionRequests.length)
+                    (pendingFriends.length + TransactionRequests.length + EventRequests.length)
                         .toString(),
                     style: TextStyle(color: Colors.white),
                   ),
@@ -217,6 +246,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  Future<void> handleEventRequest(
+      int eventId, String action) async {
+    try {
+      const storage = FlutterSecureStorage();
+      final token = await storage.read(key: 'token');
+      // Make a request to your backend API to accept the request
+
+      if(await ApiService.joinEvent(eventId)){
+
+        showSuccessSnackBar(context, 'Request accepted successfully');
+      } else {
+
+        // Request failed, handle the error
+        showErrorSnackBar(context, 'Error accepting request, please try again');
+      }
+    } catch (error) {
+      // Handle exceptions
+      print('Error accepting request: $error');
+    }
+  }
+
   Future<void> fetchPendingFriends() async {
     try {
       final userProfile = await userProfileFuture;
@@ -242,9 +292,74 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  Future<List<Event>> fetchPendingEventRequests() async {
+
+    try {
+      const storage = FlutterSecureStorage();
+      final token = await storage.read(key: 'token');
+
+      if (token == null) {
+        throw Exception('Token not found');
+      }
+
+      final response = await http.get(
+        Uri.parse('${ApiService.serverUrl}/pending-events'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+
+      if (response.statusCode == 200) {
+
+        final List<dynamic> data = jsonDecode(response.body);
+        final List<dynamic> eventsData = data;
+
+        List<Event> events = eventsData.map((eventData) {
+          return Event.fromJson(eventData as Map<String, dynamic>);
+        }).toList();
+
+        events.sort((a, b) => b.datetimeEvent.compareTo(a.datetimeEvent));
+
+        return events;
+      } else {
+        throw Exception('Failed to load pending events. Error: ${response.statusCode}');
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+
   Future<void> fetchAndBuildNotifications(
       BuildContext context, Map<String, dynamic> user) async {
     await fetchPendingFriends();
+    await fetchPendingEventRequests()
+        .then((List<Event>? events) {
+      if (events != null) {
+        EventRequests = events.map((Event event) {
+          return {
+            'event_id': event.eventID,
+            'title': event.title,
+            'category': event.category,
+            'description': event.description,
+            'participants': event.participants,
+            'max_participants': event.maxParticipants,
+            'datetime_event': event.datetimeEvent,
+            'price' : event.price,
+            'status': event.status,
+            'creator_username': event.creatorUsername,
+            'county': event.country,
+            'city': event.city,
+            'street': event.street,
+            'zipcode': event.zipcode
+          };
+        }).toList();
+      } else {
+        EventRequests = [];
+      }
+    });
     await Notifications.fetchTransactions()
         .then((List<Transaction>? transactions) {
       if (transactions != null) {
@@ -269,7 +384,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     items.clear(); // Clear the existing items list
 
-    if (pendingFriends.isEmpty && TransactionRequests.isEmpty) {
+    if (pendingFriends.isEmpty && TransactionRequests.isEmpty && EventRequests.isEmpty) {
       items.add(buildNoNotificationsItem());
     } else {
       for (int i = 0; i < pendingFriends.length; i++) {
@@ -282,6 +397,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
           PopupMenuItem<String> item = await buildNotificationItemTransaction(
             context,
             TransactionRequests[i],
+            user,
+          );
+          items.add(item);
+        }
+      }
+      if (EventRequests.isNotEmpty) {
+        for (int i = 0; i < EventRequests.length; i++) {
+          PopupMenuItem<String> item = await buildNotificationItemEvent(
+            context,
+            EventRequests[i],
             user,
           );
           items.add(item);
@@ -422,4 +547,61 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
+
+  Future<PopupMenuItem<String>> buildNotificationItemEvent(
+
+      BuildContext context,
+      Map<String, dynamic> eventRequest,
+      Map<String, dynamic> user,
+      ) async {
+
+    String creator = eventRequest['creator_username'];
+    String eventTitle = eventRequest['title'];
+
+
+    return PopupMenuItem<String>(
+      key: Key(eventRequest['event_id'].toString()),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: ListTile(
+              title: Text('Invited to $eventTitle from $creator'),
+            ),
+          ),
+          IconButton(
+            icon: Icon(Icons.check, color: Colors.green),
+            onPressed: () {
+              ApiService.joinEvent(
+                eventRequest['event_id'],
+              ).then((_) {
+                items.removeWhere((item) =>
+                item.key ==
+                    Key(eventRequest['event_id'].toString()));
+
+                Navigator.pop(context);
+                fetchAndBuildNotifications(context, user);
+              });
+            },
+          ),
+          IconButton(
+            icon: Icon(Icons.close, color: Colors.red),
+            onPressed: () {
+              ApiService.leaveEvent(
+                eventRequest['event_id'],
+              ).then((_) {
+                items.removeWhere((item) =>
+                item.key ==
+                    Key(eventRequest['event_id'].toString()));
+                Navigator.pop(context);
+                fetchAndBuildNotifications(context, user);
+              });
+            },
+          ),
+        ],
+      ),
+    );
+
+  }
+
 }

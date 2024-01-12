@@ -16,7 +16,6 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:badges/badges.dart' as Badge;
 
-
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({Key? key}) : super(key: key);
 
@@ -31,7 +30,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   late List<Map<String, dynamic>> TransactionRequests = [];
   late List<Map<String, dynamic>> EventRequests = [];
   late Map<String, dynamic> user;
-
 
   @override
   void initState() {
@@ -63,8 +61,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         }
       });
     });
-    fetchPendingEventRequests()
-        .then((List<Event>? events) {
+    fetchPendingEventRequests().then((List<Event>? events) {
       if (events != null) {
         EventRequests = events.map((Event event) {
           return {
@@ -75,7 +72,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             'participants': event.participants,
             'max_participants': event.maxParticipants,
             'datetime_event': event.datetimeEvent,
-            'price' : event.price,
+            'price': event.price,
             'status': event.status,
             'creator_username': event.creatorUsername,
             'county': event.country,
@@ -93,7 +90,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // Fetch events from the backend
   Future<List<Event>> fetchEvents() async {
     try {
-
       const storage = FlutterSecureStorage();
       final token = await storage.read(key: 'token');
 
@@ -118,8 +114,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           return Event.fromJson(eventData as Map<String, dynamic>);
         }).toList();
 
-        for(var event in events){
-          if(event.status == 1 && filteredEvents.length <= 3){
+        for (var event in events) {
+          if (event.status == 1 && filteredEvents.length <= 3) {
             event.checkIfCreator();
             filteredEvents.add(event);
           }
@@ -154,7 +150,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               actions: [
                 Badge.Badge(
                   badgeContent: Text(
-                    (pendingFriends.length + TransactionRequests.length + EventRequests.length)
+                    (pendingFriends.length +
+                            TransactionRequests.length +
+                            EventRequests.length)
                         .toString(),
                     style: TextStyle(color: Colors.white),
                   ),
@@ -246,18 +244,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  Future<void> handleEventRequest(
-      int eventId, String action) async {
+  Future<void> handleEventRequest(int eventId, String action) async {
     try {
       const storage = FlutterSecureStorage();
       final token = await storage.read(key: 'token');
       // Make a request to your backend API to accept the request
 
-      if(await ApiService.joinEvent(eventId)){
-
+      if (await ApiService.joinEvent(eventId)) {
         showSuccessSnackBar(context, 'Request accepted successfully');
       } else {
-
         // Request failed, handle the error
         showErrorSnackBar(context, 'Error accepting request, please try again');
       }
@@ -293,7 +288,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<List<Event>> fetchPendingEventRequests() async {
-
     try {
       const storage = FlutterSecureStorage();
       final token = await storage.read(key: 'token');
@@ -310,9 +304,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         },
       );
 
-
       if (response.statusCode == 200) {
-
         final List<dynamic> data = jsonDecode(response.body);
         final List<dynamic> eventsData = data;
 
@@ -324,19 +316,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
         return events;
       } else {
-        throw Exception('Failed to load pending events. Error: ${response.statusCode}');
+        throw Exception(
+            'Failed to load pending events. Error: ${response.statusCode}');
       }
     } catch (e) {
       rethrow;
     }
   }
 
-
   Future<void> fetchAndBuildNotifications(
       BuildContext context, Map<String, dynamic> user) async {
     await fetchPendingFriends();
-    await fetchPendingEventRequests()
-        .then((List<Event>? events) {
+    await fetchPendingEventRequests().then((List<Event>? events) {
       if (events != null) {
         EventRequests = events.map((Event event) {
           return {
@@ -347,7 +338,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             'participants': event.participants,
             'max_participants': event.maxParticipants,
             'datetime_event': event.datetimeEvent,
-            'price' : event.price,
+            'price': event.price,
             'status': event.status,
             'creator_username': event.creatorUsername,
             'county': event.country,
@@ -384,7 +375,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     items.clear(); // Clear the existing items list
 
-    if (pendingFriends.isEmpty && TransactionRequests.isEmpty && EventRequests.isEmpty) {
+    if (pendingFriends.isEmpty &&
+        TransactionRequests.isEmpty &&
+        EventRequests.isEmpty) {
       items.add(buildNoNotificationsItem());
     } else {
       for (int i = 0; i < pendingFriends.length; i++) {
@@ -549,15 +542,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<PopupMenuItem<String>> buildNotificationItemEvent(
-
-      BuildContext context,
-      Map<String, dynamic> eventRequest,
-      Map<String, dynamic> user,
-      ) async {
-
+    BuildContext context,
+    Map<String, dynamic> eventRequest,
+    Map<String, dynamic> user,
+  ) async {
     String creator = eventRequest['creator_username'];
     String eventTitle = eventRequest['title'];
-
 
     return PopupMenuItem<String>(
       key: Key(eventRequest['event_id'].toString()),
@@ -576,8 +566,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 eventRequest['event_id'],
               ).then((_) {
                 items.removeWhere((item) =>
-                item.key ==
-                    Key(eventRequest['event_id'].toString()));
+                    item.key == Key(eventRequest['event_id'].toString()));
 
                 Navigator.pop(context);
                 fetchAndBuildNotifications(context, user);
@@ -591,8 +580,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 eventRequest['event_id'],
               ).then((_) {
                 items.removeWhere((item) =>
-                item.key ==
-                    Key(eventRequest['event_id'].toString()));
+                    item.key == Key(eventRequest['event_id'].toString()));
                 Navigator.pop(context);
                 fetchAndBuildNotifications(context, user);
               });
@@ -601,7 +589,5 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ],
       ),
     );
-
   }
-
 }

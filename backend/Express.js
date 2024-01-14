@@ -25,14 +25,13 @@ app.use(cors({
 
 // Create a connection pool to the MySQL database
 const db = mysql.createPool({
-
-
-
-   host: 'btxppofwkgo3xl10tfwy-mysql.services.clever-cloud.com',
-   user: 'ud86jc8auniwbfsm',
-   password: 'ER0nIAbQy5qyAeSd4ZCV',
-   database: 'btxppofwkgo3xl10tfwy',
-    
+  
+  connectionLimit: 5,
+  host: 'btxppofwkgo3xl10tfwy-mysql.services.clever-cloud.com',
+  user: 'ud86jc8auniwbfsm',
+  password: 'ER0nIAbQy5qyAeSd4ZCV',
+  database: 'btxppofwkgo3xl10tfwy',
+  
   // host: '87.144.241.181',
   // user: 'payfriendz',
   // password: 'payfriendz',
@@ -923,7 +922,7 @@ app.get('/transactions', authenticateToken, async (req, res) => {
       WHERE 
         sender_id = ? OR receiver_id = ?
     `, [userId, userId]);
-
+    
     //console.log('transactions:', transactions);
 
     // Send the user's transaction history as the response

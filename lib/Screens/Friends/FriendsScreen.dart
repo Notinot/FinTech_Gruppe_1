@@ -9,44 +9,25 @@ import 'package:intl/intl.dart';
 import '../Money/TransactionHistoryScreen.dart';
 import '../api_service.dart';
 
-/* ---------- Change Log since last lecture -------------------------------
- - Searchbar is working again
- - Profile Pictures are displayed at the FriendsScreen & FriendInfoScreen
-
- - Accepting or declining request will refresh the screen
- - PendingFriends screen dynamically adjusts size depending on amount of requests
- - Friends are displayed alphabetically (by username)
- - Deleting a friend is possible now
- -Blocking and unblocking someone is possbible now
-
-  Other:
-  Bug fixes 
-    -navigation
-    -self add
-    -pixel overflow caused by pending friends and friends
-  Merged some Widgets into one and changed some processes
-  Changed ways of managing states
-
----------------------------------------------------------------------------*/
-
 /* To-do:
   -when a pending friend is pressed - send moneyScreen is opened
     -> change that to InfoScreen?
 
-  -search 
+  -searchBar
     -show recommendation after typing 3-4 characters in
     -Filter Friends as well?
+    -dont show blocked users
 
-  -Profile Picture als Avatar oder so? 
+  -Profile Picture als CircleAvatar oder so? Was bringt das? auf Bild drücken zum vergrößern? 
   -dynamic spacing, width, heigth etc
 
   -Adding Friends
     -only when not declined? cooldown?
-    -dont consider blocked users !! (in searchbar as well)
 
   -FriendInfoScreen
     -show transaction history of Friend and yourself
 
+  - Decide whether cancel/decline Button should be on the left or the right
   -Correct use of jwt everywhere
   -Check for correct error handling everywhere    
 */
@@ -71,18 +52,30 @@ class _FriendsScreenState extends State<FriendsScreen> {
       resizeToAvoidBottomInset: false, //avoids overflow when keyboard is opened
       appBar: AppBar(
         titleSpacing: 15.0,
-        title: FriendsSearchBar(),
+        // title: FriendsSearchBar(),
+        title: Text('Friends'),
         actions: [
           IconButton(
               onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => BlockedUsersScreen(),
-                  ),
-                );
+                showSearch(context: context, delegate: FriendsSearchBar());
               },
-              icon: Icon(Icons.person_off))
+              icon: Icon(Icons.search)),
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => BlockedUsersScreen(),
+                ),
+              );
+            },
+            icon: Icon(
+              Icons.person_off,
+              size: MediaQuery.of(context).size.width *
+                  0.07, //Dynamic Icon size depending on screen res
+            ),
+            padding: EdgeInsets.only(right: 15), //Distance to the right
+          )
         ],
       ),
       body: Column(
@@ -320,26 +313,32 @@ class BlockedUsers extends StatelessWidget {
       builder: (context, snapshot) {
         //if users are loaded
         if (snapshot.connectionState == ConnectionState.done) {
-          return Expanded(
-            child: Column(
-              children: [
-                //Text("Blocked Users", style: TextStyle(fontSize: 25)),
-                Expanded(
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: blockedUsers.length,
-                    itemBuilder: (context, index) {
-                      return Card(
-                        child: BlockedUserItem(
-                          user: blockedUsers[index],
+          return blockedUsers.isNotEmpty
+              ? Expanded(
+                  child: Column(
+                    children: [
+                      //Text("Blocked Users", style: TextStyle(fontSize: 25)),
+                      Expanded(
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: blockedUsers.length,
+                          itemBuilder: (context, index) {
+                            return Card(
+                              child: BlockedUserItem(
+                                user: blockedUsers[index],
+                              ),
+                            );
+                          },
                         ),
-                      );
-                    },
+                      )
+                    ],
                   ),
                 )
-              ],
-            ),
-          );
+              : Center(
+                  child: Text(
+                  "No blocked users",
+                  style: TextStyle(fontSize: 18),
+                ));
         } else {
           return Center(
             child: CircularProgressIndicator(),
@@ -523,7 +522,6 @@ class BlockedUserItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      //if no blocked users display -> "You have no blocked users"?
       leading: user.profileImage != null
           ? ClipOval(
               child: Image.memory(
@@ -802,71 +800,112 @@ class FriendInfoScreen extends StatelessWidget {
   }
 }
 
-class FriendsSearchBar extends StatefulWidget {
-  const FriendsSearchBar({super.key});
+// Search Bar -----------------------------------
 
-  @override
-  State<FriendsSearchBar> createState() => _FriendsSearchBarState();
-}
+class FriendsSearchBar extends SearchDelegate {
+  //List of Friends here?
 
-class _FriendsSearchBarState extends State<FriendsSearchBar> {
+  //Leading Icon (back arrow)
   @override
-  Widget build(BuildContext context) {
-    return TextField(
-      decoration: InputDecoration(
-        hintText: 'Search...',
-        border: InputBorder.none,
-      ),
-      onChanged: (query) {
-        debugPrint('search query $query');
+  Widget? buildLeading(BuildContext context) => IconButton(
+      onPressed: () {
+        close(context, null);
       },
-      onSubmitted: (query) {
-        debugPrint('submitted: $query');
-        handleAddFriend(username: query);
+      icon: const Icon(Icons.arrow_back));
+
+  //Tailing Icon (X to clear query)
+  @override
+  List<Widget>? buildActions(BuildContext context) => [
+        IconButton(
+            onPressed: () {
+              if (query.isEmpty) {
+                close(context, null);
+              } else {
+                query = ''; //Clears query when X is pressed
+              }
+            },
+            icon: Icon(Icons.clear))
+      ];
+
+  @override
+  Widget buildResults(BuildContext context) => Container();
+  //UserInfo mit Add Button?
+
+  @override //less than 3 or 4 characters show friends - more show suggested
+  Widget buildSuggestions(BuildContext context) {
+    List<String> tempSuggestions = ['Thomas', 'Tim', 'Tom'];
+
+    return ListView.builder(
+      itemCount: tempSuggestions.length,
+      itemBuilder: (context, index) {
+        return ListTile(
+          title: Text(tempSuggestions[index]),
+          onTap: () {
+            query = tempSuggestions[index];
+            showResults(context); //after suggestion was selected - show results
+          },
+        );
       },
     );
   }
 
-  void handleAddFriend({required String username}) async {
-    try {
-      //reads JWT again (need to be updated)
-      Map<String, dynamic> user = await ApiService.fetchUserProfile();
-      int user_id = user['user_id'];
+  // @override
+  // Widget build(BuildContext context) {
+  //   return TextField(
+  //     decoration: InputDecoration(
+  //       hintText: 'Search...',
+  //       border: InputBorder.none,
+  //     ),
+  //     onChanged: (query) {
+  //       debugPrint('search query $query');
+  //     },
+  //     onSubmitted: (query) {
+  //       debugPrint('submitted: $query');
+  //       handleAddFriend(username: query);
+  //     },
+  //   );
+  // }
 
-      Map<String, dynamic> requestBody = {
-        'friendUsername': username,
-      };
-      final response = await http.post(
-        Uri.parse('${ApiService.serverUrl}/friends/add/$user_id'),
-        body: json.encode(requestBody),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      );
-      if (response.statusCode == 200) {
-        //hier lieber true/false mit message return?
-        showSuccessSnackBar(
-            context, 'Friend request sended to User: $username');
-      } else {
-        print('Error MEssaage: ${response.body}');
-        showErrorSnackBar(context, json.decode(response.body));
-      }
-    } catch (e) {
-      print('Error accepting friend request: $e');
-    }
-  }
+  // void handleAddFriend({required String username}) async {
+  //   try {
+  //     //reads JWT again (need to be updated)
+  //     Map<String, dynamic> user = await ApiService.fetchUserProfile();
+  //     int user_id = user['user_id'];
 
-  void showSuccessSnackBar(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(message),
-      backgroundColor: Colors.green,
-    ));
-  }
+  //     Map<String, dynamic> requestBody = {
+  //       'friendUsername': username,
+  //     };
+  //     final response = await http.post(
+  //       Uri.parse('${ApiService.serverUrl}/friends/add/$user_id'),
+  //       body: json.encode(requestBody),
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //     );
+  //     if (response.statusCode == 200) {
+  //       //hier lieber true/false mit message return?
+  //       showSuccessSnackBar(
+  //           context, 'Friend request sended to User: $username');
+  //     } else {
+  //       print('Error MEssaage: ${response.body}');
+  //       showErrorSnackBar(context, json.decode(response.body));
+  //     }
+  //   } catch (e) {
+  //     print('Error accepting friend request: $e');
+  //   }
+  // }
 
-  void showErrorSnackBar(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(message),
-      backgroundColor: Colors.red,
-    ));
-  }
+  // void showSuccessSnackBar(BuildContext context, String message) {
+  //   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+  //     content: Text(message),
+  //     backgroundColor: Colors.green,
+  //   ));
+  // }
+
+  // void showErrorSnackBar(BuildContext context, String message) {
+  //   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+  //     content: Text(message),
+  //     backgroundColor: Colors.red,
+  //   ));
+  // }
 }

@@ -25,8 +25,8 @@ app.use(cors({
 
 // Create a connection pool to the MySQL database
 const db = mysql.createPool({
-  
-  connectionLimit: 5,
+
+  connectionLimit: 5, //clevercloud only allows 5 connections at the same time
   host: 'btxppofwkgo3xl10tfwy-mysql.services.clever-cloud.com',
   user: 'ud86jc8auniwbfsm',
   password: 'ER0nIAbQy5qyAeSd4ZCV',

@@ -515,10 +515,19 @@ app.get('/friends/block/:user_id', async (req, res) => {
   //get users which contain String for suggestions in Searchbar
   app.post('/users/:user_id', async(req, res) => {
     const user_id = req.params.user_id;
-    const searchQuery = req.body;
-    console.print(searchQuery);
+    const searchQuery = req.body.query;
+    console.log('user_id: ',user_id);
+    console.log('searchQuery: ',searchQuery);
 
-    const query = '';
+    const query = `
+    SELECT user_id, username, first_name, last_name 
+    FROM User 
+    WHERE user_id != ? AND
+    username LIKE ?`;
+
+    const [matchingUsers] = await db.query(query, [user_id,`%${searchQuery}%`]);
+    //console.log('Matching Users', matchingUsers);
+    res.json({matchingUsers});
   });
 
 app.post('/verify', async (req, res) => {

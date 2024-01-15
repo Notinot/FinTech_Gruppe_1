@@ -10,6 +10,7 @@ import '../Money/TransactionHistoryScreen.dart';
 import '../api_service.dart';
 
 /* To-do:
+Users nur anzeigen, adden usw wenn ACTIVE true
   -when a pending friend is pressed - send moneyScreen is opened
     -> change that to InfoScreen?
 
@@ -803,6 +804,7 @@ class FriendInfoScreen extends StatelessWidget {
 // Search Bar -----------------------------------
 
 class FriendsSearchBar extends SearchDelegate {
+  List<String> tempTest = [];
   //List of Friends here?
 
   //Leading Icon (back arrow)
@@ -833,36 +835,45 @@ class FriendsSearchBar extends SearchDelegate {
 
   @override //less than 3 or 4 characters show friends - more show suggested
   Widget buildSuggestions(BuildContext context) {
-    List<String> tempSuggestions = [
-      'Thomas',
-      'Tim',
-      'Tom'
-    ]; //first just get all users
-    if (query.length >= 4) {
-      //hier ne Methode die n String an api sendet und api antwortet mit usern
-      getSuggestions(query);
-    }
+    // List<String> tempSuggestions = [
+    //   'Thomas',
+    //   'Tim',
+    //   'Tom'
+    // ]; //first just get all users
+    tempTest = [];
 
+    // if (query.length > 3) {
+    //   //hier ne Methode die n String an api sendet und api antwortet mit usern
+    //   getSuggestions(query);
+    // }
     //checks whether query is contained somewhere
-    List<String> queryMatches = [];
-    for (var name in tempSuggestions) {
-      if (name.toLowerCase().contains(query.toLowerCase())) {
-        queryMatches.add(name);
-      }
+    // List<String> queryMatches = [];
+    // for (var name in tempSuggestions) {
+    //   if (name.toLowerCase().contains(query.toLowerCase())) {
+    //     queryMatches.add(name);
+    //   }
+    // }
+    if (query.length >= 4) {
+      return FutureBuilder(
+        future: getSuggestions(query),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            return ListView.builder(
+              itemCount: tempTest.length,
+              itemBuilder: (context, index) {
+                return ListTile(
+                  title: Text(tempTest[index]),
+                );
+              },
+            );
+          } else {
+            return Container();
+          }
+        },
+      );
+    } else {
+      return Text('No friendo foundo');
     }
-
-    return ListView.builder(
-      itemCount: queryMatches.length,
-      itemBuilder: (context, index) {
-        return ListTile(
-          title: Text(queryMatches[index]),
-          onTap: () {
-            query = queryMatches[index];
-            showResults(context); //after suggestion was selected - show results
-          },
-        );
-      },
-    );
   }
 
   Future getSuggestions(String query) async {
@@ -870,13 +881,23 @@ class FriendsSearchBar extends SearchDelegate {
     Map<String, dynamic> user = await ApiService.fetchUserProfile();
     int user_id = user[
         'user_id']; //sehr stupid weil nun jedes mal userId neu angefragt wird
-    String requestBody = query; //!
+    Map<String, dynamic> requestBody = {'query': query}; //!
 
     var response = await http.post(
-        Uri.parse('${ApiService.serverUrl}/users/$user_id'),
-        body: json.encode(requestBody));
+      Uri.parse('${ApiService.serverUrl}/users/$user_id'),
+      body: json.encode(requestBody),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    );
 
-    return jsonDecode(response.body);
+    Map<String, dynamic> data = jsonDecode(response.body);
+    debugPrint('data: ${data['matchingUsers']}');
+    //tempTest = [];
+    for (user in data['matchingUsers']) {
+      tempTest.add(user['username']);
+    }
+    debugPrint('tempTest: $tempTest');
   }
 
   // @override

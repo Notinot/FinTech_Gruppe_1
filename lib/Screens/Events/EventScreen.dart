@@ -23,7 +23,6 @@ User_Event Status:
 2 -> Pending (received invite)
 */
 
-
 class EventScreen extends StatefulWidget {
   const EventScreen({Key? key}) : super(key: key);
   @override
@@ -31,7 +30,6 @@ class EventScreen extends StatefulWidget {
 }
 
 class _EventScreenState extends State<EventScreen> {
-
   late Future<List<Event>> eventsFuture;
   late search_bar.SearchBar searchBar;
 
@@ -53,13 +51,17 @@ class _EventScreenState extends State<EventScreen> {
     );
   }
 
-
-  final List<String> possibleFilters = ['All events', 'My events', 'Pending', 'Active', 'Inactive'];
+  final List<String> possibleFilters = [
+    'All events',
+    'My events',
+    'Pending',
+    'Active',
+    'Inactive'
+  ];
   String eventFilter = 'All events';
 
   final List<String> possibleCategories = [];
   String categoryFilter = 'Category';
-
 
   // Fetch events from the backend
   Future<List<Event>> fetchEvents() async {
@@ -79,9 +81,7 @@ class _EventScreenState extends State<EventScreen> {
         },
       );
 
-
       if (response.statusCode == 200) {
-
         String userId = await ApiService.fetchUserId();
         final List<dynamic> data = jsonDecode(response.body);
         final List<dynamic> eventsData = data;
@@ -91,7 +91,6 @@ class _EventScreenState extends State<EventScreen> {
         List<Event> events = eventsData.map((eventData) {
           return Event.fromJson(eventData as Map<String, dynamic>);
         }).toList();
-
 
         // Sort by status and datetime
         events.sort((a, b) {
@@ -106,81 +105,96 @@ class _EventScreenState extends State<EventScreen> {
           }
         });
 
-
         // Fill list for category list
-        for(var event in events){
-          if(!possibleCategories.contains(event.category)){
+        for (var event in events) {
+          if (!possibleCategories.contains(event.category)) {
             possibleCategories.add(event.category);
           }
         }
 
         // Set if User is Creator
-        for(var event in events){
-          if(userId == event.creatorId.toString()){
-
+        for (var event in events) {
+          if (userId == event.creatorId.toString()) {
             setState(() {
               event.isCreator = true;
             });
           }
         }
 
-        switch(eventFilter){
+        switch (eventFilter) {
           case 'All events':
-            if(categoryFilter == 'Category'){
+            if (categoryFilter == 'Category') {
               return events;
-            }
-            else if(categoryFilter != 'Category'){
-              for(var event in events){
-                if(categoryFilter == event.category && !filteredEvents.contains(event)){
+            } else if (categoryFilter != 'Category') {
+              for (var event in events) {
+                if (categoryFilter == event.category &&
+                    !filteredEvents.contains(event)) {
                   filteredEvents.add(event);
-                }}
+                }
+              }
               return filteredEvents;
             }
           case 'My events':
-            if(categoryFilter == 'Category'){
-              for(var event in events) {
-                if (userId == event.creatorId.toString() && !filteredEvents.contains(event)) {
+            if (categoryFilter == 'Category') {
+              for (var event in events) {
+                if (userId == event.creatorId.toString() &&
+                    !filteredEvents.contains(event)) {
                   filteredEvents.add(event);
-                }}
+                }
+              }
               return filteredEvents;
-            }
-            else if(categoryFilter != 'Category'){
-              for(var event in events){
-                if(userId == event.creatorId.toString() && categoryFilter == event.category && !filteredEvents.contains(event)){
+            } else if (categoryFilter != 'Category') {
+              for (var event in events) {
+                if (userId == event.creatorId.toString() &&
+                    categoryFilter == event.category &&
+                    !filteredEvents.contains(event)) {
                   filteredEvents.add(event);
-                }}
+                }
+              }
               return filteredEvents;
             }
           case 'Active':
-            if(categoryFilter == 'Category'){
-              for(var event in events){
-                if(event.status == 1 && event.datetimeEvent.millisecondsSinceEpoch > DateTime.now().millisecondsSinceEpoch && !filteredEvents.contains(event)){
+            if (categoryFilter == 'Category') {
+              for (var event in events) {
+                if (event.status == 1 &&
+                    event.datetimeEvent.millisecondsSinceEpoch >
+                        DateTime.now().millisecondsSinceEpoch &&
+                    !filteredEvents.contains(event)) {
                   filteredEvents.add(event);
-                }}
+                }
+              }
               return filteredEvents;
-            }
-            else if(categoryFilter != 'Category'){
-              for(var event in events){
-                if(event.status == 1 && categoryFilter == event.category && event.datetimeEvent.millisecondsSinceEpoch > DateTime.now().millisecondsSinceEpoch && !filteredEvents.contains(event)){
+            } else if (categoryFilter != 'Category') {
+              for (var event in events) {
+                if (event.status == 1 &&
+                    categoryFilter == event.category &&
+                    event.datetimeEvent.millisecondsSinceEpoch >
+                        DateTime.now().millisecondsSinceEpoch &&
+                    !filteredEvents.contains(event)) {
                   filteredEvents.add(event);
-                }}
+                }
+              }
               return filteredEvents;
             }
           case 'Inactive':
-            if(categoryFilter == 'Category'){
-              for(var event in events){
-                if(event.status != 1 || event.datetimeEvent.millisecondsSinceEpoch < DateTime.now().millisecondsSinceEpoch){
-                  if(!filteredEvents.contains(event)){
+            if (categoryFilter == 'Category') {
+              for (var event in events) {
+                if (event.status != 1 ||
+                    event.datetimeEvent.millisecondsSinceEpoch <
+                        DateTime.now().millisecondsSinceEpoch) {
+                  if (!filteredEvents.contains(event)) {
                     filteredEvents.add(event);
                   }
                 }
               }
               return filteredEvents;
-            }
-            else if(categoryFilter != 'Category'){
-              for(var event in events){
-                if(event.status != 1 || event.datetimeEvent.millisecondsSinceEpoch < DateTime.now().millisecondsSinceEpoch){
-                  if(categoryFilter == event.category && !filteredEvents.contains(event)){
+            } else if (categoryFilter != 'Category') {
+              for (var event in events) {
+                if (event.status != 1 ||
+                    event.datetimeEvent.millisecondsSinceEpoch <
+                        DateTime.now().millisecondsSinceEpoch) {
+                  if (categoryFilter == event.category &&
+                      !filteredEvents.contains(event)) {
                     filteredEvents.add(event);
                   }
                 }
@@ -189,7 +203,6 @@ class _EventScreenState extends State<EventScreen> {
             }
         }
         return events;
-
       } else {
         throw Exception('Failed to load events. Error: ${response.statusCode}');
       }
@@ -197,7 +210,6 @@ class _EventScreenState extends State<EventScreen> {
       rethrow;
     }
   }
-
 
   // Function to build the AppBar
   AppBar buildAppBar(BuildContext context) {
@@ -207,17 +219,14 @@ class _EventScreenState extends State<EventScreen> {
     );
   }
 
-  Future<void> onSubmitted(String value) async{
-
+  Future<void> onSubmitted(String value) async {
     if (value.isNotEmpty) {
       List<Event> filteredEvents = events
           .where((events) =>
-      events.title
-          .toLowerCase()
-          .contains(value.toLowerCase()) ||
-          events.creatorUsername
-              .toLowerCase()
-              .contains(value.toLowerCase()))
+              events.title.toLowerCase().contains(value.toLowerCase()) ||
+              events.creatorUsername
+                  .toLowerCase()
+                  .contains(value.toLowerCase()))
           .toList();
       setState(() {
         eventsFuture = Future.value(filteredEvents);
@@ -229,17 +238,14 @@ class _EventScreenState extends State<EventScreen> {
     }
   }
 
-  Future<void> onChanged(String value) async{
-
+  Future<void> onChanged(String value) async {
     if (value.isNotEmpty) {
       List<Event> filteredEvents = events
           .where((events) =>
-      events.title
-          .toLowerCase()
-          .contains(value.toLowerCase()) ||
-          events.creatorUsername
-              .toLowerCase()
-              .contains(value.toLowerCase()))
+              events.title.toLowerCase().contains(value.toLowerCase()) ||
+              events.creatorUsername
+                  .toLowerCase()
+                  .contains(value.toLowerCase()))
           .toList();
       setState(() {
         eventsFuture = Future.value(filteredEvents);
@@ -265,7 +271,6 @@ class _EventScreenState extends State<EventScreen> {
       eventsFuture = fetchEvents();
     });
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -309,93 +314,83 @@ class _EventScreenState extends State<EventScreen> {
                     return ListView.builder(
                       itemCount: events.length,
                       itemBuilder: (context, index) {
-                        return EventItem(
-                            event: events[index]
-                        );
+                        return EventItem(event: events[index]);
                       },
                     );
                   }
                 });
-            }
-          },
+          }
+        },
       ),
 
       bottomNavigationBar: BottomAppBar(
         child: FutureBuilder<Map<String, dynamic>>(
-
-          future: ApiService.fetchUserProfile(),
-          builder: (context, snapshot){
-
-            if(snapshot.connectionState == ConnectionState.waiting){
-              return const Center(
-                child: CircularProgressIndicator()
-              );
-            }
-            else if(snapshot.hasError){
-              return Text('Error:  ${snapshot.error}');
-            }
-            else{
-              final Map<String, dynamic> user = snapshot.data!;
-              return Container(
-                height: 20,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 32.0),
-                        child: DropdownMenu<String>(
-                          width: 140,
-                          initialSelection: eventFilter,
-                          hintText: eventFilter,
-                          requestFocusOnTap: false,
-                          onSelected: (String? newValue) {
-                            setState(() {
-                              eventFilter = newValue!;
-                              eventsFuture = fetchEvents();
-                            });
-                          },
-                          dropdownMenuEntries:
-                          possibleFilters.map<DropdownMenuEntry<String>>((String value) {
-                            return DropdownMenuEntry<String>(value: value, label: value);
-                          }).toList(),
+            future: ApiService.fetchUserProfile(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              } else if (snapshot.hasError) {
+                return Text('Error:  ${snapshot.error}');
+              } else {
+                final Map<String, dynamic> user = snapshot.data!;
+                return Container(
+                  height: 20,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 32.0),
+                          child: DropdownMenu<String>(
+                            width: 140,
+                            initialSelection: eventFilter,
+                            hintText: eventFilter,
+                            requestFocusOnTap: false,
+                            onSelected: (String? newValue) {
+                              setState(() {
+                                eventFilter = newValue!;
+                                eventsFuture = fetchEvents();
+                              });
+                            },
+                            dropdownMenuEntries: possibleFilters
+                                .map<DropdownMenuEntry<String>>((String value) {
+                              return DropdownMenuEntry<String>(
+                                  value: value, label: value);
+                            }).toList(),
+                          ),
                         ),
                       ),
-                    ),
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 32.0),
-                        child: DropdownMenu<String>(
-                          width: 140,
-                          initialSelection: categoryFilter,
-                          hintText: categoryFilter,
-                          requestFocusOnTap: false,
-                          onSelected: (String? newValue) {
-                            setState(() {
-                              categoryFilter = newValue!;
-                              eventsFuture = fetchEvents();
-                            });
-                          },
-                          dropdownMenuEntries:
-                          possibleCategories.map<DropdownMenuEntry<String>>((String value) {
-                            return DropdownMenuEntry<String>(value: value, label: value);
-                          }).toList(),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 32.0),
+                          child: DropdownMenu<String>(
+                            width: 140,
+                            initialSelection: categoryFilter,
+                            hintText: categoryFilter,
+                            requestFocusOnTap: false,
+                            onSelected: (String? newValue) {
+                              setState(() {
+                                categoryFilter = newValue!;
+                                eventsFuture = fetchEvents();
+                              });
+                            },
+                            dropdownMenuEntries: possibleCategories
+                                .map<DropdownMenuEntry<String>>((String value) {
+                              return DropdownMenuEntry<String>(
+                                  value: value, label: value);
+                            }).toList(),
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              );
-            }
-          }
-        ),
-
+                    ],
+                  ),
+                );
+              }
+            }),
       ),
     );
   }
 }
-
-
 
 class Event {
   final int eventID;
@@ -418,30 +413,27 @@ class Event {
   final creatorId;
   bool isCreator;
 
-  Event(
-      {
-        required this.eventID,
-        required this.title,
-        required this.description,
-        required this.category,
-        required this.participants,
-        required this.maxParticipants,
-        required this.datetimeCreated,
-        required this.datetimeEvent,
-        required this.price,
-        required this.status,
-        required this.recurrenceType,
-        required this.recurrenceInterval,
-        required this.country,
-        required this.city,
-        required this.street,
-        required this.zipcode,
-        required this.creatorUsername,
-        required this.creatorId,
-        required this.isCreator,
-      });
-
-
+  Event({
+    required this.eventID,
+    required this.title,
+    required this.description,
+    required this.category,
+    required this.participants,
+    required this.maxParticipants,
+    required this.datetimeCreated,
+    required this.datetimeEvent,
+    required this.price,
+    required this.status,
+    required this.recurrenceType,
+    required this.recurrenceInterval,
+    required this.country,
+    required this.city,
+    required this.street,
+    required this.zipcode,
+    required this.creatorUsername,
+    required this.creatorId,
+    required this.isCreator,
+  });
 
   final Map<String, IconData> iconMap = {
     'Book and Literature': Icons.menu_book_rounded,
@@ -460,62 +452,59 @@ class Event {
     'Professional': Icons.business_center_rounded,
   };
 
-
   IconData getIconForCategory(String category) {
-
     // Check if the category exists in the map, otherwise use a default icon
-    if(status != 1){
+    if (status != 1) {
       return Icons.do_disturb;
-    }
-    else if(datetimeEvent.millisecondsSinceEpoch < DateTime.now().millisecondsSinceEpoch){
+    } else if (datetimeEvent.millisecondsSinceEpoch <
+        DateTime.now().millisecondsSinceEpoch) {
       return Icons.update_disabled_rounded;
     }
 
     return iconMap.containsKey(category) ? iconMap[category]! : Icons.category;
   }
 
-  bool notOutDatedEvent(DateTime eventTime){
-    if(eventTime.millisecondsSinceEpoch > DateTime.now().millisecondsSinceEpoch){
+  bool notOutDatedEvent(DateTime eventTime) {
+    if (eventTime.millisecondsSinceEpoch >
+        DateTime.now().millisecondsSinceEpoch) {
       return true;
     }
     return false;
   }
 
-  bool notFullEvent(){
-    if(participants < maxParticipants){
+  bool notFullEvent() {
+    if (participants < maxParticipants) {
       return true;
     }
     return false;
   }
-
 
   factory Event.fromJson(Map<String, dynamic> json) {
     return Event(
-        eventID: json['event_id'],
-        category: json['category'],
-        title: json['title'],
-        description: json['description'],
-        participants: json['participants'],
-        maxParticipants: json['max_participants'],
-        datetimeCreated: DateTime.parse(json['datetime_created']),
-        datetimeEvent: DateTime.parse(json['datetime_event']),
-        price: (json['price'] as num).toDouble(),
-        status: json['status'],
-        recurrenceType: json['recurrence_type'],
-        recurrenceInterval: json['recurrence_interval'],
-        country: json['country'],
-        city: json['city'],
-        street: json['street'],
-        zipcode: json['zipcode'],
-        creatorUsername: json['creator_username'],
-        creatorId: json['creator_id'],
-        isCreator: false,
+      eventID: json['event_id'],
+      category: json['category'],
+      title: json['title'],
+      description: json['description'],
+      participants: json['participants'],
+      maxParticipants: json['max_participants'],
+      datetimeCreated: DateTime.parse(json['datetime_created']),
+      datetimeEvent: DateTime.parse(json['datetime_event']),
+      price: (json['price'] as num).toDouble(),
+      status: json['status'],
+      recurrenceType: json['recurrence_type'],
+      recurrenceInterval: json['recurrence_interval'],
+      country: json['country'],
+      city: json['city'],
+      street: json['street'],
+      zipcode: json['zipcode'],
+      creatorUsername: json['creator_username'],
+      creatorId: json['creator_id'],
+      isCreator: false,
     );
   }
 
   Future eventService() async {
-    try{
-
+    try {
       const storage = FlutterSecureStorage();
       final token = await storage.read(key: 'token');
 
@@ -531,8 +520,7 @@ class Event {
         },
       );
 
-      if(fetchEvents.statusCode == 200){
-
+      if (fetchEvents.statusCode == 200) {
         final List<dynamic> data = jsonDecode(fetchEvents.body);
         final List<dynamic> eventsData = data;
 
@@ -545,24 +533,21 @@ class Event {
         List<Event> checkingEvents = [];
 
         // Get all repeatable Events
-        for(var event in events){
-          if(event.recurrenceType != 0 && !checkingEvents.contains(event)){
+        for (var event in events) {
+          if (event.recurrenceType != 0 && !checkingEvents.contains(event)) {
             checkingEvents.add(event);
           }
         }
 
-
-        for(var event in checkingEvents){
-
-          if(event.datetimeEvent.compareTo(DateTime.now()) < 0){
-
-            switch(event.recurrenceType) {
+        for (var event in checkingEvents) {
+          if (event.datetimeEvent.compareTo(DateTime.now()) < 0) {
+            switch (event.recurrenceType) {
               case 1:
                 event.datetimeEvent =
                     event.datetimeEvent.add(Duration(days: 7));
                 event.recurrenceInterval = (event.recurrenceInterval! + 1)!;
               case 2:
-              // Needs to be improved
+                // Needs to be improved
                 event.datetimeEvent =
                     event.datetimeEvent.add(Duration(days: 30));
                 event.recurrenceInterval = (event.recurrenceInterval! + 1)!;
@@ -574,43 +559,37 @@ class Event {
           }
         }
 
-        try{
-
+        try {
           List<Map<String, dynamic>> eventsJson =
-          checkingEvents.map((i) => i.toJson()).toList();
+              checkingEvents.map((i) => i.toJson()).toList();
 
           String body = jsonEncode(eventsJson);
 
           ApiService.EventService(body);
-
-        }catch(e){
+        } catch (e) {
           print(e);
         }
-      }
-      else{
+      } else {
         print("/events error");
         print(fetchEvents.statusCode);
       }
-    }
-    catch(e){
+    } catch (e) {
       return e.toString();
     }
   }
 
-  Map<String, dynamic> toJson(){
-    return{
+  Map<String, dynamic> toJson() {
+    return {
       'event_id': this.eventID,
-      'datetime_event': this.datetimeEvent.toString().substring(0, this.datetimeEvent.toString().length - 4), // Use UTC time
+      'datetime_event': this.datetimeEvent.toString().substring(
+          0, this.datetimeEvent.toString().length - 4), // Use UTC time
       'recurrence_interval': this.recurrenceInterval,
     };
   }
-
 }
-
 
 //Display a single event object in a ListTile
 class EventItem extends StatelessWidget {
-
   final Event event;
   EventItem({super.key, required this.event});
 
@@ -620,74 +599,57 @@ class EventItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     Color? iconColor;
-    event.status != 1
-    ? iconColor = Colors.red
-    : iconColor;
+    event.status != 1 ? iconColor = Colors.red : iconColor;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 10),
-      child: Hero(
-        tag:
-        'event_${event.eventID}',
-        child: Card(
-          elevation: 2.0,
-          child: ListTile(
-            leading: Icon(
-              event.getIconForCategory(event.category),
-              color: iconColor,
-            ),
-            title: Text(event.title),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: EdgeInsets.all(2),
-                  child:
-                  isFree()
-                  ?
-                  Text(
-                    'Free',
-                      style: TextStyle(fontWeight: FontWeight.bold)
-                  )
-                  :
-                      Text(
-                          '${NumberFormat("#,##0.00", "de_DE").format(event.price)}\€',
-                      )
-                ),
-                Container(
-                  padding: EdgeInsets.all(2),
-                  child: Text(
-                      event.creatorUsername
+        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 10),
+        child: Hero(
+          tag: 'event_${event.eventID}',
+          child: Card(
+            elevation: 2.0,
+            child: ListTile(
+              leading: Icon(
+                event.getIconForCategory(event.category),
+                color: iconColor,
+              ),
+              title: Text(event.title),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                      padding: EdgeInsets.all(2),
+                      child: isFree()
+                          ? Text('Free',
+                              style: TextStyle(fontWeight: FontWeight.bold))
+                          : Text(
+                              '${NumberFormat("#,##0.00", "de_DE").format(event.price)}\€',
+                            )),
+                  Container(
+                    padding: EdgeInsets.all(2),
+                    child: Text(event.creatorUsername),
                   ),
-                ),
-              ],
-            ),
-            trailing:
-                Text(
-                  '${DateFormat('dd/MM/yyyy').format(event.datetimeEvent)}\n${DateFormat('HH:mm').format(event.datetimeEvent)}',
-                  textAlign: TextAlign.right,
-                  style: TextStyle(color: Colors.black),
-                ),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => EventInfoScreen(
-                    event: event,
+                ],
+              ),
+              trailing: Text(
+                '${DateFormat('dd/MM/yyyy').format(event.datetimeEvent)}\n${DateFormat('HH:mm').format(event.datetimeEvent)}',
+                textAlign: TextAlign.right,
+              ),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => EventInfoScreen(
+                      event: event,
+                    ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
-        ),
-      )
-    );
+        ));
   }
 }
-
-
 
 class EventInfoScreen extends StatelessWidget {
   final Event event;
@@ -720,63 +682,62 @@ class EventInfoScreen extends StatelessWidget {
                 SizedBox(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children:[
+                  children: [
                     Text(
                       'Event Information',
-                      style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                      style:
+                          TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                     ),
                     SizedBox(width: 24),
                     event.isCreator
-                    ?
-                        event.notOutDatedEvent(event.datetimeEvent)
-                    ?
-                    InkWell(
-                      onTap: (){
-                        showDialog(context: context,
-                        builder: (BuildContext context) {
-                          return AlertDialog(
-                            title: Text('Cancel ${event.title}'),
-                            content: Text('Are you sure you want to cancel the Event "${event.title}"?'),
-                            actions: <Widget>[
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.of(context).pop();
+                        ? event.notOutDatedEvent(event.datetimeEvent)
+                            ? InkWell(
+                                onTap: () {
+                                  showDialog(
+                                      context: context,
+                                      builder: (BuildContext context) {
+                                        return AlertDialog(
+                                          title: Text('Cancel ${event.title}'),
+                                          content: Text(
+                                              'Are you sure you want to cancel the Event "${event.title}"?'),
+                                          actions: <Widget>[
+                                            TextButton(
+                                              onPressed: () {
+                                                Navigator.of(context).pop();
+                                              },
+                                              child: Text('Back'),
+                                            ),
+                                            SizedBox(width: 32),
+                                            TextButton(
+                                              onPressed: () async {
+                                                int result = await ApiService
+                                                    .cancelEvent(event.eventID);
+                                                if (result == 401) {
+                                                  Navigator.of(context).pop();
+                                                  showErrorSnackBar(context,
+                                                      'Event was already canceled!');
+                                                } else if (result == 0) {
+                                                  Navigator.of(context).pop();
+                                                  showErrorSnackBar(context,
+                                                      'Canceling event failed!');
+                                                } else if (result == 1) {
+                                                  Navigator.of(context).pop();
+                                                  showSuccessSnackBar(context,
+                                                      'Canceling event was successful!');
+                                                }
+                                              },
+                                              child: Text('Yes'),
+                                            )
+                                          ],
+                                        );
+                                      });
                                 },
-                                child: Text('Back'),
-                              ),
-                              SizedBox(width: 32),
-                              TextButton(
-                                onPressed: () async {
-                                  int result = await ApiService.cancelEvent(event.eventID);
-                                  if(result == 401){
-                                    Navigator.of(context).pop();
-                                    showErrorSnackBar(context, 'Event was already canceled!');
-                                  }
-                                  else if(result == 0){
-                                    Navigator.of(context).pop();
-                                    showErrorSnackBar(context, 'Canceling event failed!');
-                                  }
-                                  else if(result == 1){
-                                    Navigator.of(context).pop();
-                                    showSuccessSnackBar(context, 'Canceling event was successful!');
-                                  }
-                                },
-                                child: Text('Yes'),
-                              )
-                            ],
-                          );
-                          }
-                        );
-                      },
-                      child: Icon(
-                        Icons.settings,
-                        color: Colors.grey,
-                      )
-                    )
-                        :
-                        Container()
-                        :
-                        Container()
+                                child: Icon(
+                                  Icons.settings,
+                                  color: Colors.grey,
+                                ))
+                            : Container()
+                        : Container()
                   ],
                 ),
                 SizedBox(height: 12),
@@ -870,141 +831,137 @@ class EventInfoScreen extends StatelessWidget {
                 isEmpty
                     ? Container()
                     : Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Icon(Icons.add_location_alt_rounded),
-                      SizedBox(width: 8),
-                      Text(
-                        ' ${event.country}, ${event.city}, \n ${event.zipcode}, ${event.street}',
-                        style: TextStyle(fontSize: 18),
+                        padding: EdgeInsets.symmetric(horizontal: 16),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Icon(Icons.add_location_alt_rounded),
+                            SizedBox(width: 8),
+                            Text(
+                              ' ${event.country}, ${event.city}, \n ${event.zipcode}, ${event.street}',
+                              style: TextStyle(fontSize: 18),
+                            ),
+                          ],
+                        ),
                       ),
-                    ],
-                  ),
-                ),
                 SizedBox(height: 4),
                 isNull
                     ? Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Icon(Icons.money_off_csred_rounded),
-                      SizedBox(width: 8),
-                      Text(
-                        'Free',
-                        style: TextStyle(fontSize: 18),
-                      ),
-                    ],
-                  ),
-                )
+                        padding: EdgeInsets.symmetric(horizontal: 16),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Icon(Icons.money_off_csred_rounded),
+                            SizedBox(width: 8),
+                            Text(
+                              'Free',
+                              style: TextStyle(fontSize: 18),
+                            ),
+                          ],
+                        ),
+                      )
                     : Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Icon(Icons.attach_money_rounded),
-                      SizedBox(width: 8),
-                      Text(
-                        formatAmount(),
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                        padding: EdgeInsets.symmetric(horizontal: 16),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Icon(Icons.attach_money_rounded),
+                            SizedBox(width: 8),
+                            Text(
+                              formatAmount(),
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
-                ),
                 SizedBox(height: 24),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     TextButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                      child: Text(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        child: Text(
                           'Back',
                           style: TextStyle(fontSize: 16),
-                      )
-                    ),
+                        )),
                     SizedBox(width: 20),
                     event.status != 1
-                    ?
-                    Container()
-                    :
-                    event.isCreator
-                        ?
-                        event.notOutDatedEvent(event.datetimeEvent)
-                            ?
-                            event.notFullEvent()
-                              ?
-                            ElevatedButton.icon(
-                              style: ElevatedButton.styleFrom(
-                                  textStyle: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 15
-                                  )),
-                              onPressed: (){
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => InviteToEventScreen(eventId: event.eventID),
-                                  ),
-                                );
-                              }, icon: Icon(Icons.emoji_people_rounded),
-                              label: Text('Invite'),
-                            )
-                              :
-                            Container()
-                        :
-                            Container()
-                        :
-                        event.notOutDatedEvent(event.datetimeEvent)
-                    ?
-                    TextButton(
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return AlertDialog(
-                              title: Text('Leaving ${event.title}'),
-                              content: Text('Are you sure you want to leave the Event "${event.title}"?'),
-                              actions: <Widget>[
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.of(context).pop();
-                                  },
-                                  child: Text('Back'),
-                                ),
-                                TextButton(
-                                  onPressed: () async {
-                                    int result = await ApiService.leaveEvent(event.eventID);
-                                    if(result == 401){
-                                      Navigator.of(context).pop();
-                                      showErrorSnackBar(context, 'Event was already leaved!');
-                                    }
-                                    else if(result == 0){
-                                      Navigator.of(context).pop();
-                                      showErrorSnackBar(context, 'Leaving event failed!');
-                                    }
-                                    else if(result == 1){
-                                      Navigator.of(context).pop();
-                                      showSuccessSnackBar(context, 'Leaving event was successful!');
-                                    }
-                                  },
-                                  child: Text('Yes'),
-                                )
-                              ],
-                            );
-                          },
-                        );
-                      },
-                      child: Text('Leave event'),
-                    )
-                            :
-                            Container()
+                        ? Container()
+                        : event.isCreator
+                            ? event.notOutDatedEvent(event.datetimeEvent)
+                                ? event.notFullEvent()
+                                    ? ElevatedButton.icon(
+                                        style: ElevatedButton.styleFrom(
+                                            textStyle: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 15)),
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  InviteToEventScreen(
+                                                      eventId: event.eventID),
+                                            ),
+                                          );
+                                        },
+                                        icon: Icon(Icons.emoji_people_rounded),
+                                        label: Text('Invite'),
+                                      )
+                                    : Container()
+                                : Container()
+                            : event.notOutDatedEvent(event.datetimeEvent)
+                                ? TextButton(
+                                    onPressed: () {
+                                      showDialog(
+                                        context: context,
+                                        builder: (BuildContext context) {
+                                          return AlertDialog(
+                                            title:
+                                                Text('Leaving ${event.title}'),
+                                            content: Text(
+                                                'Are you sure you want to leave the Event "${event.title}"?'),
+                                            actions: <Widget>[
+                                              TextButton(
+                                                onPressed: () {
+                                                  Navigator.of(context).pop();
+                                                },
+                                                child: Text('Back'),
+                                              ),
+                                              TextButton(
+                                                onPressed: () async {
+                                                  int result = await ApiService
+                                                      .leaveEvent(
+                                                          event.eventID);
+                                                  if (result == 401) {
+                                                    Navigator.of(context).pop();
+                                                    showErrorSnackBar(context,
+                                                        'Event was already leaved!');
+                                                  } else if (result == 0) {
+                                                    Navigator.of(context).pop();
+                                                    showErrorSnackBar(context,
+                                                        'Leaving event failed!');
+                                                  } else if (result == 1) {
+                                                    Navigator.of(context).pop();
+                                                    showSuccessSnackBar(context,
+                                                        'Leaving event was successful!');
+                                                  }
+                                                },
+                                                child: Text('Yes'),
+                                              )
+                                            ],
+                                          );
+                                        },
+                                      );
+                                    },
+                                    child: Text('Leave event'),
+                                  )
+                                : Container()
                   ],
                 ),
                 SizedBox(height: 24),
@@ -1021,14 +978,9 @@ class EventInfoScreen extends StatelessWidget {
   }
 }
 
-
-
-
 class EventDateSection extends StatelessWidget {
-
   final Event event;
-  const EventDateSection({Key? key, required this.event})
-      : super(key: key);
+  const EventDateSection({Key? key, required this.event}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -1051,13 +1003,9 @@ class EventDateSection extends StatelessWidget {
   }
 }
 
-
-
 class EventTimeSection extends StatelessWidget {
-
   final Event event;
-  const EventTimeSection({Key? key, required this.event})
-      : super(key: key);
+  const EventTimeSection({Key? key, required this.event}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -1080,7 +1028,6 @@ class EventTimeSection extends StatelessWidget {
   }
 }
 
-
 void showErrorSnackBar(BuildContext context, String message) {
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
@@ -1089,7 +1036,6 @@ void showErrorSnackBar(BuildContext context, String message) {
     ),
   );
 }
-
 
 void showSuccessSnackBar(BuildContext context, String message) {
   ScaffoldMessenger.of(context).showSnackBar(

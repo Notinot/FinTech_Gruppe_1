@@ -863,6 +863,10 @@ class FriendsSearchBar extends SearchDelegate {
               itemBuilder: (context, index) {
                 return ListTile(
                   title: Text(tempTest[index]),
+                  onTap: () {
+                    query = tempTest[index];
+                    //hier result noch aufrufen I guess
+                  },
                 );
               },
             );

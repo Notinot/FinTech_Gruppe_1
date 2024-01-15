@@ -26,7 +26,7 @@ app.use(cors({
 // Create a connection pool to the MySQL database
 const db = mysql.createPool({
 
-  connectionLimit: 5, //clevercloud only allows 5 connections at the same time
+  connectionLimit: 3, //clevercloud only allows 5 connections at the same time
   host: 'btxppofwkgo3xl10tfwy-mysql.services.clever-cloud.com',
   user: 'ud86jc8auniwbfsm',
   password: 'ER0nIAbQy5qyAeSd4ZCV',
@@ -510,6 +510,15 @@ app.get('/friends/block/:user_id', async (req, res) => {
   `;
   const [blockedUsers] = await db.query(query, [user_id]);
     res.json({blockedUsers}); //!
+  });
+
+  //get users which contain String for suggestions in Searchbar
+  app.post('/users/:user_id', async(req, res) => {
+    const user_id = req.params.user_id;
+    const searchQuery = req.body;
+    console.print(searchQuery);
+
+    const query = '';
   });
 
 app.post('/verify', async (req, res) => {

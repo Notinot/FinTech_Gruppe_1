@@ -184,7 +184,7 @@ class Friends extends StatelessWidget {
         await http.get(Uri.parse('${ApiService.serverUrl}/friends/$user_id'));
 
     Map<String, dynamic> data = jsonDecode(response.body);
-
+    //debugPrint(data['friends'].runtimeType.toString());
     for (var user in data['friends']) {
       final friendTemp = Friend(
           userID: user['friend_user_id'],
@@ -828,25 +828,55 @@ class FriendsSearchBar extends SearchDelegate {
       ];
 
   @override
-  Widget buildResults(BuildContext context) => Container();
+  Widget buildResults(BuildContext context) => Center(child: Text(query));
   //UserInfo mit Add Button?
 
   @override //less than 3 or 4 characters show friends - more show suggested
   Widget buildSuggestions(BuildContext context) {
-    List<String> tempSuggestions = ['Thomas', 'Tim', 'Tom'];
+    List<String> tempSuggestions = [
+      'Thomas',
+      'Tim',
+      'Tom'
+    ]; //first just get all users
+    if (query.length >= 4) {
+      //hier ne Methode die n String an api sendet und api antwortet mit usern
+      getSuggestions(query);
+    }
+
+    //checks whether query is contained somewhere
+    List<String> queryMatches = [];
+    for (var name in tempSuggestions) {
+      if (name.toLowerCase().contains(query.toLowerCase())) {
+        queryMatches.add(name);
+      }
+    }
 
     return ListView.builder(
-      itemCount: tempSuggestions.length,
+      itemCount: queryMatches.length,
       itemBuilder: (context, index) {
         return ListTile(
-          title: Text(tempSuggestions[index]),
+          title: Text(queryMatches[index]),
           onTap: () {
-            query = tempSuggestions[index];
+            query = queryMatches[index];
             showResults(context); //after suggestion was selected - show results
           },
         );
       },
     );
+  }
+
+  Future getSuggestions(String query) async {
+    //read jwt
+    Map<String, dynamic> user = await ApiService.fetchUserProfile();
+    int user_id = user[
+        'user_id']; //sehr stupid weil nun jedes mal userId neu angefragt wird
+    String requestBody = query; //!
+
+    var response = await http.post(
+        Uri.parse('${ApiService.serverUrl}/users/$user_id'),
+        body: json.encode(requestBody));
+
+    return jsonDecode(response.body);
   }
 
   // @override
@@ -866,34 +896,33 @@ class FriendsSearchBar extends SearchDelegate {
   //   );
   // }
 
-  // void handleAddFriend({required String username}) async {
-  //   try {
-  //     //reads JWT again (need to be updated)
-  //     Map<String, dynamic> user = await ApiService.fetchUserProfile();
-  //     int user_id = user['user_id'];
+  void handleAddFriend({required String username}) async {
+    try {
+      //reads JWT again (need to be updated)
+      Map<String, dynamic> user = await ApiService.fetchUserProfile();
+      int user_id = user['user_id'];
 
-  //     Map<String, dynamic> requestBody = {
-  //       'friendUsername': username,
-  //     };
-  //     final response = await http.post(
-  //       Uri.parse('${ApiService.serverUrl}/friends/add/$user_id'),
-  //       body: json.encode(requestBody),
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //       },
-  //     );
-  //     if (response.statusCode == 200) {
-  //       //hier lieber true/false mit message return?
-  //       showSuccessSnackBar(
-  //           context, 'Friend request sended to User: $username');
-  //     } else {
-  //       print('Error MEssaage: ${response.body}');
-  //       showErrorSnackBar(context, json.decode(response.body));
-  //     }
-  //   } catch (e) {
-  //     print('Error accepting friend request: $e');
-  //   }
-  // }
+      Map<String, dynamic> requestBody = {
+        'friendUsername': username,
+      };
+      final response = await http.post(
+        Uri.parse('${ApiService.serverUrl}/friends/add/$user_id'),
+        body: json.encode(requestBody),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      );
+      if (response.statusCode == 200) {
+        //hier lieber true/false mit message return?
+        // showSuccessSnackBar context, 'Friend request sended to User: $username');
+      } else {
+        print('Error MEssaage: ${response.body}');
+        //showErrorSnackBar(context, json.decode(response.body));
+      }
+    } catch (e) {
+      print('Error accepting friend request: $e');
+    }
+  }
 
   // void showSuccessSnackBar(BuildContext context, String message) {
   //   ScaffoldMessenger.of(context).showSnackBar(SnackBar(

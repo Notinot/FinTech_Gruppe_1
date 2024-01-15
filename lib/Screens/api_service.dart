@@ -22,7 +22,7 @@ class ApiService {
       throw Exception('Token not found');
     }
 
-    print('FetchUserProfile() called');
+    //print('FetchUserProfile() called');
     final response = await http.get(
       Uri.parse('${ApiService.serverUrl}/user/profile'),
       headers: {

@@ -10,6 +10,7 @@ import '../Money/TransactionHistoryScreen.dart';
 import '../api_service.dart';
 
 /* To-do:
+Users nur anzeigen, adden usw wenn ACTIVE true
   -when a pending friend is pressed - send moneyScreen is opened
     -> change that to InfoScreen?
 
@@ -184,7 +185,7 @@ class Friends extends StatelessWidget {
         await http.get(Uri.parse('${ApiService.serverUrl}/friends/$user_id'));
 
     Map<String, dynamic> data = jsonDecode(response.body);
-
+    //debugPrint(data['friends'].runtimeType.toString());
     for (var user in data['friends']) {
       final friendTemp = Friend(
           userID: user['friend_user_id'],
@@ -803,6 +804,7 @@ class FriendInfoScreen extends StatelessWidget {
 // Search Bar -----------------------------------
 
 class FriendsSearchBar extends SearchDelegate {
+  List<String> tempTest = [];
   //List of Friends here?
 
   //Leading Icon (back arrow)
@@ -828,25 +830,78 @@ class FriendsSearchBar extends SearchDelegate {
       ];
 
   @override
-  Widget buildResults(BuildContext context) => Container();
+  Widget buildResults(BuildContext context) => Center(child: Text(query));
   //UserInfo mit Add Button?
 
   @override //less than 3 or 4 characters show friends - more show suggested
   Widget buildSuggestions(BuildContext context) {
-    List<String> tempSuggestions = ['Thomas', 'Tim', 'Tom'];
+    // List<String> tempSuggestions = [
+    //   'Thomas',
+    //   'Tim',
+    //   'Tom'
+    // ]; //first just get all users
+    tempTest = [];
 
-    return ListView.builder(
-      itemCount: tempSuggestions.length,
-      itemBuilder: (context, index) {
-        return ListTile(
-          title: Text(tempSuggestions[index]),
-          onTap: () {
-            query = tempSuggestions[index];
-            showResults(context); //after suggestion was selected - show results
-          },
-        );
+    // if (query.length > 3) {
+    //   //hier ne Methode die n String an api sendet und api antwortet mit usern
+    //   getSuggestions(query);
+    // }
+    //checks whether query is contained somewhere
+    // List<String> queryMatches = [];
+    // for (var name in tempSuggestions) {
+    //   if (name.toLowerCase().contains(query.toLowerCase())) {
+    //     queryMatches.add(name);
+    //   }
+    // }
+    if (query.length >= 4) {
+      return FutureBuilder(
+        future: getSuggestions(query),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            return ListView.builder(
+              itemCount: tempTest.length,
+              itemBuilder: (context, index) {
+                return ListTile(
+                  title: Text(tempTest[index]),
+                  onTap: () {
+                    query = tempTest[index];
+                    //hier result noch aufrufen I guess
+                  },
+                );
+              },
+            );
+          } else {
+            return Container();
+          }
+        },
+      );
+    } else {
+      return Text('No friendo foundo');
+    }
+  }
+
+  Future getSuggestions(String query) async {
+    //read jwt
+    Map<String, dynamic> user = await ApiService.fetchUserProfile();
+    int user_id = user[
+        'user_id']; //sehr stupid weil nun jedes mal userId neu angefragt wird
+    Map<String, dynamic> requestBody = {'query': query}; //!
+
+    var response = await http.post(
+      Uri.parse('${ApiService.serverUrl}/users/$user_id'),
+      body: json.encode(requestBody),
+      headers: {
+        'Content-Type': 'application/json',
       },
     );
+
+    Map<String, dynamic> data = jsonDecode(response.body);
+    debugPrint('data: ${data['matchingUsers']}');
+    //tempTest = [];
+    for (user in data['matchingUsers']) {
+      tempTest.add(user['username']);
+    }
+    debugPrint('tempTest: $tempTest');
   }
 
   // @override
@@ -866,34 +921,33 @@ class FriendsSearchBar extends SearchDelegate {
   //   );
   // }
 
-  // void handleAddFriend({required String username}) async {
-  //   try {
-  //     //reads JWT again (need to be updated)
-  //     Map<String, dynamic> user = await ApiService.fetchUserProfile();
-  //     int user_id = user['user_id'];
+  void handleAddFriend({required String username}) async {
+    try {
+      //reads JWT again (need to be updated)
+      Map<String, dynamic> user = await ApiService.fetchUserProfile();
+      int user_id = user['user_id'];
 
-  //     Map<String, dynamic> requestBody = {
-  //       'friendUsername': username,
-  //     };
-  //     final response = await http.post(
-  //       Uri.parse('${ApiService.serverUrl}/friends/add/$user_id'),
-  //       body: json.encode(requestBody),
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //       },
-  //     );
-  //     if (response.statusCode == 200) {
-  //       //hier lieber true/false mit message return?
-  //       showSuccessSnackBar(
-  //           context, 'Friend request sended to User: $username');
-  //     } else {
-  //       print('Error MEssaage: ${response.body}');
-  //       showErrorSnackBar(context, json.decode(response.body));
-  //     }
-  //   } catch (e) {
-  //     print('Error accepting friend request: $e');
-  //   }
-  // }
+      Map<String, dynamic> requestBody = {
+        'friendUsername': username,
+      };
+      final response = await http.post(
+        Uri.parse('${ApiService.serverUrl}/friends/add/$user_id'),
+        body: json.encode(requestBody),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      );
+      if (response.statusCode == 200) {
+        //hier lieber true/false mit message return?
+        // showSuccessSnackBar context, 'Friend request sended to User: $username');
+      } else {
+        print('Error MEssaage: ${response.body}');
+        //showErrorSnackBar(context, json.decode(response.body));
+      }
+    } catch (e) {
+      print('Error accepting friend request: $e');
+    }
+  }
 
   // void showSuccessSnackBar(BuildContext context, String message) {
   //   ScaffoldMessenger.of(context).showSnackBar(SnackBar(

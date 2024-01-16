@@ -897,7 +897,7 @@ class FriendsSearchBar extends SearchDelegate {
 
     Map<String, dynamic> data = jsonDecode(response.body);
     debugPrint('data: ${data['matchingUsers']}');
-    //tempTest = [];
+    tempTest = [];
     for (user in data['matchingUsers']) {
       tempTest.add(user['username']);
     }

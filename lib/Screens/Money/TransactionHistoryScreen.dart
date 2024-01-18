@@ -29,6 +29,23 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
   // Future to hold a list of transactions
   late Future<List<Transaction>> transactionsFuture;
   late search_bar.SearchBar searchBar;
+  String currentSortOrder = 'Date (↓)'; // Default sort order
+  List<String> sortOptions = [
+    'Date (↑)',
+    'Date (↓)',
+    'Amount (↑)',
+    'Amount (↓)',
+    'User (A-Z)',
+    'User (Z-A)',
+    'Requests',
+    'Payments',
+    'Deposits',
+  ];
+  List<String> sortOptions2 = [
+    'Requests',
+    'Payments',
+    'Deposits',
+  ];
 
   List<Transaction> allTransactions = [];
 
@@ -47,6 +64,17 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
       buildDefaultAppBar: buildAppBar,
       hintText: "Search",
     );
+  }
+
+  // Function to sort transactions
+  void sortTransactions(String sortOrder) {
+    if (sortOrder == 'Date (↑)') {
+      allTransactions.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    } else {
+      allTransactions.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    }
+    // Update the Future to reflect the new sorted list
+    transactionsFuture = Future.value(allTransactions);
   }
 
   // Function to fetch transactions from the API
@@ -97,8 +125,34 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
   // Function to build the AppBar
   AppBar buildAppBar(BuildContext context) {
     return AppBar(
-      title: Text('Transaction History'),
-      actions: [searchBar.getSearchAction(context)],
+      title: Text('History'),
+      actions: [
+        DropdownButton<String>(
+          value: currentSortOrder,
+          icon: Icon(Icons.sort),
+          onChanged: (String? newValue) {
+            if (newValue != null) {
+              setState(() {
+                currentSortOrder = newValue;
+                sortTransactions(currentSortOrder);
+              });
+            }
+          },
+          items: sortOptions.map<DropdownMenuItem<String>>((String value) {
+            return DropdownMenuItem<String>(
+              value: value,
+              child: Text(value),
+              onTap: () {
+                setState(() {
+                  currentSortOrder = value;
+                  sortTransactions(currentSortOrder);
+                });
+              },
+            );
+          }).toList(),
+        ),
+        searchBar.getSearchAction(context),
+      ],
     );
   }
 
@@ -183,39 +237,6 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
         },
         child: const Icon(Icons.refresh),
       ),
-      //navigation bar at the bottom of the screen to navigate to the send money and request money screens respectively
-      /* bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.monetization_on),
-            label: 'Send Money',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.request_page),
-            label: 'Request Money',
-          ),
-        ],
-        currentIndex: 0,
-        selectedItemColor: Colors.blue,
-        onTap: (index) {
-          if (index == 0) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => SendMoneyScreen(),
-              ),
-            );
-          } else {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => RequestMoneyScreen(),
-              ),
-            );
-          }
-        },
-      ),
-      */
       body: FutureBuilder<Map<String, dynamic>>(
         // Fetch user profile data
         future: ApiService.fetchUserProfile(),

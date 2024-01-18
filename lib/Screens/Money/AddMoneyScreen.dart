@@ -114,6 +114,13 @@ class _AddMoneyScreenState extends State<AddMoneyScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Add Money'),
+        leading: IconButton(
+            icon: Icon(Icons.arrow_back),
+            onPressed: () {
+              // Custom behavior when the back button is pressed
+              // For example, you can navigate to a different screen
+              ApiService.navigateWithAnimation(context, DashboardScreen());
+            }),
       ),
       body: Center(
         child: Padding(

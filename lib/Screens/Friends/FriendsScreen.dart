@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:flutter_application_1/Screens/Dashboard/dashBoardScreen.dart';
 import 'package:flutter_application_1/Screens/Events/CreateEventScreen.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
@@ -55,6 +56,13 @@ class _FriendsScreenState extends State<FriendsScreen> {
         titleSpacing: 15.0,
         // title: FriendsSearchBar(),
         title: Text('Friends'),
+        leading: IconButton(
+            icon: Icon(Icons.arrow_back),
+            onPressed: () {
+              // Custom behavior when the back button is pressed
+              // For example, you can navigate to a different screen
+              ApiService.navigateWithAnimation(context, DashboardScreen());
+            }),
         actions: [
           IconButton(
               onPressed: () {

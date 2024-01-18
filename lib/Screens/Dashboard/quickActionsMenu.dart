@@ -5,6 +5,7 @@ import 'package:flutter_application_1/Screens/Events/CreateEventScreen.dart';
 import 'package:flutter_application_1/Screens/Login%20&%20Register/LoginScreen.dart';
 import 'package:flutter_application_1/Screens/Money/RequestMoneyScreen.dart';
 import 'package:flutter_application_1/Screens/Money/SendMoneyScreen.dart';
+import 'package:flutter_application_1/Screens/api_service.dart';
 
 class QuickMenu extends StatelessWidget {
   final Map<String, dynamic> user;
@@ -28,12 +29,13 @@ class QuickMenu extends StatelessWidget {
           ),
 
           onPressed: () {
-            Navigator.push(
+            ApiService.navigateWithAnimation(context, SendMoneyScreen());
+            /*Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) => SendMoneyScreen(),
               ),
-            );
+            );*/
           },
         ),
         FloatingActionButton.large(
@@ -47,12 +49,13 @@ class QuickMenu extends StatelessWidget {
             ],
           ),
           onPressed: () {
-            Navigator.push(
+            ApiService.navigateWithAnimation(context, RequestMoneyScreen());
+            /*Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) => RequestMoneyScreen(),
               ),
-            );
+            );*/
           },
         ),
         FloatingActionButton.large(
@@ -66,12 +69,13 @@ class QuickMenu extends StatelessWidget {
             ],
           ),
           onPressed: () {
-            Navigator.push(
+            ApiService.navigateWithAnimation(context, CreateEventScreen());
+            /*Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) => CreateEventScreen(),
               ),
-            );
+            );*/
           },
         ),
       ],

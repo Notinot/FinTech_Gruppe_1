@@ -27,10 +27,10 @@ app.use(cors({
 const db = mysql.createPool({
 
   // connectionLimit: 5, //clevercloud only allows 5 connections at the same time
-  // host: 'btxppofwkgo3xl10tfwy-mysql.services.clever-cloud.com',
-  // user: 'ud86jc8auniwbfsm',
-  // password: 'ER0nIAbQy5qyAeSd4ZCV',
-  // database: 'btxppofwkgo3xl10tfwy',
+   /*host: 'btxppofwkgo3xl10tfwy-mysql.services.clever-cloud.com',
+   user: 'ud86jc8auniwbfsm',
+   password: 'ER0nIAbQy5qyAeSd4ZCV',
+   database: 'btxppofwkgo3xl10tfwy',*/
   
   host: '87.144.250.22',
    user: 'payfriendz',

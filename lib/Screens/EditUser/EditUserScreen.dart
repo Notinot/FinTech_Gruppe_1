@@ -538,14 +538,15 @@ class _EditUserState extends State<EditUser> {
           return Scaffold(
             appBar: AppBar(
               title: const Text('Edit Profile'),
-              automaticallyImplyLeading: false,
               leading: IconButton(
-                icon: Icon(Icons.arrow_back),
-                onPressed: () {
-                  Navigator.of(context).pushReplacement(MaterialPageRoute(
-                      builder: (context) => const DashboardScreen()));
-                },
-              ),
+                  icon: Icon(Icons.arrow_back),
+                  onPressed: () {
+                    // Custom behavior when the back button is pressed
+                    // For example, you can navigate to a different screen
+                    ApiService.navigateWithAnimation(
+                        context, DashboardScreen());
+                  }),
+              automaticallyImplyLeading: false,
             ),
             body: SingleChildScrollView(
               child: Padding(

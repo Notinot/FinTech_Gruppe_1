@@ -1,11 +1,12 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
 class ApiService {
   static const String serverUrl = 'http://10.0.2.2:3000';
-  // static const String serverUrl = 'http://localhost:3000';
+  //static const String serverUrl = 'http://localhost:3000';
 
   //static const serverUrl = '192.168.56.1:3000';
   //
@@ -497,5 +498,39 @@ class ApiService {
       print('cancelEvent function: Error canceling Event');
       return 0;
     }
+  }
+
+  static void navigateWithAnimation(
+      BuildContext context, Widget destinationScreen) {
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            destinationScreen,
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          const begin = 0.0;
+          const end = 1.0;
+          const curve = Curves.easeInOutQuart;
+
+          var slideTween = Tween(begin: Offset(0.0, 1.0), end: Offset.zero)
+              .chain(CurveTween(curve: curve));
+
+          var fadeTween = Tween(begin: begin, end: end).chain(
+            CurveTween(curve: curve),
+          );
+
+          var slideAnimation = animation.drive(slideTween);
+          var fadeAnimation = animation.drive(fadeTween);
+
+          return SlideTransition(
+            position: slideAnimation,
+            child: FadeTransition(
+              opacity: fadeAnimation,
+              child: child,
+            ),
+          );
+        },
+      ),
+    );
   }
 }

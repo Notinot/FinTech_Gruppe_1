@@ -36,6 +36,13 @@ class _RequestMoneyScreenState extends State<RequestMoneyScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Request Money'),
+        leading: IconButton(
+            icon: Icon(Icons.arrow_back),
+            onPressed: () {
+              // Custom behavior when the back button is pressed
+              // For example, you can navigate to a different screen
+              ApiService.navigateWithAnimation(context, DashboardScreen());
+            }),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

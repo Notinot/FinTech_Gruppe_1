@@ -9,6 +9,7 @@ import 'package:flutter_application_1/Screens/Friends/FriendsScreen.dart';
 import 'package:flutter_application_1/Screens/Money/AddMoneyScreen.dart';
 
 import 'package:flutter_application_1/Screens/Money/TransactionHistoryScreen.dart';
+import 'package:flutter_application_1/Screens/api_service.dart';
 import 'package:flutter_application_1/assets/color_schemes.g.dart';
 import 'package:flutter_application_1/Screens/Login%20&%20Register/LoginScreen.dart';
 
@@ -50,11 +51,12 @@ class AppDrawer extends StatelessWidget {
             leading: const Icon(Icons.dashboard),
             title: const Text('Dashboard'),
             onTap: () {
-              Navigator.push(
+              ApiService.navigateWithAnimation(context, DashboardScreen());
+              /*Navigator.push(
                 context,
                 MaterialPageRoute(
                     builder: (context) => const DashboardScreen()),
-              );
+              );*/
             },
           ),
 
@@ -62,11 +64,13 @@ class AppDrawer extends StatelessWidget {
             leading: const Icon(Icons.monetization_on),
             title: const Text('Transactions'),
             onTap: () {
-              Navigator.push(
+              ApiService.navigateWithAnimation(
+                  context, TransactionHistoryScreen());
+              /*Navigator.push(
                 context,
                 MaterialPageRoute(
                     builder: (context) => const TransactionHistoryScreen()),
-              );
+              );*/
             },
           ),
           ListTile(
@@ -74,30 +78,33 @@ class AppDrawer extends StatelessWidget {
             title: const Text('Events'),
             onTap: () {
               // Navigate to the events section
-              Navigator.push(
+              ApiService.navigateWithAnimation(context, EventScreen());
+              /*Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => EventScreen()),
-              );
+              );*/
             },
           ),
           ListTile(
             leading: const Icon(Icons.groups_rounded),
             title: const Text('Friends'),
             onTap: () {
-              Navigator.push(
+              ApiService.navigateWithAnimation(context, FriendsScreen());
+              /*Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => FriendsScreen()),
-              );
+              );*/
             },
           ),
           ListTile(
             leading: const Icon(Icons.person),
             title: const Text('Profile information'),
             onTap: () {
-              Navigator.push(
+              ApiService.navigateWithAnimation(context, EditUser());
+              /*Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => EditUser()),
-              );
+              );*/
             },
           ),
 
@@ -107,10 +114,11 @@ class AppDrawer extends StatelessWidget {
             title: const Text('Add Money'),
             onTap: () {
               // Navigate to the events section
-              Navigator.push(
+              ApiService.navigateWithAnimation(context, AddMoneyScreen());
+              /*Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => AddMoneyScreen()),
-              );
+              );*/
             },
           ),
           //ListTile to change theme from light to dark and vice versa

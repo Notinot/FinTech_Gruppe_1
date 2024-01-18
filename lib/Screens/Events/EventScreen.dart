@@ -215,6 +215,13 @@ class _EventScreenState extends State<EventScreen> {
   AppBar buildAppBar(BuildContext context) {
     return AppBar(
       title: Text('Events'),
+      leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            // Custom behavior when the back button is pressed
+            // For example, you can navigate to a different screen
+            ApiService.navigateWithAnimation(context, DashboardScreen());
+          }),
       actions: [searchBar.getSearchAction(context)],
     );
   }

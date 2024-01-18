@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/Screens/EditUser/EditUserScreen.dart';
+import 'package:flutter_application_1/Screens/api_service.dart';
 
 class UserProfileSection extends StatelessWidget {
   final Map<String, dynamic> user;
@@ -12,6 +14,12 @@ class UserProfileSection extends StatelessWidget {
   Widget build(BuildContext context) {
     Image image;
 
+    void handleCircleAvatarTap() {
+      // Handle the button click event here
+      ApiService.navigateWithAnimation(context, EditUser());
+      // Add your navigation or other logic as needed
+    }
+
     // Use a fallback image if the image data is not available in the JSON data
     image = Image.asset(
       "lib/assets/profile_image.png",
@@ -21,16 +29,19 @@ class UserProfileSection extends StatelessWidget {
 
     return Column(
       children: <Widget>[
-        CircleAvatar(
-          backgroundImage: user['picture'] != null &&
-                  user['picture'] is Map<String, dynamic> &&
-                  user['picture']['data'] != null
-              ? MemoryImage(
-                  Uint8List.fromList(user['picture']['data'].cast<int>()))
-              : image.image,
-          radius: 50,
-          //   backgroundColor: Colors.grey, // Fallback background color
-          //   backgroundColor: Theme.of(context).primaryColor,
+        GestureDetector(
+          onTap: handleCircleAvatarTap,
+          child: CircleAvatar(
+            backgroundImage: user['picture'] != null &&
+                    user['picture'] is Map<String, dynamic> &&
+                    user['picture']['data'] != null
+                ? MemoryImage(
+                    Uint8List.fromList(user['picture']['data'].cast<int>()))
+                : image.image,
+            radius: 50,
+            //   backgroundColor: Colors.grey, // Fallback background color
+            //   backgroundColor: Theme.of(context).primaryColor,
+          ),
         ),
         const SizedBox(height: 16),
         Text(

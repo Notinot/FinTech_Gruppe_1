@@ -61,7 +61,10 @@ class _FriendsScreenState extends State<FriendsScreen> {
             onPressed: () {
               // Custom behavior when the back button is pressed
               // For example, you can navigate to a different screen
-              ApiService.navigateWithAnimation(context, DashboardScreen());
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => DashboardScreen()),
+              );
             }),
         actions: [
           IconButton(

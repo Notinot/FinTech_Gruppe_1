@@ -797,6 +797,7 @@ class UserInfoScreen extends StatelessWidget {
               children: [
                 Text("Actions: "),
 
+                //ADD FrIned button als statefull und denn dann ändern wenn man den gedrückt hat???
                 friendRequestSend
                     ? OutlinedButton(onPressed: null, child: Text('Requested'))
                     : AddFriendButton(userID: userID, userName: userName),

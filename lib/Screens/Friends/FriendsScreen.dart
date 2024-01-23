@@ -10,6 +10,8 @@ import '../api_service.dart';
 
 /* To-do:
 
+bei no Friends - so wie bei no transactions 
+
 nach friend suchen und onTap kackt ab
 
 SuggestedUser sortieren nach friends
@@ -412,7 +414,7 @@ class FriendItem extends StatelessWidget {
               )
             ],
           )
-        //build item without accept and decline buttons BUT with Icon Button
+        //build item WITHOUT accept/decline buttons BUT with Icon Button
         : IconButton(
             onPressed: () {
               requestOrSendMoneyDialog(context);
@@ -770,7 +772,7 @@ class UserInfoScreen extends StatelessWidget {
     //debugPrint('profile picture: ${friend.profileImage?.length}');
     return Scaffold(
       appBar: AppBar(
-        title: Text('Friend Details'),
+        title: Text('User Details'),
       ),
       body: SizedBox(
         width: double.infinity,

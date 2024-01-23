@@ -1134,7 +1134,6 @@ app.post('/event-service', async (req, res) => {
                 events[i].event_id
         ]);
 
-        console.log(updateInformation);
     }
 
 

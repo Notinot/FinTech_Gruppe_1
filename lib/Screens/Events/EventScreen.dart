@@ -963,21 +963,6 @@ class EventInfoScreen extends StatelessWidget {
               child: const Text('Back'),
             ),
             ElevatedButton(
-              child: Text('Edit'),
-              onPressed: () {
-                Navigator.pop(
-                    context); //closes dialog so pressing return wont open it again
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => EditEventScreen(
-                      event: event,
-                    ),
-                  ),
-                );
-              },
-            ),
-            ElevatedButton(
               child: Text('Cancel'),
               onPressed: () {
                 Navigator.pop(
@@ -1030,6 +1015,21 @@ class EventInfoScreen extends StatelessWidget {
                         ],
                       );
                     });
+              },
+            ),
+            ElevatedButton(
+              child: Text('Edit'),
+              onPressed: () {
+                Navigator.pop(
+                    context); //closes dialog so pressing return wont open it again
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => EditEventScreen(
+                      event: event,
+                    ),
+                  ),
+                );
               },
             ),
           ],

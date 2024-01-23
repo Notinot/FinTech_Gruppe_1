@@ -1,16 +1,17 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter_application_1/Screens/Dashboard/dashBoardScreen.dart';
-import 'package:flutter_application_1/Screens/Events/CreateEventScreen.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Screens/Money/RequestMoneyScreen.dart';
 import 'package:flutter_application_1/Screens/Money/SendMoneyScreen.dart';
-import 'package:intl/intl.dart';
-import '../Money/TransactionHistoryScreen.dart';
+
 import '../api_service.dart';
 
 /* To-do:
+PendingFriend Screen ohne Friends since und DeleteButton
+
+
 Users nur anzeigen, adden usw wenn ACTIVE true
   -when a pending friend is pressed - send moneyScreen is opened
     -> change that to InfoScreen?
@@ -20,7 +21,6 @@ Users nur anzeigen, adden usw wenn ACTIVE true
     -Filter Friends as well?
     -dont show blocked users
 
-  -Profile Picture als CircleAvatar oder so? Was bringt das? auf Bild drücken zum vergrößern? 
   -dynamic spacing, width, heigth etc
 
   -Adding Friends
@@ -42,8 +42,6 @@ class FriendsScreen extends StatefulWidget {
 }
 
 class _FriendsScreenState extends State<FriendsScreen> {
-  //anstatt alles neuzuladen gucken ob man einfach aus der ListView eins entfernt
-  //und in die andere ListView hinzufügt
   callback() {
     setState(() {});
   }
@@ -54,19 +52,23 @@ class _FriendsScreenState extends State<FriendsScreen> {
       resizeToAvoidBottomInset: false, //avoids overflow when keyboard is opened
       appBar: AppBar(
         titleSpacing: 15.0,
-        // title: FriendsSearchBar(),
         title: Text('Friends'),
         leading: IconButton(
             icon: Icon(Icons.arrow_back),
             onPressed: () {
               // Custom behavior when the back button is pressed
               // For example, you can navigate to a different screen
-              ApiService.navigateWithAnimation(context, DashboardScreen());
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => DashboardScreen()),
+              );
             }),
         actions: [
           IconButton(
               onPressed: () {
-                showSearch(context: context, delegate: FriendsSearchBar());
+                showSearch(
+                    context: context,
+                    delegate: FriendsSearchBar(callbackFunction: callback));
               },
               icon: Icon(Icons.search)),
           IconButton(
@@ -412,38 +414,41 @@ class FriendItem extends StatelessWidget {
               )
             ],
           )
-        //build item without accept and decline buttons
+        //build item without accept and decline buttons BUT with Icon Button
         : IconButton(
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => FriendInfoScreen(
-                    friend: friend,
-                    callbackFunction: callbackFunction,
-                  ),
-                ),
-              );
+              requestOrSendMoneyDialog(context);
             },
-            icon: Icon(Icons.info));
+            icon: Icon(
+              Icons.attach_money,
+              size: 35,
+            ));
 
     return ListTile(
-      leading: friend.profileImage != null
-          ? ClipOval(
-              child: Image.memory(
-                friend.profileImage!,
-                width: 40,
-                height: 40,
-                fit: BoxFit.cover,
-              ),
-            )
-          : Icon(Icons.person_sharp, size: 40),
+      leading: ShowProfilePicture(
+          image: friend.profileImage,
+          initial: friend.firstName[0] + friend.lastName[0],
+          size: 20),
       title: Text(friend.username),
       subtitle: Text('${friend.firstName} ${friend.lastName}'),
       trailing: trailing,
       onTap: () {
-        //Open Dialog to either Send or Request Money
-        requestOrSendMoneyDialog(context);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => isStillPending
+                ? UserInfoScreen(
+                    userID: friend.userID,
+                    userName: friend.username,
+                    callbackFunction: callbackFunction,
+                    friendRequestSend: false,
+                  )
+                : FriendInfoScreen(
+                    friend: friend,
+                    callbackFunction: callbackFunction,
+                  ),
+          ),
+        );
       },
     );
   }
@@ -531,16 +536,10 @@ class BlockedUserItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: user.profileImage != null
-          ? ClipOval(
-              child: Image.memory(
-                user.profileImage!,
-                width: 40,
-                height: 40,
-                fit: BoxFit.cover,
-              ),
-            )
-          : Icon(Icons.person_sharp, size: 40),
+      leading: ShowProfilePicture(
+          image: user.profileImage,
+          initial: user.firstName[0] + user.lastName[0],
+          size: 20),
       title: Text(user.username),
       subtitle: Text('${user.firstName} ${user.lastName}'),
       trailing: Row(
@@ -615,12 +614,16 @@ class BlockedUserItem extends StatelessWidget {
   }
 }
 
+//Show an info screen of a befriended user (has option to delete them & shows how long user is friends with them)
 class FriendInfoScreen extends StatelessWidget {
   final Friend friend;
   final Function callbackFunction; // not necessary?
 
-  const FriendInfoScreen(
-      {super.key, required this.friend, required this.callbackFunction});
+  const FriendInfoScreen({
+    super.key,
+    required this.friend,
+    required this.callbackFunction,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -634,16 +637,10 @@ class FriendInfoScreen extends StatelessWidget {
         height: double.infinity,
         child: Column(
           children: [
-            friend.profileImage != null
-                ? ClipOval(
-                    child: Image.memory(
-                      friend.profileImage!,
-                      width: 150,
-                      height: 150,
-                      fit: BoxFit.cover,
-                    ),
-                  )
-                : Icon(Icons.person_sharp, size: 150),
+            ShowProfilePicture(
+                image: friend.profileImage,
+                initial: friend.firstName[0] + friend.lastName[0],
+                size: 60),
             SizedBox(height: 20),
             Text(
               friend.username,
@@ -659,6 +656,7 @@ class FriendInfoScreen extends StatelessWidget {
               'Friends since: ${friend.requestTime?.month}-${friend.requestTime?.day}-${friend.requestTime?.year}',
               style: TextStyle(fontSize: 20),
             ),
+
             SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -701,45 +699,9 @@ class FriendInfoScreen extends StatelessWidget {
                       ),
                     );
                   },
-                ), //repetitive code - make a widget out of this?
-                OutlinedButton(
-                  child: Text("Block"),
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: Text('Block'),
-                        content:
-                            Text("Do you want to block ${friend.username}?"),
-                        actions: [
-                          TextButton(
-                            child: Text('Cancel'),
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                            },
-                          ),
-                          ElevatedButton(
-                            child: Text('Block'),
-                            onPressed: () {
-                              blockFriend(friend.userID);
-                              //I mean, dadurch wird das Pop up & der Info Screen geschlossen
-                              //und der Context für navigation ist wieder richtig. Gibt vllt ne bessere Lösung
-                              Navigator.of(context).pop();
-                              Navigator.of(context).pop();
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => FriendsScreen(),
-                                ),
-                              );
-                              //callbackFunction();
-                            },
-                          ),
-                        ],
-                      ),
-                    );
-                  },
                 ),
+                BlockUserButton(
+                    userID: friend.userID, userName: friend.username),
               ],
             ),
             SizedBox(height: 20),
@@ -783,6 +745,131 @@ class FriendInfoScreen extends StatelessWidget {
       print('Error deleting friend: $e');
     }
   }
+}
+
+//testing --------------------------
+class UserInfoScreen extends StatelessWidget {
+  //final Friend user;
+  final int userID;
+  final String userName;
+  final Function callbackFunction; // not necessary?
+  final bool friendRequestSend;
+  //noEntry, requestAlreadySend,
+  //TheySendYouRequest -< nicht anzeigen
+
+  const UserInfoScreen(
+      {super.key,
+      required this.userID,
+      required this.userName,
+      required this.callbackFunction,
+      required this.friendRequestSend});
+
+  @override
+  Widget build(BuildContext context) {
+    //debugPrint('profile picture: ${friend.profileImage?.length}');
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Friend Details'),
+      ),
+      body: SizedBox(
+        width: double.infinity,
+        height: double.infinity,
+        child: Column(
+          children: [
+            //not even show initiales?
+            // ShowProfilePicture(
+            //     image: null, //dont show profile picture of strangers
+            //     initial: user.firstName[0] + user.lastName[0],
+            //     size: 60),
+            SizedBox(height: 20),
+            Text(
+              userName,
+              style: TextStyle(fontSize: 30),
+            ),
+            SizedBox(height: 20),
+            // Text(
+            //   '${user.firstName} ${user.lastName}',
+            //   style: TextStyle(fontSize: 20),
+            // ),
+            // SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text("Actions: "),
+
+                //ADD FrIned button als statefull und denn dann ändern wenn man den gedrückt hat???
+                friendRequestSend
+                    ? OutlinedButton(onPressed: null, child: Text('Requested'))
+                    : AddFriendButton(userID: userID, userName: userName),
+
+                BlockUserButton(userID: userID, userName: userName),
+
+                //hier kommen buttons hin, block zb
+              ],
+            ),
+            SizedBox(height: 20),
+            Text(
+              'Transaction History: ',
+              style: TextStyle(fontSize: 30),
+            ),
+            // Container(
+            //   child: TransactionHistoryScreen(),
+            //   height: 100,
+            //   width: 100,
+            // ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class BlockUserButton extends StatelessWidget {
+  int userID;
+  String userName;
+
+  BlockUserButton({super.key, required this.userID, required this.userName});
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton(
+      child: Text("Block"),
+      onPressed: () {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text('Block'),
+            content: Text("Do you want to block $userName?"),
+            actions: [
+              TextButton(
+                child: Text('Cancel'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+              ElevatedButton(
+                child: Text('Block'),
+                onPressed: () {
+                  blockFriend(userID);
+                  //I mean, dadurch wird das Pop up & der Info Screen geschlossen
+                  //und der Context für navigation ist wieder richtig. Gibt vllt ne bessere Lösung
+                  Navigator.of(context).pop();
+                  Navigator.of(context).pop();
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => FriendsScreen(),
+                    ),
+                  );
+                  //callbackFunction();
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   void blockFriend(int userID) async {
     //insert here DialogShow to Block Friend?
@@ -809,11 +896,21 @@ class FriendInfoScreen extends StatelessWidget {
   }
 }
 
-// Search Bar -----------------------------------
-
+//SearchBar - --
 class FriendsSearchBar extends SearchDelegate {
-  List<String> tempTest = [];
+  final Function callbackFunction;
+  List<dynamic> suggestedUsers = [];
+
+  FriendsSearchBar(
+      {super.searchFieldLabel,
+      super.searchFieldStyle,
+      super.searchFieldDecorationTheme,
+      super.keyboardType,
+      super.textInputAction,
+      required this.callbackFunction}); //testing
+
   //List of Friends here?
+  //dann suggestedFriendItem?
 
   //Leading Icon (back arrow)
   @override
@@ -843,38 +940,91 @@ class FriendsSearchBar extends SearchDelegate {
 
   @override //less than 3 or 4 characters show friends - more show suggested
   Widget buildSuggestions(BuildContext context) {
-    // List<String> tempSuggestions = [
-    //   'Thomas',
-    //   'Tim',
-    //   'Tom'
-    // ]; //first just get all users
-    tempTest = [];
+    suggestedUsers = [];
 
-    // if (query.length > 3) {
-    //   //hier ne Methode die n String an api sendet und api antwortet mit usern
-    //   getSuggestions(query);
-    // }
-    //checks whether query is contained somewhere
-    // List<String> queryMatches = [];
-    // for (var name in tempSuggestions) {
-    //   if (name.toLowerCase().contains(query.toLowerCase())) {
-    //     queryMatches.add(name);
-    //   }
-    // }
     if (query.length >= 4) {
       return FutureBuilder(
         future: getSuggestions(query),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
             return ListView.builder(
-              itemCount: tempTest.length,
+              itemCount: suggestedUsers.length,
               itemBuilder: (context, index) {
-                return ListTile(
-                  title: Text(tempTest[index]),
-                  onTap: () {
-                    query = tempTest[index];
-                    //hier result noch aufrufen I guess
-                  },
+                //hier zwischen
+
+                //FRIEND
+
+                //USER
+                //REQUESTED
+                //unterscheiden
+
+                //I mean, es funktioniert
+                Uint8List? pictureData;
+                if (suggestedUsers[index]['status'] == 'friend') {
+                  pictureData = (suggestedUsers[index]['picture'] != null &&
+                          suggestedUsers[index]['picture']['data'] != null)
+                      ? Uint8List.fromList(
+                          suggestedUsers[index]['picture']['data'].cast<int>())
+                      : null;
+                }
+                debugPrint('suggestedUsers[index]::::::::: ');
+                debugPrint(suggestedUsers[index].toString());
+                return Card(
+                  child: ListTile(
+                    leading: suggestedUsers[index]['status'] == 'friend'
+                        ? ShowProfilePicture(
+                            image: pictureData,
+                            initial:
+                                '${suggestedUsers[index]['first_name'][0]}${suggestedUsers[index]['last_name'][0]}',
+                            size: 20)
+                        : Icon(Icons.person, size: 40),
+                    title: Text(suggestedUsers[index]['username']),
+                    subtitle: suggestedUsers[index]['status'] ==
+                            'friend' //when already friends - show full name
+                        ? Text(
+                            '${suggestedUsers[index]['first_name']} ${suggestedUsers[index]['last_name']}')
+                        : null,
+                    onTap: () {
+                      //hier entweder FriendInfo oder UserInfo (mit add oder mit send)
+
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => suggestedUsers[index]
+                                      ['status'] ==
+                                  'friend'
+                              ? FriendInfoScreen(
+                                  friend: Friend(
+                                      userID: suggestedUsers[index]['user_id'],
+                                      profileImage: suggestedUsers[index]
+                                          ['picture'],
+                                      username: suggestedUsers[index]
+                                          ['username'],
+                                      firstName: suggestedUsers[index]
+                                          ['first_name'],
+                                      lastName: suggestedUsers[index]
+                                          ['last_name'],
+                                      requestTime: DateTime.parse(
+                                              suggestedUsers[index]
+                                                  ['request_time'])
+                                          .toLocal()),
+
+                                  callbackFunction: callbackFunction, //!!,
+                                )
+                              : UserInfoScreen(
+                                  userID: suggestedUsers[index]['user_id'],
+                                  userName: suggestedUsers[index]['username'],
+                                  callbackFunction: callbackFunction, //!!
+                                  friendRequestSend: suggestedUsers[index]
+                                              ['status'] ==
+                                          'requested'
+                                      ? true
+                                      : false,
+                                ),
+                        ),
+                      );
+                    },
+                  ),
                 );
               },
             );
@@ -884,7 +1034,8 @@ class FriendsSearchBar extends SearchDelegate {
         },
       );
     } else {
-      return Text('No friendo foundo');
+      return Text(
+          'Can´t find the user you are looking for? \n\nTake a look at your pending friend requests. \nOr you might have blocked them.');
     }
   }
 
@@ -904,57 +1055,15 @@ class FriendsSearchBar extends SearchDelegate {
     );
 
     Map<String, dynamic> data = jsonDecode(response.body);
-    debugPrint('data: ${data['matchingUsers']}');
-    tempTest = [];
-    for (user in data['matchingUsers']) {
-      tempTest.add(user['username']);
+    debugPrint('dataMatchingUsers: ${data['matchingUsersFinal']}');
+    debugPrint('TYPE: ${data['matchingUsersFinal'].runtimeType}');
+
+    suggestedUsers = [];
+    for (user in data['matchingUsersFinal']) {
+      suggestedUsers.add(user);
     }
-    debugPrint('tempTest: $tempTest');
-  }
 
-  // @override
-  // Widget build(BuildContext context) {
-  //   return TextField(
-  //     decoration: InputDecoration(
-  //       hintText: 'Search...',
-  //       border: InputBorder.none,
-  //     ),
-  //     onChanged: (query) {
-  //       debugPrint('search query $query');
-  //     },
-  //     onSubmitted: (query) {
-  //       debugPrint('submitted: $query');
-  //       handleAddFriend(username: query);
-  //     },
-  //   );
-  // }
-
-  void handleAddFriend({required String username}) async {
-    try {
-      //reads JWT again (need to be updated)
-      Map<String, dynamic> user = await ApiService.fetchUserProfile();
-      int user_id = user['user_id'];
-
-      Map<String, dynamic> requestBody = {
-        'friendUsername': username,
-      };
-      final response = await http.post(
-        Uri.parse('${ApiService.serverUrl}/friends/add/$user_id'),
-        body: json.encode(requestBody),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      );
-      if (response.statusCode == 200) {
-        //hier lieber true/false mit message return?
-        // showSuccessSnackBar context, 'Friend request sended to User: $username');
-      } else {
-        print('Error MEssaage: ${response.body}');
-        //showErrorSnackBar(context, json.decode(response.body));
-      }
-    } catch (e) {
-      print('Error accepting friend request: $e');
-    }
+    debugPrint('suggestedUsers: $suggestedUsers');
   }
 
   // void showSuccessSnackBar(BuildContext context, String message) {
@@ -970,4 +1079,131 @@ class FriendsSearchBar extends SearchDelegate {
   //     backgroundColor: Colors.red,
   //   ));
   // }
+}
+
+class AddFriendButton extends StatelessWidget {
+  int userID;
+  String userName;
+
+  AddFriendButton({super.key, required this.userID, required this.userName});
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      child: Text("Add"),
+      onPressed: () {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text('Add'),
+            content: Text("Do you want to add $userName?"),
+            actions: [
+              TextButton(
+                child: Text('Cancel'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+              ElevatedButton(
+                child: Text('Add'),
+                onPressed: () {
+                  addFriend(username: userName, context: context);
+                  Navigator.of(context).pop();
+                  //callbackFunction();
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+void addFriend(
+    {required String username, required BuildContext context}) async {
+  try {
+    //reads JWT again (need to be updated)
+    Map<String, dynamic> user = await ApiService.fetchUserProfile();
+    int user_id = user['user_id'];
+
+    Map<String, dynamic> requestBody = {
+      'friendUsername': username,
+    };
+    final response = await http.post(
+      Uri.parse('${ApiService.serverUrl}/friends/add/$user_id'),
+      body: json.encode(requestBody),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    );
+    if (response.statusCode == 200) {
+      debugPrint('Added friend successful');
+      //hier lieber true/false mit message return?
+      showSuccessSnackBarr(context, 'Friend request sended to User: $username');
+    } else {
+      print('Error MEssaage: ${response.body}');
+      showErrorSnackBarr(context, json.decode(response.body));
+    }
+  } catch (e) {
+    print('Error accepting friend request: $e');
+  }
+}
+
+void showSuccessSnackBarr(BuildContext context, String message) {
+  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+    content: Text(message),
+    backgroundColor: Colors.green,
+  ));
+}
+
+void showErrorSnackBarr(BuildContext context, String message) {
+  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+    content: Text(message),
+    backgroundColor: Colors.red,
+  ));
+}
+
+class ShowProfilePicture extends StatelessWidget {
+  final Uint8List? image;
+  final String initial;
+  final double size;
+
+  const ShowProfilePicture(
+      {super.key,
+      required this.image,
+      required this.initial,
+      required this.size});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => image != null
+          ? showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                // title: Text(
+                //   friend.username,
+                //   style: TextStyle(fontSize: 20),
+                // ),
+                content: Image.memory(
+                  image!,
+                  fit: BoxFit.contain,
+                ),
+              ),
+            )
+          : null,
+      child: CircleAvatar(
+        radius: size,
+        backgroundImage: image != null ? Image.memory(image!).image : null,
+        backgroundColor: Colors.grey,
+        child: image == null
+            ? Text(
+                '$initial',
+                style: TextStyle(fontSize: size),
+              )
+            : null,
+      ),
+    );
+  }
 }

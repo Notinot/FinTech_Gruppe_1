@@ -51,12 +51,11 @@ class AppDrawer extends StatelessWidget {
             leading: const Icon(Icons.dashboard),
             title: const Text('Dashboard'),
             onTap: () {
-              ApiService.navigateWithAnimation(context, DashboardScreen());
-              /*Navigator.push(
+              Navigator.push(
                 context,
                 MaterialPageRoute(
                     builder: (context) => const DashboardScreen()),
-              );*/
+              );
             },
           ),
 
@@ -64,13 +63,11 @@ class AppDrawer extends StatelessWidget {
             leading: const Icon(Icons.monetization_on),
             title: const Text('Transactions'),
             onTap: () {
-              ApiService.navigateWithAnimation(
-                  context, TransactionHistoryScreen());
-              /*Navigator.push(
+              Navigator.push(
                 context,
                 MaterialPageRoute(
                     builder: (context) => const TransactionHistoryScreen()),
-              );*/
+              );
             },
           ),
           ListTile(
@@ -78,33 +75,31 @@ class AppDrawer extends StatelessWidget {
             title: const Text('Events'),
             onTap: () {
               // Navigate to the events section
-              ApiService.navigateWithAnimation(context, EventScreen());
-              /*Navigator.push(
+
+              Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => EventScreen()),
-              );*/
+              );
             },
           ),
           ListTile(
             leading: const Icon(Icons.groups_rounded),
             title: const Text('Friends'),
             onTap: () {
-              ApiService.navigateWithAnimation(context, FriendsScreen());
-              /*Navigator.push(
+              Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => FriendsScreen()),
-              );*/
+              );
             },
           ),
           ListTile(
             leading: const Icon(Icons.person),
             title: const Text('Profile information'),
             onTap: () {
-              ApiService.navigateWithAnimation(context, EditUser());
-              /*Navigator.push(
+              Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => EditUser()),
-              );*/
+              );
             },
           ),
 
@@ -115,10 +110,10 @@ class AppDrawer extends StatelessWidget {
             onTap: () {
               // Navigate to the events section
               ApiService.navigateWithAnimation(context, AddMoneyScreen());
-              /*Navigator.push(
+              Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => AddMoneyScreen()),
-              );*/
+              );
             },
           ),
           //ListTile to change theme from light to dark and vice versa

@@ -9,19 +9,20 @@ import 'package:flutter_application_1/Screens/Money/SendMoneyScreen.dart';
 import '../api_service.dart';
 
 /* To-do:
-PendingFriend Screen ohne Friends since und DeleteButton
 
+nach friend suchen und onTap kackt ab
+
+SuggestedUser sortieren nach friends
 
 Users nur anzeigen, adden usw wenn ACTIVE true
-  -when a pending friend is pressed - send moneyScreen is opened
-    -> change that to InfoScreen?
 
-  -searchBar
-    -show recommendation after typing 3-4 characters in
-    -Filter Friends as well?
-    -dont show blocked users
+pending friend hat noch Add Button in FriendInfo (wenn man drauf drückt)
+
+pendingFriends iwie anzeigen wenn mehr als 3 da seind (Icon mit arrow down, number etc)
+
 
   -dynamic spacing, width, heigth etc
+   MediaQuery.of(context).size.width *  0.07
 
   -Adding Friends
     -only when not declined? cooldown?
@@ -30,6 +31,7 @@ Users nur anzeigen, adden usw wenn ACTIVE true
     -show transaction history of Friend and yourself
 
   - Decide whether cancel/decline Button should be on the left or the right
+  -Same Design of Accept /Decline etc
   -Correct use of jwt everywhere
   -Check for correct error handling everywhere    
 */
@@ -157,13 +159,11 @@ class PendingFriends extends StatelessWidget {
                         shrinkWrap: true, //WICHTIG,
                         itemCount: pendingFriends.length,
                         itemBuilder: (context, index) {
-                          //debugPrint('pendingFriendslength: ${pendingFriends.length}');
-                          return Card(
-                              child: FriendItem(
+                          return FriendItem(
                             callbackFunction: callbackFunction,
                             isStillPending: true,
                             friend: pendingFriends[index],
-                          ));
+                          );
                         },
                       ),
                     )
@@ -230,12 +230,10 @@ class Friends extends StatelessWidget {
                     shrinkWrap: true,
                     itemCount: friends.length,
                     itemBuilder: (context, index) {
-                      return Card(
-                        child: FriendItem(
-                            callbackFunction: callbackFunction,
-                            friend: friends[index],
-                            isStillPending: false),
-                      );
+                      return FriendItem(
+                          callbackFunction: callbackFunction,
+                          friend: friends[index],
+                          isStillPending: false);
                     },
                   ),
                 )
@@ -424,32 +422,34 @@ class FriendItem extends StatelessWidget {
               size: 35,
             ));
 
-    return ListTile(
-      leading: ShowProfilePicture(
-          image: friend.profileImage,
-          initial: friend.firstName[0] + friend.lastName[0],
-          size: 20),
-      title: Text(friend.username),
-      subtitle: Text('${friend.firstName} ${friend.lastName}'),
-      trailing: trailing,
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => isStillPending
-                ? UserInfoScreen(
-                    userID: friend.userID,
-                    userName: friend.username,
-                    callbackFunction: callbackFunction,
-                    friendRequestSend: false,
-                  )
-                : FriendInfoScreen(
-                    friend: friend,
-                    callbackFunction: callbackFunction,
-                  ),
-          ),
-        );
-      },
+    return Card(
+      child: ListTile(
+        leading: ShowProfilePicture(
+            image: friend.profileImage,
+            initial: friend.firstName[0] + friend.lastName[0],
+            size: 25),
+        title: Text(friend.username),
+        subtitle: Text('${friend.firstName} ${friend.lastName}'),
+        trailing: trailing,
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => isStillPending
+                  ? UserInfoScreen(
+                      userID: friend.userID,
+                      userName: friend.username,
+                      callbackFunction: callbackFunction,
+                      friendRequestSend: false,
+                    )
+                  : FriendInfoScreen(
+                      friend: friend,
+                      callbackFunction: callbackFunction,
+                    ),
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -536,12 +536,13 @@ class BlockedUserItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: ShowProfilePicture(
-          image: user.profileImage,
-          initial: user.firstName[0] + user.lastName[0],
-          size: 20),
+      leading: Icon(Icons.person, size: 40),
+      // ShowProfilePicture(
+      //     image: user.profileImage,
+      //     initial: user.firstName[0] + user.lastName[0],
+      //     size: 20),
       title: Text(user.username),
-      subtitle: Text('${user.firstName} ${user.lastName}'),
+      //subtitle: Text('${user.firstName} ${user.lastName}'),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -798,9 +799,11 @@ class UserInfoScreen extends StatelessWidget {
                 Text("Actions: "),
 
                 //ADD FrIned button als statefull und denn dann ändern wenn man den gedrückt hat???
-                friendRequestSend
-                    ? OutlinedButton(onPressed: null, child: Text('Requested'))
-                    : AddFriendButton(userID: userID, userName: userName),
+
+                AddFriendButton(
+                    userID: userID,
+                    userName: userName,
+                    friendRequestSend: friendRequestSend),
 
                 BlockUserButton(userID: userID, userName: userName),
 
@@ -950,14 +953,6 @@ class FriendsSearchBar extends SearchDelegate {
             return ListView.builder(
               itemCount: suggestedUsers.length,
               itemBuilder: (context, index) {
-                //hier zwischen
-
-                //FRIEND
-
-                //USER
-                //REQUESTED
-                //unterscheiden
-
                 //I mean, es funktioniert
                 Uint8List? pictureData;
                 if (suggestedUsers[index]['status'] == 'friend') {
@@ -967,7 +962,6 @@ class FriendsSearchBar extends SearchDelegate {
                           suggestedUsers[index]['picture']['data'].cast<int>())
                       : null;
                 }
-                debugPrint('suggestedUsers[index]::::::::: ');
                 debugPrint(suggestedUsers[index].toString());
                 return Card(
                   child: ListTile(
@@ -1081,42 +1075,39 @@ class FriendsSearchBar extends SearchDelegate {
   // }
 }
 
-class AddFriendButton extends StatelessWidget {
+class AddFriendButton extends StatefulWidget {
   int userID;
   String userName;
 
-  AddFriendButton({super.key, required this.userID, required this.userName});
+  bool friendRequestSend;
+
+  AddFriendButton(
+      {super.key,
+      required this.userID,
+      required this.userName,
+      required this.friendRequestSend});
 
   @override
+  State<AddFriendButton> createState() => _AddFriendButtonState();
+}
+
+class _AddFriendButtonState extends State<AddFriendButton> {
+  @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
-      child: Text("Add"),
-      onPressed: () {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text('Add'),
-            content: Text("Do you want to add $userName?"),
-            actions: [
-              TextButton(
-                child: Text('Cancel'),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-              ElevatedButton(
-                child: Text('Add'),
-                onPressed: () {
-                  addFriend(username: userName, context: context);
-                  Navigator.of(context).pop();
-                  //callbackFunction();
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
+    return widget.friendRequestSend
+        ? OutlinedButton(onPressed: null, child: Text('Requested'))
+        : ElevatedButton(
+            child: Text("Add"),
+            onPressed: () {
+              addFriend(username: widget.userName, context: context);
+              setState(() {
+                widget.friendRequestSend =
+                    true; //ist das so korrekt mit widget. ?
+              });
+              //Navigator.of(context).pop();
+              //callbackFunction();
+            },
+          );
   }
 }
 

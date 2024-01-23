@@ -27,6 +27,8 @@ class TransactionHistoryScreen extends StatefulWidget {
 
 class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
   // Future to hold a list of transactions
+  List<Transaction> originalTransactions = [];
+
   late Future<List<Transaction>> transactionsFuture;
   late search_bar.SearchBar searchBar;
   String currentSortOrder = 'Date (↓)'; // Default sort order
@@ -35,11 +37,11 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     'Date (↓)',
     'Amount (↑)',
     'Amount (↓)',
-    'User (A-Z)',
-    'User (Z-A)',
-    'Requests',
-    'Payments',
-    'Deposits',
+    // 'User (A-Z)',
+    // 'User (Z-A)',
+    // 'Requests',
+    // 'Payments',
+    // 'Deposits',
   ];
   List<String> sortOptions2 = [
     'Requests',
@@ -52,7 +54,11 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
   @override
   void initState() {
     super.initState();
-    transactionsFuture = fetchTransactions();
+    transactionsFuture = fetchTransactions().then((transactions) {
+      originalTransactions =
+          List.from(transactions); // Store the original transactions
+      return transactions;
+    });
     searchBar = search_bar.SearchBar(
       showClearButton: true,
       inBar: true,
@@ -62,17 +68,32 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
       onCleared: onCleared,
       onClosed: onClosed,
       buildDefaultAppBar: buildAppBar,
-      hintText: "Search",
+      hintText: "Search by username, message, type",
     );
   }
 
   // Function to sort transactions
   void sortTransactions(String sortOrder) {
+    //reset the transactions list to the original list
+    // allTransactions = List.from(originalTransactions);
+
+    // Sort the transactions based on the sort order
     if (sortOrder == 'Date (↑)') {
       allTransactions.sort((a, b) => a.createdAt.compareTo(b.createdAt));
-    } else {
+    } else if (sortOrder == 'Date (↓)') {
       allTransactions.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    } else if (sortOrder == 'Amount (↑)') {
+      allTransactions.sort((a, b) => a.amount.compareTo(b.amount));
+    } else if (sortOrder == 'Amount (↓)') {
+      allTransactions.sort((a, b) => b.amount.compareTo(a.amount));
+    } else if (sortOrder == 'User (A-Z)') {
+      allTransactions
+          .sort((a, b) => a.senderUsername.compareTo(b.senderUsername));
+    } else if (sortOrder == 'User (Z-A)') {
+      allTransactions
+          .sort((a, b) => b.senderUsername.compareTo(a.senderUsername));
     }
+
     // Update the Future to reflect the new sorted list
     transactionsFuture = Future.value(allTransactions);
   }
@@ -193,10 +214,8 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
   }
 
   Future<void> onChanged(String value) async {
-    // Handle search value changes
-    // Update the UI or filter the list dynamically
     if (value.isNotEmpty) {
-      List<Transaction> filteredTransactions = allTransactions
+      List<Transaction> filteredTransactions = originalTransactions
           .where((transaction) =>
               transaction.transactionType
                   .toLowerCase()
@@ -214,7 +233,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
       });
     } else {
       setState(() {
-        transactionsFuture = fetchTransactions();
+        transactionsFuture = Future.value(List.from(originalTransactions));
       });
     }
   }

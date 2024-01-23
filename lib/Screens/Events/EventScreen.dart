@@ -33,7 +33,20 @@ class _EventScreenState extends State<EventScreen> {
   late Future<List<Event>> eventsFuture;
   late search_bar.SearchBar searchBar;
 
+  String currentSortOrder = 'All events';
+  List<String> sortOptions = [
+    'All events',
+    'My events',
+    'Active',
+    'Inactive'
+  ];
+
+  String currentCategoryOption = 'Category';
+  List<String> possibleCategories = ['Category'];
+
+
   List<Event> events = [];
+
   @override
   void initState() {
     super.initState();
@@ -50,17 +63,6 @@ class _EventScreenState extends State<EventScreen> {
       hintText: "Search",
     );
   }
-
-  final List<String> possibleFilters = [
-    'All events',
-    'My events',
-    'Active',
-    'Inactive'
-  ];
-  String eventFilter = 'All events';
-
-  final List<String> possibleCategories = [];
-  String categoryFilter = 'Category';
 
   // Fetch events from the backend
   Future<List<Event>> fetchEvents() async {
@@ -120,13 +122,13 @@ class _EventScreenState extends State<EventScreen> {
           }
         }
 
-        switch (eventFilter) {
+        switch (currentSortOrder) {
           case 'All events':
-            if (categoryFilter == 'Category') {
+            if (currentCategoryOption == 'Category') {
               return events;
-            } else if (categoryFilter != 'Category') {
+            } else if (currentCategoryOption != 'Category') {
               for (var event in events) {
-                if (categoryFilter == event.category &&
+                if (currentCategoryOption == event.category &&
                     !filteredEvents.contains(event)) {
                   filteredEvents.add(event);
                 }
@@ -134,7 +136,7 @@ class _EventScreenState extends State<EventScreen> {
               return filteredEvents;
             }
           case 'My events':
-            if (categoryFilter == 'Category') {
+            if (currentCategoryOption == 'Category') {
               for (var event in events) {
                 if (userId == event.creatorId.toString() &&
                     !filteredEvents.contains(event)) {
@@ -142,10 +144,10 @@ class _EventScreenState extends State<EventScreen> {
                 }
               }
               return filteredEvents;
-            } else if (categoryFilter != 'Category') {
+            } else if (currentCategoryOption != 'Category') {
               for (var event in events) {
                 if (userId == event.creatorId.toString() &&
-                    categoryFilter == event.category &&
+                    currentCategoryOption == event.category &&
                     !filteredEvents.contains(event)) {
                   filteredEvents.add(event);
                 }
@@ -153,7 +155,7 @@ class _EventScreenState extends State<EventScreen> {
               return filteredEvents;
             }
           case 'Active':
-            if (categoryFilter == 'Category') {
+            if (currentCategoryOption == 'Category') {
               for (var event in events) {
                 if (event.status == 1 &&
                     event.datetimeEvent.millisecondsSinceEpoch >
@@ -163,10 +165,10 @@ class _EventScreenState extends State<EventScreen> {
                 }
               }
               return filteredEvents;
-            } else if (categoryFilter != 'Category') {
+            } else if (currentCategoryOption != 'Category') {
               for (var event in events) {
                 if (event.status == 1 &&
-                    categoryFilter == event.category &&
+                    currentCategoryOption == event.category &&
                     event.datetimeEvent.millisecondsSinceEpoch >
                         DateTime.now().millisecondsSinceEpoch &&
                     !filteredEvents.contains(event)) {
@@ -176,7 +178,7 @@ class _EventScreenState extends State<EventScreen> {
               return filteredEvents;
             }
           case 'Inactive':
-            if (categoryFilter == 'Category') {
+            if (currentCategoryOption == 'Category') {
               for (var event in events) {
                 if (event.status != 1 ||
                     event.datetimeEvent.millisecondsSinceEpoch <
@@ -187,12 +189,12 @@ class _EventScreenState extends State<EventScreen> {
                 }
               }
               return filteredEvents;
-            } else if (categoryFilter != 'Category') {
+            } else if (currentCategoryOption != 'Category') {
               for (var event in events) {
                 if (event.status != 1 ||
                     event.datetimeEvent.millisecondsSinceEpoch <
                         DateTime.now().millisecondsSinceEpoch) {
-                  if (categoryFilter == event.category &&
+                  if (currentCategoryOption == event.category &&
                       !filteredEvents.contains(event)) {
                     filteredEvents.add(event);
                   }
@@ -224,7 +226,58 @@ class _EventScreenState extends State<EventScreen> {
               MaterialPageRoute(builder: (context) => DashboardScreen()),
             );
           }),
-      actions: [searchBar.getSearchAction(context)],
+        actions: [
+        DropdownButton<String>(
+          value: currentSortOrder,
+          icon: Icon(Icons.sort),
+          onChanged: (String? newValue) {
+            if(newValue != null){
+              setState(() {
+                currentSortOrder = newValue;
+              });
+            }
+          },
+          items: sortOptions.map<DropdownMenuItem<String>>((String value) {
+            return DropdownMenuItem<String>(
+              value: value,
+              child: Text(value),
+              onTap: () {
+                setState(() {
+                  currentSortOrder = value;
+                  eventsFuture = fetchEvents();
+                });
+              },
+            );
+          }).toList(),
+        ),
+        // Not implemented because of missing Space!
+        /*
+        DropdownButton<String>(
+          value: currentCategoryOption,
+          icon: Icon(Icons.sort),
+          onChanged: (String? newValue) {
+            if(newValue != null){
+              setState(() {
+                currentCategoryOption = newValue;
+              });
+            }
+          },
+          items: possibleCategories.map<DropdownMenuItem<String>>((String value) {
+            return DropdownMenuItem<String>(
+              value: value,
+              child: Text(value),
+              onTap: () {
+                setState(() {
+                  currentCategoryOption = value;
+                  eventsFuture = fetchEvents();
+                });
+              },
+            );
+          }).toList(),
+        ),
+        */
+        searchBar.getSearchAction(context)
+      ],
     );
   }
 
@@ -281,6 +334,7 @@ class _EventScreenState extends State<EventScreen> {
     });
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -289,8 +343,8 @@ class _EventScreenState extends State<EventScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           setState(() {
-            eventFilter = 'All events';
-            categoryFilter = 'Category';
+            currentSortOrder = 'All events';
+            currentCategoryOption = 'Category';
             eventsFuture = fetchEvents();
           });
         },
@@ -330,72 +384,6 @@ class _EventScreenState extends State<EventScreen> {
                 });
           }
         },
-      ),
-
-      bottomNavigationBar: BottomAppBar(
-        child: FutureBuilder<Map<String, dynamic>>(
-            future: ApiService.fetchUserProfile(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              } else if (snapshot.hasError) {
-                return Text('Error:  ${snapshot.error}');
-              } else {
-                final Map<String, dynamic> user = snapshot.data!;
-                return Container(
-                  height: 20,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 32.0),
-                          child: DropdownMenu<String>(
-                            width: 140,
-                            initialSelection: eventFilter,
-                            hintText: eventFilter,
-                            requestFocusOnTap: false,
-                            onSelected: (String? newValue) {
-                              setState(() {
-                                eventFilter = newValue!;
-                                eventsFuture = fetchEvents();
-                              });
-                            },
-                            dropdownMenuEntries: possibleFilters
-                                .map<DropdownMenuEntry<String>>((String value) {
-                              return DropdownMenuEntry<String>(
-                                  value: value, label: value);
-                            }).toList(),
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 32.0),
-                          child: DropdownMenu<String>(
-                            width: 140,
-                            initialSelection: categoryFilter,
-                            hintText: categoryFilter,
-                            requestFocusOnTap: false,
-                            onSelected: (String? newValue) {
-                              setState(() {
-                                categoryFilter = newValue!;
-                                eventsFuture = fetchEvents();
-                              });
-                            },
-                            dropdownMenuEntries: possibleCategories
-                                .map<DropdownMenuEntry<String>>((String value) {
-                              return DropdownMenuEntry<String>(
-                                  value: value, label: value);
-                            }).toList(),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }
-            }),
       ),
     );
   }
@@ -579,7 +567,7 @@ class Event {
     return {
       'event_id': this.eventID,
       'datetime_event': this.datetimeEvent.toString().substring(
-          0, this.datetimeEvent.toString().length - 4), // Use UTC time
+          0, this.datetimeEvent.toString().length - 5), // Use UTC time
       'recurrence_interval': this.recurrenceInterval,
     };
   }

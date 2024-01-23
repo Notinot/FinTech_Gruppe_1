@@ -19,7 +19,7 @@ app.use(express.json());
 
 // Enable CORS to allow requests from any origin and restrict to POST requests
 app.use(cors({
-  origin: '*', 
+  origin: '*',
   methods: 'POST',
 }));
 
@@ -27,16 +27,16 @@ app.use(cors({
 const db = mysql.createPool({
 
   // connectionLimit: 5, //clevercloud only allows 5 connections at the same time
-   /*host: 'btxppofwkgo3xl10tfwy-mysql.services.clever-cloud.com',
-   user: 'ud86jc8auniwbfsm',
-   password: 'ER0nIAbQy5qyAeSd4ZCV',
-   database: 'btxppofwkgo3xl10tfwy',*/
-  
+  /*host: 'btxppofwkgo3xl10tfwy-mysql.services.clever-cloud.com',
+  user: 'ud86jc8auniwbfsm',
+  password: 'ER0nIAbQy5qyAeSd4ZCV',
+  database: 'btxppofwkgo3xl10tfwy',*/
+
   host: '87.144.250.22',
-   user: 'payfriendz',
-password: 'payfriendz',
-   database: 'Payfriendz',
-    
+  user: 'payfriendz',
+  password: 'payfriendz',
+  database: 'Payfriendz',
+
 });
 let server; // Define the server variable at a higher scope
 
@@ -86,40 +86,40 @@ const transporter = nodemailer.createTransport({
 
 
 // Forgot Password
-app.post('/forgotpassword', async (req, res) =>{
+app.post('/forgotpassword', async (req, res) => {
 
-    const {email} = req.body;
+  const { email } = req.body;
 
-    // Check if the user with the provided email exists
-    const [user] = await db.query('SELECT * FROM User WHERE email = ?', [email]);
+  // Check if the user with the provided email exists
+  const [user] = await db.query('SELECT * FROM User WHERE email = ?', [email]);
 
-    if (user.length === 0) {
-        return res.status(401).json({ message: 'Invalid email' });
-    }
-
-    try {
-        // Generate a random verification code
-        const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-
-        await db.query('UPDATE User SET verification_code = ? WHERE email = ?', [verificationCode, email])
-
-        // Send verification code
-        sendVerificationEmail(email, verificationCode);
-
-        res.json({ message: 'Verification code sent successfully', email });
-    }
-    catch{
-
-      console.error('Error sending verification code');
-      res.status(500).json({ message: 'Internal server error' });
-    }
+  if (user.length === 0) {
+    return res.status(401).json({ message: 'Invalid email' });
   }
+
+  try {
+    // Generate a random verification code
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+    await db.query('UPDATE User SET verification_code = ? WHERE email = ?', [verificationCode, email])
+
+    // Send verification code
+    sendVerificationEmail(email, verificationCode);
+
+    res.json({ message: 'Verification code sent successfully', email });
+  }
+  catch {
+
+    console.error('Error sending verification code');
+    res.status(500).json({ message: 'Internal server error' });
+  }
+}
 )
 
 
 app.post('/changepassword', async (req, res) => {
 
-  const{email, newPassword, verificationCode} = req.body;
+  const { email, newPassword, verificationCode } = req.body;
 
   const [user] = await db.query('SELECT * FROM User WHERE email = ?', [email]);
 
@@ -133,34 +133,35 @@ app.post('/changepassword', async (req, res) => {
 
   if (verificationCode != user[0].verification_code) {
 
-      return res.status(401).json({ message: 'Invalid verification code' });
+    return res.status(401).json({ message: 'Invalid verification code' });
   }
-  else if (passwordMatch){
+  else if (passwordMatch) {
 
-        return res.status(400).json({ message: 'Old password can not be new password' });
+    return res.status(400).json({ message: 'Old password can not be new password' });
   }
-  
-  try{
+
+  try {
 
     await db.query('UPDATE User SET password_hash = ?, salt = ?, verification_code = NULL WHERE email = ?', [hashedPassword, salt, email]);
     return res.json({ message: 'Account verified successfully' });
 
-  }catch{
+  } catch {
 
     console.error('Error in verification process');
     res.status(500).json({ message: 'Internal server error' });
   }
-  
+
 })
 
 
 // Route for user registration
 app.post('/register', async (req, res) => {
-  const { username, email, firstname, lastname, password,picture } = req.body;
+  const { username, email, firstname, lastname, password, picture } = req.body;
 
-   pictureData = null;
-  if(picture != null){
-  pictureData = Buffer.from(picture, 'base64');}
+  pictureData = null;
+  if (picture != null) {
+    pictureData = Buffer.from(picture, 'base64');
+  }
 
   // Check if the email or username is already in use
   const [existingUser] = await db.query(
@@ -175,11 +176,11 @@ app.post('/register', async (req, res) => {
   try {
     // Generate a random verification code
     const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-    
+
     // Generate a salt, hash the password, and store the user data in the database
     const salt = generateSalt();
     const hashedPassword = await bcrypt.hash(password + salt, 10);
-    
+
     await db.query('INSERT INTO User (username, email, first_name, last_name, password_hash, salt, created_at, verification_code,picture) VALUES (?,?,?,?,?,?,NOW(), ?,?)', [
       username,
       email,
@@ -290,8 +291,8 @@ app.post('/friendName', authenticateToken, async (req, res) => {
   const { friend: friendId } = req.body; // Rename the variable here
   try {
     const query = 'SELECT username FROM User WHERE user_id = ?';
-    const [friend] = await db.query(query, friendId); 
-    console.log(friend[0].username );
+    const [friend] = await db.query(query, friendId);
+    console.log(friend[0].username);
     res.json({ friendname: friend[0].username });
   } catch (error) {
     console.error('Error fetching profile:', error);
@@ -301,10 +302,10 @@ app.post('/friendName', authenticateToken, async (req, res) => {
 
 //get friends of specific user
 //returns JSON with: 
-app.get('/friends/:user_id', async(req, res) => {
-  const user_id = req.params.user_id;  
-const query =
-`SELECT
+app.get('/friends/:user_id', async (req, res) => {
+  const user_id = req.params.user_id;
+  const query =
+    `SELECT
   request_time,
 CASE
     WHEN f.requester_id = ? THEN u_addressee.user_id
@@ -336,21 +337,21 @@ WHERE
 f.status = 'accepted'
 AND (f.requester_id = ? OR f.addressee_id = ?);
 `;
-const [friends] = await db.query(query, [user_id, user_id, user_id, user_id, user_id, user_id, user_id, user_id,user_id, user_id, user_id, user_id]);
-res.json({friends}); 
+  const [friends] = await db.query(query, [user_id, user_id, user_id, user_id, user_id, user_id, user_id, user_id, user_id, user_id, user_id, user_id]);
+  res.json({ friends });
 });
 
 //get pending friend requests of specific user
-app.get('/friends/pending/:user_id', async(req, res) => {
-  const user_id = req.params.user_id;  
-const query =
-`SELECT  f.requester_id, u.username, u.first_name, u.last_name, u.picture
+app.get('/friends/pending/:user_id', async (req, res) => {
+  const user_id = req.params.user_id;
+  const query =
+    `SELECT  f.requester_id, u.username, u.first_name, u.last_name, u.picture
 FROM Friendship f
 JOIN User u ON f.requester_id = u.user_id
 WHERE f.addressee_id = ? AND f.status = 'pending';
 `;
-const [pendingFriends] = await db.query(query, [user_id]);
-  res.json({pendingFriends}); //!
+  const [pendingFriends] = await db.query(query, [user_id]);
+  res.json({ pendingFriends }); //!
 });
 
 
@@ -361,127 +362,127 @@ Receives: boolean value whether request was accepted or declined
           ID of person who was accepted or declined
 */
 app.post('/friends/request/:user_id', async (req, res) => {
-  const user_id = req.params.user_id;  
-  const{friendId, accepted} = req.body;
+  const user_id = req.params.user_id;
+  const { friendId, accepted } = req.body;
   var query = '';
   //hier noch überprüfen, dass Status auf "pending" ist?
-  if(accepted){
-     query =
-    `Update Friendship
+  if (accepted) {
+    query =
+      `Update Friendship
      Set status = 'accepted' 
-     WHERE addressee_id = ? AND requester_id = ? ` ;  
-  }else{
-     query =
-    `Update Friendship
+     WHERE addressee_id = ? AND requester_id = ? ` ;
+  } else {
+    query =
+      `Update Friendship
      Set status = 'declined' 
      WHERE addressee_id = ? AND requester_id = ? ` ;
   }
- console.log(query);
-   const [friendRequest] = await db.query(query, [user_id, friendId]);
-   res.json({friendRequest});
-    });
+  console.log(query);
+  const [friendRequest] = await db.query(query, [user_id, friendId]);
+  res.json({ friendRequest });
+});
 
-  ///add friend (sending friend request)
-      //names of routes are kinda misleading, needs to be updated
-  app.post('/friends/add/:user_id', async (req, res) => {
-    const user_id = req.params.user_id;  
-    const{friendUsername} = req.body;
-  
-    //get user_id from username
-    const [temp] = await db.query('SELECT user_id FROM User WHERE username = ?', [friendUsername]);
+///add friend (sending friend request)
+//names of routes are kinda misleading, needs to be updated
+app.post('/friends/add/:user_id', async (req, res) => {
+  const user_id = req.params.user_id;
+  const { friendUsername } = req.body;
 
-    //checks if username even exists
-    if(temp[0] != undefined && temp[0].user_id != user_id){
-      const friendId = temp[0].user_id; 
-      
-        //check if users are already friends
-        const[friends] = await db.query(
-          ` 
+  //get user_id from username
+  const [temp] = await db.query('SELECT user_id FROM User WHERE username = ?', [friendUsername]);
+
+  //checks if username even exists
+  if (temp[0] != undefined && temp[0].user_id != user_id) {
+    const friendId = temp[0].user_id;
+
+    //check if users are already friends
+    const [friends] = await db.query(
+      ` 
           SELECT * 
           FROM Friendship 
           WHERE (requester_id = ? AND addressee_id = ?)
           OR    (requester_id = ? AND addressee_id = ?)
           `
-          ,[user_id,friendId,
-            friendId,user_id]);
-            
-      //when they are not already friends
-      if(friends[0] == null){
-        const query = `
+      , [user_id, friendId,
+        friendId, user_id]);
+
+    //when they are not already friends
+    if (friends[0] == null) {
+      const query = `
       INSERT INTO Friendship 
       (requester_id, addressee_id, status, request_time) 
       VALUES (?, ?, ?, NOW())`;
-       const [addingFriend] = await db.query(query, [user_id, friendId, 'pending']);
-       res.status(200).json({addingFriend});
-      }else{
-        //res.status(500).json({message: 'Cannot add User'});
-        res.status(500).json('Cannot add User');
-      }
-    }else{
-      //res.status(500).json({message: 'Username not found'});
-      res.status(500).json('Username not found'); //kommt auch wenn man versucht sich selbst zu adden
+      const [addingFriend] = await db.query(query, [user_id, friendId, 'pending']);
+      res.status(200).json({ addingFriend });
+    } else {
+      //res.status(500).json({message: 'Cannot add User'});
+      res.status(500).json('Cannot add User');
     }
-  });
-  
-  //removing friend
-  app.delete('/friends/:user_id', async (req, res) => {
-    const user_id = req.params.user_id;
-    const{friendId} = req.body;
+  } else {
+    //res.status(500).json({message: 'Username not found'});
+    res.status(500).json('Username not found'); //kommt auch wenn man versucht sich selbst zu adden
+  }
+});
 
-    const query = `
+//removing friend
+app.delete('/friends/:user_id', async (req, res) => {
+  const user_id = req.params.user_id;
+  const { friendId } = req.body;
+
+  const query = `
     DELETE FROM Friendship
     WHERE (requester_id = ? AND addressee_id = ?) 
         OR (requester_id = ? AND addressee_id = ?)
     `;
 
-    try {
-        const [deletingFriend] = await db.query(query, [user_id, friendId, friendId, user_id]);
+  try {
+    const [deletingFriend] = await db.query(query, [user_id, friendId, friendId, user_id]);
 
-        res.json({ success: true, message: 'Friend deleted successfully.' });
-    } catch (error) {
-        console.error('Error deleting friend:', error);
-        res.status(500).json({ success: false, message: 'Internal server error' });
-    }
+    res.json({ success: true, message: 'Friend deleted successfully.' });
+  } catch (error) {
+    console.error('Error deleting friend:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
 });
 
 //blocking user
 app.post('/friends/block/:user_id', async (req, res) => {
   const user_id = req.params.user_id; //person who blocks - requester
-  const{friendId} = req.body; //person who gets blocked - addressee
+  const { friendId } = req.body; //person who gets blocked - addressee
 
   //delete friends entry first
   const delQuery = `
   DELETE FROM Friendship
   WHERE (requester_id = ? AND addressee_id = ?) 
       OR (requester_id = ? AND addressee_id = ?)`;
-  try{
+  try {
     await db.query(delQuery, [user_id, friendId, friendId, user_id]);
 
-  }catch(e){
+  } catch (e) {
     console.error('Error deleting friends entry', e);
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 
-    //REQUESTER = PERSON WHO BLOCKs
-   const blockQuery = `
+  //REQUESTER = PERSON WHO BLOCKs
+  const blockQuery = `
       INSERT INTO Friendship 
       (requester_id, addressee_id, status, request_time) 
       VALUES (?, ?, ?, NOW())`;
-      
-      try {
+
+  try {
     await db.query(blockQuery, [user_id, friendId, 'blocked']);
 
-      res.json({ success: true, message: 'User blocked successfully.' });
+    res.json({ success: true, message: 'User blocked successfully.' });
   } catch (error) {
-      console.error('Error blocking friend:', error);
-      res.status(500).json({ success: false, message: 'Internal server error' });
+    console.error('Error blocking friend:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
 
 //unblocking user
 app.post('/friends/unblock/:user_id', async (req, res) => {
   const user_id = req.params.user_id; //person who blocked - requester
-  const{friendId} = req.body; //person who got blocked - addressee
+  const { friendId } = req.body; //person who got blocked - addressee
   console.error(user_id);
   console.error(friendId);
   //delete entry
@@ -489,10 +490,10 @@ app.post('/friends/unblock/:user_id', async (req, res) => {
   DELETE FROM Friendship
   WHERE (requester_id = ? AND addressee_id = ?) 
       OR (requester_id = ? AND addressee_id = ?)`; //and status = blocked
-  try{
+  try {
     await db.query(delQuery, [user_id, friendId, friendId, user_id]);
 
-  }catch(e){
+  } catch (e) {
     console.error('Error deleting friends entry', e);
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
@@ -503,32 +504,96 @@ app.get('/friends/block/:user_id', async (req, res) => {
   const user_id = req.params.user_id; //person who blocked - requester
 
   const query =
-  `SELECT  f.addressee_id, f.request_time, u.username, u.first_name, u.last_name, u.picture
+    `SELECT  f.addressee_id, f.request_time, u.username, u.first_name, u.last_name, u.picture
   FROM Friendship f
   JOIN User u ON f.addressee_id = u.user_id
   WHERE f.requester_id = ? AND f.status = 'blocked';
   `;
   const [blockedUsers] = await db.query(query, [user_id]);
-    res.json({blockedUsers}); //!
-  });
+  res.json({ blockedUsers }); //!
+});
 
-  //get users which contain String for suggestions in Searchbar
-  app.post('/users/:user_id', async(req, res) => {
-    const user_id = req.params.user_id;
-    const searchQuery = req.body.query;
-    console.log('user_id: ',user_id);
-    console.log('searchQuery: ',searchQuery);
+//get users which contain String for suggestions in Searchbar
+app.post('/users/:user_id', async (req, res) => {
+  const user_id = req.params.user_id;
+  const searchQuery = req.body.query;
+  console.log('user_id: ', user_id, ' searchQuery: ', searchQuery);
 
-    const query = `
-    SELECT user_id, username, first_name, last_name 
+  //get all users which match the query
+  var query = `
+    SELECT user_id, username, first_name, last_name, picture
     FROM User 
     WHERE user_id != ? AND
     username LIKE ?`;
+  const [matchingUsers] = await db.query(query, [user_id, `%${searchQuery}%`]);
 
-    const [matchingUsers] = await db.query(query, [user_id,`%${searchQuery}%`]);
-    //console.log('Matching Users', matchingUsers);
-    res.json({matchingUsers});
-  });
+  //get all friendship entries of user 
+  query = `SELECT requester_id, addressee_id, status, request_time FROM Friendship
+    WHERE requester_id = ? OR
+    addressee_id = ?`;
+  const [friendshipEntries] = await db.query(query, [user_id, user_id]);
+
+  //var responseFinal = JSON.parse(JSON.stringify(matchingUsers)); //hard copy of matchingUsers
+
+  console.log('friendshipEntries', friendshipEntries);
+  console.log('matchingUsers', matchingUsers);
+  //console.log('copy: ', responseFinal);
+
+
+  const matchingUsersFinal = matchingUsers.map(mUser => {
+    const matchingEntry = friendshipEntries.find(fEntry => fEntry['requester_id'] == mUser['user_id'] || fEntry['addressee_id'] == mUser['user_id']);
+    if (matchingEntry) {
+      console.log('matchingEntry: ', matchingEntry);
+      /* callerIsRequester = true
+
+     pending - this user send the friend request -> show "pending" button /only other user can accept
+     declined - other user declined thisUser -> dont show user at all/only other user can send again
+     blocked - this user blocked other -> show "unblock" button
+       */
+      var callerIsRequester = true;
+      //this means that THE OTHER USER is the requester in the friendship table
+      if (matchingEntry['requester_id'] == mUser['user_id']) callerIsRequester = false;
+
+
+      switch (matchingEntry['status']) {
+        case 'accepted': //egal wie rum als friend anzeigen
+          return { ...mUser, status: 'friend' , request_time: matchingEntry['request_time']};
+
+        case 'declined':
+          if (callerIsRequester) {
+            return null; //caller got declined, dont show. (maybe show after cooldown)
+          } else {
+            return { user_id: mUser['user_id'],username : mUser['username'], status: 'user' };//so wie new user
+          }
+        case 'blocked'://so oder so nicht anzeigen?
+          return null;
+
+        case 'pending':
+          if (callerIsRequester) {
+            return { user_id: mUser['user_id'],username : mUser['username'], status: 'requested' }; //anzeigen mit "send"
+          } else {
+            return null;
+            //nicht anzeigen? this user must accept/decline in pendingFriends Screen
+          }
+        default:
+          console.log('Entry status not known - ', entry);
+      }
+    } else {
+      console.log(mUser, ' is not in Entries');
+      return { user_id: mUser['user_id'],username : mUser['username'], status: 'user' };
+    }
+    //remove entries which are null or undefined
+  }).filter(user => user != null && user != undefined);
+
+
+  console.log('matchingUsersFinal: ', matchingUsersFinal);
+  //for each dies das
+  //1 von 4 types zurückgeben
+  //friends, pending (incomming), pending (outcomming), blocked, declined, no entry
+
+
+  res.json({ matchingUsersFinal });
+});
 
 app.post('/verify', async (req, res) => {
   const { email, verificationCode } = req.body;
@@ -552,17 +617,18 @@ app.post('/verify', async (req, res) => {
 });
 
 //delete user
-app.post('/delete_user', authenticateToken,async (req, res) => {
-  const{userid} = req.body;
-  try{
+app.post('/delete_user', authenticateToken, async (req, res) => {
+  const { userid } = req.body;
+  try {
     const [userInfo] = await db.query('SELECT username, email FROM User WHERE user_id = ?', [userid]);
     const { username, email } = userInfo[0];
     sendDeletionEmail(email, username);
     await db.query('UPDATE User SET active = 0, username = null,email = null, Picture = null,password_hash = null WHERE user_id = ?', [userid]);
     await db.query('DELETE FROM Friendship WHERE (requester_id = ? ) OR (addressee_id = ?)'
       , [userid, userid]);
-    
-    res.json({message : 'Account deleted'});}
+
+    res.json({ message: 'Account deleted' });
+  }
   catch (error) {
     console.error('User deletion failed. Error:', error);
     res.status(500).json({ message: 'Internal server error' });
@@ -571,8 +637,8 @@ app.post('/delete_user', authenticateToken,async (req, res) => {
 
 
 //editing user
-app.post('/edit_user',authenticateToken, async (req, res) => {
-  const { email, firstname, lastname,new_password, userid,pw_change,picture } = req.body;
+app.post('/edit_user', authenticateToken, async (req, res) => {
+  const { email, firstname, lastname, new_password, userid, pw_change, picture } = req.body;
   emailChange = false;
 
   let pictureData = null;
@@ -581,14 +647,14 @@ app.post('/edit_user',authenticateToken, async (req, res) => {
   }
 
   // Check if the user exists based on the provided user_id
-   [existingUser] = await db.query('SELECT * FROM User WHERE user_id = ?', [userid]);
+  [existingUser] = await db.query('SELECT * FROM User WHERE user_id = ?', [userid]);
   console.log(existingUser);
 
   if (existingUser.length === 0) {
     return res.status(404).json({ message: 'User not found' });
   }
 
-  
+
 
   const [existingInfo] = await db.query(
     'SELECT * FROM User WHERE email = ?',
@@ -606,7 +672,7 @@ app.post('/edit_user',authenticateToken, async (req, res) => {
     return res.status(403).json({ message: 'Email already in use' });
   }
 
-  
+
   const samePassword = await bcrypt.compare(new_password + existingUser[0].salt, existingUser[0].password_hash);
   if (samePassword) {
     return res.status(406).json({ message: 'Your new password cannot be your old password' });
@@ -616,65 +682,65 @@ app.post('/edit_user',authenticateToken, async (req, res) => {
   console.log(samePassword)
 
   try {
-    updateData = [email, firstname, lastname,pictureData,userid];
+    updateData = [email, firstname, lastname, pictureData, userid];
     query = 'UPDATE User SET email=?, first_name=?, last_name=?, picture=? WHERE user_id = ? ';
 
-    if(pw_change == true){
-      
-      const salt = generateSalt();
-     const passwordHash = await bcrypt.hash(new_password + salt, 10);
+    if (pw_change == true) {
 
-     updateData = [email, firstname, lastname, passwordHash,salt, pictureData,userid];
-     query = 'UPDATE User SET email=?, first_name=?, last_name=?, password_hash=?,salt = ?, picture=? WHERE user_id=?';
-      
-  }
+      const salt = generateSalt();
+      const passwordHash = await bcrypt.hash(new_password + salt, 10);
+
+      updateData = [email, firstname, lastname, passwordHash, salt, pictureData, userid];
+      query = 'UPDATE User SET email=?, first_name=?, last_name=?, password_hash=?,salt = ?, picture=? WHERE user_id=?';
+
+    }
 
 
     await db.query(query, updateData);
     [existingUser] = await db.query('SELECT * FROM User WHERE user_id = ?', [userid]);
-    const token = jwt.sign({ userid : existingUser[0].userid}, jwtSecret, jwtOptions);
+    const token = jwt.sign({ userid: existingUser[0].userid }, jwtSecret, jwtOptions);
 
-    res.json({ message: 'Profile updated successfully',token,user: existingUser[0] });
+    res.json({ message: 'Profile updated successfully', token, user: existingUser[0] });
   }
-   catch (error) {
+  catch (error) {
     console.error('Error updating profile:', error);
-    res.status(500).json({ message: 'Internal server error',error: error.message });
+    res.status(500).json({ message: 'Internal server error', error: error.message });
     console.log('Received data:', req.body);
   }
 });
 
-app.post('/edit_user/verify', authenticateToken,async (req, res) => {
+app.post('/edit_user/verify', authenticateToken, async (req, res) => {
   const { userid, verificationCode } = req.body;
   console.log('Received userid:', userid);
   console.log('Received verificationCode:', verificationCode);
-  
-  
-  const [code] = await db.query('SELECT verification_code FROM User WHERE user_id = ?', [userid]);
-console.log("needed input:",code[0].verification_code);
 
-  if(code[0].verification_code === verificationCode.trim()){
+
+  const [code] = await db.query('SELECT verification_code FROM User WHERE user_id = ?', [userid]);
+  console.log("needed input:", code[0].verification_code);
+
+  if (code[0].verification_code === verificationCode.trim()) {
     res.json({ message: 'Verification succeeded' });
   }
-  else{
+  else {
     res.status(411).json({ message: 'Wrong verification code' })
   }
 }
 );
 
 
-app.post('/edit_user/send_code',authenticateToken, async (req, res) => {
-  const {userid,email} = req.body;
-   code = Math.floor(100000 + Math.random() * 900000).toString();
-   query = 'UPDATE User SET verification_code = ? WHERE user_id = ? ';
-   updateData = [code,userid];
-   await db.query(query, updateData);
-   sendVerificationEmail(email,code);
-   console.log(code);
-   res.json({ message: 'Email sent' });
-  }
-   );
+app.post('/edit_user/send_code', authenticateToken, async (req, res) => {
+  const { userid, email } = req.body;
+  code = Math.floor(100000 + Math.random() * 900000).toString();
+  query = 'UPDATE User SET verification_code = ? WHERE user_id = ? ';
+  updateData = [code, userid];
+  await db.query(query, updateData);
+  sendVerificationEmail(email, code);
+  console.log(code);
+  res.json({ message: 'Email sent' });
+}
+);
 
-app.post('/verifyPassword',authenticateToken, async (req, res) => {
+app.post('/verifyPassword', authenticateToken, async (req, res) => {
   try {
     const { userid, password } = req.body;
     console.log(userid)
@@ -773,11 +839,11 @@ app.post('/addMoney', authenticateToken, async (req, res) => {
     await updateBalance(userId, +amount);
 
     //insert as transaction into database. sender and receiver are the same. processed = 3 means it is a deposit, message is empty
-    await db.query('INSERT INTO Transaction (sender_id, receiver_id, amount, transaction_type, created_at, message, processed) VALUES (?, ?, ?, ?, NOW(), ?, 3)', 
-    [userId, userId, amount, 'Deposit', '']);
+    await db.query('INSERT INTO Transaction (sender_id, receiver_id, amount, transaction_type, created_at, message, processed) VALUES (?, ?, ?, ?, NOW(), ?, 3)',
+      [userId, userId, amount, 'Deposit', '']);
     // Send true as the response
     res.json({ success: true });
-    
+
     console.log('Money added successfully');
   } catch (error) {
     console.error('Error adding money:', error);
@@ -855,7 +921,7 @@ app.post('/send-money', authenticateToken, async (req, res) => {
     await updateBalance(senderId, -amount);
     await updateBalance(recipientId, +amount);
 
-    sendConfirmationEmail(senderEmail, senderUsername,recipientUsername, "Payment", amount, recipientEmail);
+    sendConfirmationEmail(senderEmail, senderUsername, recipientUsername, "Payment", amount, recipientEmail);
 
     res.json({ message: 'Money transfer successful' });
   } catch (error) {
@@ -905,10 +971,10 @@ app.post('/request-money', authenticateToken, async (req, res) => {
       'Request',
       message,
     ]);
-    sendConfirmationEmail(requesterEmail, requesterUsername,recipientUsername, "Request", amount, recipientEmail);
+    sendConfirmationEmail(requesterEmail, requesterUsername, recipientUsername, "Request", amount, recipientEmail);
 
     res.json({ message: 'Money request sent successfully' });
-    
+
 
   } catch (error) {
     console.error('Error requesting money:', error);
@@ -940,7 +1006,7 @@ app.get('/transactions', authenticateToken, async (req, res) => {
       WHERE 
         sender_id = ? OR receiver_id = ?
     `, [userId, userId]);
-    
+
     //console.log('transactions:', transactions);
 
     // Send the user's transaction history as the response
@@ -950,18 +1016,18 @@ app.get('/transactions', authenticateToken, async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 });
-  //check if user is already friends with another user with JWT authentication
-  app.get('/checkIfFriends', authenticateToken, async (req, res) => {
-    const user_id = req.user.userId;
-    const friendId = req.query.friendId;
-    const query = `SELECT * FROM Friendship WHERE (requester_id = ? AND addressee_id = ?) OR (requester_id = ? AND addressee_id = ?)`;
-    const [friends] = await db.query(query, [user_id, friendId, friendId, user_id]);
-    const isFriend = friends[0] != null;
-    console.log('isFriend:', isFriend);
-    res.json({ isFriend: isFriend });
-    
-  });
-  
+//check if user is already friends with another user with JWT authentication
+app.get('/checkIfFriends', authenticateToken, async (req, res) => {
+  const user_id = req.user.userId;
+  const friendId = req.query.friendId;
+  const query = `SELECT * FROM Friendship WHERE (requester_id = ? AND addressee_id = ?) OR (requester_id = ? AND addressee_id = ?)`;
+  const [friends] = await db.query(query, [user_id, friendId, friendId, user_id]);
+  const isFriend = friends[0] != null;
+  console.log('isFriend:', isFriend);
+  res.json({ isFriend: isFriend });
+
+});
+
 //Route to accept or decline a transaction Request with JWT authentication
 app.post('/transactions/:transactionId', authenticateToken, async (req, res) => {
   try {
@@ -986,7 +1052,7 @@ app.post('/transactions/:transactionId', authenticateToken, async (req, res) => 
     if (transactionData.length === 0) {
       return res.status(404).json({ message: 'Transaction not found' });
     }
-    const transaction = transactionData[0];      
+    const transaction = transactionData[0];
     // Check if the transaction has already been processed
     if (transaction.processed === 1) {
       return res.status(400).json({ message: 'Transaction has already been processed' });
@@ -1006,7 +1072,7 @@ app.post('/transactions/:transactionId', authenticateToken, async (req, res) => 
       if (senderBalance < transaction.amount) {
         return res.status(400).json({ message: 'Insufficient funds' });
       }
-      
+
       // Update the transaction status to "accepted"
       await db.query('UPDATE Transaction SET processed = 1 WHERE transaction_id = ?', [transactionId]);
 
@@ -1019,13 +1085,13 @@ app.post('/transactions/:transactionId', authenticateToken, async (req, res) => 
       const [recipientData] = await db.query('SELECT username, email FROM User WHERE user_id = ?', [transaction.receiver_id]);
       const recipientUsername = recipientData[0].username;
       const recipientEmail = recipientData[0].email;
-    
+
       // Update balances in the database
       await updateBalance(transaction.sender_id, +transaction.amount);
       await updateBalance(transaction.receiver_id, -transaction.amount);
 
       // Send confirmation emails to sender and recipient
-      sendRequestConfirmationEmail(senderEmail, senderUsername, recipientUsername, 'Request' , transaction.amount, "accepted");
+      sendRequestConfirmationEmail(senderEmail, senderUsername, recipientUsername, 'Request', transaction.amount, "accepted");
 
       res.json({ message: 'Transaction accepted successfully' });
     }
@@ -1039,10 +1105,10 @@ app.post('/transactions/:transactionId', authenticateToken, async (req, res) => 
       const [recipientData] = await db.query('SELECT username, email FROM User WHERE user_id = ?', [transaction.receiver_id]);
       const recipientUsername = recipientData[0].username;
       const recipientEmail = recipientData[0].email;
-    
+
       // Update the transaction status to "declined"
       await db.query('UPDATE Transaction SET processed = 2 WHERE transaction_id = ?', [transactionId]);
-      sendRequestConfirmationEmail(senderEmail, senderUsername, recipientUsername, 'Request' , transaction.amount, "declined");
+      sendRequestConfirmationEmail(senderEmail, senderUsername, recipientUsername, 'Request', transaction.amount, "declined");
       res.json({ message: 'Transaction declined successfully' });
     }
   } catch (error) {
@@ -1054,38 +1120,45 @@ app.post('/transactions/:transactionId', authenticateToken, async (req, res) => 
 
 
 app.post('/event-service', async (req, res) => {
-    try{
+  try {
 
         events = req.body;
         console.log(events);
 
-        for(let i = 0; i < events.length; i++){
+    for (let i = 0; i < events.length; i++) {
 
-
-            await db.query('UPDATE Event SET datetime_event = ?, recurrence_interval = 1 WHERE id = ?',
-             [
+        [updateInformation] = await db.query('UPDATE Event SET datetime_event = ?, recurrence_interval = ? WHERE id = ?',
+        [
                 events[i].datetime_event,
                 events[i].recurrence_interval,
                 events[i].event_id
-             ]);
+        ]);
 
-        }
+        console.log(updateInformation);
+    }
 
-        const [updateEventStatusToActive] = await db.query(`
-            UPDATE Event SET status = 1 WHERE datetime_event > NOW()
+
+    const [updateEventStatusToActive] = await db.query(`
+            UPDATE Event SET status = 1 WHERE datetime_event > NOW() AND status != 0
         `);
 
         const [updateEventStatusToInactive] = await db.query(`
-            UPDATE Event SET status = 2 WHERE datetime_event < NOW() AND status != 0
+            UPDATE Event
+            SET status = 2
+            WHERE datetime_event < NOW()
+            AND
+            status != 0
+            AND
+            recurrence_type = 0
         `);
 
 
-        res.status(200).json({ message: 'Event Service successfully finished' });
-    }
-    catch(e){
-        console.log(e);
-        res.status(500).json({message: 'Event Service failed'});
-    }
+    res.status(200).json({ message: 'Event Service successfully finished' });
+  }
+  catch (e) {
+    console.log(e);
+    res.status(500).json({ message: 'Event Service failed' });
+  }
 });
 
 //route to get the events the user is part of with JWT authentication
@@ -1161,14 +1234,14 @@ app.get('/fetch-all-events', authenticateToken, async(req, res) => {
 
 
 // Get the tree soonest events for the dashboard
-app.get('/dashboard-events', authenticateToken, async(req, res) => {
+app.get('/dashboard-events', authenticateToken, async (req, res) => {
 
-    try{
+  try {
 
-        const senderId = req.user.userId;
+    const senderId = req.user.userId;
 
-        const [dashboardEventQuery] = await db.query(
-            `SELECT
+    const [dashboardEventQuery] = await db.query(
+      `SELECT
              Event.*,
                        Location.*,
                        User_Event.user_id,
@@ -1191,12 +1264,13 @@ app.get('/dashboard-events', authenticateToken, async(req, res) => {
              [senderId]
         );
 
-        res.json(dashboardEventQuery);
-    }
-    catch(error){
-       console.error('Error fetching Events:', error);
-       res.status(500).json({ message: 'Internal server error' });
-    }
+
+    res.json(dashboardEventQuery);
+  }
+  catch (error) {
+    console.error('Error fetching Events:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
 });
 
 // Create Event
@@ -1212,7 +1286,7 @@ app.post('/create-event', authenticateToken, async (req, res) => {
     const { category, title, description, max_participants, datetime_event, country, city, street, zipcode, price, recurrence_type } = req.body;
 
     // Validate input
-    if (!category || !title || !description || !max_participants || !datetime_event ) {
+    if (!category || !title || !description || !max_participants || !datetime_event) {
       return res.status(400).json({ message: 'Invalid input' });
     }
 
@@ -1278,64 +1352,64 @@ app.post('/create-event', authenticateToken, async (req, res) => {
 
 // Invite to event
 app.post('/invite-event', authenticateToken, async (req, res) => {
-    try{
-        const senderId = req.user.userId;
-        const {eventId, recipient} = req.body;
+  try {
+    const senderId = req.user.userId;
+    const { eventId, recipient } = req.body;
 
-        if(!eventId || !recipient){
-            return res.status(400).json({message: 'Invalid Event Id or Recipient'});
-        }
-
-        const [recipientData] = await db.query('SELECT user_id FROM User WHERE username = ? OR email = ?', [recipient, recipient]);
-        const recipientId = recipientData[0].user_id;
-
-        const [checkForSpam] = await db.query('SELECT * FROM User_Event WHERE event_id = ? and user_id = ?', [eventId, recipientId]);
-        if(checkForSpam.length > 0){
-
-            return res.status(401).json({message: 'User already interacted with the Event'});
-        }
-
-        const [inviteQuery] = await db.query('INSERT INTO User_Event (event_id, user_id, status) VALUES (?, ?, 2)', [eventId, recipientId]);
-        console.log(inviteQuery);
-
-        res.status(200).json({ message: 'Successfully invited to Event' });
-
+    if (!eventId || !recipient) {
+      return res.status(400).json({ message: 'Invalid Event Id or Recipient' });
     }
-    catch (error){
-        console.error('Error sending invite to Event:', error);
-        res.status(500).json({ message: 'Internal server error' });
+
+    const [recipientData] = await db.query('SELECT user_id FROM User WHERE username = ? OR email = ?', [recipient, recipient]);
+    const recipientId = recipientData[0].user_id;
+
+    const [checkForSpam] = await db.query('SELECT * FROM User_Event WHERE event_id = ? and user_id = ?', [eventId, recipientId]);
+    if (checkForSpam.length > 0) {
+
+      return res.status(401).json({ message: 'User already interacted with the Event' });
     }
+
+    const [inviteQuery] = await db.query('INSERT INTO User_Event (event_id, user_id, status) VALUES (?, ?, 2)', [eventId, recipientId]);
+    console.log(inviteQuery);
+
+    res.status(200).json({ message: 'Successfully invited to Event' });
+
+  }
+  catch (error) {
+    console.error('Error sending invite to Event:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
 });
 
 // Join event
 app.post('/join-event', authenticateToken, async (req, res) => {
-    try{
-        const senderId = req.user.userId;
-        const eventId = req.query.eventId;
+  try {
+    const senderId = req.user.userId;
+    const eventId = req.query.eventId;
 
-        if(!eventId){
-            console.log('Invalid Event Id');
-            return res.status(400).json({message: 'Invalid input'});
-        }
-
-        const [joinQuery] = await db.query('UPDATE User_Event SET status = 1 WHERE event_id = ? AND user_id = ?', [eventId, senderId]);
-        console.log(joinQuery);
-
-        const [increaseParticipantsQuery] = await db.query('UPDATE Event SET participants = participants + 1 WHERE id = ?', [eventId]);
-        console.log(increaseParticipantsQuery)
-
-        res.status(200).json({ message: 'Event successfully joined' });
+    if (!eventId) {
+      console.log('Invalid Event Id');
+      return res.status(400).json({ message: 'Invalid input' });
     }
-    catch (error){
 
-        console.error('Error creating event:', error);
-        res.status(500).json({ message: 'Internal server error' });
-    }
+    const [joinQuery] = await db.query('UPDATE User_Event SET status = 1 WHERE event_id = ? AND user_id = ?', [eventId, senderId]);
+    console.log(joinQuery);
+
+    const [increaseParticipantsQuery] = await db.query('UPDATE Event SET participants = participants + 1 WHERE id = ?', [eventId]);
+    console.log(increaseParticipantsQuery)
+
+    res.status(200).json({ message: 'Event successfully joined' });
+  }
+  catch (error) {
+
+    console.error('Error creating event:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
 });
 
 // Leave event
 app.post('/leave-event', authenticateToken, async (req, res) => {
-    try {
+  try {
         const senderId = req.user.userId;
         const eventId = req.query.eventId;
 
@@ -1363,59 +1437,89 @@ app.post('/leave-event', authenticateToken, async (req, res) => {
 
         res.status(200).json({ message: 'Event successfully leaved' });
 
-    } catch (error) {
-        console.error('Error leaving event:', error);
-        res.status(500).json({ message: 'Internal server error' });
-    }
+       } catch (error) {
+          console.error('Error leaving event:', error);
+          res.status(500).json({ message: 'Internal server error' });
+       }
 });
 
 
 
 // Cancel event
 app.post('/cancel-event', authenticateToken, async (req, res) => {
-    try {
-        const senderId = req.user.userId;
-        const eventId = req.query.eventId;
+  try {
+    const senderId = req.user.userId;
+    const eventId = req.query.eventId;
 
-        if (!eventId) {
-            console.log('Invalid Event Id');
-            return res.status(400).json({ message: 'Invalid input' });
-        }
-
-        const [event] = await db.query('SELECT * FROM Event WHERE id = ?', eventId);
-
-        if (event.length === 0) {
-            return res.status(404).json({ message: 'Event not found' });
-        }
-
-        if (event[0].status === 0) {
-            return res.status(401).json({ message: 'Event is already canceled' });
-        }
-
-        const [cancelQuery] = await db.query('UPDATE Event SET status = 0 WHERE id = ? AND creator_id = ?',
-            [
-                eventId,
-                senderId
-            ]);
-
-        console.log(cancelQuery);
-        res.status(200).json({ message: 'Event successfully canceled' });
-
-    } catch (error) {
-        console.error('Error canceling event:', error);
-        res.status(500).json({ message: 'Internal server error' });
+    if (!eventId) {
+      console.log('Invalid Event Id');
+      return res.status(400).json({ message: 'Invalid input' });
     }
+
+    const [event] = await db.query('SELECT * FROM Event WHERE id = ?', eventId);
+
+    if (event.length === 0) {
+      return res.status(404).json({ message: 'Event not found' });
+    }
+
+    if (event[0].status === 0) {
+      return res.status(401).json({ message: 'Event is already canceled' });
+    }
+
+    const [cancelQuery] = await db.query('UPDATE Event SET status = 0 WHERE id = ? AND creator_id = ?',
+      [
+        eventId,
+        senderId
+      ]);
+
+    console.log(cancelQuery);
+    res.status(200).json({ message: 'Event successfully canceled' });
+
+  } catch (error) {
+    console.error('Error canceling event:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
 });
 
+// Fetch participants of event
+app.get('/event-participants', authenticateToken, async (req, res) => {
+  try {
 
+    const senderId = req.user.userId;
+    const eventId = req.query.eventId;
+
+    if (!eventId) {
+        console.log('Invalid Event Id');
+        return res.status(400).json({ message: 'Invalid input' });
+    }
+
+    const [participants] = await db.query(`
+             SELECT
+             	User.username
+                FROM User
+                JOIN
+                User_Event
+                ON User.user_id = User_Event.user_id
+                WHERE User_Event.event_id = ?;
+           `, [eventId]);
+
+
+    console.log('Participants:', participants);
+    res.json(participants);
+
+  } catch (error) {
+    console.error('Error fetching event participants:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
 
 // Fetch pending events
 app.get('/pending-events', authenticateToken, async (req, res) => {
-    try {
+  try {
 
-        const userId = req.user.userId;
+    const userId = req.user.userId;
 
-        const [pendingEvents] = await db.query(`
+    const [pendingEvents] = await db.query(`
              SELECT
                         Event.*,
                         Location.*,
@@ -1439,13 +1543,13 @@ app.get('/pending-events', authenticateToken, async (req, res) => {
         `, [userId]);
 
 
-        console.log('events:', pendingEvents);
-        res.json(pendingEvents);
+    console.log('events:', pendingEvents);
+    res.json(pendingEvents);
 
-      } catch (error) {
-        console.error('Error fetching pending Events:', error);
-        res.status(500).json({ message: 'Internal server error' });
-      }
+  } catch (error) {
+    console.error('Error fetching pending Events:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
 });
 
 
@@ -1524,8 +1628,8 @@ function sendVerificationEmail(to, code) {
       </body>
     </html>
   `
-    
-    
+
+
   }
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
@@ -1635,7 +1739,7 @@ function sendConfirmationEmail(senderEmail, username, receiver, requestType, amo
   const mailOptions = {
     from: 'Payfriendz App',
     to: senderEmail,
-    subject: 'Payfriendz: Your ' + requestType + ' to ' + receiver +  ' was successfully send',
+    subject: 'Payfriendz: Your ' + requestType + ' to ' + receiver + ' was successfully send',
     html: `
     <html>
       <head>
@@ -1717,7 +1821,7 @@ function sendConfirmationEmail(senderEmail, username, receiver, requestType, amo
   `
   }
 
-  
+
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
       console.error('Error sending email:', error);
@@ -1729,7 +1833,7 @@ function sendConfirmationEmail(senderEmail, username, receiver, requestType, amo
   const mailToRecipient = {
     from: 'Payfriendz App',
     to: recipientEmail,
-    subject: 'Payfriendz: You received a ' + requestType + ' from ' + username +  '',
+    subject: 'Payfriendz: You received a ' + requestType + ' from ' + username + '',
     html: `
     <html>
       <head>
@@ -1823,7 +1927,7 @@ function sendRequestConfirmationEmail(senderEmail, username, receiver, requestTy
   const mailOptions = {
     from: 'Payfriendz App',
     to: senderEmail,
-    subject: 'Payfriendz: Your ' +requestType+ ' to ' + receiver +  ' has been ' + status,
+    subject: 'Payfriendz: Your ' + requestType + ' to ' + receiver + ' has been ' + status,
     html: `
     <html>
       <head>
@@ -1963,7 +2067,7 @@ async function getBalance(userId) {
 
 //  new route /addFriend?friendId=$friendId with JWT authentication
 app.post('/addFriendId', authenticateToken, async (req, res) => {
-  try{
+  try {
     const userId = req.user.userId;
     const friendId = req.body.friendId;
     console.log("user_id: ", userId, "- friendId: ", friendId);
@@ -1976,23 +2080,23 @@ app.post('/addFriendId', authenticateToken, async (req, res) => {
       [userId, friendId, friendId, userId]
     );
 
-        console.log(friends);
-      //when they are not already friends
-      if(friends[0] == null){
-        const query = `
+    console.log(friends);
+    //when they are not already friends
+    if (friends[0] == null) {
+      const query = `
       INSERT INTO Friendship 
       (requester_id, addressee_id, status, request_time) 
       VALUES (?, ?, ?, NOW())`;
-       const [addingFriend] = await db.query(query, [userId, friendId, 'pending']);
-       res.status(200).json({addingFriend});
-      }else{
-        //res.status(500).json({message: 'Cannot add User'});
-        res.status(500).json('Cannot add User');
-      }
-    }catch (error) {
-      console.error('Error adding friend:', error);
-      res.status(500).json({ message: 'Internal server error' });
+      const [addingFriend] = await db.query(query, [userId, friendId, 'pending']);
+      res.status(200).json({ addingFriend });
+    } else {
+      //res.status(500).json({message: 'Cannot add User'});
+      res.status(500).json('Cannot add User');
     }
+  } catch (error) {
+    console.error('Error adding friend:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
 });
 
 

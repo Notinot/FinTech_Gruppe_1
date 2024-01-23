@@ -1,5 +1,9 @@
 
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/Screens/Events/EventScreen.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import '../api_service.dart';
 
@@ -15,15 +19,59 @@ class InviteToEventScreen extends StatefulWidget {
 class _InviteToEventScreenState extends State<InviteToEventScreen> {
 
   final TextEditingController recipientController = TextEditingController();
-
   Color recipientBorderColor = Colors.grey;
-
   final String recipient = '';
+
+
+  Future<List<String>> fetchParticipants(int eventId) async {
+    try{
+      const storage = FlutterSecureStorage();
+      final token = await storage.read(key: 'token');
+
+      if (token == null) {
+        throw Exception('Token not found');
+      }
+
+      List<String> participants = [];
+
+      final response = await http.get(
+        Uri.parse('${ApiService.serverUrl}/event-participants?eventId=$eventId'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if(response.statusCode == 200){
+
+        final List<dynamic> participantsList = jsonDecode(response.body);
+
+        // Explicitly cast each element to String
+        final List<String> participants = participantsList
+            .map((dynamic item) => (item as Map<String, dynamic>)['username'].toString())
+            .toList();
+
+        for(var p in participants){
+          print(p);
+        }
+        return participants;
+
+      }else{
+
+        throw Exception('Failed to load participants. Error: ${response.statusCode}');
+      }
+    }catch(e){
+      print("Error fetching Participants");
+      print(e);
+      rethrow;
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
 
-    print(recipient);
+    final Future<List<String>> participants = fetchParticipants(widget.eventId);
 
     return Scaffold(
       appBar: AppBar(
@@ -36,7 +84,7 @@ class _InviteToEventScreenState extends State<InviteToEventScreen> {
           children: <Widget>[
             const Text(
               'Recipient:',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             TextFormField(
@@ -47,7 +95,32 @@ class _InviteToEventScreenState extends State<InviteToEventScreen> {
                 prefixIcon: const Icon(Icons.person),
               ),
             ),
-
+            const SizedBox(height: 24),
+            Text("Participants: ", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            Expanded(
+              child: FutureBuilder<List<String>>(
+                future: participants,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return CircularProgressIndicator();
+                  } else if (snapshot.hasError) {
+                    return Text('Error: ${snapshot.error}');
+                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return Text('No participants found');
+                  } else {
+                    return ListView.builder(
+                      itemCount: snapshot.data!.length,
+                      itemBuilder: (context, index) {
+                        return ListTile(
+                          title: Text(snapshot.data![index]),
+                          // Add more details if needed
+                        );
+                      },
+                    );
+                  }
+                },
+              ),
+            ),
             const SizedBox(height: 24),
             Center(
               child: ElevatedButton(
@@ -66,7 +139,7 @@ class _InviteToEventScreenState extends State<InviteToEventScreen> {
                     });
                   }
 
-                  // check if user is sending money to himself
+
                   final Map<String, dynamic> user =
                   await ApiService.fetchUserProfile();
 

@@ -333,6 +333,7 @@ class ApiService {
 
   static Future<bool> EventService(String body) async {
     try {
+      print("Starting EventService()");
       print(body);
       const storage = FlutterSecureStorage();
       final token = await storage.read(key: 'token');
@@ -360,8 +361,6 @@ class ApiService {
       print(e);
       return false;
     }
-
-    return false;
   }
 
   static Future<int> inviteEvent(int eventId, String recipient) async {

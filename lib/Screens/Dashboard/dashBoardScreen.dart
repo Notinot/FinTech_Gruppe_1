@@ -4,14 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Screens/Dashboard/appDrawer.dart';
 import 'package:flutter_application_1/Screens/Dashboard/Notifications.dart';
 import 'package:flutter_application_1/Screens/Dashboard/accountSummary.dart';
-import 'package:flutter_application_1/Screens/Events/CreateEventScreen.dart';
+import 'package:flutter_application_1/Screens/Events/EventScreen.dart';
 import 'package:flutter_application_1/Screens/Friends/FriendsScreen.dart';
 import 'package:flutter_application_1/Screens/Dashboard/Notifications.dart';
 import 'package:flutter_application_1/Screens/Money/TransactionHistoryScreen.dart';
 import 'package:flutter_application_1/Screens/api_service.dart';
 import 'package:flutter_application_1/Screens/Dashboard/quickActionsMenu.dart';
 import 'package:flutter_application_1/Screens/Dashboard/userProfileSection.dart';
-import 'package:flutter_application_1/Screens/dashBoardScreen.dart';
+// import 'package:flutter_application_1/Screens/dashBoardScreen.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:badges/badges.dart' as Badge;
@@ -97,6 +97,35 @@ class _DashboardScreenState extends State<DashboardScreen> {
         throw Exception('Token not found');
       }
 
+      // Event Service
+      final res = await http.get(
+        Uri.parse('${ApiService.serverUrl}/fetch-all-events'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if(res.statusCode == 200){
+
+        final List<dynamic> data = jsonDecode(res.body);
+        final List<dynamic> eventsData = data;
+
+        List<Event> events = eventsData.map((eventData) {
+        return Event.fromJson(eventData as Map<String, dynamic>);
+        }).toList();
+
+        for (int i = 0; i < events.length; i++) {
+          for (int j = i + 1; j < events.length; j++) {
+            if (events[i].eventID == events[j].eventID) {
+              events.remove(events[i]);
+            }
+          }
+        }
+        Event.eventService(events);
+      }
+
+
       final response = await http.get(
         Uri.parse('${ApiService.serverUrl}/dashboard-events'),
         headers: <String, String>{
@@ -109,22 +138,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
         final List<dynamic> data = jsonDecode(response.body);
         final List<dynamic> eventsData = data;
 
-        List<Event> filteredEvents = [];
+        List<Event> dashboardEvents = [];
         List<Event> events = eventsData.map((eventData) {
           return Event.fromJson(eventData as Map<String, dynamic>);
         }).toList();
 
         for (var event in events) {
-          if (event.status == 1 && filteredEvents.length <= 3) {
+          if (event.status == 1 && dashboardEvents.length <= 3) {
             event.checkIfCreator();
-            filteredEvents.add(event);
+            dashboardEvents.add(event);
           }
         }
 
-        filteredEvents
+        dashboardEvents
             .sort((a, b) => b.datetimeEvent.compareTo(a.datetimeEvent));
 
-        return filteredEvents.reversed.toList();
+        return dashboardEvents.reversed.toList();
       } else {
         throw Exception('Failed to load events. Error: ${response.statusCode}');
       }
@@ -556,7 +585,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         children: [
           Expanded(
             child: ListTile(
-              title: Text('Invited to $eventTitle from $creator'),
+              title: Text('$creator invited you to:\n $eventTitle'),
             ),
           ),
           IconButton(

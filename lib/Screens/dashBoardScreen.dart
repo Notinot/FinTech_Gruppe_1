@@ -159,6 +159,8 @@ class UpcomingEvents extends StatelessWidget {
   }
 }
 
+// TRASH
+
 
 class Event {
   final int eventID;

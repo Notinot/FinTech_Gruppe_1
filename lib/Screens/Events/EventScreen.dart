@@ -33,7 +33,20 @@ class _EventScreenState extends State<EventScreen> {
   late Future<List<Event>> eventsFuture;
   late search_bar.SearchBar searchBar;
 
+  String currentSortOrder = 'All events';
+  List<String> sortOptions = [
+    'All events',
+    'My events',
+    'Active',
+    'Inactive'
+  ];
+
+  String currentCategoryOption = 'Category';
+  List<String> possibleCategories = ['Category'];
+
+
   List<Event> events = [];
+
   @override
   void initState() {
     super.initState();
@@ -50,18 +63,6 @@ class _EventScreenState extends State<EventScreen> {
       hintText: "Search",
     );
   }
-
-  final List<String> possibleFilters = [
-    'All events',
-    'My events',
-    'Pending',
-    'Active',
-    'Inactive'
-  ];
-  String eventFilter = 'All events';
-
-  final List<String> possibleCategories = [];
-  String categoryFilter = 'Category';
 
   // Fetch events from the backend
   Future<List<Event>> fetchEvents() async {
@@ -121,13 +122,13 @@ class _EventScreenState extends State<EventScreen> {
           }
         }
 
-        switch (eventFilter) {
+        switch (currentSortOrder) {
           case 'All events':
-            if (categoryFilter == 'Category') {
+            if (currentCategoryOption == 'Category') {
               return events;
-            } else if (categoryFilter != 'Category') {
+            } else if (currentCategoryOption != 'Category') {
               for (var event in events) {
-                if (categoryFilter == event.category &&
+                if (currentCategoryOption == event.category &&
                     !filteredEvents.contains(event)) {
                   filteredEvents.add(event);
                 }
@@ -135,7 +136,7 @@ class _EventScreenState extends State<EventScreen> {
               return filteredEvents;
             }
           case 'My events':
-            if (categoryFilter == 'Category') {
+            if (currentCategoryOption == 'Category') {
               for (var event in events) {
                 if (userId == event.creatorId.toString() &&
                     !filteredEvents.contains(event)) {
@@ -143,10 +144,10 @@ class _EventScreenState extends State<EventScreen> {
                 }
               }
               return filteredEvents;
-            } else if (categoryFilter != 'Category') {
+            } else if (currentCategoryOption != 'Category') {
               for (var event in events) {
                 if (userId == event.creatorId.toString() &&
-                    categoryFilter == event.category &&
+                    currentCategoryOption == event.category &&
                     !filteredEvents.contains(event)) {
                   filteredEvents.add(event);
                 }
@@ -154,7 +155,7 @@ class _EventScreenState extends State<EventScreen> {
               return filteredEvents;
             }
           case 'Active':
-            if (categoryFilter == 'Category') {
+            if (currentCategoryOption == 'Category') {
               for (var event in events) {
                 if (event.status == 1 &&
                     event.datetimeEvent.millisecondsSinceEpoch >
@@ -164,10 +165,10 @@ class _EventScreenState extends State<EventScreen> {
                 }
               }
               return filteredEvents;
-            } else if (categoryFilter != 'Category') {
+            } else if (currentCategoryOption != 'Category') {
               for (var event in events) {
                 if (event.status == 1 &&
-                    categoryFilter == event.category &&
+                    currentCategoryOption == event.category &&
                     event.datetimeEvent.millisecondsSinceEpoch >
                         DateTime.now().millisecondsSinceEpoch &&
                     !filteredEvents.contains(event)) {
@@ -177,7 +178,7 @@ class _EventScreenState extends State<EventScreen> {
               return filteredEvents;
             }
           case 'Inactive':
-            if (categoryFilter == 'Category') {
+            if (currentCategoryOption == 'Category') {
               for (var event in events) {
                 if (event.status != 1 ||
                     event.datetimeEvent.millisecondsSinceEpoch <
@@ -188,12 +189,12 @@ class _EventScreenState extends State<EventScreen> {
                 }
               }
               return filteredEvents;
-            } else if (categoryFilter != 'Category') {
+            } else if (currentCategoryOption != 'Category') {
               for (var event in events) {
                 if (event.status != 1 ||
                     event.datetimeEvent.millisecondsSinceEpoch <
                         DateTime.now().millisecondsSinceEpoch) {
-                  if (categoryFilter == event.category &&
+                  if (currentCategoryOption == event.category &&
                       !filteredEvents.contains(event)) {
                     filteredEvents.add(event);
                   }
@@ -225,7 +226,58 @@ class _EventScreenState extends State<EventScreen> {
               MaterialPageRoute(builder: (context) => DashboardScreen()),
             );
           }),
-      actions: [searchBar.getSearchAction(context)],
+        actions: [
+        DropdownButton<String>(
+          value: currentSortOrder,
+          icon: Icon(Icons.sort),
+          onChanged: (String? newValue) {
+            if(newValue != null){
+              setState(() {
+                currentSortOrder = newValue;
+              });
+            }
+          },
+          items: sortOptions.map<DropdownMenuItem<String>>((String value) {
+            return DropdownMenuItem<String>(
+              value: value,
+              child: Text(value),
+              onTap: () {
+                setState(() {
+                  currentSortOrder = value;
+                  eventsFuture = fetchEvents();
+                });
+              },
+            );
+          }).toList(),
+        ),
+        // Not implemented because of missing Space!
+        /*
+        DropdownButton<String>(
+          value: currentCategoryOption,
+          icon: Icon(Icons.sort),
+          onChanged: (String? newValue) {
+            if(newValue != null){
+              setState(() {
+                currentCategoryOption = newValue;
+              });
+            }
+          },
+          items: possibleCategories.map<DropdownMenuItem<String>>((String value) {
+            return DropdownMenuItem<String>(
+              value: value,
+              child: Text(value),
+              onTap: () {
+                setState(() {
+                  currentCategoryOption = value;
+                  eventsFuture = fetchEvents();
+                });
+              },
+            );
+          }).toList(),
+        ),
+        */
+        searchBar.getSearchAction(context)
+      ],
     );
   }
 
@@ -282,6 +334,7 @@ class _EventScreenState extends State<EventScreen> {
     });
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -290,8 +343,8 @@ class _EventScreenState extends State<EventScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           setState(() {
-            eventFilter = 'All events';
-            categoryFilter = 'Category';
+            currentSortOrder = 'All events';
+            currentCategoryOption = 'Category';
             eventsFuture = fetchEvents();
           });
         },
@@ -332,77 +385,12 @@ class _EventScreenState extends State<EventScreen> {
           }
         },
       ),
-
-      bottomNavigationBar: BottomAppBar(
-        child: FutureBuilder<Map<String, dynamic>>(
-            future: ApiService.fetchUserProfile(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              } else if (snapshot.hasError) {
-                return Text('Error:  ${snapshot.error}');
-              } else {
-                final Map<String, dynamic> user = snapshot.data!;
-                return Container(
-                  height: 20,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 32.0),
-                          child: DropdownMenu<String>(
-                            width: 140,
-                            initialSelection: eventFilter,
-                            hintText: eventFilter,
-                            requestFocusOnTap: false,
-                            onSelected: (String? newValue) {
-                              setState(() {
-                                eventFilter = newValue!;
-                                eventsFuture = fetchEvents();
-                              });
-                            },
-                            dropdownMenuEntries: possibleFilters
-                                .map<DropdownMenuEntry<String>>((String value) {
-                              return DropdownMenuEntry<String>(
-                                  value: value, label: value);
-                            }).toList(),
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 32.0),
-                          child: DropdownMenu<String>(
-                            width: 140,
-                            initialSelection: categoryFilter,
-                            hintText: categoryFilter,
-                            requestFocusOnTap: false,
-                            onSelected: (String? newValue) {
-                              setState(() {
-                                categoryFilter = newValue!;
-                                eventsFuture = fetchEvents();
-                              });
-                            },
-                            dropdownMenuEntries: possibleCategories
-                                .map<DropdownMenuEntry<String>>((String value) {
-                              return DropdownMenuEntry<String>(
-                                  value: value, label: value);
-                            }).toList(),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }
-            }),
-      ),
     );
   }
 }
 
 class Event {
+
   final int eventID;
   final String title;
   final String category;
@@ -474,6 +462,13 @@ class Event {
     return iconMap.containsKey(category) ? iconMap[category]! : Icons.category;
   }
 
+  Future<void> checkIfCreator() async {
+    String userId = await ApiService.fetchUserId();
+    if(creatorId.toString() == userId){
+      isCreator = true;
+    }
+  }
+
   bool notOutDatedEvent(DateTime eventTime) {
     if (eventTime.millisecondsSinceEpoch >
         DateTime.now().millisecondsSinceEpoch) {
@@ -513,7 +508,7 @@ class Event {
     );
   }
 
-  Future eventService() async {
+  static Future<void> eventService(List<Event> events) async {
     try {
       const storage = FlutterSecureStorage();
       final token = await storage.read(key: 'token');
@@ -522,40 +517,22 @@ class Event {
         throw Exception('Token not found');
       }
 
-      final fetchEvents = await http.get(
-        Uri.parse('${ApiService.serverUrl}/events'),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-          'Authorization': 'Bearer $token',
-        },
-      );
+      List<Event> checkingEvents = [];
 
-      if (fetchEvents.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(fetchEvents.body);
-        final List<dynamic> eventsData = data;
-
-        List<Event> events = eventsData.map((eventData) {
-          return Event.fromJson(eventData as Map<String, dynamic>);
-        }).toList();
-
-        print('fetchEvents: Call was successful');
-
-        List<Event> checkingEvents = [];
-
-        // Get all repeatable Events
-        for (var event in events) {
-          if (event.recurrenceType != 0 && !checkingEvents.contains(event)) {
-            checkingEvents.add(event);
-          }
+      // Get all repeatable Events
+      for (var event in events) {
+        if (event.recurrenceType != 0 && !checkingEvents.contains(event)) {
+          checkingEvents.add(event);
         }
+      }
 
-        for (var event in checkingEvents) {
-          if (event.datetimeEvent.compareTo(DateTime.now()) < 0) {
-            switch (event.recurrenceType) {
-              case 1:
-                event.datetimeEvent =
+      for (var event in checkingEvents) {
+        if (event.datetimeEvent.compareTo(DateTime.now()) < 0) {
+          switch (event.recurrenceType) {
+            case 1:
+              event.datetimeEvent =
                     event.datetimeEvent.add(Duration(days: 7));
-                event.recurrenceInterval = (event.recurrenceInterval! + 1)!;
+              event.recurrenceInterval = (event.recurrenceInterval! + 1)!;
               case 2:
                 // Needs to be improved
                 event.datetimeEvent =
@@ -574,17 +551,15 @@ class Event {
               checkingEvents.map((i) => i.toJson()).toList();
 
           String body = jsonEncode(eventsJson);
-
+          print(body);
           ApiService.EventService(body);
+
         } catch (e) {
           print(e);
         }
-      } else {
-        print("/events error");
-        print(fetchEvents.statusCode);
-      }
+
     } catch (e) {
-      return e.toString();
+      print(e.toString());
     }
   }
 
@@ -592,7 +567,7 @@ class Event {
     return {
       'event_id': this.eventID,
       'datetime_event': this.datetimeEvent.toString().substring(
-          0, this.datetimeEvent.toString().length - 4), // Use UTC time
+          0, this.datetimeEvent.toString().length - 5), // Use UTC time
       'recurrence_interval': this.recurrenceInterval,
     };
   }
@@ -712,54 +687,7 @@ class EventInfoScreen extends StatelessWidget {
                               ? event.notOutDatedEvent(event.datetimeEvent)
                                   ? InkWell(
                                       onTap: () {
-                                        showDialog(
-                                            context: context,
-                                            builder: (BuildContext context) {
-                                              return AlertDialog(
-                                                title: Text(
-                                                    'Cancel ${event.title}'),
-                                                content: Text(
-                                                    'Are you sure you want to cancel the Event "${event.title}"?'),
-                                                actions: <Widget>[
-                                                  TextButton(
-                                                    onPressed: () {
-                                                      Navigator.of(context)
-                                                          .pop();
-                                                    },
-                                                    child: Text('Back'),
-                                                  ),
-                                                  SizedBox(width: 32),
-                                                  TextButton(
-                                                    onPressed: () async {
-                                                      int result =
-                                                          await ApiService
-                                                              .cancelEvent(event
-                                                                  .eventID);
-                                                      if (result == 401) {
-                                                        Navigator.of(context)
-                                                            .pop();
-                                                        showErrorSnackBar(
-                                                            context,
-                                                            'Event was already canceled!');
-                                                      } else if (result == 0) {
-                                                        Navigator.of(context)
-                                                            .pop();
-                                                        showErrorSnackBar(
-                                                            context,
-                                                            'Canceling event failed!');
-                                                      } else if (result == 1) {
-                                                        Navigator.of(context)
-                                                            .pop();
-                                                        showSuccessSnackBar(
-                                                            context,
-                                                            'Canceling event was successful!');
-                                                      }
-                                                    },
-                                                    child: Text('Yes'),
-                                                  )
-                                                ],
-                                              );
-                                            });
+                                        editOrcancelEvent(context);
                                       },
                                       child: Icon(
                                         Icons.settings,
@@ -1021,7 +949,111 @@ class EventInfoScreen extends StatelessWidget {
   String formatAmount() {
     return '${NumberFormat("#,##0.00", "de_DE").format(event.price)} €';
   }
+
+  Future<dynamic> editOrcancelEvent(BuildContext context) {
+    return showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(event.title),
+          content: Text('Edit or Cancel Event'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.pop(context, 'Back'),
+              child: const Text('Back'),
+            ),
+            ElevatedButton(
+              child: Text('Cancel'),
+              onPressed: () {
+                Navigator.pop(
+                    context); //closes dialog so pressing return wont open it again
+                showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: Text(
+                            '${event.title}'),
+                        content: Text(
+                            'Are you sure you want to cancel the Event "${event.title}"?'),
+                        actions: <Widget>[
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(context)
+                                  .pop();
+                            },
+                            child: Text('No'),
+                          ),
+                          SizedBox(width: 32),
+                          TextButton(
+                            onPressed: () async {
+                              int result =
+                              await ApiService
+                                  .cancelEvent(event
+                                  .eventID);
+                              if (result == 401) {
+                                Navigator.of(context)
+                                    .pop();
+                                showErrorSnackBar(
+                                    context,
+                                    'Event was already canceled!');
+                              } else if (result == 0) {
+                                Navigator.of(context)
+                                    .pop();
+                                showErrorSnackBar(
+                                    context,
+                                    'Canceling event failed!');
+                              } else if (result == 1) {
+                                Navigator.of(context)
+                                    .pop();
+                                showSuccessSnackBar(
+                                    context,
+                                    'Canceling event was successful!');
+                              }
+                            },
+                            child: Text('Yes'),
+                          )
+                        ],
+                      );
+                    });
+              },
+            ),
+            ElevatedButton(
+              child: Text('Edit'),
+              onPressed: () {
+                Navigator.pop(
+                    context); //closes dialog so pressing return wont open it again
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => EditEventScreen(
+                      event: event,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
 }
+
+
+class EditEventScreen extends StatelessWidget {
+
+  final Event event;
+  const EditEventScreen({Key? key, required this.event}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    // TODO: implement build
+    throw UnimplementedError();
+  }
+}
+
+
 
 class EventDateSection extends StatelessWidget {
   final Event event;
@@ -1072,6 +1104,44 @@ class EventTimeSection extends StatelessWidget {
     );
   }
 }
+
+class UpcomingEvents extends StatelessWidget {
+  const UpcomingEvents({Key? key, required this.fetchEventsFunction}) : super(key: key);
+  final Future<List<Event>> Function() fetchEventsFunction;
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<Event>>(
+      future: fetchEventsFunction(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Text('Error: ${snapshot.error}');
+        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return Text('No upcoming events');
+        } else {
+          List<Event> events = snapshot.data!;
+          return Column(
+            children: <Widget>[
+              const Text(
+                'Upcoming Events:',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              ListView.builder(
+                shrinkWrap: true,
+                itemCount: events.length,
+                itemBuilder: (context, index) {
+                  return EventItem(event: events[index]);
+                },
+              ),
+            ],
+          );
+        }
+      },
+    );
+  }
+}
+
 
 void showErrorSnackBar(BuildContext context, String message) {
   ScaffoldMessenger.of(context).showSnackBar(

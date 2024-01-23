@@ -149,7 +149,7 @@ class ApiService {
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
-        final double balance = data['balance'];
+        final double balance = data['balance'].toDouble();
         return balance;
       } else {
         throw Exception('Failed to load user profile');

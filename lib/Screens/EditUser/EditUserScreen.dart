@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_application_1/Screens/Dashboard/appDrawer.dart';
 import 'package:flutter_application_1/Screens/Dashboard/dashBoardScreen.dart';
 import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
 import 'package:flutter_application_1/Screens/Login & Register/LoginScreen.dart';
@@ -551,6 +552,7 @@ class _EditUserState extends State<EditUser> {
                   }),
               automaticallyImplyLeading: false,
             ),
+            drawer: AppDrawer(user: user),
             body: SingleChildScrollView(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),

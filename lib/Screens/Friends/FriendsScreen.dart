@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_application_1/Screens/Dashboard/dashBoardScreen.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
@@ -55,16 +56,6 @@ class _FriendsScreenState extends State<FriendsScreen> {
       appBar: AppBar(
         titleSpacing: 15.0,
         title: Text('Friends'),
-        leading: IconButton(
-            icon: Icon(Icons.arrow_back),
-            onPressed: () {
-              // Custom behavior when the back button is pressed
-              // For example, you can navigate to a different screen
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => DashboardScreen()),
-              );
-            }),
         actions: [
           IconButton(
               onPressed: () {
@@ -1172,14 +1163,13 @@ class ShowProfilePicture extends StatelessWidget {
       onTap: () => image != null
           ? showDialog(
               context: context,
-              builder: (context) => AlertDialog(
-                // title: Text(
-                //   friend.username,
-                //   style: TextStyle(fontSize: 20),
-                // ),
-                content: Image.memory(
-                  image!,
-                  fit: BoxFit.contain,
+              builder: (context) => Animate(
+                effects: [FadeEffect()],
+                child: AlertDialog(
+                  content: Image.memory(
+                    image!,
+                    fit: BoxFit.contain,
+                  ),
                 ),
               ),
             )

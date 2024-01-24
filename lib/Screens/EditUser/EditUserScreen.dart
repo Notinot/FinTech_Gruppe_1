@@ -88,8 +88,8 @@ class _EditUserState extends State<EditUser> {
         firstname_old = userData['first_name'];
         lastname_old = userData['last_name'];
         currentPassword = userData['password_hash'];
-        profileImage =
-            Uint8List.fromList(userData['picture']['data'].cast<int>());
+        //profileImage =
+        //   Uint8List.fromList(userData['picture']['data'].cast<int>());
 
         /*_imageProvider = ((userData['picture'] != null &&
                     userData['picture'] is Map<String, dynamic> &&
@@ -110,8 +110,7 @@ class _EditUserState extends State<EditUser> {
         } else {
           // Provide a default value if userData['picture'] is null
           _imageProvider = AssetImage('lib/assets/profile_image.png');
-          profileImage =
-              null; // or you can set it to a null value expected by your API
+          profileImage = null;
         }
       });
     });

@@ -96,32 +96,6 @@ class _InviteToEventScreenState extends State<InviteToEventScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            Text("Participants: ", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            Expanded(
-              child: FutureBuilder<List<String>>(
-                future: participants,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return CircularProgressIndicator();
-                  } else if (snapshot.hasError) {
-                    return Text('Error: ${snapshot.error}');
-                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return Text('No participants found');
-                  } else {
-                    return ListView.builder(
-                      itemCount: snapshot.data!.length,
-                      itemBuilder: (context, index) {
-                        return ListTile(
-                          title: Text(snapshot.data![index]),
-                          // Add more details if needed
-                        );
-                      },
-                    );
-                  }
-                },
-              ),
-            ),
-            const SizedBox(height: 24),
             Center(
               child: ElevatedButton(
                 onPressed: () async {
@@ -173,6 +147,32 @@ class _InviteToEventScreenState extends State<InviteToEventScreen> {
                   }
                 },
                 child: Text('Invite'), // Add this line
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text("Participants: ", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            Expanded(
+              child: FutureBuilder<List<String>>(
+                future: participants,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return CircularProgressIndicator();
+                  } else if (snapshot.hasError) {
+                    return Text('Error: ${snapshot.error}');
+                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return Text('No participants found');
+                  } else {
+                    return ListView.builder(
+                      itemCount: snapshot.data!.length,
+                      itemBuilder: (context, index) {
+                        return ListTile(
+                          title: Text(snapshot.data![index]),
+                          // Add more details if needed
+                        );
+                      },
+                    );
+                  }
+                },
               ),
             ),
           ],

@@ -1123,7 +1123,6 @@ app.post('/event-service', async (req, res) => {
   try {
 
         events = req.body;
-        console.log(events);
 
     for (let i = 0; i < events.length; i++) {
 
@@ -1133,7 +1132,6 @@ app.post('/event-service', async (req, res) => {
                 events[i].recurrence_interval,
                 events[i].event_id
         ]);
-
     }
 
 
@@ -1160,13 +1158,13 @@ app.post('/event-service', async (req, res) => {
   }
 });
 
+
+
 //route to get the events the user is part of with JWT authentication
 app.get('/events', authenticateToken, async (req, res) => {
   try {
-    console.log('Token:', req.headers['authorization']);
     // Get the user ID from the authenticated token
     const userId = req.user.userId;
-    console.log('userId:', userId);
 
     // All Events the User interacted with (being Creator or joined the Event)
     const [interactedEvents] = await db.query(`
@@ -1248,11 +1246,11 @@ app.get('/dashboard-events', authenticateToken, async (req, res) => {
                        User.user_id AS creator_id
              FROM Event
              JOIN
-                       User_Event ON User_Event.event_id = Event.id
-                   JOIN
-                       User ON Event.creator_id = User.user_id
-                   LEFT JOIN
-                       Location ON Event.id = Location.event_id
+                    User_Event ON User_Event.event_id = Event.id
+             JOIN
+                    User ON Event.creator_id = User.user_id
+             LEFT JOIN
+                    Location ON Event.id = Location.event_id
              WHERE User_Event.status = 1
              AND
              datetime_event > NOW()
@@ -1279,9 +1277,6 @@ app.post('/create-event', authenticateToken, async (req, res) => {
 
   try {
     const senderId = req.user.userId;
-    console.log('senderId: ', senderId);
-
-
     const { category, title, description, max_participants, datetime_event, country, city, street, zipcode, price, recurrence_type } = req.body;
 
     // Validate input

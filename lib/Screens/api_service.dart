@@ -334,7 +334,6 @@ class ApiService {
   static Future<bool> EventService(String body) async {
     try {
       print("Starting EventService()");
-      print(body);
       const storage = FlutterSecureStorage();
       final token = await storage.read(key: 'token');
       if (token == null) {

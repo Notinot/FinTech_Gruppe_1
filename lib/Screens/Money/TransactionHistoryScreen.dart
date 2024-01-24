@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/Screens/Dashboard/appDrawer.dart';
 import 'package:flutter_application_1/Screens/Dashboard/dashBoardScreen.dart';
 import 'package:flutter_application_1/Screens/api_service.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -145,16 +146,6 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
   AppBar buildAppBar(BuildContext context) {
     return AppBar(
       title: Text('History'),
-      leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () {
-            // Custom behavior when the back button is pressed
-            // For example, you can navigate to a different screen
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => DashboardScreen()),
-            );
-          }),
       actions: [
         DropdownButton<String>(
           value: currentSortOrder,
@@ -264,9 +255,11 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
         },
         child: const Icon(Icons.refresh),
       ),
+
       body: FutureBuilder<Map<String, dynamic>>(
         // Fetch user profile data
         future: ApiService.fetchUserProfile(),
+
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -302,6 +295,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
           }
         },
       ),
+
       // Bottom navigation bar
       bottomNavigationBar: BottomAppBar(
         child: FutureBuilder<Map<String, dynamic>>(

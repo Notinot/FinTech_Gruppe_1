@@ -36,16 +36,10 @@ class _EventScreenState extends State<EventScreen> {
   late search_bar.SearchBar searchBar;
 
   String currentSortOrder = 'All events';
-  List<String> sortOptions = [
-    'All events',
-    'My events',
-    'Active',
-    'Inactive'
-  ];
+  List<String> sortOptions = ['All events', 'My events', 'Active', 'Inactive'];
 
   String currentCategoryOption = 'Category';
   List<String> possibleCategories = ['Category'];
-
 
   List<Event> events = [];
 
@@ -226,12 +220,12 @@ class _EventScreenState extends State<EventScreen> {
               MaterialPageRoute(builder: (context) => DashboardScreen()),
             );
           }),
-        actions: [
+      actions: [
         DropdownButton<String>(
           value: currentSortOrder,
           icon: Icon(Icons.sort),
           onChanged: (String? newValue) {
-            if(newValue != null){
+            if (newValue != null) {
               setState(() {
                 currentSortOrder = newValue;
               });
@@ -333,7 +327,6 @@ class _EventScreenState extends State<EventScreen> {
       eventsFuture = fetchEvents();
     });
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -452,9 +445,7 @@ class EventItem extends StatelessWidget {
   }
 }
 
-
 class EditEventScreen extends StatelessWidget {
-
   final Event event;
   const EditEventScreen({Key? key, required this.event}) : super(key: key);
 
@@ -464,8 +455,6 @@ class EditEventScreen extends StatelessWidget {
     throw UnimplementedError();
   }
 }
-
-
 
 class EventDateSection extends StatelessWidget {
   final Event event;
@@ -518,7 +507,8 @@ class EventTimeSection extends StatelessWidget {
 }
 
 class UpcomingEvents extends StatelessWidget {
-  const UpcomingEvents({Key? key, required this.fetchEventsFunction}) : super(key: key);
+  const UpcomingEvents({Key? key, required this.fetchEventsFunction})
+      : super(key: key);
   final Future<List<Event>> Function() fetchEventsFunction;
 
   @override
@@ -553,7 +543,6 @@ class UpcomingEvents extends StatelessWidget {
     );
   }
 }
-
 
 void showErrorSnackBar(BuildContext context, String message) {
   ScaffoldMessenger.of(context).showSnackBar(

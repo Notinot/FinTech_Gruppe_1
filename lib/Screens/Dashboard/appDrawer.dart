@@ -109,7 +109,7 @@ class AppDrawer extends StatelessWidget {
             title: const Text('Add Money'),
             onTap: () {
               // Navigate to the events section
-              ApiService.navigateWithAnimation(context, AddMoneyScreen());
+              // ApiService.navigateWithAnimation(context, AddMoneyScreen());
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => AddMoneyScreen()),

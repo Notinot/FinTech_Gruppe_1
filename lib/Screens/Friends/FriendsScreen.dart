@@ -1210,7 +1210,7 @@ class ShowProfilePicture extends StatelessWidget {
         backgroundColor: Colors.grey,
         child: image == null
             ? Text(
-                '$initial',
+                '${initial.toUpperCase()}',
                 style: TextStyle(fontSize: size),
               )
             : null,

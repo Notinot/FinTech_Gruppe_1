@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_application_1/Screens/Dashboard/appDrawer.dart';
 import 'package:flutter_application_1/Screens/Dashboard/dashBoardScreen.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
@@ -55,6 +56,72 @@ class _FriendsScreenState extends State<FriendsScreen> {
         title: Text('Friends'),
         actions: [
           IconButton(
+            onPressed: () {
+              showSearch(
+                context: context,
+                delegate: FriendsSearchBar(callbackFunction: callback),
+              );
+            },
+            icon: Icon(Icons.search),
+          ),
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => BlockedUsersScreen(),
+                ),
+              );
+            },
+            icon: Icon(
+              Icons.person_off,
+              size: MediaQuery.of(context).size.width *
+                  0.07, //Dynamic Icon size depending on screen res
+            ),
+            padding: EdgeInsets.only(right: 15), //Distance to the right
+          ),
+        ],
+      ),
+      drawer: FutureBuilder<Map<String, dynamic>>(
+        future: ApiService
+            .fetchUserProfile(), // Replace with your actual method to fetch user data
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Drawer(
+              child: ListTile(
+                title: Text('Loading...'),
+              ),
+            );
+          } else if (snapshot.hasError) {
+            return Drawer(
+              child: ListTile(
+                title: Text('Error: ${snapshot.error}'),
+              ),
+            );
+          } else {
+            final Map<String, dynamic> user = snapshot.data!;
+            return AppDrawer(user: user);
+          }
+        },
+      ),
+      body: Column(
+        children: [
+          PendingFriends(callbackFunction: callback),
+          Friends(callbackFunction: callback),
+        ],
+      ),
+    );
+  }
+
+  /*@override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      resizeToAvoidBottomInset: false, //avoids overflow when keyboard is opened
+      appBar: AppBar(
+        titleSpacing: 15.0,
+        title: Text('Friends'),
+        actions: [
+          IconButton(
               onPressed: () {
                 showSearch(
                     context: context,
@@ -86,7 +153,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
         ],
       ),
     );
-  }
+  }*/
 }
 
 class PendingFriends extends StatelessWidget {

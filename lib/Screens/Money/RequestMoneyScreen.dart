@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/Screens/Dashboard/appDrawer.dart';
 import 'package:flutter_application_1/Screens/Dashboard/dashBoardScreen.dart';
 import 'package:flutter_application_1/Screens/Money/TransactionHistoryScreen.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -34,15 +35,30 @@ class _RequestMoneyScreenState extends State<RequestMoneyScreen> {
         ? requesterController.text = widget.requester
         : null;
     return Scaffold(
+      drawer: FutureBuilder<Map<String, dynamic>>(
+        future: ApiService
+            .fetchUserProfile(), // Replace with your actual method to fetch user data
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Drawer(
+              child: ListTile(
+                title: Text('Loading...'),
+              ),
+            );
+          } else if (snapshot.hasError) {
+            return Drawer(
+              child: ListTile(
+                title: Text('Error: ${snapshot.error}'),
+              ),
+            );
+          } else {
+            final Map<String, dynamic> user = snapshot.data!;
+            return AppDrawer(user: user);
+          }
+        },
+      ),
       appBar: AppBar(
         title: const Text('Request Money'),
-        leading: IconButton(
-            icon: Icon(Icons.arrow_back),
-            onPressed: () {
-              // Custom behavior when the back button is pressed
-              // For example, you can navigate to a different screen
-              ApiService.navigateWithAnimation(context, DashboardScreen());
-            }),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

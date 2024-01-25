@@ -89,8 +89,6 @@ class _EditUserState extends State<EditUser> {
         firstname_old = userData['first_name'];
         lastname_old = userData['last_name'];
         currentPassword = userData['password_hash'];
-        //profileImage =
-        //   Uint8List.fromList(userData['picture']['data'].cast<int>());
 
         /*_imageProvider = ((userData['picture'] != null &&
                     userData['picture'] is Map<String, dynamic> &&

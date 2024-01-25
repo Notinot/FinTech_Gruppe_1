@@ -89,8 +89,6 @@ class _EditUserState extends State<EditUser> {
         firstname_old = userData['first_name'];
         lastname_old = userData['last_name'];
         currentPassword = userData['password_hash'];
-        //profileImage =
-        //   Uint8List.fromList(userData['picture']['data'].cast<int>());
 
         /*_imageProvider = ((userData['picture'] != null &&
                     userData['picture'] is Map<String, dynamic> &&
@@ -538,7 +536,7 @@ class _EditUserState extends State<EditUser> {
           return Scaffold(
             appBar: AppBar(
               title: const Text('Edit Profile'),
-              leading: IconButton(
+              /*leading: IconButton(
                   icon: Icon(Icons.arrow_back),
                   onPressed: () {
                     // Custom behavior when the back button is pressed
@@ -548,10 +546,10 @@ class _EditUserState extends State<EditUser> {
                       MaterialPageRoute(
                           builder: (context) => DashboardScreen()),
                     );
-                  }),
-              automaticallyImplyLeading: false,
+                  }),*/
+              //automaticallyImplyLeading: false,
             ),
-            drawer: AppDrawer(user: user),
+            //drawer: AppDrawer(user: user),
             body: SingleChildScrollView(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -657,6 +655,7 @@ class _EditUserState extends State<EditUser> {
                 ),
               ),
             ),
+            drawer: AppDrawer(user: user),
           );
         }
       },

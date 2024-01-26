@@ -255,66 +255,83 @@ class _EditEventScreenState extends State<EditEventScreen> {
 
     print(selectedTimestamp);
 
-    final editEventResponse =
-        await http.post(Uri.parse('${ApiService.serverUrl}/edit-event'),
-            headers: {
-              'Content-Type': 'application/json; charset=UTF-8',
-              'Authorization': 'Bearer $token',
-            },
-            body: json.encode(<String, dynamic>{
-              'eventID': widget.event.eventID,
-              'category': selectedCategory,
-              'OLD_title': widget.event.title,
-              'title': title,
-              'description': description,
-              'max_participants': selectedMaxParticipants,
-              'datetime_event': selectedTimestamp.toString(),
-              'country': selectedCountry,
-              'city': city,
-              'street': street,
-              'zipcode': zipcode,
-              'price': parsedPrice,
-              'recurrence_type': recurrenceType,
-              'participantMails': participants,
-              'creatorName': creatorName
-            }));
-
-    print(editEventResponse);
-
-    if (editEventResponse.statusCode == 200) {
-      const storage = FlutterSecureStorage();
-      final token = await storage.read(key: 'token');
-
-      if (token == null) {
-        if (kDebugMode) {
-          print('JWT token not found.');
-        }
-        return;
-      }
-      if (kDebugMode) {
-        print('token: $token');
-      }
-
-      print(selectedTimestamp);
-
+    if (widget.event.category == selectedCategory.toString() &&
+        widget.event.city == city &&
+        widget.event.country == selectedCountry.toString() &&
+        /*widget.event.datetimeEvent == selectedTimestamp &&*/
+        widget.event.description == description &&
+        widget.event.maxParticipants.toString() == maxParticipants.toString() &&
+        widget.event.price.toString() == price &&
+        widget.event.title == title &&
+        widget.event.recurrenceType == recurrenceType.toInt() &&
+        widget.event.street == street &&
+        widget.event.zipcode == zipcode) {
       Navigator.push(
         this.context,
         MaterialPageRoute(builder: (context) => const DashboardScreen()),
       );
-    } else if (editEventResponse.statusCode == 401) {
-      setState(() {
-        selectedCountry = '';
-        countryButton = Colors.red;
-        cityError = 'The address does not exist';
-        streetError = ' ';
-        zipcodeError = ' ';
-      });
-
-      print('The address does not exist');
-      return;
     } else {
-      print('Error creating the event: ${editEventResponse.body}');
-      return;
+      final editEventResponse =
+          await http.post(Uri.parse('${ApiService.serverUrl}/edit-event'),
+              headers: {
+                'Content-Type': 'application/json; charset=UTF-8',
+                'Authorization': 'Bearer $token',
+              },
+              body: json.encode(<String, dynamic>{
+                'eventID': widget.event.eventID,
+                'category': selectedCategory,
+                'OLD_title': widget.event.title,
+                'title': title,
+                'description': description,
+                'max_participants': selectedMaxParticipants,
+                'datetime_event': selectedTimestamp.toString(),
+                'country': selectedCountry,
+                'city': city,
+                'street': street,
+                'zipcode': zipcode,
+                'price': parsedPrice,
+                'recurrence_type': recurrenceType,
+                'participantMails': participants,
+                'creatorName': creatorName
+              }));
+
+      print(editEventResponse);
+
+      if (editEventResponse.statusCode == 200) {
+        const storage = FlutterSecureStorage();
+        final token = await storage.read(key: 'token');
+
+        if (token == null) {
+          if (kDebugMode) {
+            print('JWT token not found.');
+          }
+          return;
+        }
+        if (kDebugMode) {
+          print('token: $token');
+        }
+
+        print(selectedTimestamp);
+
+        Navigator.push(
+          this.context,
+          MaterialPageRoute(builder: (context) => const DashboardScreen()),
+        );
+      } else if (editEventResponse.statusCode == 401) {
+        setState(() {
+          selectedCountry = '';
+          countryButton = Colors.red;
+          cityError = 'The address does not exist';
+          streetError = ' ';
+          zipcodeError = ' ';
+        });
+
+        print('The address does not exist');
+        return;
+      } else {
+        print('Error creating the event: ${editEventResponse.body}');
+        return;
+      }
     }
   }
 

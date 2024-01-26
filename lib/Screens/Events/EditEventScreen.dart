@@ -504,6 +504,8 @@ class _EditEventScreenState extends State<EditEventScreen> {
               const SizedBox(height: 16.0),
               TextFormField(
                 controller: priceController,
+                enabled: weekly == true || monthly == true || yearly == true,
+
                 decoration: InputDecoration(
                     hintText: '0,00 €', // Initial value
                     border: OutlineInputBorder(),

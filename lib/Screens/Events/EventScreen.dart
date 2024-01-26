@@ -489,17 +489,6 @@ class EventItem extends StatelessWidget {
   }
 }
 
-class EditEventScreen extends StatelessWidget {
-  final Event event;
-  const EditEventScreen({Key? key, required this.event}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    // TODO: implement build
-    throw UnimplementedError();
-  }
-}
-
 class EventDateSection extends StatelessWidget {
   final Event event;
   const EventDateSection({Key? key, required this.event}) : super(key: key);

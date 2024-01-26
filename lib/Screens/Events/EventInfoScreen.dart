@@ -3,6 +3,8 @@ import 'package:flutter_application_1/Screens/Events/InviteToEventScreen.dart';
 import 'package:flutter_application_1/Screens/api_service.dart'; // Assumed path
 import 'package:intl/intl.dart';
 import 'package:flutter_application_1/Screens/Events/Event.dart';
+import 'package:flutter_application_1/Screens/Events/EditEventScreen.dart'
+    as edit;
 
 import 'EventScreen.dart';
 
@@ -55,15 +57,15 @@ class EventInfoScreen extends StatelessWidget {
                           SizedBox(width: 24),
                           event.isCreator
                               ? event.notOutDatedEvent(event.datetimeEvent)
-                              ? InkWell(
-                              onTap: () {
-                                editOrcancelEvent(context);
-                              },
-                              child: Icon(
-                                Icons.settings,
-                                color: Colors.grey,
-                              ))
-                              : Container()
+                                  ? InkWell(
+                                      onTap: () {
+                                        editOrcancelEvent(context);
+                                      },
+                                      child: Icon(
+                                        Icons.settings,
+                                        color: Colors.grey,
+                                      ))
+                                  : Container()
                               : Container()
                         ],
                       ),
@@ -158,52 +160,52 @@ class EventInfoScreen extends StatelessWidget {
                       isEmpty
                           ? Container()
                           : Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Icon(Icons.add_location_alt_rounded),
-                            SizedBox(width: 8),
-                            Text(
-                              ' ${event.country}, ${event.city}, \n ${event.zipcode}, ${event.street}',
-                              style: TextStyle(fontSize: 18),
+                              padding: EdgeInsets.symmetric(horizontal: 16),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  Icon(Icons.add_location_alt_rounded),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    ' ${event.country}, ${event.city}, \n ${event.zipcode}, ${event.street}',
+                                    style: TextStyle(fontSize: 18),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ],
-                        ),
-                      ),
                       SizedBox(height: 4),
                       isNull
                           ? Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Icon(Icons.money_off_csred_rounded),
-                            SizedBox(width: 8),
-                            Text(
-                              'Free',
-                              style: TextStyle(fontSize: 18),
-                            ),
-                          ],
-                        ),
-                      )
+                              padding: EdgeInsets.symmetric(horizontal: 16),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  Icon(Icons.money_off_csred_rounded),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'Free',
+                                    style: TextStyle(fontSize: 18),
+                                  ),
+                                ],
+                              ),
+                            )
                           : Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Icon(Icons.attach_money_rounded),
-                            SizedBox(width: 8),
-                            Text(
-                              formatAmount(),
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
+                              padding: EdgeInsets.symmetric(horizontal: 16),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  Icon(Icons.attach_money_rounded),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    formatAmount(),
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ],
-                        ),
-                      ),
                       SizedBox(height: 24),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -220,88 +222,88 @@ class EventInfoScreen extends StatelessWidget {
                           event.status != 1
                               ? Container()
                               : event.isCreator
-                              ? event.notOutDatedEvent(event.datetimeEvent)
-                              ? event.notFullEvent()
-                              ? ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(
-                                textStyle: TextStyle(
-                                    fontWeight:
-                                    FontWeight.bold,
-                                    fontSize: 15)),
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      InviteToEventScreen(
-                                          eventId:
-                                          event.eventID),
-                                  ),
-                                );
-                              },
-                                icon: Icon(
-                                  Icons.emoji_people_rounded),
-                                  label: Text('Invite'),
-                          )
-                              : Container()
-                              : Container()
-                              : event.notOutDatedEvent(event.datetimeEvent)
-                              ? TextButton(
-                            onPressed: () {
-                              showDialog(
-                                context: context,
-                                builder: (BuildContext context) {
-                                  return AlertDialog(
-                                    title: Text(
-                                        'Leaving ${event.title}'),
-                                    content: Text(
-                                        'Are you sure you want to leave the Event "${event.title}"?'),
-                                    actions: <Widget>[
-                                      TextButton(
-                                        onPressed: () {
-                                          Navigator.of(context)
-                                              .pop();
-                                        },
-                                        child: Text('Back'),
-                                      ),
-                                      TextButton(
-                                        onPressed: () async {
-                                          int result =
-                                          await ApiService
-                                              .leaveEvent(event
-                                              .eventID);
-                                          if (result == 401) {
-                                            Navigator.of(context)
-                                                .pop();
-                                            showErrorSnackBar(
-                                                context,
-                                                'Event was already leaved!');
-                                          } else if (result ==
-                                              0) {
-                                            Navigator.of(context)
-                                                .pop();
-                                            showErrorSnackBar(
-                                                context,
-                                                'Leaving event failed!');
-                                          } else if (result ==
-                                              1) {
-                                            Navigator.of(context)
-                                                .pop();
-                                            showSuccessSnackBar(
-                                                context,
-                                                'Leaving event was successful!');
-                                          }
-                                        },
-                                        child: Text('Yes'),
-                                      )
-                                    ],
-                                  );
-                                },
-                              );
-                            },
-                                child: Text('Leave event'),
-                          )
-                              : Container()
+                                  ? event.notOutDatedEvent(event.datetimeEvent)
+                                      ? event.notFullEvent()
+                                          ? ElevatedButton.icon(
+                                              style: ElevatedButton.styleFrom(
+                                                  textStyle: TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontSize: 15)),
+                                              onPressed: () {
+                                                Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        InviteToEventScreen(
+                                                            eventId:
+                                                                event.eventID),
+                                                  ),
+                                                );
+                                              },
+                                              icon: Icon(
+                                                  Icons.emoji_people_rounded),
+                                              label: Text('Invite'),
+                                            )
+                                          : Container()
+                                      : Container()
+                                  : event.notOutDatedEvent(event.datetimeEvent)
+                                      ? TextButton(
+                                          onPressed: () {
+                                            showDialog(
+                                              context: context,
+                                              builder: (BuildContext context) {
+                                                return AlertDialog(
+                                                  title: Text(
+                                                      'Leaving ${event.title}'),
+                                                  content: Text(
+                                                      'Are you sure you want to leave the Event "${event.title}"?'),
+                                                  actions: <Widget>[
+                                                    TextButton(
+                                                      onPressed: () {
+                                                        Navigator.of(context)
+                                                            .pop();
+                                                      },
+                                                      child: Text('Back'),
+                                                    ),
+                                                    TextButton(
+                                                      onPressed: () async {
+                                                        int result =
+                                                            await ApiService
+                                                                .leaveEvent(event
+                                                                    .eventID);
+                                                        if (result == 401) {
+                                                          Navigator.of(context)
+                                                              .pop();
+                                                          showErrorSnackBar(
+                                                              context,
+                                                              'Event was already leaved!');
+                                                        } else if (result ==
+                                                            0) {
+                                                          Navigator.of(context)
+                                                              .pop();
+                                                          showErrorSnackBar(
+                                                              context,
+                                                              'Leaving event failed!');
+                                                        } else if (result ==
+                                                            1) {
+                                                          Navigator.of(context)
+                                                              .pop();
+                                                          showSuccessSnackBar(
+                                                              context,
+                                                              'Leaving event was successful!');
+                                                        }
+                                                      },
+                                                      child: Text('Yes'),
+                                                    )
+                                                  ],
+                                                );
+                                              },
+                                            );
+                                          },
+                                          child: Text('Leave event'),
+                                        )
+                                      : Container()
                         ],
                       ),
                       SizedBox(height: 24),
@@ -341,15 +343,13 @@ class EventInfoScreen extends StatelessWidget {
                     context: context,
                     builder: (BuildContext context) {
                       return AlertDialog(
-                        title: Text(
-                            '${event.title}'),
+                        title: Text('${event.title}'),
                         content: Text(
                             'Are you sure you want to cancel the Event "${event.title}"?'),
                         actions: <Widget>[
                           TextButton(
                             onPressed: () {
-                              Navigator.of(context)
-                                  .pop();
+                              Navigator.of(context).pop();
                             },
                             child: Text('No'),
                           ),
@@ -357,27 +357,19 @@ class EventInfoScreen extends StatelessWidget {
                           TextButton(
                             onPressed: () async {
                               int result =
-                              await ApiService
-                                  .cancelEvent(event
-                                  .eventID);
+                                  await ApiService.cancelEvent(event.eventID);
                               if (result == 401) {
-                                Navigator.of(context)
-                                    .pop();
+                                Navigator.of(context).pop();
                                 showErrorSnackBar(
-                                    context,
-                                    'Event was already canceled!');
+                                    context, 'Event was already canceled!');
                               } else if (result == 0) {
-                                Navigator.of(context)
-                                    .pop();
+                                Navigator.of(context).pop();
                                 showErrorSnackBar(
-                                    context,
-                                    'Canceling event failed!');
+                                    context, 'Canceling event failed!');
                               } else if (result == 1) {
-                                Navigator.of(context)
-                                    .pop();
+                                Navigator.of(context).pop();
                                 showSuccessSnackBar(
-                                    context,
-                                    'Canceling event was successful!');
+                                    context, 'Canceling event was successful!');
                               }
                             },
                             child: Text('Yes'),
@@ -395,7 +387,7 @@ class EventInfoScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => EditEventScreen(
+                    builder: (context) => edit.EditEventScreen(
                       event: event,
                     ),
                   ),
@@ -407,5 +399,4 @@ class EventInfoScreen extends StatelessWidget {
       },
     );
   }
-
 }

@@ -24,7 +24,7 @@ class _InviteToEventScreenState extends State<InviteToEventScreen> {
   final String recipient = '';
 
 
-  Future<List<String>> fetchParticipants(int eventId) async {
+  Future<List<String>> fetchParticipants(int eventId, int type) async {
     try{
       const storage = FlutterSecureStorage();
       final token = await storage.read(key: 'token');
@@ -34,7 +34,7 @@ class _InviteToEventScreenState extends State<InviteToEventScreen> {
       }
 
       final response = await http.get(
-        Uri.parse('${ApiService.serverUrl}/event-participants?eventId=$eventId'),
+        Uri.parse('${ApiService.serverUrl}/event-participants?eventId=$eventId&type=$type'),
         headers: {
           'Content-Type': 'application/json; charset=UTF-8',
           'Authorization': 'Bearer $token',
@@ -50,9 +50,6 @@ class _InviteToEventScreenState extends State<InviteToEventScreen> {
             .map((dynamic item) => (item as Map<String, dynamic>)['username'].toString())
             .toList();
 
-        for(var p in participants){
-          print(p);
-        }
         return participants;
 
       }else{
@@ -70,7 +67,8 @@ class _InviteToEventScreenState extends State<InviteToEventScreen> {
   @override
   Widget build(BuildContext context) {
 
-    final Future<List<String>> participants = fetchParticipants(widget.eventId);
+    final Future<List<String>> joinedParticipants = fetchParticipants(widget.eventId, 1);
+    final Future<List<String>> invitedParticipants = fetchParticipants(widget.eventId, 2);
 
     return Scaffold(
       appBar: AppBar(
@@ -86,7 +84,7 @@ class _InviteToEventScreenState extends State<InviteToEventScreen> {
             Text("Participants: ", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             Expanded(
               child: FutureBuilder<List<String>>(
-                future: participants,
+                future: joinedParticipants,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return CircularProgressIndicator();
@@ -94,6 +92,32 @@ class _InviteToEventScreenState extends State<InviteToEventScreen> {
                     return Text('Error: ${snapshot.error}');
                   } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
                     return Text('No participants found');
+                  } else {
+                    return ListView.builder(
+                      itemCount: snapshot.data!.length,
+                      itemBuilder: (context, index) {
+                        return ListTile(
+                          title: Text(snapshot.data![index]),
+                          // Add more details if needed
+                        );
+                      },
+                    );
+                  }
+                },
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text("Invited participants: ", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            Expanded(
+              child: FutureBuilder<List<String>>(
+                future: invitedParticipants,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return CircularProgressIndicator();
+                  } else if (snapshot.hasError) {
+                    return Text('Error: ${snapshot.error}');
+                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return Text('No participants invited');
                   } else {
                     return ListView.builder(
                       itemCount: snapshot.data!.length,

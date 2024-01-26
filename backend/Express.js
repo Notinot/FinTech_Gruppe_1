@@ -1519,25 +1519,34 @@ app.get('/event-participants', authenticateToken, async (req, res) => {
 
     const senderId = req.user.userId;
     const eventId = req.query.eventId;
+    const type = req.query.type;
 
-    if (!eventId) {
+    console.log(type);
+
+    if (!eventId || !type) {
         console.log('Invalid Event Id');
         return res.status(400).json({ message: 'Invalid input' });
     }
 
-    const [participants] = await db.query(`
+    // Type:
+    // 1 -> Joined
+    // 2 -> Pending
+
+    const [joinedParticipants] = await db.query(`
              SELECT
              	User.username
                 FROM User
                 JOIN
                 User_Event
                 ON User.user_id = User_Event.user_id
-                WHERE User_Event.event_id = ?;
-           `, [eventId]);
+                WHERE User_Event.event_id = ?
+                AND
+                User_Event.status = ?;
+           `, [eventId, type]);
 
 
-    console.log('Participants:', participants);
-    res.json(participants);
+    console.log('Participants:', joinedParticipants);
+    res.json(joinedParticipants);
 
   } catch (error) {
     console.error('Error fetching event participants:', error);

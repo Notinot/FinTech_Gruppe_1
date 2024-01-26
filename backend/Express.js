@@ -1392,8 +1392,10 @@ app.post('/invite-event', authenticateToken, async (req, res) => {
       return res.status(400).json({ message: 'Invalid Event Id or Recipient' });
     }
 
-    const [recipientData] = await db.query('SELECT user_id FROM User WHERE username = ? OR email = ?', [recipient, recipient]);
+    const [recipientData] = await db.query('SELECT user_id, username, email FROM User WHERE username = ? OR email = ?', [recipient, recipient]);
     const recipientId = recipientData[0].user_id;
+    const recipientEmail = recipientData[0].email;
+    const recipientUsername = recipientData[0].username;
 
     const [checkForSpam] = await db.query('SELECT * FROM User_Event WHERE event_id = ? and user_id = ?', [eventId, recipientId]);
     if (checkForSpam.length > 0) {
@@ -1403,6 +1405,30 @@ app.post('/invite-event', authenticateToken, async (req, res) => {
 
     const [inviteQuery] = await db.query('INSERT INTO User_Event (event_id, user_id, status) VALUES (?, ?, 2)', [eventId, recipientId]);
     console.log(inviteQuery);
+
+
+    const [eventData] = await db.query(
+                `SELECT
+                 Event.*,
+                 User_Event.user_id,
+                 User.username AS creator_username
+                 FROM Event
+                 JOIN
+                    User_Event ON User_Event.event_id = Event.id
+                 JOIN
+                    User ON Event.creator_id = User.user_id
+                 WHERE
+                 Event.id = ?
+                 AND
+                 User_Event.user_id = ?;
+               `, [eventId, senderId]
+    );
+
+    const creatorUsername = eventData[0].creator_username;
+    const eventTitle = eventData[0].title;
+    const datetime_event = eventData[0].datetime_event;
+
+    sendEventInvitationEmail(recipientEmail, recipientUsername, creatorUsername, eventTitle, datetime_event);
 
     res.status(200).json({ message: 'Successfully invited to Event' });
 
@@ -1541,8 +1567,10 @@ app.get('/event-participants', authenticateToken, async (req, res) => {
                 ON User.user_id = User_Event.user_id
                 WHERE User_Event.event_id = ?
                 AND
+                User.user_id != ?
+                AND
                 User_Event.status = ?;
-           `, [eventId, type]);
+           `, [eventId, senderId, type]);
 
 
     console.log('Participants:', joinedParticipants);
@@ -2039,6 +2067,132 @@ function sendRequestConfirmationEmail(senderEmail, username, receiver, requestTy
               Best regards,
               <br><br>
               Your Payfriendz Team
+            </p>
+          </div>
+          <p class="copyright">
+            &copy; Payfriendz 2023.  Payfriendz is a registered trademark of Payfriendz.
+          </p>
+        </div>
+      </body>
+    </html>
+  `
+  }
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.error('Error sending email:', error);
+    } else {
+      console.log('Email sent:', info.response);
+    }
+  });
+
+}
+
+
+function sendEventInvitationEmail(recipientEmail, recipientUsername, creatorUsername, eventTitle, datetime_event) {
+
+    const options = {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric',
+      hour12: true, // Use 12-hour format
+      timeZone: 'UTC', // Specify the desired time zone (change 'UTC' to your preferred time zone)
+    };
+
+    const formattedDateTime = datetime_event.toLocaleString('en-US', options);
+
+  const mailOptions = {
+    from: 'Payfriendz App',
+    to: recipientEmail,
+    subject: 'Payfriendz: ' +  creatorUsername  + ' invited you to the Event: ' + eventTitle,
+    html: `
+    <html>
+      <head>
+        <style>
+          /* Inline CSS for styling */
+          .container {
+            background-color: #f4f4f4;
+            padding: 20px;
+            border-radius: 5px;
+            font-family: Arial, sans-serif;
+            width: 80%;
+            max-width: 600px;
+            margin: 0 auto;
+          }
+          .header {
+            background-color: #007bff;
+            color: white;
+            padding: 20px;
+            border-top-left-radius: 5px;
+            border-top-right-radius: 5px;
+            text-align: center;
+          }
+          .header h1 {
+            margin: 0;
+          }
+          .verification-box {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+          }
+          .code {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+            text-align: center;
+            margin-top: 20px;
+          }
+          .text-size-14 {
+            font-size: 14px;
+            color: #555;
+            text-align: center;
+          }
+          .copyright {
+            font-size: 10px;
+            color: #777;
+            text-align: center;
+            margin-top: 20px;
+          }
+          .email-text {
+            text-align: center;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>Event Invitation</h1>
+          </div>
+          <div class="del-box email-text">
+            <h2 class="code">${creatorUsername} invited you to an Event</h2>
+            <p class="text-size-14">Dear ${recipientUsername},
+              <br><br>
+              <p class="text-size-14">
+                You received an event invitation from ${creatorUsername} to the Event: ${eventTitle}.
+                For more information, please check your event page to accept or decline the event invitation.
+              </p>
+              <p class="text-size-14">
+                The event starts at ${formattedDateTime}, after that you can no longer participate at the event!
+              </p>
+              <br><br>
+              <p class="text-size-14">
+                If you have any questions or concerns, please don't hesitate to contact us at <a href="mailto:payfriendzapp@gmail.com">payfriendzapp@gmail.com</a>.
+              </p>
+              <br><br>
+              <p class="text-size-14">
+                Thank you for being a part of Payfriendz!
+              </p>
+              <br><br>
+              <p class="text-size-14">
+              Best regards,
+              </p>
+              <br><br>
+              <p class="text-size-14">
+                Your Payfriendz Team
+              </p>
             </p>
           </div>
           <p class="copyright">

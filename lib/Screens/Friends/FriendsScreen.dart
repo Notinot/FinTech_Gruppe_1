@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_application_1/Screens/Dashboard/appDrawer.dart';
 import 'package:flutter_application_1/Screens/Dashboard/dashBoardScreen.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
@@ -10,15 +12,10 @@ import '../api_service.dart';
 
 /* To-do:
 
-bei no Friends - so wie bei no transactions 
-
-nach friend suchen und onTap kackt ab
-
-SuggestedUser sortieren nach friends
+Suchen und Enter muss noch gehen
 
 Users nur anzeigen, adden usw wenn ACTIVE true
 
-pending friend hat noch Add Button in FriendInfo (wenn man drauf drückt)
 
 pendingFriends iwie anzeigen wenn mehr als 3 da seind (Icon mit arrow down, number etc)
 
@@ -57,16 +54,72 @@ class _FriendsScreenState extends State<FriendsScreen> {
       appBar: AppBar(
         titleSpacing: 15.0,
         title: Text('Friends'),
-        leading: IconButton(
-            icon: Icon(Icons.arrow_back),
+        actions: [
+          IconButton(
             onPressed: () {
-              // Custom behavior when the back button is pressed
-              // For example, you can navigate to a different screen
+              showSearch(
+                context: context,
+                delegate: FriendsSearchBar(callbackFunction: callback),
+              );
+            },
+            icon: Icon(Icons.search),
+          ),
+          IconButton(
+            onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => DashboardScreen()),
+                MaterialPageRoute(
+                  builder: (context) => BlockedUsersScreen(),
+                ),
               );
-            }),
+            },
+            icon: Icon(
+              Icons.person_off,
+              size: MediaQuery.of(context).size.width *
+                  0.07, //Dynamic Icon size depending on screen res
+            ),
+            padding: EdgeInsets.only(right: 15), //Distance to the right
+          ),
+        ],
+      ),
+      drawer: FutureBuilder<Map<String, dynamic>>(
+        future: ApiService
+            .fetchUserProfile(), // Replace with your actual method to fetch user data
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Drawer(
+              child: ListTile(
+                title: Text('Loading...'),
+              ),
+            );
+          } else if (snapshot.hasError) {
+            return Drawer(
+              child: ListTile(
+                title: Text('Error: ${snapshot.error}'),
+              ),
+            );
+          } else {
+            final Map<String, dynamic> user = snapshot.data!;
+            return AppDrawer(user: user);
+          }
+        },
+      ),
+      body: Column(
+        children: [
+          PendingFriends(callbackFunction: callback),
+          Friends(callbackFunction: callback),
+        ],
+      ),
+    );
+  }
+
+  /*@override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      resizeToAvoidBottomInset: false, //avoids overflow when keyboard is opened
+      appBar: AppBar(
+        titleSpacing: 15.0,
+        title: Text('Friends'),
         actions: [
           IconButton(
               onPressed: () {
@@ -100,7 +153,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
         ],
       ),
     );
-  }
+  }*/
 }
 
 class PendingFriends extends StatelessWidget {
@@ -223,25 +276,29 @@ class Friends extends StatelessWidget {
       builder: (context, snapshot) {
         //if friends are loaded
         if (snapshot.connectionState == ConnectionState.done) {
-          return Expanded(
-            child: Column(
-              children: [
-                Text("Your Friends", style: TextStyle(fontSize: 25)),
-                Expanded(
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: friends.length,
-                    itemBuilder: (context, index) {
-                      return FriendItem(
-                          callbackFunction: callbackFunction,
-                          friend: friends[index],
-                          isStillPending: false);
-                    },
-                  ),
+          return friends.isEmpty
+              ? Center(
+                  child: Text('No friends found'),
                 )
-              ],
-            ),
-          );
+              : Expanded(
+                  child: Column(
+                    children: [
+                      Text("Your Friends", style: TextStyle(fontSize: 25)),
+                      Expanded(
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: friends.length,
+                          itemBuilder: (context, index) {
+                            return FriendItem(
+                                callbackFunction: callbackFunction,
+                                friend: friends[index],
+                                isStillPending: false);
+                          },
+                        ),
+                      )
+                    ],
+                  ),
+                );
         } else {
           return Center(
             child: CircularProgressIndicator(),
@@ -437,17 +494,20 @@ class FriendItem extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => isStillPending
-                  ? UserInfoScreen(
-                      userID: friend.userID,
-                      userName: friend.username,
-                      callbackFunction: callbackFunction,
-                      friendRequestSend: false,
-                    )
-                  : FriendInfoScreen(
-                      friend: friend,
-                      callbackFunction: callbackFunction,
-                    ),
+              builder: (context) =>
+                  //isStillPending
+                  // ? UserInfoScreen(
+                  //     userID: friend.userID,
+                  //     userName: friend.username,
+                  //     callbackFunction: callbackFunction,
+                  //     friendRequestSend: false,
+                  //   )
+                  //:
+                  FriendInfoScreen(
+                friend: friend,
+                callbackFunction: callbackFunction,
+                pendingFriendRequestReceived: isStillPending,
+              ),
             ),
           );
         },
@@ -621,12 +681,13 @@ class BlockedUserItem extends StatelessWidget {
 class FriendInfoScreen extends StatelessWidget {
   final Friend friend;
   final Function callbackFunction; // not necessary?
+  final bool pendingFriendRequestReceived;
 
-  const FriendInfoScreen({
-    super.key,
-    required this.friend,
-    required this.callbackFunction,
-  });
+  const FriendInfoScreen(
+      {super.key,
+      required this.friend,
+      required this.callbackFunction,
+      required this.pendingFriendRequestReceived});
 
   @override
   Widget build(BuildContext context) {
@@ -655,54 +716,57 @@ class FriendInfoScreen extends StatelessWidget {
               style: TextStyle(fontSize: 20),
             ),
             SizedBox(height: 20),
-            Text(
-              'Friends since: ${friend.requestTime?.month}-${friend.requestTime?.day}-${friend.requestTime?.year}',
-              style: TextStyle(fontSize: 20),
-            ),
+            pendingFriendRequestReceived
+                ? Container()
+                : Text(
+                    'Friends since: ${friend.requestTime?.month}-${friend.requestTime?.day}-${friend.requestTime?.year}',
+                    style: TextStyle(fontSize: 20)),
 
             SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text("Actions: "),
-                OutlinedButton(
-                  child: Text("Delete"),
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: Text('Delete'),
-                        content: Text(
-                            "Do you want to remove ${friend.username} as your friend?"),
-                        actions: [
-                          TextButton(
-                            child: Text('Cancel'),
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                            },
-                          ),
-                          ElevatedButton(
-                            child: Text('Delete'),
-                            onPressed: () {
-                              deleteFriend(friend.userID);
-                              //I mean, dadurch wird das Pop up & der Info Screen geschlossen
-                              //und der Context für navigation ist wieder richtig. Gibt vllt ne bessere Lösung
-                              Navigator.of(context).pop();
-                              Navigator.of(context).pop();
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => FriendsScreen(),
+                pendingFriendRequestReceived
+                    ? Container()
+                    : OutlinedButton(
+                        child: Text("Delete"),
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: Text('Delete'),
+                              content: Text(
+                                  "Do you want to remove ${friend.username} as your friend?"),
+                              actions: [
+                                TextButton(
+                                  child: Text('Cancel'),
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
                                 ),
-                              );
-                              //callbackFunction();
-                            },
-                          ),
-                        ],
+                                ElevatedButton(
+                                  child: Text('Delete'),
+                                  onPressed: () {
+                                    deleteFriend(friend.userID);
+                                    //I mean, dadurch wird das Pop up & der Info Screen geschlossen
+                                    //und der Context für navigation ist wieder richtig. Gibt vllt ne bessere Lösung
+                                    Navigator.of(context).pop();
+                                    Navigator.of(context).pop();
+                                    Navigator.pushReplacement(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => FriendsScreen(),
+                                      ),
+                                    );
+                                    //callbackFunction();
+                                  },
+                                ),
+                              ],
+                            ),
+                          );
+                        },
                       ),
-                    );
-                  },
-                ),
                 BlockUserButton(
                     userID: friend.userID, userName: friend.username),
               ],
@@ -952,6 +1016,16 @@ class FriendsSearchBar extends SearchDelegate {
         future: getSuggestions(query),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
+            //sort suggestions by status so friends are displayed first
+            suggestedUsers.sort(
+              (a, b) {
+                if (b['status'] == 'friend') {
+                  return 1;
+                } else {
+                  return 0;
+                }
+              },
+            );
             return ListView.builder(
               itemCount: suggestedUsers.length,
               itemBuilder: (context, index) {
@@ -964,7 +1038,7 @@ class FriendsSearchBar extends SearchDelegate {
                           suggestedUsers[index]['picture']['data'].cast<int>())
                       : null;
                 }
-                debugPrint(suggestedUsers[index].toString());
+                //debugPrint(suggestedUsers[index].toString());
                 return Card(
                   child: ListTile(
                     leading: suggestedUsers[index]['status'] == 'friend'
@@ -986,37 +1060,46 @@ class FriendsSearchBar extends SearchDelegate {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => suggestedUsers[index]
-                                      ['status'] ==
-                                  'friend'
-                              ? FriendInfoScreen(
-                                  friend: Friend(
-                                      userID: suggestedUsers[index]['user_id'],
-                                      profileImage: suggestedUsers[index]
-                                          ['picture'],
-                                      username: suggestedUsers[index]
-                                          ['username'],
-                                      firstName: suggestedUsers[index]
-                                          ['first_name'],
-                                      lastName: suggestedUsers[index]
-                                          ['last_name'],
-                                      requestTime: DateTime.parse(
-                                              suggestedUsers[index]
-                                                  ['request_time'])
-                                          .toLocal()),
+                          builder: (context) =>
+                              suggestedUsers[index]['status'] == 'friend'
+                                  ? FriendInfoScreen(
+                                      pendingFriendRequestReceived: false,
+                                      friend: Friend(
+                                          userID: suggestedUsers[index]
+                                              ['user_id'],
+                                          profileImage: (suggestedUsers[index]
+                                                          ['picture'] !=
+                                                      null &&
+                                                  suggestedUsers[index]
+                                                          ['picture']['data'] !=
+                                                      null) //idk if this is necessary
+                                              ? Uint8List.fromList(suggestedUsers[index]
+                                                      ['picture']['data']
+                                                  .cast<int>())
+                                              : null,
+                                          username: suggestedUsers[index]
+                                              ['username'],
+                                          firstName: suggestedUsers[index]
+                                              ['first_name'],
+                                          lastName: suggestedUsers[index]
+                                              ['last_name'],
+                                          requestTime:
+                                              DateTime.parse(suggestedUsers[index]['request_time'])
+                                                  .toLocal()),
 
-                                  callbackFunction: callbackFunction, //!!,
-                                )
-                              : UserInfoScreen(
-                                  userID: suggestedUsers[index]['user_id'],
-                                  userName: suggestedUsers[index]['username'],
-                                  callbackFunction: callbackFunction, //!!
-                                  friendRequestSend: suggestedUsers[index]
-                                              ['status'] ==
-                                          'requested'
-                                      ? true
-                                      : false,
-                                ),
+                                      callbackFunction: callbackFunction, //!!,
+                                    )
+                                  : UserInfoScreen(
+                                      userID: suggestedUsers[index]['user_id'],
+                                      userName: suggestedUsers[index]
+                                          ['username'],
+                                      callbackFunction: callbackFunction, //!!
+                                      friendRequestSend: suggestedUsers[index]
+                                                  ['status'] ==
+                                              'requested'
+                                          ? true
+                                          : false,
+                                    ),
                         ),
                       );
                     },
@@ -1030,8 +1113,11 @@ class FriendsSearchBar extends SearchDelegate {
         },
       );
     } else {
-      return Text(
-          'Can´t find the user you are looking for? \n\nTake a look at your pending friend requests. \nOr you might have blocked them.');
+      return Center(
+        child: Text(
+            'Can´t find the user you are looking for? \n\nTake a look at your pending friend requests. \nOr you might have blocked them.',
+            style: TextStyle(fontSize: 20)),
+      );
     }
   }
 
@@ -1051,15 +1137,15 @@ class FriendsSearchBar extends SearchDelegate {
     );
 
     Map<String, dynamic> data = jsonDecode(response.body);
-    debugPrint('dataMatchingUsers: ${data['matchingUsersFinal']}');
-    debugPrint('TYPE: ${data['matchingUsersFinal'].runtimeType}');
+    // debugPrint('dataMatchingUsers: ${data['matchingUsersFinal']}');
+    // debugPrint('TYPE: ${data['matchingUsersFinal'].runtimeType}');
 
     suggestedUsers = [];
     for (user in data['matchingUsersFinal']) {
       suggestedUsers.add(user);
     }
 
-    debugPrint('suggestedUsers: $suggestedUsers');
+    // debugPrint('suggestedUsers: $suggestedUsers');
   }
 
   // void showSuccessSnackBar(BuildContext context, String message) {
@@ -1174,14 +1260,13 @@ class ShowProfilePicture extends StatelessWidget {
       onTap: () => image != null
           ? showDialog(
               context: context,
-              builder: (context) => AlertDialog(
-                // title: Text(
-                //   friend.username,
-                //   style: TextStyle(fontSize: 20),
-                // ),
-                content: Image.memory(
-                  image!,
-                  fit: BoxFit.contain,
+              builder: (context) => Animate(
+                effects: [FadeEffect()],
+                child: AlertDialog(
+                  content: Image.memory(
+                    image!,
+                    fit: BoxFit.contain,
+                  ),
                 ),
               ),
             )
@@ -1192,7 +1277,7 @@ class ShowProfilePicture extends StatelessWidget {
         backgroundColor: Colors.grey,
         child: image == null
             ? Text(
-                '$initial',
+                '${initial.toUpperCase()}',
                 style: TextStyle(fontSize: size),
               )
             : null,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Screens/Dashboard/accountSummary.dart';
+import 'package:flutter_application_1/Screens/Dashboard/appDrawer.dart';
 import 'package:flutter_application_1/Screens/Dashboard/dashBoardScreen.dart';
 import 'package:flutter_application_1/Screens/api_service.dart';
 import 'package:intl/intl.dart';
@@ -10,12 +11,14 @@ class AddMoneyScreen extends StatefulWidget {
 }
 
 class _AddMoneyScreenState extends State<AddMoneyScreen> {
+  late Future<Map<String, dynamic>> _userFuture;
   double balance = 0.0;
   final TextEditingController amountController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
+    _userFuture = ApiService.fetchUserProfile();
     _fetchUserBalance();
   }
 
@@ -114,14 +117,20 @@ class _AddMoneyScreenState extends State<AddMoneyScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Add Money'),
-        leading: IconButton(
-            icon: Icon(Icons.arrow_back),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => DashboardScreen()),
-              );
-            }),
+      ),
+      drawer: FutureBuilder<Map<String, dynamic>>(
+        // Fetch user profile data for the drawer
+        future: _userFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Drawer(); // You can return a loading state or an empty drawer
+          } else if (snapshot.hasError) {
+            return Drawer(); // Handle error state or return an empty drawer
+          } else {
+            final Map<String, dynamic> user = snapshot.data!;
+            return AppDrawer(user: user);
+          }
+        },
       ),
       body: Center(
         child: Padding(

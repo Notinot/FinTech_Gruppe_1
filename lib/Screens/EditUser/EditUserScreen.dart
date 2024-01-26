@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_application_1/Screens/Dashboard/appDrawer.dart';
 import 'package:flutter_application_1/Screens/Dashboard/dashBoardScreen.dart';
 import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
 import 'package:flutter_application_1/Screens/Login & Register/LoginScreen.dart';
@@ -88,8 +89,6 @@ class _EditUserState extends State<EditUser> {
         firstname_old = userData['first_name'];
         lastname_old = userData['last_name'];
         currentPassword = userData['password_hash'];
-        profileImage =
-            Uint8List.fromList(userData['picture']['data'].cast<int>());
 
         /*_imageProvider = ((userData['picture'] != null &&
                     userData['picture'] is Map<String, dynamic> &&
@@ -110,8 +109,7 @@ class _EditUserState extends State<EditUser> {
         } else {
           // Provide a default value if userData['picture'] is null
           _imageProvider = AssetImage('lib/assets/profile_image.png');
-          profileImage =
-              null; // or you can set it to a null value expected by your API
+          profileImage = null;
         }
       });
     });
@@ -538,7 +536,7 @@ class _EditUserState extends State<EditUser> {
           return Scaffold(
             appBar: AppBar(
               title: const Text('Edit Profile'),
-              leading: IconButton(
+              /*leading: IconButton(
                   icon: Icon(Icons.arrow_back),
                   onPressed: () {
                     // Custom behavior when the back button is pressed
@@ -548,9 +546,10 @@ class _EditUserState extends State<EditUser> {
                       MaterialPageRoute(
                           builder: (context) => DashboardScreen()),
                     );
-                  }),
-              automaticallyImplyLeading: false,
+                  }),*/
+              //automaticallyImplyLeading: false,
             ),
+            //drawer: AppDrawer(user: user),
             body: SingleChildScrollView(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -656,6 +655,7 @@ class _EditUserState extends State<EditUser> {
                 ),
               ),
             ),
+            drawer: AppDrawer(user: user),
           );
         }
       },

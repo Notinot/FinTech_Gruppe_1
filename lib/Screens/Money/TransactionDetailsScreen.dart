@@ -1,8 +1,11 @@
 // TransactionDetailScreen displays detailed information about a transaction
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Screens/Dashboard/dashBoardScreen.dart';
+import 'package:flutter_application_1/Screens/Friends/FriendsScreen.dart';
 import 'package:flutter_application_1/Screens/api_service.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
@@ -39,6 +42,17 @@ class TransactionDetailsScreen extends StatelessWidget {
     Color? textColor;
     Icon? transactionIcon;
     bool isDeposit = transaction.transactionType == 'Deposit';
+    ImageProvider<Object> _imageProvider =
+        const AssetImage('lib/assets/profile_img.png');
+    Uint8List? profileImageBytes;
+    //turn assetimage into bytes and then into Uint8List
+    _imageProvider
+        .resolve(const ImageConfiguration())
+        .addListener(ImageStreamListener((ImageInfo info, bool _) async {
+      final ByteData? bytes =
+          await info.image.toByteData(format: ImageByteFormat.png);
+      profileImageBytes = bytes?.buffer.asUint8List();
+    }));
     //get friendId and friendUsername based on transaction type and whether the user received or sent money
     transaction.transactionType == 'Request'
         ? isProcessed
@@ -116,67 +130,67 @@ class TransactionDetailsScreen extends StatelessWidget {
                 : SizedBox(height: 10);
 
     // Add GestureDetector for the avatar
-    GestureDetector _buildAvatar(Uint8List? profilePictureData) {
-      return GestureDetector(
-        onTap: () {
-          showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              return Animate(
-                effects: [FadeEffect()],
-                child: AlertDialog(
-                  content: Container(
-                    width: double.maxFinite,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: <Widget>[
-                        CircleAvatar(
-                          radius: 120, // Larger radius for enhanced view
-                          backgroundColor: Colors.white,
-                          backgroundImage: profilePictureData != null
-                              ? MemoryImage(profilePictureData)
-                              : null,
-                          child: profilePictureData == null
-                              ? Icon(Icons.person_rounded,
-                                  size: 100) // Larger icon size
-                              : null,
-                        ),
-                        // SizedBox(height: 10),
-                        // Text(friendUsername,
-                        //     style: TextStyle(
-                        //         fontSize: 24)), // Optional: show username
-                      ],
-                    ),
-                  ),
-                  actions: <Widget>[
-                    TextButton(
-                      child: Text('Close'),
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                    ),
-                  ],
-                ),
-              );
-            },
-          );
-        },
-        child: CircleAvatar(
-          radius: 40,
-          backgroundColor: null,
-          child: CircleAvatar(
-            radius: 38,
-            backgroundColor: Colors.white,
-            backgroundImage: profilePictureData != null
-                ? MemoryImage(profilePictureData)
-                : null,
-            child: profilePictureData == null
-                ? Icon(Icons.person_rounded, size: 38)
-                : null,
-          ),
-        ),
-      );
-    }
+    // GestureDetector _buildAvatar(Uint8List? profilePictureData) {
+    //   return GestureDetector(
+    //     onTap: () {
+    //       showDialog(
+    //         context: context,
+    //         builder: (BuildContext context) {
+    //           return Animate(
+    //             effects: [FadeEffect()],
+    //             child: AlertDialog(
+    //               content: Container(
+    //                 width: double.maxFinite,
+    //                 child: Column(
+    //                   mainAxisSize: MainAxisSize.min,
+    //                   children: <Widget>[
+    //                     CircleAvatar(
+    //                       radius: 120, // Larger radius for enhanced view
+    //                       backgroundColor: Colors.white,
+    //                       backgroundImage: profilePictureData != null
+    //                           ? MemoryImage(profilePictureData)
+    //                           : null,
+    //                       child: profilePictureData == null
+    //                           ? Icon(Icons.person_rounded,
+    //                               size: 100) // Larger icon size
+    //                           : null,
+    //                     ),
+    //                     // SizedBox(height: 10),
+    //                     // Text(friendUsername,
+    //                     //     style: TextStyle(
+    //                     //         fontSize: 24)), // Optional: show username
+    //                   ],
+    //                 ),
+    //               ),
+    //               actions: <Widget>[
+    //                 TextButton(
+    //                   child: Text('Close'),
+    //                   onPressed: () {
+    //                     Navigator.of(context).pop();
+    //                   },
+    //                 ),
+    //               ],
+    //             ),
+    //           );
+    //         },
+    //       );
+    //     },
+    //     child: CircleAvatar(
+    //       radius: 40,
+    //       backgroundColor: null,
+    //       child: CircleAvatar(
+    //         radius: 38,
+    //         backgroundColor: Colors.white,
+    //         backgroundImage: profilePictureData != null
+    //             ? MemoryImage(profilePictureData)
+    //             : null,
+    //         child: profilePictureData == null
+    //             ? Icon(Icons.person_rounded, size: 38)
+    //             : null,
+    //       ),
+    //     ),
+    //   );
+    // }
 
     Future<Event> fetchEvent(int? eventId) async{
 
@@ -273,8 +287,20 @@ class TransactionDetailsScreen extends StatelessWidget {
                                     SizedBox(height: 5),
                                   Row(
                                     children: [
-                                      _buildAvatar(
-                                          profilePictureData), // GestureDetector for the avatar
+                                      //check if user has profile picture
+                                      hasProfilePicture
+                                          ? ShowProfilePicture(
+                                              image: profilePictureData,
+                                              initial: friendUsername.isEmpty
+                                                  ? ' '
+                                                  : friendUsername,
+                                              size: 40)
+                                          : ShowProfilePicture(
+                                              image: profileImageBytes,
+                                              initial: friendUsername.isEmpty
+                                                  ? ' '
+                                                  : '',
+                                              size: 40),
                                       SizedBox(width: 10),
                                       Text(
                                         friendUsername,
@@ -284,6 +310,7 @@ class TransactionDetailsScreen extends StatelessWidget {
                                   ),
 
                                   SizedBox(height: 15),
+
                                   // Display the date of the transaction with icon
                                   Row(
                                     children: [

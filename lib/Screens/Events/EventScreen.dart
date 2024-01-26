@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/Screens/Dashboard/appDrawer.dart';
 import 'package:flutter_application_1/Screens/Dashboard/dashBoardScreen.dart';
 import 'package:flutter_application_1/Screens/Events/InviteToEventScreen.dart';
 import 'package:flutter_application_1/Screens/api_service.dart'; // Assumed path
@@ -36,16 +37,10 @@ class _EventScreenState extends State<EventScreen> {
   late search_bar.SearchBar searchBar;
 
   String currentSortOrder = 'All events';
-  List<String> sortOptions = [
-    'All events',
-    'My events',
-    'Active',
-    'Inactive'
-  ];
+  List<String> sortOptions = ['All events', 'My events', 'Active', 'Inactive'];
 
   String currentCategoryOption = 'Category';
   List<String> possibleCategories = ['Category'];
-
 
   List<Event> events = [];
 
@@ -218,20 +213,12 @@ class _EventScreenState extends State<EventScreen> {
   AppBar buildAppBar(BuildContext context) {
     return AppBar(
       title: Text('Events'),
-      leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => DashboardScreen()),
-            );
-          }),
-        actions: [
+      actions: [
         DropdownButton<String>(
           value: currentSortOrder,
           icon: Icon(Icons.sort),
           onChanged: (String? newValue) {
-            if(newValue != null){
+            if (newValue != null) {
               setState(() {
                 currentSortOrder = newValue;
               });
@@ -334,8 +321,58 @@ class _EventScreenState extends State<EventScreen> {
     });
   }
 
-
   @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: searchBar.build(context),
+      drawer: FutureBuilder<Map<String, dynamic>>(
+        future: ApiService.fetchUserProfile(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Drawer(); // You can return a loading state or an empty drawer
+          } else if (snapshot.hasError) {
+            return Drawer(); // Handle error state or return an empty drawer
+          } else {
+            final Map<String, dynamic> user = snapshot.data!;
+            return AppDrawer(user: user);
+          }
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          setState(() {
+            currentSortOrder = 'All events';
+            currentCategoryOption = 'Category';
+            eventsFuture = fetchEvents();
+          });
+        },
+        child: const Icon(Icons.refresh),
+      ),
+      body: FutureBuilder<List<Event>>(
+        future: eventsFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(child: Text('No Events found.'));
+          } else {
+            // Save all events for reference
+            events = snapshot.data!;
+            return ListView.builder(
+              itemCount: events.length,
+              itemBuilder: (context, index) {
+                return EventItem(event: events[index]);
+              },
+            );
+          }
+        },
+      ),
+    );
+  }
+
+  /*@override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: searchBar.build(context),
@@ -386,7 +423,7 @@ class _EventScreenState extends State<EventScreen> {
         },
       ),
     );
-  }
+  }*/
 }
 
 //Display a single event object in a ListTile
@@ -452,9 +489,7 @@ class EventItem extends StatelessWidget {
   }
 }
 
-
 class EditEventScreen extends StatelessWidget {
-
   final Event event;
   const EditEventScreen({Key? key, required this.event}) : super(key: key);
 
@@ -464,8 +499,6 @@ class EditEventScreen extends StatelessWidget {
     throw UnimplementedError();
   }
 }
-
-
 
 class EventDateSection extends StatelessWidget {
   final Event event;
@@ -518,7 +551,8 @@ class EventTimeSection extends StatelessWidget {
 }
 
 class UpcomingEvents extends StatelessWidget {
-  const UpcomingEvents({Key? key, required this.fetchEventsFunction}) : super(key: key);
+  const UpcomingEvents({Key? key, required this.fetchEventsFunction})
+      : super(key: key);
   final Future<List<Event>> Function() fetchEventsFunction;
 
   @override
@@ -563,7 +597,6 @@ class UpcomingEvents extends StatelessWidget {
     );
   }
 }
-
 
 void showErrorSnackBar(BuildContext context, String message) {
   ScaffoldMessenger.of(context).showSnackBar(

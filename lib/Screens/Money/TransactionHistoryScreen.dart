@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/Screens/Dashboard/appDrawer.dart';
 import 'package:flutter_application_1/Screens/Dashboard/dashBoardScreen.dart';
 import 'package:flutter_application_1/Screens/api_service.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -145,16 +146,6 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
   AppBar buildAppBar(BuildContext context) {
     return AppBar(
       title: Text('History'),
-      leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () {
-            // Custom behavior when the back button is pressed
-            // For example, you can navigate to a different screen
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => DashboardScreen()),
-            );
-          }),
       actions: [
         DropdownButton<String>(
           value: currentSortOrder,
@@ -255,7 +246,20 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: searchBar.build(context),
-      //floating action button to refresh the transaction history screen
+      drawer: FutureBuilder<Map<String, dynamic>>(
+        // Fetch user profile data for the drawer
+        future: ApiService.fetchUserProfile(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Drawer(); // You can return a loading state or an empty drawer
+          } else if (snapshot.hasError) {
+            return Drawer(); // Handle error state or return an empty drawer
+          } else {
+            final Map<String, dynamic> user = snapshot.data!;
+            return AppDrawer(user: user);
+          }
+        },
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           setState(() {
@@ -265,7 +269,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
         child: const Icon(Icons.refresh),
       ),
       body: FutureBuilder<Map<String, dynamic>>(
-        // Fetch user profile data
+        // Fetch user profile data for the main body
         future: ApiService.fetchUserProfile(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -302,6 +306,131 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
           }
         },
       ),
+      bottomNavigationBar: BottomAppBar(
+        // Your existing bottom navigation bar code
+        child: FutureBuilder<Map<String, dynamic>>(
+          // Fetch user profile data for the bottom navigation bar
+          future: ApiService.fetchUserProfile(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (snapshot.hasError) {
+              return Text('Error: ${snapshot.error}');
+            } else {
+              final Map<String, dynamic> user = snapshot.data!;
+              return Container(
+                height: 50,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Icon(Icons.euro), // Display the user's balance
+                    Text(
+                      '${NumberFormat("#,##0.00", "de_DE").format(user['balance'])}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                    ),
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        textStyle: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                      ),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => SendMoneyScreen(),
+                          ),
+                        );
+                      },
+                      icon: Icon(Icons.monetization_on),
+                      label: Text('Send'),
+                    ),
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        textStyle: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                      ),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => RequestMoneyScreen(),
+                          ),
+                        );
+                      },
+                      icon: Icon(Icons.request_page),
+                      label: Text('Request'),
+                    ),
+                  ],
+                ),
+              );
+            }
+          },
+        ),
+      ),
+    );
+  }
+
+  /*@override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: searchBar.build(context),
+      //floating action button to refresh the transaction history screen
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          setState(() {
+            transactionsFuture = fetchTransactions();
+          });
+        },
+        child: const Icon(Icons.refresh),
+      ),
+
+      body: FutureBuilder<Map<String, dynamic>>(
+        // Fetch user profile data
+        future: ApiService.fetchUserProfile(),
+
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Text('Error: ${snapshot.error}');
+          } else {
+            final Map<String, dynamic> user = snapshot.data!;
+            return FutureBuilder<List<Transaction>>(
+              future: transactionsFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const Center(child: Text('No transactions found.'));
+                } else {
+                  // Save all transactions for reference
+                  allTransactions = snapshot.data!;
+                  return ListView.builder(
+                    itemCount: allTransactions.length,
+                    itemBuilder: (context, index) {
+                      return TransactionItem(
+                        transaction: allTransactions[index],
+                        userId: user['user_id'],
+                        username: user['username'],
+                      );
+                    },
+                  );
+                }
+              },
+            );
+          }
+        },
+      ),
+
       // Bottom navigation bar
       bottomNavigationBar: BottomAppBar(
         child: FutureBuilder<Map<String, dynamic>>(
@@ -371,7 +500,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
         ),
       ),
     );
-  }
+  }*/
 }
 
 // Transaction class represents a financial transaction with relevant details

@@ -89,6 +89,17 @@ class _EditEventScreenState extends State<EditEventScreen> {
     selectedCategory = widget.event.category;
     selectedCountry = widget.event.country;
     selectedMaxParticipants = widget.event.maxParticipants;
+    int? recurrenceType = widget.event.recurrenceType;
+
+    if (recurrenceType == 1) {
+      weekly = true;
+    } else if (recurrenceType == 2) {
+      monthly = true;
+    } else if (recurrenceType == 3) {
+      yearly = true;
+    } else {
+      recurrenceType = 0;
+    }
   }
 
   void clearErrors() {
@@ -156,7 +167,7 @@ class _EditEventScreenState extends State<EditEventScreen> {
     String? street = streetController.text;
     String? zipcode = zipcodeController.text;
     final String price = priceController.text;
-    final int recurrenceType;
+    int recurrenceType;
 
     try {
       if (unixTimestamp == null || unixTimestamp == '') {
@@ -340,7 +351,7 @@ class _EditEventScreenState extends State<EditEventScreen> {
               ),
               const SizedBox(height: 16.0),
               DropdownMenu<String>(
-                initialSelection: categories.first,
+                initialSelection: selectedCategory, //categories.first,
                 hintText: 'Categories',
                 requestFocusOnTap: false,
                 onSelected: (String? newValue) {

@@ -6,6 +6,8 @@ import 'package:flutter_application_1/Screens/api_service.dart'; // Assumed path
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_application_1/Screens/Events/Event.dart';
+import 'package:flutter_application_1/Screens/Events/EditEventScreen.dart'
+    as edit;
 import 'package:http/http.dart' as http;
 import 'EventScreen.dart';
 

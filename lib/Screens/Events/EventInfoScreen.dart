@@ -1,16 +1,16 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Screens/Events/InviteToEventScreen.dart';
 import 'package:flutter_application_1/Screens/api_service.dart'; // Assumed path
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_application_1/Screens/Events/Event.dart';
-import 'package:flutter_application_1/Screens/Events/EditEventScreen.dart'
-    as edit;
-
+import 'package:http/http.dart' as http;
 import 'EventScreen.dart';
 
 class EventInfoScreen extends StatelessWidget {
   final Event event;
-
   const EventInfoScreen({Key? key, required this.event}) : super(key: key);
 
   @override
@@ -56,7 +56,7 @@ class EventInfoScreen extends StatelessWidget {
                           ),
                           SizedBox(width: 24),
                           event.isCreator
-                              ? event.notOutDatedEvent(event.datetimeEvent)
+                              ? event.status == 1
                                   ? InkWell(
                                       onTap: () {
                                         editOrcancelEvent(context);
@@ -219,91 +219,7 @@ class EventInfoScreen extends StatelessWidget {
                                 style: TextStyle(fontSize: 16),
                               )),
                           SizedBox(width: 20),
-                          event.status != 1
-                              ? Container()
-                              : event.isCreator
-                                  ? event.notOutDatedEvent(event.datetimeEvent)
-                                      ? event.notFullEvent()
-                                          ? ElevatedButton.icon(
-                                              style: ElevatedButton.styleFrom(
-                                                  textStyle: TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      fontSize: 15)),
-                                              onPressed: () {
-                                                Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                    builder: (context) =>
-                                                        InviteToEventScreen(
-                                                            eventId:
-                                                                event.eventID),
-                                                  ),
-                                                );
-                                              },
-                                              icon: Icon(
-                                                  Icons.emoji_people_rounded),
-                                              label: Text('Invite'),
-                                            )
-                                          : Container()
-                                      : Container()
-                                  : event.notOutDatedEvent(event.datetimeEvent)
-                                      ? TextButton(
-                                          onPressed: () {
-                                            showDialog(
-                                              context: context,
-                                              builder: (BuildContext context) {
-                                                return AlertDialog(
-                                                  title: Text(
-                                                      'Leaving ${event.title}'),
-                                                  content: Text(
-                                                      'Are you sure you want to leave the Event "${event.title}"?'),
-                                                  actions: <Widget>[
-                                                    TextButton(
-                                                      onPressed: () {
-                                                        Navigator.of(context)
-                                                            .pop();
-                                                      },
-                                                      child: Text('Back'),
-                                                    ),
-                                                    TextButton(
-                                                      onPressed: () async {
-                                                        int result =
-                                                            await ApiService
-                                                                .leaveEvent(event
-                                                                    .eventID);
-                                                        if (result == 401) {
-                                                          Navigator.of(context)
-                                                              .pop();
-                                                          showErrorSnackBar(
-                                                              context,
-                                                              'Event was already leaved!');
-                                                        } else if (result ==
-                                                            0) {
-                                                          Navigator.of(context)
-                                                              .pop();
-                                                          showErrorSnackBar(
-                                                              context,
-                                                              'Leaving event failed!');
-                                                        } else if (result ==
-                                                            1) {
-                                                          Navigator.of(context)
-                                                              .pop();
-                                                          showSuccessSnackBar(
-                                                              context,
-                                                              'Leaving event was successful!');
-                                                        }
-                                                      },
-                                                      child: Text('Yes'),
-                                                    )
-                                                  ],
-                                                );
-                                              },
-                                            );
-                                          },
-                                          child: Text('Leave event'),
-                                        )
-                                      : Container()
+                          buildButton(event, context)
                         ],
                       ),
                       SizedBox(height: 24),
@@ -316,6 +232,116 @@ class EventInfoScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Widget buildButton(Event event, BuildContext context) {
+    // Event is active
+    if (event.status == 1) {
+      // User is Creator
+      if (event.isCreator) {
+        // Event is not completly full
+        if (event.notFullEvent()) {
+          // Event is active && User is Creator && Event is not full
+          return ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+                textStyle:
+                    TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => InviteToEventScreen(
+                      eventId: event.eventID, allowInvite: true),
+                ),
+              );
+            },
+            icon: Icon(Icons.emoji_people_rounded),
+            label: Text('Invite'),
+          );
+        } else {
+          // Event is active && User is Creator && Event IS full
+          return ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+                textStyle:
+                    TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => InviteToEventScreen(
+                      eventId: event.eventID, allowInvite: false),
+                ),
+              );
+            },
+            icon: Icon(Icons.people_rounded),
+            label: Text('View participants'),
+          );
+        }
+      } else {
+        // Event is Active && User not Creator
+        return TextButton(
+          onPressed: () {
+            showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  title: Text('Leaving ${event.title}'),
+                  content: Text(
+                      'Are you sure you want to leave the Event "${event.title}"?'),
+                  actions: <Widget>[
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: Text('Back'),
+                    ),
+                    TextButton(
+                      onPressed: () async {
+                        int result = await ApiService.leaveEvent(event.eventID);
+                        if (result == 401) {
+                          Navigator.of(context).pop();
+                          showErrorSnackBar(
+                              context, 'Event was already leaved!');
+                        } else if (result == 0) {
+                          Navigator.of(context).pop();
+                          showErrorSnackBar(context, 'Leaving event failed!');
+                        } else if (result == 1) {
+                          Navigator.of(context).pop();
+                          showSuccessSnackBar(
+                              context, 'Leaving event was successful!');
+                        }
+                      },
+                      child: Text('Yes'),
+                    )
+                  ],
+                );
+              },
+            );
+          },
+          child: Text('Leave event'),
+        );
+      }
+    }
+    if (event.isCreator) {
+      // Event is unactive && User = Creator
+      return ElevatedButton.icon(
+        style: ElevatedButton.styleFrom(
+            textStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => InviteToEventScreen(
+                  eventId: event.eventID, allowInvite: false),
+            ),
+          );
+        },
+        icon: Icon(Icons.people_rounded),
+        label: Text('View participants'),
+      );
+    } else {
+      return Container();
+    }
   }
 
   String formatAmount() {

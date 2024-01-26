@@ -61,30 +61,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         }
       });
     });
-    fetchPendingEventRequests().then((List<Event>? events) {
-      if (events != null) {
-        EventRequests = events.map((Event event) {
-          return {
-            'event_id': event.eventID,
-            'title': event.title,
-            'category': event.category,
-            'description': event.description,
-            'participants': event.participants,
-            'max_participants': event.maxParticipants,
-            'datetime_event': event.datetimeEvent,
-            'price': event.price,
-            'status': event.status,
-            'creator_username': event.creatorUsername,
-            'county': event.country,
-            'city': event.city,
-            'street': event.street,
-            'zipcode': event.zipcode
-          };
-        }).toList();
-      } else {
-        EventRequests = [];
-      }
-    });
   }
 
   // Fetch events from the backend
@@ -273,13 +249,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  Future<void> handleEventRequest(int eventId, String action) async {
+  Future<void> handleEventRequest(int recipientId, String recipientUsername, double amount, String message, String eventTitle, int eventId, String action) async {
     try {
-      const storage = FlutterSecureStorage();
-      final token = await storage.read(key: 'token');
-      // Make a request to your backend API to accept the request
 
-      if (await ApiService.joinEvent(eventId)) {
+      if (await ApiService.joinEvent(recipientId, recipientUsername, amount, message, eventId)) {
         showSuccessSnackBar(context, 'Request accepted successfully');
       } else {
         // Request failed, handle the error
@@ -370,7 +343,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             'price': event.price,
             'status': event.status,
             'creator_username': event.creatorUsername,
-            'county': event.country,
+            'creator_id' : event.creatorId,
+            'country': event.country,
             'city': event.city,
             'street': event.street,
             'zipcode': event.zipcode
@@ -575,24 +549,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
     Map<String, dynamic> eventRequest,
     Map<String, dynamic> user,
   ) async {
-    String creator = eventRequest['creator_username'];
+
+    print(eventRequest['creator_id']);
+    int creatorId = eventRequest['creator_id'];
+    String creatorUsername = eventRequest['creator_username'];
+    double amount = eventRequest['price'];
     String eventTitle = eventRequest['title'];
+    int eventId = eventRequest['event_id'];
+
+    String message = "Sent $amount€ for $eventTitle";
+    print(creatorUsername);
+    print(message);
 
     return PopupMenuItem<String>(
-      key: Key(eventRequest['event_id'].toString()),
+      key: Key(eventId.toString()),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Expanded(
             child: ListTile(
-              title: Text('$creator invited you to:\n $eventTitle'),
+              title: Text('$creatorUsername invited you to:\n$eventTitle'),
             ),
           ),
           IconButton(
             icon: Icon(Icons.check, color: Colors.green),
             onPressed: () {
               ApiService.joinEvent(
-                eventRequest['event_id'],
+                creatorId,
+                creatorUsername,
+                amount,
+                eventTitle,
+                eventId,
               ).then((_) {
                 items.removeWhere((item) =>
                     item.key == Key(eventRequest['event_id'].toString()));

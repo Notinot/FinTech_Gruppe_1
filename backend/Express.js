@@ -898,6 +898,7 @@ app.post('/send-money', authenticateToken, async (req, res) => {
     const recipientId = recipientData[0].user_id;
     const recipientUsername = recipientData[0].username;
     const recipientEmail = recipientData[0].email;
+
     // Insert transaction with message and event_id
     await db.query('INSERT INTO Transaction (sender_id, receiver_id, amount, transaction_type, created_at, message, processed, event_id) VALUES (?, ?, ?, ?, NOW(), ?, 1, ?)', [
       senderId,
@@ -1198,6 +1199,41 @@ app.get('/events', authenticateToken, async (req, res) => {
   }
 });
 
+app.get('/fetch-single-event', authenticateToken, async(req, res) => {
+
+    try{
+
+        const senderId = req.user.userId;
+        const eventId = req.query.eventId;
+
+        const [singleEvent] = await db.query(
+            `SELECT
+             Event.*,
+                       Location.*,
+                       User_Event.user_id,
+                       User.username AS creator_username,
+                       User.user_id AS creator_id
+             FROM Event
+             JOIN
+                       User_Event ON User_Event.event_id = Event.id
+                   JOIN
+                       User ON Event.creator_id = User.user_id
+                   LEFT JOIN
+                       Location ON Event.id = Location.event_id
+             WHERE
+             Event.id = ?
+             AND
+             User_Event.user_id = ?
+             ;`, [eventId, senderId]
+        );
+
+        res.json(singleEvent);
+    }
+    catch(error){
+       console.error('Error fetching Events:', error);
+       res.status(500).json({ message: 'Internal server error' });
+    }
+});
 
 app.get('/fetch-all-events', authenticateToken, async(req, res) => {
 
@@ -1252,6 +1288,8 @@ app.get('/dashboard-events', authenticateToken, async (req, res) => {
              LEFT JOIN
                     Location ON Event.id = Location.event_id
              WHERE User_Event.status = 1
+             AND
+             Event.status = 1
              AND
              datetime_event > NOW()
              AND
@@ -1448,25 +1486,25 @@ app.post('/invite-event', authenticateToken, async (req, res) => {
 // Join event
 app.post('/join-event', authenticateToken, async (req, res) => {
   try {
-    const senderId = req.user.userId;
-    const eventId = req.query.eventId;
 
-    if (!eventId) {
-      console.log('Invalid Event Id');
-      return res.status(400).json({ message: 'Invalid input' });
+    const senderId = req.user.userId;
+    const { recipientId, amount, message, eventId } = req.body;
+
+    if( !recipientId || !amount || !message || !eventId){
+        return res.status(400).json({ message: 'Invalid input' });
     }
 
     const [joinQuery] = await db.query('UPDATE User_Event SET status = 1 WHERE event_id = ? AND user_id = ?', [eventId, senderId]);
     console.log(joinQuery);
 
     const [increaseParticipantsQuery] = await db.query('UPDATE Event SET participants = participants + 1 WHERE id = ?', [eventId]);
-    console.log(increaseParticipantsQuery)
+    console.log(increaseParticipantsQuery);
 
     res.status(200).json({ message: 'Event successfully joined' });
-  }
-  catch (error) {
 
-    console.error('Error creating event:', error);
+  }catch (error) {
+
+    console.error('Error joining event:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
@@ -1551,25 +1589,34 @@ app.get('/event-participants', authenticateToken, async (req, res) => {
 
     const senderId = req.user.userId;
     const eventId = req.query.eventId;
+    const type = req.query.type;
 
-    if (!eventId) {
+    console.log(type);
+
+    if (!eventId || !type) {
         console.log('Invalid Event Id');
         return res.status(400).json({ message: 'Invalid input' });
     }
 
-    const [participants] = await db.query(`
+    // Type:
+    // 1 -> Joined
+    // 2 -> Pending
+
+    const [joinedParticipants] = await db.query(`
              SELECT
              	User.username
                 FROM User
                 JOIN
                 User_Event
                 ON User.user_id = User_Event.user_id
-                WHERE User_Event.event_id = ?;
-           `, [eventId]);
+                WHERE User_Event.event_id = ?
+                AND
+                User_Event.status = ?;
+           `, [eventId, type]);
 
 
-    console.log('Participants:', participants);
-    res.json(participants);
+    console.log('Participants:', joinedParticipants);
+    res.json(joinedParticipants);
 
   } catch (error) {
     console.error('Error fetching event participants:', error);

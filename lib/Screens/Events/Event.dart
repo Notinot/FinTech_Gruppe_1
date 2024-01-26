@@ -78,6 +78,7 @@ class Event {
   }
 
   Future<void> checkIfCreator() async {
+
     String userId = await ApiService.fetchUserId();
     if(creatorId.toString() == userId){
       isCreator = true;
@@ -181,7 +182,8 @@ class Event {
     return {
       'event_id': this.eventID,
       'datetime_event': this.datetimeEvent.toString().substring(
-          0, this.datetimeEvent.toString().length - 5), // Use UTC time
+          0, this.datetimeEvent.toString().length - 5), // U
+      // se UTC time
       'recurrence_interval': this.recurrenceInterval,
     };
   }

@@ -555,22 +555,32 @@ class UpcomingEvents extends StatelessWidget {
           return Text('No upcoming events');
         } else {
           List<Event> events = snapshot.data!;
-          return Column(
-            children: <Widget>[
-              const Text(
-                'Upcoming Events:',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              ListView.builder(
-                shrinkWrap: true,
-                itemCount: events.length,
-                itemBuilder: (context, index) {
-                  return EventItem(event: events[index]);
-                },
-              ),
-            ],
-          );
+          if (events.isNotEmpty){
+            return Column(
+              children: <Widget>[
+                const Text(
+                  'Upcoming Events:',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: events.length,
+                  itemBuilder: (context, index) {
+                    return EventItem(event: events[index]);
+                  },
+                ),
+              ],
+            );
+          }
+          else{
+            return Column(
+              children: [
+                const Text('No upcoming Events',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)
+                )],
+            );
+          }
         }
       },
     );

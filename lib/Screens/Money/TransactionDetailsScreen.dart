@@ -9,6 +9,8 @@ import 'package:flutter_application_1/Screens/Friends/FriendsScreen.dart';
 import 'package:flutter_application_1/Screens/api_service.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_application_1/Screens/Events/Event.dart';
+import 'package:flutter_application_1/Screens/Events/EventInfoScreen.dart';
 import 'package:http/http.dart' as http;
 import 'RequestMoneyScreen.dart';
 import 'SendMoneyScreen.dart';
@@ -189,6 +191,55 @@ class TransactionDetailsScreen extends StatelessWidget {
     //     ),
     //   );
     // }
+
+    Future<Event> fetchEvent(int? eventId) async{
+
+      try{
+
+        const storage = FlutterSecureStorage();
+        final token = await storage.read(key: 'token');
+
+        if (token == null) {
+          throw Exception('Token not found');
+        }
+
+        final res = await http.get(
+
+          Uri.parse('${ApiService.serverUrl}/fetch-single-event?eventId=$eventId'),
+          headers: <String, String>{
+            'Content-Type': 'application/json; charset=UTF-8',
+            'Authorization': 'Bearer $token',
+          },
+        );
+
+        if(res.statusCode == 200){
+
+          final List<dynamic> data = jsonDecode(res.body);
+          final List<dynamic> eventsData = data;
+
+          List<Event> events = eventsData.map((eventData) {
+            return Event.fromJson(eventData as Map<String, dynamic>);
+          }).toList();
+
+          String userId = await ApiService.fetchUserId();
+
+          if(userId == events[0].creatorId.toString()){
+              events[0].isCreator = true;
+          }
+
+          return events[0];
+        }
+        else {
+
+          throw Exception('Unexpected response format for single event');
+        }
+      }
+      catch(err){
+        print(err);
+        rethrow;
+      }
+    }
+
 
     //check if the user is already a friend
     return FutureBuilder<bool>(
@@ -476,7 +527,7 @@ class TransactionDetailsScreen extends StatelessWidget {
                                         Icon(Icons.event_rounded),
                                         SizedBox(width: 10),
                                         Text(
-                                          'Event:" transaction.eventName"',
+                                          'Event: ${transaction.message}',
                                           style: TextStyle(fontSize: 20),
                                         ),
                                       ],
@@ -516,20 +567,40 @@ class TransactionDetailsScreen extends StatelessWidget {
                                     ),
                                   // Add a link to the event details screen if the transaction is associated with an event and the event is not null (Go to dashboard while event details screen is not implemented)
                                   if (transaction.eventId != null)
-                                    Column(
+                                  Column(
                                       children: [
                                         SizedBox(height: 20),
-                                        ElevatedButton(
-                                          onPressed: () {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      DashboardScreen()),
-                                            );
-                                          },
-                                          child: Text('View Event Details'),
+                                        FutureBuilder<Event>(
+                                          future: fetchEvent(transaction.eventId),
+                                          builder: (context, snapshot){
+                                            if(snapshot.connectionState == ConnectionState.waiting){
+                                              return CircularProgressIndicator();
+                                            } else if(snapshot.hasError){
+                                              return Text('Error: ${snapshot.error}');
+                                            } else if(!snapshot.hasData || snapshot.data == null){
+                                              return Text('No event found');
+                                            }
+                                            else{
+
+                                              Event event = snapshot.data!;
+
+                                              return ElevatedButton(
+                                                      onPressed: () {
+                                                        Navigator.push(
+                                                          context,
+                                                          MaterialPageRoute(
+                                                            builder: (context) => EventInfoScreen(
+                                                              event: event,
+                                                            ),
+                                                          ),
+                                                        );
+                                                      },
+                                                      child: Text('View Event Details'),
+                                              );
+                                            }
+                                          }
                                         ),
+
                                       ],
                                     ),
                                   // Additional UI elements for user interactions (sending money, requests, adding as friend)

@@ -6,14 +6,14 @@ import 'package:flutter_application_1/Screens/api_service.dart'; // Assumed path
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_application_1/Screens/Events/Event.dart';
+import 'package:flutter_application_1/Screens/Events/EditEventScreen.dart'
+    as edit;
 import 'package:http/http.dart' as http;
 import 'EventScreen.dart';
 
 class EventInfoScreen extends StatelessWidget {
-
   final Event event;
   const EventInfoScreen({Key? key, required this.event}) : super(key: key);
-
 
   @override
   Widget build(BuildContext context) {
@@ -59,15 +59,15 @@ class EventInfoScreen extends StatelessWidget {
                           SizedBox(width: 24),
                           event.isCreator
                               ? event.status == 1
-                              ? InkWell(
-                              onTap: () {
-                                editOrcancelEvent(context);
-                              },
-                              child: Icon(
-                                Icons.settings,
-                                color: Colors.grey,
-                              ))
-                              : Container()
+                                  ? InkWell(
+                                      onTap: () {
+                                        editOrcancelEvent(context);
+                                      },
+                                      child: Icon(
+                                        Icons.settings,
+                                        color: Colors.grey,
+                                      ))
+                                  : Container()
                               : Container()
                         ],
                       ),
@@ -162,52 +162,52 @@ class EventInfoScreen extends StatelessWidget {
                       isEmpty
                           ? Container()
                           : Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Icon(Icons.add_location_alt_rounded),
-                            SizedBox(width: 8),
-                            Text(
-                              ' ${event.country}, ${event.city}, \n ${event.zipcode}, ${event.street}',
-                              style: TextStyle(fontSize: 18),
+                              padding: EdgeInsets.symmetric(horizontal: 16),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  Icon(Icons.add_location_alt_rounded),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    ' ${event.country}, ${event.city}, \n ${event.zipcode}, ${event.street}',
+                                    style: TextStyle(fontSize: 18),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ],
-                        ),
-                      ),
                       SizedBox(height: 4),
                       isNull
                           ? Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Icon(Icons.money_off_csred_rounded),
-                            SizedBox(width: 8),
-                            Text(
-                              'Free',
-                              style: TextStyle(fontSize: 18),
-                            ),
-                          ],
-                        ),
-                      )
+                              padding: EdgeInsets.symmetric(horizontal: 16),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  Icon(Icons.money_off_csred_rounded),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'Free',
+                                    style: TextStyle(fontSize: 18),
+                                  ),
+                                ],
+                              ),
+                            )
                           : Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 16),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: [
-                              Icon(Icons.attach_money_rounded),
-                              SizedBox(width: 8),
-                              Text(
-                                formatAmount(),
-                                style: TextStyle(
-                                 fontSize: 18,
-                                 fontWeight: FontWeight.bold,
-                                ),
+                              padding: EdgeInsets.symmetric(horizontal: 16),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  Icon(Icons.attach_money_rounded),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    formatAmount(),
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ],
-                        ),
-                      ),
                       SizedBox(height: 24),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -236,66 +236,50 @@ class EventInfoScreen extends StatelessWidget {
     );
   }
 
-
-  Widget buildButton(Event event, BuildContext context){
-
+  Widget buildButton(Event event, BuildContext context) {
     // Event is active
-    if(event.status == 1){
+    if (event.status == 1) {
       // User is Creator
-      if(event.isCreator){
+      if (event.isCreator) {
         // Event is not completly full
-        if(event.notFullEvent()){
+        if (event.notFullEvent()) {
           // Event is active && User is Creator && Event is not full
           return ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
-                textStyle: TextStyle(
-                    fontWeight:
-                    FontWeight.bold,
-                    fontSize: 15)),
+                textStyle:
+                    TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
             onPressed: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) =>
-                      InviteToEventScreen(
-                          eventId: event.eventID,
-                          allowInvite: true
-                      ),
+                  builder: (context) => InviteToEventScreen(
+                      eventId: event.eventID, allowInvite: true),
                 ),
               );
             },
-            icon: Icon(
-                Icons.emoji_people_rounded),
+            icon: Icon(Icons.emoji_people_rounded),
             label: Text('Invite'),
           );
-        }
-        else{
+        } else {
           // Event is active && User is Creator && Event IS full
           return ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
-                textStyle: TextStyle(
-                    fontWeight:
-                    FontWeight.bold,
-                    fontSize: 15)),
+                textStyle:
+                    TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
             onPressed: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) =>
-                      InviteToEventScreen(
-                          eventId: event.eventID,
-                          allowInvite: false
-                      ),
+                  builder: (context) => InviteToEventScreen(
+                      eventId: event.eventID, allowInvite: false),
                 ),
               );
             },
-            icon: Icon(
-                Icons.people_rounded),
+            icon: Icon(Icons.people_rounded),
             label: Text('View participants'),
           );
         }
-      }
-      else {
+      } else {
         // Event is Active && User not Creator
         return TextButton(
           onPressed: () {
@@ -303,45 +287,30 @@ class EventInfoScreen extends StatelessWidget {
               context: context,
               builder: (BuildContext context) {
                 return AlertDialog(
-                  title: Text(
-                      'Leaving ${event.title}'),
+                  title: Text('Leaving ${event.title}'),
                   content: Text(
-                      'Are you sure you want to leave the Event "${event
-                          .title}"?'),
+                      'Are you sure you want to leave the Event "${event.title}"?'),
                   actions: <Widget>[
                     TextButton(
                       onPressed: () {
-                        Navigator.of(context)
-                            .pop();
+                        Navigator.of(context).pop();
                       },
                       child: Text('Back'),
                     ),
                     TextButton(
                       onPressed: () async {
-                        int result =
-                        await ApiService
-                            .leaveEvent(event
-                            .eventID);
+                        int result = await ApiService.leaveEvent(event.eventID);
                         if (result == 401) {
-                          Navigator.of(context)
-                              .pop();
+                          Navigator.of(context).pop();
                           showErrorSnackBar(
-                              context,
-                              'Event was already leaved!');
-                        } else if (result ==
-                            0) {
-                          Navigator.of(context)
-                              .pop();
-                          showErrorSnackBar(
-                              context,
-                              'Leaving event failed!');
-                        } else if (result ==
-                            1) {
-                          Navigator.of(context)
-                              .pop();
+                              context, 'Event was already leaved!');
+                        } else if (result == 0) {
+                          Navigator.of(context).pop();
+                          showErrorSnackBar(context, 'Leaving event failed!');
+                        } else if (result == 1) {
+                          Navigator.of(context).pop();
                           showSuccessSnackBar(
-                              context,
-                              'Leaving event was successful!');
+                              context, 'Leaving event was successful!');
                         }
                       },
                       child: Text('Yes'),
@@ -354,42 +323,32 @@ class EventInfoScreen extends StatelessWidget {
           child: Text('Leave event'),
         );
       }
-      }
-    if(event.isCreator){
+    }
+    if (event.isCreator) {
       // Event is unactive && User = Creator
       return ElevatedButton.icon(
         style: ElevatedButton.styleFrom(
-            textStyle: TextStyle(
-                fontWeight:
-                FontWeight.bold,
-                fontSize: 15)),
+            textStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
         onPressed: () {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) =>
-                  InviteToEventScreen(
-                      eventId: event.eventID,
-                      allowInvite: false
-                  ),
+              builder: (context) => InviteToEventScreen(
+                  eventId: event.eventID, allowInvite: false),
             ),
           );
         },
-        icon: Icon(
-            Icons.people_rounded),
+        icon: Icon(Icons.people_rounded),
         label: Text('View participants'),
       );
-    }
-    else{
+    } else {
       return Container();
     }
   }
 
-
   String formatAmount() {
     return '${NumberFormat("#,##0.00", "de_DE").format(event.price)} €';
   }
-
 
   Future<dynamic> editOrcancelEvent(BuildContext context) {
     return showDialog(
@@ -412,15 +371,13 @@ class EventInfoScreen extends StatelessWidget {
                     context: context,
                     builder: (BuildContext context) {
                       return AlertDialog(
-                        title: Text(
-                            '${event.title}'),
+                        title: Text('${event.title}'),
                         content: Text(
                             'Are you sure you want to cancel the Event "${event.title}"?'),
                         actions: <Widget>[
                           TextButton(
                             onPressed: () {
-                              Navigator.of(context)
-                                  .pop();
+                              Navigator.of(context).pop();
                             },
                             child: Text('No'),
                           ),
@@ -428,27 +385,19 @@ class EventInfoScreen extends StatelessWidget {
                           TextButton(
                             onPressed: () async {
                               int result =
-                              await ApiService
-                                  .cancelEvent(event
-                                  .eventID);
+                                  await ApiService.cancelEvent(event.eventID);
                               if (result == 401) {
-                                Navigator.of(context)
-                                    .pop();
+                                Navigator.of(context).pop();
                                 showErrorSnackBar(
-                                    context,
-                                    'Event was already canceled!');
+                                    context, 'Event was already canceled!');
                               } else if (result == 0) {
-                                Navigator.of(context)
-                                    .pop();
+                                Navigator.of(context).pop();
                                 showErrorSnackBar(
-                                    context,
-                                    'Canceling event failed!');
+                                    context, 'Canceling event failed!');
                               } else if (result == 1) {
-                                Navigator.of(context)
-                                    .pop();
+                                Navigator.of(context).pop();
                                 showSuccessSnackBar(
-                                    context,
-                                    'Canceling event was successful!');
+                                    context, 'Canceling event was successful!');
                               }
                             },
                             child: Text('Yes'),
@@ -466,7 +415,7 @@ class EventInfoScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => EditEventScreen(
+                    builder: (context) => edit.EditEventScreen(
                       event: event,
                     ),
                   ),

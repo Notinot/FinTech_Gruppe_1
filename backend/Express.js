@@ -1382,6 +1382,76 @@ app.post('/create-event', authenticateToken, async (req, res) => {
 
 });
 
+//edit event
+app.post('/edit-event', authenticateToken, async (req, res) => {
+
+  let eventId;
+
+  try {
+    const senderId = req.user.userId;
+    const { category, title, description, max_participants, datetime_event, country, city, street, zipcode, price, recurrence_type,eventID } = req.body;
+
+    // Validate input
+    if (!category || !title || !description || !max_participants || !datetime_event) {
+      return res.status(400).json({ message: 'Invalid input' });
+    }
+
+    const address = `${street}, ${zipcode}, ${city}, ${country}`;
+
+    // Validate address
+    const NodeGeocoder = require('node-geocoder');
+    const geocoder = NodeGeocoder({
+      provider: 'opencage',
+      apiKey: '7b209ea4bde844489fd0411dc1b53b9d'
+    });
+
+    const response = await geocoder.geocode(address);
+
+    if (response && response.length > 0) {
+
+      if (response[0].extra.confidence < 5) {
+
+        console.log('Address does not exist');
+        return res.status(401).json({ message: 'Address could not be validated' });
+      }
+
+      console.log(response);
+      console.log('Address does exist');
+    }
+
+    // Create Event in Table
+    const [eventQuery] = await db.query('UPDATE Event SET category = ?, title = ?, description = ?, max_participants = ?, datetime_created = NOW(), datetime_event = ?, price = ?, creator_id = ?, recurrence_interval = 0, recurrence_type = ? WHERE id = ?', [
+  category,
+  title,
+  description,
+  max_participants,
+  datetime_event,
+  price,
+  senderId,
+  recurrence_type,
+  eventID
+]);
+
+    console.log(eventQuery);
+
+    // Link Event -> Location
+    const locationQuery = await db.query('UPDATE Location SET country = ?, city = ?, street = ?, zipcode = ? WHERE event_id = ?', [country, city, street, zipcode, eventID]);
+    console.log(locationQuery);
+
+    // Link Event -> User_Event
+    //const user_eventQuery = await db.query('INSERT INTO User_Event (event_id, user_id) VALUES (?, ?)', [eventId, senderId]);
+    //console.log(user_eventQuery);
+
+    res.status(200).json({ message: 'Event created successfully' });
+
+  } catch (error) {
+
+    console.error('Error creating event:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+
+});
+
 // Invite to event
 app.post('/invite-event', authenticateToken, async (req, res) => {
   try {

@@ -1389,7 +1389,8 @@ app.post('/edit-event', authenticateToken, async (req, res) => {
 
   try {
     const senderId = req.user.userId;
-    const { category, title, description, max_participants, datetime_event, country, city, street, zipcode, price, recurrence_type,eventID } = req.body;
+    const { category,OLD_title, title, description, max_participants, datetime_event, country, city, street, zipcode, price, 
+      recurrence_type,eventID,participantMails,creatorName } = req.body;
 
     // Validate input
     if (!category || !title || !description || !max_participants || !datetime_event) {
@@ -1441,6 +1442,9 @@ app.post('/edit-event', authenticateToken, async (req, res) => {
     // Link Event -> User_Event
     //const user_eventQuery = await db.query('INSERT INTO User_Event (event_id, user_id) VALUES (?, ?)', [eventId, senderId]);
     //console.log(user_eventQuery);
+
+    sendEventEditedEmail(participantMails,creatorName,OLD_title, title,
+      category, description, country, city, street, zipcode, price, recurrence_type, datetime_event)
 
     res.status(200).json({ message: 'Event created successfully' });
 
@@ -1631,6 +1635,48 @@ app.get('/event-participants', authenticateToken, async (req, res) => {
     const [joinedParticipants] = await db.query(`
              SELECT
              	User.username
+                FROM User
+                JOIN
+                User_Event
+                ON User.user_id = User_Event.user_id
+                WHERE User_Event.event_id = ?
+                AND
+                User.user_id != ?
+                AND
+                User_Event.status = ?;
+           `, [eventId, senderId, type]);
+
+
+    console.log('Participants:', joinedParticipants);
+    res.json(joinedParticipants);
+
+  } catch (error) {
+    console.error('Error fetching event participants:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.get('/event-participant-mails', authenticateToken, async (req, res) => {
+  try {
+
+    const senderId = req.user.userId;
+    const eventId = req.query.eventId;
+    const type = req.query.type;
+
+    console.log(type);
+
+    if (!eventId || !type) {
+        console.log('Invalid Event Id');
+        return res.status(400).json({ message: 'Invalid input' });
+    }
+
+    // Type:
+    // 1 -> Joined
+    // 2 -> Pending
+
+    const [joinedParticipants] = await db.query(`
+             SELECT
+             	User.email
                 FROM User
                 JOIN
                 User_Event
@@ -2273,6 +2319,128 @@ function sendEventInvitationEmail(recipientEmail, recipientUsername, creatorUser
     </html>
   `
   }
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.error('Error sending email:', error);
+    } else {
+      console.log('Email sent:', info.response);
+    }
+  });
+
+}
+
+function sendEventEditedEmail(recipientEmails, creatorUsername,OLD_eventTitle, eventTitle,
+  category, description, country, city, street, zipcode, price, recurrence_type, datetime_event) {
+
+  const options = {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+    hour12: true, // Use 12-hour format
+    timeZone: 'UTC', // Specify the desired time zone (change 'UTC' to your preferred time zone)
+  };
+
+  const formattedDateTime = datetime_event.toLocaleString('en-US', options);
+
+  const mailOptions = {
+    from: 'Payfriendz App',
+    to: recipientEmails,
+    subject: 'Payfriendz: Event "' + OLD_eventTitle + '" Information Updated',
+    html: `
+  <html>
+    <head>
+      <style>
+        /* Inline CSS for styling */
+        .container {
+          background-color: #f4f4f4;
+          padding: 20px;
+          border-radius: 5px;
+          font-family: Arial, sans-serif;
+          width: 80%;
+          max-width: 600px;
+          margin: 0 auto;
+        }
+        .header {
+          background-color: #007bff;
+          color: white;
+          padding: 20px;
+          border-top-left-radius: 5px;
+          border-top-right-radius: 5px;
+          text-align: center;
+        }
+        .header h1 {
+          margin: 0;
+        }
+        .info-box {
+          background-color: #ffffff;
+          padding: 20px;
+          border-radius: 5px;
+          margin-top: 20px;
+          box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        .text-size-14 {
+          font-size: 14px;
+          color: #555;
+        }
+        .bold {
+          font-weight: bold;
+        }
+        .email-text {
+          text-align: center;
+        }
+        .updated-info {
+          margin-top: 20px;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>Event Information Updated</h1>
+        </div>
+        <div class="info-box email-text">
+          <h2 class="text-size-14 bold">${creatorUsername} updated the information for the Event: ${OLD_eventTitle}</h2>
+          <div class="updated-info">
+            <p class="text-size-14 bold">New Event Information:</p>
+            <p class="text-size-14"><span class="bold">Title:</span> ${eventTitle}</p>
+            <p class="text-size-14"><span class="bold">Category:</span> ${category}</p>
+            <p class="text-size-14"><span class="bold">Description:</span> ${description}</p>
+            <p class="text-size-14"><span class="bold">Location:</span> ${street}, ${city}, ${zipcode}, ${country}</p>
+            <p class="text-size-14"><span class="bold">Price:</span> ${price}</p>
+            <p class="text-size-14"><span class="bold">Recurrence Type:</span> ${recurrence_type}</p>
+            <p class="text-size-14"><span class="bold">Event Date and Time:</span> ${formattedDateTime}</p>
+          </div>
+          <p class="text-size-14">
+            For more information, please check your event page.
+          </p>
+          <br><br>
+          <p class="text-size-14">
+            If you have any questions or concerns, please don't hesitate to contact us at <a href="mailto:payfriendzapp@gmail.com">payfriendzapp@gmail.com</a>.
+          </p>
+          <br><br>
+          <p class="text-size-14">
+            Thank you for being a part of Payfriendz!
+          </p>
+          <br><br>
+          <p class="text-size-14">
+            Best regards,
+          </p>
+          <br><br>
+          <p class="text-size-14">
+            Your Payfriendz Team
+          </p>
+        </div>
+        <p class="text-size-14 updated-info">
+          &copy; Payfriendz 2023. Payfriendz is a registered trademark of Payfriendz.
+        </p>
+      </div>
+    </body>
+  </html>
+  `
+  };
+
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
       console.error('Error sending email:', error);

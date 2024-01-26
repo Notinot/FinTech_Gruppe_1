@@ -161,6 +161,13 @@ class _EditEventScreenState extends State<EditEventScreen> {
     // Error cleaning
     clearErrors();
 
+    // Fetch participant emails
+    List<String> participants =
+        await fetchParticipantMails(widget.event.eventID, 1);
+
+    // Fetch creator name
+    String creatorName = await ApiService.fetchUsername(widget.event.creatorId);
+
     final String title = titleController.text;
     final String description = descriptionController.text;
     String? city = cityController.text;
@@ -257,6 +264,7 @@ class _EditEventScreenState extends State<EditEventScreen> {
             body: json.encode(<String, dynamic>{
               'eventID': widget.event.eventID,
               'category': selectedCategory,
+              'OLD_title': widget.event.title,
               'title': title,
               'description': description,
               'max_participants': selectedMaxParticipants,
@@ -266,12 +274,29 @@ class _EditEventScreenState extends State<EditEventScreen> {
               'street': street,
               'zipcode': zipcode,
               'price': parsedPrice,
-              'recurrence_type': recurrenceType
+              'recurrence_type': recurrenceType,
+              'participantMails': participants,
+              'creatorName': creatorName
             }));
 
     print(editEventResponse);
 
     if (editEventResponse.statusCode == 200) {
+      const storage = FlutterSecureStorage();
+      final token = await storage.read(key: 'token');
+
+      if (token == null) {
+        if (kDebugMode) {
+          print('JWT token not found.');
+        }
+        return;
+      }
+      if (kDebugMode) {
+        print('token: $token');
+      }
+
+      print(selectedTimestamp);
+
       Navigator.push(
         this.context,
         MaterialPageRoute(builder: (context) => const DashboardScreen()),
@@ -596,6 +621,45 @@ class _EditEventScreenState extends State<EditEventScreen> {
         ),
       ),
     );
+  }
+}
+
+Future<List<String>> fetchParticipantMails(int eventId, int type) async {
+  try {
+    const storage = FlutterSecureStorage();
+    final token = await storage.read(key: 'token');
+
+    if (token == null) {
+      throw Exception('Token not found');
+    }
+
+    final response = await http.get(
+      Uri.parse(
+          '${ApiService.serverUrl}/event-participant-mails?eventId=$eventId&type=$type'),
+      headers: {
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> participantsList = jsonDecode(response.body);
+
+      // Explicitly cast each element to String
+      final List<String> participants = participantsList
+          .map((dynamic item) =>
+              (item as Map<String, dynamic>)['email'].toString())
+          .toList();
+
+      return participants;
+    } else {
+      throw Exception(
+          'Failed to load participants. Error: ${response.statusCode}');
+    }
+  } catch (e) {
+    print("Error fetching Participants");
+    print(e);
+    rethrow;
   }
 }
 

@@ -402,31 +402,85 @@ class ApiService {
     }
   }
 
-  static Future<bool> joinEvent(int eventId) async {
+  static Future<bool> joinEvent(int recipientId, String recipientUsername, double amount, String message, int eventId) async {
     try {
+
       const storage = FlutterSecureStorage();
       final token = await storage.read(key: 'token');
       if (token == null) {
         throw Exception('Token not found');
       }
 
-      print(eventId);
 
-      final joinEventResponse = await http.post(
-          Uri.parse('${ApiService.serverUrl}/join-event?eventId=$eventId'),
+        final joinEventResponse = await http.post(
+          Uri.parse('${ApiService.serverUrl}/join-event'),
           headers: {
             'Content-Type': 'application/json; charset=UTF-8',
             'Authorization': 'Bearer $token',
-          });
+          },
+          body: jsonEncode({
+            'recipientId': recipientId.toString(),
+            'amount' : amount.toString(),
+            'message' : message,
+            'eventId' : eventId.toString()
+          }),
+        );
 
-      if (joinEventResponse.statusCode == 200) {
-        print('joinEvent function: Joining Event was successful');
-        return true;
-      }
-      print(joinEventResponse.statusCode);
-      print('joinEvent function: Error joining Event');
-      return false;
+
+        if (joinEventResponse.statusCode == 200) {
+
+          print("Joining Event Successful");
+
+          if(amount > 0){
+            try{
+
+              final sendMoneyResponse = await http.post(
+                Uri.parse('${ApiService.serverUrl}/send-money'),
+                headers: {
+                  'Content-Type': 'application/json; charset=UTF-8',
+                  'Authorization': 'Bearer $token',
+                },
+                body: json.encode(<String, dynamic>{
+                  'recipient': recipientUsername,
+                  'recipientUsername' : recipientUsername,
+                  'amount': amount,
+                  'message': message,
+                  'event_id': eventId.toString(),
+                }),
+              );
+
+              if (sendMoneyResponse.statusCode == 200) {
+
+                // Money sent successfully
+                print('Sending money was successful');
+                return true;
+
+              } else {
+
+                // Money transfer failed, handle accordingly
+                print('Error sending money: ${sendMoneyResponse.body}');
+                return false;
+              }
+
+            }catch(err){
+
+              print('joinEvent function: Error sending money $err');
+              return false;
+            }
+          }
+          else{
+
+            print('joinEvent function: Joining Event was successful');
+            return true;
+          }
+        }
+
+        print(joinEventResponse.statusCode);
+        print('joinEvent function: Error joining Event');
+        return false;
+
     } catch (e) {
+
       print('joinEvent function: Error joining Event: $e');
       print(e);
       return false;

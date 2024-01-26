@@ -10,7 +10,8 @@ import '../api_service.dart';
 class InviteToEventScreen extends StatefulWidget {
 
   final int eventId;
-  InviteToEventScreen({required this.eventId});
+  final bool allowInvite;
+  InviteToEventScreen({required this.eventId, required this.allowInvite});
 
   @override
   _InviteToEventScreenState createState() => _InviteToEventScreenState();
@@ -31,8 +32,6 @@ class _InviteToEventScreenState extends State<InviteToEventScreen> {
       if (token == null) {
         throw Exception('Token not found');
       }
-
-      List<String> participants = [];
 
       final response = await http.get(
         Uri.parse('${ApiService.serverUrl}/event-participants?eventId=$eventId'),
@@ -75,80 +74,14 @@ class _InviteToEventScreenState extends State<InviteToEventScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Invite Friends'),
+        title: const Text('Event Participants'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            const Text(
-              'Recipient:',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: recipientController,
-              decoration: InputDecoration(
-                hintText: 'Enter recipient name or email',
-                border: OutlineInputBorder(),
-                prefixIcon: const Icon(Icons.person),
-              ),
-            ),
-            const SizedBox(height: 24),
-            Center(
-              child: ElevatedButton(
-                onPressed: () async {
-                  final recipient = recipientController.text;
-
-                  if (recipient.trim().isEmpty) {
-                    setState(() {
-                      recipientBorderColor = Colors.red;
-                    });
-                    showErrorSnackBar(context, 'Recipient cannot be empty');
-                    return;
-                  } else {
-                    setState(() {
-                      recipientBorderColor = Colors.grey;
-                    });
-                  }
-
-
-                  final Map<String, dynamic> user =
-                  await ApiService.fetchUserProfile();
-
-                  if (recipient == user['username'] ||
-                      recipient == user['email']) {
-                    showErrorSnackBar(
-                        context, 'You cannot send a invite to yourself');
-                    return;
-                  }
-
-                  if(recipient.isEmpty){
-                    showErrorSnackBar(
-                        context, 'Recipient can not be empty');
-                    return;
-                  }
-
-                  int res = await ApiService.inviteEvent(widget.eventId, recipient);
-                  if (res == 200) {
-
-                    recipientController.clear();
-
-                    showSuccessSnackBar(context,
-                        'Invite sent successfully to $recipient');
-
-                  }
-                  else if(res == 401){
-                    showErrorSnackBar(context, '$recipient already interacted with the Event');
-                  }
-                  else if(res == 400 || res == 500){
-                    showErrorSnackBar(context, 'Failed to send invite to $recipient');
-                  }
-                },
-                child: Text('Invite'), // Add this line
-              ),
-            ),
+            checkIfInvitesPossible(),
             const SizedBox(height: 24),
             Text("Participants: ", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             Expanded(
@@ -179,6 +112,85 @@ class _InviteToEventScreenState extends State<InviteToEventScreen> {
         ),
       ),
     );
+  }
+
+  Widget checkIfInvitesPossible(){
+    // Recipient can be invited
+    if(widget.allowInvite == true){
+    return Column(
+      children: [
+        const Text(
+          'Recipient:',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 16),
+        TextFormField(
+          controller: recipientController,
+          decoration: InputDecoration(
+            hintText: 'Enter recipient name or email',
+            border: OutlineInputBorder(),
+            prefixIcon: const Icon(Icons.person),
+          ),
+        ),
+        const SizedBox(height: 24),
+        Center(
+          child: ElevatedButton(
+            onPressed: () async {
+              final recipient = recipientController.text;
+
+              if (recipient.trim().isEmpty) {
+                setState(() {
+                  recipientBorderColor = Colors.red;
+                });
+                showErrorSnackBar(context, 'Recipient cannot be empty');
+                return;
+              } else {
+                setState(() {
+                  recipientBorderColor = Colors.grey;
+                });
+              }
+
+
+              final Map<String, dynamic> user =
+              await ApiService.fetchUserProfile();
+
+              if (recipient == user['username'] ||
+                  recipient == user['email']) {
+                showErrorSnackBar(
+                    context, 'You cannot send a invite to yourself');
+                return;
+              }
+
+              if(recipient.isEmpty){
+                showErrorSnackBar(
+                    context, 'Recipient can not be empty');
+                return;
+              }
+
+              int res = await ApiService.inviteEvent(widget.eventId, recipient);
+              if (res == 200) {
+
+                recipientController.clear();
+
+                showSuccessSnackBar(context,
+                    'Invite sent successfully to $recipient');
+
+              }
+              else if(res == 401){
+                showErrorSnackBar(context, '$recipient already interacted with the Event');
+              }
+              else if(res == 400 || res == 500){
+                showErrorSnackBar(context, 'Failed to send invite to $recipient');
+              }
+            },
+            child: Text('Invite'), // Add this line
+          ),
+        ),
+      ],
+    );
+    }else{
+      return Container();
+    }
   }
 
   void showErrorSnackBar(BuildContext context, String message) {

@@ -281,7 +281,9 @@ class EventInfoScreen extends StatelessWidget {
         }
       } else {
         // Event is Active && User not Creator
-        return TextButton(
+        return ElevatedButton(
+          style: ElevatedButton.styleFrom(
+              textStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
           onPressed: () {
             showDialog(
               context: context,
@@ -350,7 +352,8 @@ class EventInfoScreen extends StatelessWidget {
     return '${NumberFormat("#,##0.00", "de_DE").format(event.price)} €';
   }
 
-  Future<dynamic> editOrcancelEvent(BuildContext context) {
+  Future<dynamic> editOrcancelEvent(BuildContext context) async {
+
     return showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -363,6 +366,8 @@ class EventInfoScreen extends StatelessWidget {
               child: const Text('Back'),
             ),
             ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                  textStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
               child: Text('Cancel'),
               onPressed: () {
                 Navigator.pop(
@@ -408,6 +413,8 @@ class EventInfoScreen extends StatelessWidget {
               },
             ),
             ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                  textStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
               child: Text('Edit'),
               onPressed: () {
                 Navigator.pop(

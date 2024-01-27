@@ -515,12 +515,60 @@ class ApiService {
         throw Exception('Token not found');
       }
 
+      Future<List<String>> fetchParticipantMails(int eventId, int type) async {
+        try {
+          const storage = FlutterSecureStorage();
+          final token = await storage.read(key: 'token');
+
+          if (token == null) {
+            throw Exception('Token not found');
+          }
+
+          final response = await http.get(
+            Uri.parse(
+                '${ApiService.serverUrl}/event-participant-mails?eventId=$eventId&type=$type'),
+            headers: {
+              'Content-Type': 'application/json; charset=UTF-8',
+              'Authorization': 'Bearer $token',
+            },
+          );
+
+          if (response.statusCode == 200) {
+            final List<dynamic> participantsList = jsonDecode(response.body);
+
+            // Explicitly cast each element to String
+            final List<String> participants = participantsList
+                .map((dynamic item) =>
+                (item as Map<String, dynamic>)['email'].toString())
+                .toList();
+
+            return participants;
+          } else {
+            throw Exception(
+                'Failed to load participants. Error: ${response.statusCode}');
+          }
+        } catch (e) {
+          print("Error fetching Participants");
+          print(e);
+          rethrow;
+        }
+      }
+
+      // Fetch participant emails
+      List<String> participants =
+      await fetchParticipantMails(eventId, 1);
+
       final cancelEventResponse = await http.post(
-          Uri.parse('${ApiService.serverUrl}/cancel-event?eventId=$eventId'),
+          Uri.parse('${ApiService.serverUrl}/cancel-event'),
           headers: {
             'Content-Type': 'application/json; charset=UTF-8',
             'Authorization': 'Bearer $token',
-          });
+          },
+          body: jsonEncode({
+            'eventId': eventId,
+            'participants' : participants
+        }),
+      );
 
       if (cancelEventResponse.statusCode == 200) {
         print('cancelEvent function: Canceling Event was successful');

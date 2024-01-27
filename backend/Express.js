@@ -1173,6 +1173,7 @@ app.get('/events', authenticateToken, async (req, res) => {
           Event.*,
           Location.*,
           User_Event.user_id,
+          User_Event.status AS user_event_status,
           User.username AS creator_username,
           User.user_id AS creator_id
       FROM
@@ -1184,7 +1185,7 @@ app.get('/events', authenticateToken, async (req, res) => {
       LEFT JOIN
           Location ON Event.id = Location.event_id
       WHERE
-          User_Event.status = 1
+          User_Event.status != 0
           AND
           User_Event.user_id = ?;
 
@@ -1211,6 +1212,7 @@ app.get('/fetch-single-event', authenticateToken, async(req, res) => {
              Event.*,
                        Location.*,
                        User_Event.user_id,
+                       User_Event.status AS user_event_status,
                        User.username AS creator_username,
                        User.user_id AS creator_id
              FROM Event
@@ -1518,11 +1520,22 @@ app.post('/join-event', authenticateToken, async (req, res) => {
   try {
 
     const senderId = req.user.userId;
-    const { recipientId, amount, message, eventId } = req.body;
+    const { amount, message, eventId } = req.body;
 
-    if( !recipientId || !amount || !message || !eventId){
+    if( !message || !eventId){
         return res.status(400).json({ message: 'Invalid input' });
     }
+
+     // Additional validation if needed
+       const [checkStatus] = await db.query('SELECT * FROM User_Event WHERE event_id = ? AND user_id = ?', [eventId, senderId]);
+
+       if (checkStatus.length === 0) {
+            return res.status(400).json({ message: 'Event not found' });
+       }
+
+       if (checkStatus[0].status === 1) {
+            return res.status(401).json({ message: 'Event is already joined' });
+       }
 
     const [joinQuery] = await db.query('UPDATE User_Event SET status = 1 WHERE event_id = ? AND user_id = ?', [eventId, senderId]);
     console.log(joinQuery);

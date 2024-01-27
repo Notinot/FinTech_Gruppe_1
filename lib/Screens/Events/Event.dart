@@ -25,6 +25,7 @@ class Event {
   final creatorUsername;
   final creatorId;
   bool isCreator;
+  int? user_event_status;
 
   Event({
     required this.eventID,
@@ -46,6 +47,7 @@ class Event {
     required this.creatorUsername,
     required this.creatorId,
     required this.isCreator,
+    required this.user_event_status
   });
 
   final Map<String, IconData> iconMap = {
@@ -120,6 +122,7 @@ class Event {
       zipcode: json['zipcode'],
       creatorUsername: json['creator_username'],
       creatorId: json['creator_id'],
+      user_event_status: json['user_event_status'],
       isCreator: false,
     );
   }

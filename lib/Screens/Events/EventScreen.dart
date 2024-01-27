@@ -37,7 +37,7 @@ class _EventScreenState extends State<EventScreen> {
   late search_bar.SearchBar searchBar;
 
   String currentSortOrder = 'All events';
-  List<String> sortOptions = ['All events', 'My events', 'Active', 'Inactive'];
+  List<String> sortOptions = ['All events', 'My events', 'Requests', 'Active', 'Inactive'];
 
   String currentCategoryOption = 'Category';
   List<String> possibleCategories = ['Category'];
@@ -103,12 +103,13 @@ class _EventScreenState extends State<EventScreen> {
           }
         });
 
-        // Fill list for category list
+        /* Fill list for category list
         for (var event in events) {
           if (!possibleCategories.contains(event.category)) {
             possibleCategories.add(event.category);
           }
         }
+        */
 
         // Set if User is Creator
         for (var event in events) {
@@ -118,6 +119,7 @@ class _EventScreenState extends State<EventScreen> {
             });
           }
         }
+
 
         switch (currentSortOrder) {
           case 'All events':
@@ -151,6 +153,13 @@ class _EventScreenState extends State<EventScreen> {
               }
               return filteredEvents;
             }
+          case 'Requests':
+            for (var event in events){
+              if (event.status == 1 && event.user_event_status == 2 && !filteredEvents.contains(event)){
+                  filteredEvents.add(event);
+              }
+            }
+            return filteredEvents;
           case 'Active':
             if (currentCategoryOption == 'Category') {
               for (var event in events) {

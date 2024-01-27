@@ -402,8 +402,15 @@ class ApiService {
     }
   }
 
-  static Future<bool> joinEvent(int recipientId, String recipientUsername,
+  static Future<int> joinEvent(int recipientId, String recipientUsername,
       double amount, String message, int eventId) async {
+
+    // Return Codes:
+    // 200: success
+    // 400: general failure
+    // 401: event already joined
+    // 402: payment failed
+
     try {
       const storage = FlutterSecureStorage();
       final token = await storage.read(key: 'token');
@@ -418,7 +425,6 @@ class ApiService {
           'Authorization': 'Bearer $token',
         },
         body: jsonEncode({
-          'recipientId': recipientId.toString(),
           'amount': amount.toString(),
           'message': message,
           'eventId': eventId.toString()
@@ -448,29 +454,33 @@ class ApiService {
             if (sendMoneyResponse.statusCode == 200) {
               // Money sent successfully
               print('Sending money was successful');
-              return true;
+              return 200;
             } else {
+
               // Money transfer failed, handle accordingly
               print('Error sending money: ${sendMoneyResponse.body}');
-              return false;
+              return 402;
             }
           } catch (err) {
             print('joinEvent function: Error sending money $err');
-            return false;
+            return 402;
           }
         } else {
           print('joinEvent function: Joining Event was successful');
-          return true;
+          return 200;
         }
+      }
+      else if(joinEventResponse.statusCode == 401){
+        return 401;
       }
 
       print(joinEventResponse.statusCode);
       print('joinEvent function: Error joining Event');
-      return false;
+      return 400;
     } catch (e) {
       print('joinEvent function: Error joining Event: $e');
       print(e);
-      return false;
+      return 400;
     }
   }
 

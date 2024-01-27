@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Screens/Dashboard/appDrawer.dart';
 import 'package:flutter_application_1/Screens/Dashboard/Notifications.dart';
 import 'package:flutter_application_1/Screens/Dashboard/accountSummary.dart';
 import 'package:flutter_application_1/Screens/Events/EventScreen.dart';
 import 'package:flutter_application_1/Screens/Events/Event.dart';
+import 'package:flutter_application_1/Screens/Events/EventInfoScreen.dart';
 import 'package:flutter_application_1/Screens/Friends/FriendsScreen.dart';
 import 'package:flutter_application_1/Screens/Dashboard/Notifications.dart';
 import 'package:flutter_application_1/Screens/Money/TransactionHistoryScreen.dart';
@@ -15,6 +17,7 @@ import 'package:flutter_application_1/Screens/Dashboard/userProfileSection.dart'
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:badges/badges.dart' as Badge;
+import 'package:intl/intl.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({Key? key}) : super(key: key);
@@ -252,7 +255,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> handleEventRequest(int recipientId, String recipientUsername, double amount, String message, String eventTitle, int eventId, String action) async {
     try {
 
-      if (await ApiService.joinEvent(recipientId, recipientUsername, amount, message, eventId)) {
+      if (await ApiService.joinEvent(recipientId, recipientUsername, amount, message, eventId) == 200) {
         showSuccessSnackBar(context, 'Request accepted successfully');
       } else {
         // Request failed, handle the error
@@ -340,6 +343,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             'participants': event.participants,
             'max_participants': event.maxParticipants,
             'datetime_event': event.datetimeEvent,
+            'datetime_created' : event.datetimeCreated,
             'price': event.price,
             'status': event.status,
             'creator_username': event.creatorUsername,
@@ -550,16 +554,35 @@ class _DashboardScreenState extends State<DashboardScreen> {
     Map<String, dynamic> user,
   ) async {
 
-    print(eventRequest['creator_id']);
     int creatorId = eventRequest['creator_id'];
     String creatorUsername = eventRequest['creator_username'];
     double amount = eventRequest['price'];
     String eventTitle = eventRequest['title'];
     int eventId = eventRequest['event_id'];
 
-    String message = "Sent $amount€ for $eventTitle";
-    print(creatorUsername);
-    print(message);
+    Event event = Event(
+        eventID: eventId,
+        title: eventTitle,
+        description: eventRequest['description'],
+        category: eventRequest['category'],
+        participants: eventRequest['participants'],
+        maxParticipants: eventRequest['max_participants'],
+        datetimeCreated: eventRequest['datetime_created'],
+        datetimeEvent: eventRequest['datetime_event'],
+        price: amount,
+        status: eventRequest['status'],
+        recurrenceType: eventRequest['recurrence_type'],
+        recurrenceInterval: eventRequest['recurrence_interval'],
+        country: eventRequest['country'],
+        city: eventRequest['city'],
+        street: eventRequest['street'],
+        zipcode: eventRequest['zipcode'],
+        creatorUsername: creatorUsername,
+        creatorId: creatorId,
+        isCreator: false,
+        user_event_status: 2);
+
+
 
     return PopupMenuItem<String>(
       key: Key(eventId.toString()),
@@ -574,12 +597,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
           IconButton(
             icon: Icon(Icons.check, color: Colors.green),
             onPressed: () {
-              ApiService.joinEvent(
-                creatorId,
-                creatorUsername,
-                amount,
-                eventTitle,
-                eventId,
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => EventInfoScreen(
+                    event: event,
+                  ),
+                ),
               ).then((_) {
                 items.removeWhere((item) =>
                     item.key == Key(eventRequest['event_id'].toString()));

@@ -236,7 +236,13 @@ class EventInfoScreen extends StatelessWidget {
     );
   }
 
+
+
   Widget buildButton(Event event, BuildContext context) {
+
+    print("-->");
+    print(event.user_event_status);
+
     // Event is active
     if (event.status == 1) {
       // User is Creator
@@ -279,8 +285,8 @@ class EventInfoScreen extends StatelessWidget {
             label: Text('View participants'),
           );
         }
-      } else {
-        // Event is Active && User not Creator
+      } else if(event.user_event_status  == 1){
+        // Event is Active && User not Creator && User is already joined
         return ElevatedButton(
           style: ElevatedButton.styleFrom(
               textStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
@@ -322,7 +328,61 @@ class EventInfoScreen extends StatelessWidget {
               },
             );
           },
-          child: Text('Leave event'),
+          child: Text('Leave'),
+        );
+      }
+      else if (event.user_event_status == 2){
+        // User is not joined
+        return ElevatedButton(
+          style: ElevatedButton.styleFrom(
+              textStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+          onPressed: () {
+            showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  title: Text('Joining ${event.title}'),
+                  content: Text(
+                      'Do you want to join "${event.title}"?'),
+                  actions: <Widget>[
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: Text('Back'),
+                    ),
+                    TextButton(
+                      onPressed: () async {
+                        int result = await ApiService.joinEvent(event.creatorId, event.creatorUsername, event.price, event.title, event.eventID);
+                        if (result == 400) {
+                          Navigator.of(context).pop();
+                          showErrorSnackBar(context, 'Joining event failed');
+                        }
+                        else if(result == 401){
+                          Navigator.of(context).pop();
+                          showErrorSnackBar(
+                              context, 'You already joined the event');
+                        }
+                        else if(result == 402){
+                          Navigator.of(context).pop();
+                          showErrorSnackBar(
+                              context, 'Something went wrong at the payment. Please check your account balance.');
+                        }
+                        else if(result == 200){
+                          Navigator.of(context).pop();
+                          showSuccessSnackBar(
+                              context, 'Joining event was successful');
+                        }
+                        Navigator.of(context).pop();
+                      },
+                      child: Text('Yes'),
+                    )
+                  ],
+                );
+              },
+            );
+          },
+          child: Text('Join'),
         );
       }
     }

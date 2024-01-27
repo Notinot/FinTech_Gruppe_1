@@ -1620,6 +1620,7 @@ app.post('/cancel-event', authenticateToken, async (req, res) => {
     const eventTitle = event[0].title;
 
 
+
     const [cancelQuery] = await db.query('UPDATE Event SET status = 0 WHERE id = ? AND creator_id = ?',
       [
         eventId,
@@ -1644,7 +1645,7 @@ app.post('/cancel-event', authenticateToken, async (req, res) => {
 
     for(let i = 0; i < participants.length; i++){
 
-        sendEventCanceledEmail(participants[i], participantsUsername[i], creatorUsername, eventTitle);
+        sendEventCanceledEmail(participants[i], participantsUsername[i][0].username, creatorUsername, eventTitle);
     }
 
 

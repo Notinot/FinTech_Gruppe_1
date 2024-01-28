@@ -1,8 +1,24 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'package:flutter_application_1/Screens/api_service.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
+
+
+/*
+Status Overview
+Event Status:
+0 -> Canceled
+1 -> Active
+2 -> Event Time pasted
+
+User_Event Status:
+0 -> Leaved
+1 -> Joined
+2 -> Pending (received invite)
+*/
 
 class Event {
 
@@ -137,10 +153,11 @@ class Event {
       }
 
       List<Event> checkingEvents = [];
+      List<Event> restartingEvents = [];
 
       // Get all repeatable Events
       for (var event in events) {
-        if (event.recurrenceType != 0 && !checkingEvents.contains(event)) {
+        if (event.recurrenceType != 0 && !checkingEvents.contains(event) && event.status != 0) {
           checkingEvents.add(event);
         }
       }
@@ -152,17 +169,66 @@ class Event {
               event.datetimeEvent =
                   event.datetimeEvent.add(Duration(days: 7));
               event.recurrenceInterval = (event.recurrenceInterval! + 1)!;
+              restartingEvents.add(event);
             case 2:
             // Needs to be improved
               event.datetimeEvent =
                   event.datetimeEvent.add(Duration(days: 30));
               event.recurrenceInterval = (event.recurrenceInterval! + 1)!;
+              restartingEvents.add(event);
             case 3:
               event.datetimeEvent =
                   event.datetimeEvent.add(Duration(days: 365));
               event.recurrenceInterval = (event.recurrenceInterval! + 1)!;
+              restartingEvents.add(event);
           }
         }
+      }
+
+      // Participants send money recurrence interval increases
+      for(var event in restartingEvents){
+        try {
+
+            if(event.price > 0){
+
+              List<String> participantsList = await ApiService.fetchParticipants(event.eventID, 1);
+
+              for(var participant in participantsList){
+                try{
+
+                    final sendMoneyResponse = await http.post(
+                      Uri.parse('${ApiService.serverUrl}/send-money'),
+                      headers: {
+                        'Content-Type': 'application/json; charset=UTF-8',
+                        'Authorization': 'Bearer $token',
+                      },
+                      body: json.encode(<String, dynamic>{
+                        'recipient': participant,
+                        'amount': event.price,
+                        'message': event.title,
+                        'event_id': event.eventID.toString(),
+                      }),
+                    );
+
+                    if (sendMoneyResponse.statusCode == 200) {
+                      // Money sent successfully
+                      print('Sending money was successful');
+                    } else {
+
+                      // Money transfer failed, handle accordingly
+                      print('Error sending money: ${sendMoneyResponse.body}');
+                      // User Kicken!
+                    }
+                }catch(err){
+                  print('Error: $err');
+
+                }
+              }
+            }
+
+         } catch (error) {
+           print('Error: $error');
+         }
       }
 
       try {

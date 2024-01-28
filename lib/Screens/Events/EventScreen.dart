@@ -17,7 +17,6 @@ Status Overview
 Event Status:
 0 -> Canceled
 1 -> Active
-(not implemented yet)
 2 -> Event Time pasted
 
 User_Event Status:
@@ -90,7 +89,6 @@ class _EventScreenState extends State<EventScreen> {
           return Event.fromJson(eventData as Map<String, dynamic>);
         }).toList();
 
-        // Sort by status and datetime
         events.sort((a, b) {
           // First, sort by status (active events first)
           if (a.status == 1 && b.status != 1) {
@@ -98,8 +96,8 @@ class _EventScreenState extends State<EventScreen> {
           } else if (a.status != 1 && b.status == 1) {
             return 1; // b is active, a is not; move b up
           } else {
-            // Both events have the same status, sort by datetimeEvent
-            return b.datetimeEvent.compareTo(a.datetimeEvent);
+            // Both events have the same status, sort by datetimeEvent in reverse order
+            return a.datetimeEvent.compareTo(b.datetimeEvent); // Swap a and b here
           }
         });
 

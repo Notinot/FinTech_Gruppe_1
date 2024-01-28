@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Screens/Events/EventScreen.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
-import '../api_service.dart';
+import 'package:flutter_application_1/Screens/api_service.dart';
+
 
 class InviteToEventScreen extends StatefulWidget {
   final int eventId;
@@ -20,51 +21,12 @@ class _InviteToEventScreenState extends State<InviteToEventScreen> {
   Color recipientBorderColor = Colors.grey;
   final String recipient = '';
 
-  Future<List<String>> fetchParticipants(int eventId, int type) async {
-    try {
-      const storage = FlutterSecureStorage();
-      final token = await storage.read(key: 'token');
-
-      if (token == null) {
-        throw Exception('Token not found');
-      }
-
-      final response = await http.get(
-        Uri.parse(
-            '${ApiService.serverUrl}/event-participants?eventId=$eventId&type=$type'),
-        headers: {
-          'Content-Type': 'application/json; charset=UTF-8',
-          'Authorization': 'Bearer $token',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final List<dynamic> participantsList = jsonDecode(response.body);
-
-        // Explicitly cast each element to String
-        final List<String> participants = participantsList
-            .map((dynamic item) =>
-                (item as Map<String, dynamic>)['username'].toString())
-            .toList();
-
-        return participants;
-      } else {
-        throw Exception(
-            'Failed to load participants. Error: ${response.statusCode}');
-      }
-    } catch (e) {
-      print("Error fetching Participants");
-      print(e);
-      rethrow;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final Future<List<String>> joinedParticipants =
-        fetchParticipants(widget.eventId, 1);
+        ApiService.fetchParticipants(widget.eventId, 1);
     final Future<List<String>> invitedParticipants =
-        fetchParticipants(widget.eventId, 2);
+        ApiService.fetchParticipants(widget.eventId, 2);
 
     return Scaffold(
       appBar: AppBar(

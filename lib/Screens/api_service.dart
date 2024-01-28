@@ -402,7 +402,7 @@ class ApiService {
     }
   }
 
-  static Future<int> joinEvent(int recipientId, String recipientUsername,
+  static Future<int> joinEvent(String recipientUsername,
       double amount, String message, int eventId) async {
 
     // Return Codes:
@@ -444,7 +444,6 @@ class ApiService {
               },
               body: json.encode(<String, dynamic>{
                 'recipient': recipientUsername,
-                'recipientUsername': recipientUsername,
                 'amount': amount,
                 'message': message,
                 'event_id': eventId.toString(),
@@ -514,6 +513,46 @@ class ApiService {
     } catch (e) {
       print('cancelEvent function: Error canceling Event');
       return 0;
+    }
+  }
+
+  static Future<List<String>> fetchParticipants(int eventId, int type) async {
+    try {
+
+      const storage = FlutterSecureStorage();
+      final token = await storage.read(key: 'token');
+
+      if (token == null) {
+        throw Exception('Token not found');
+      }
+
+      final response = await http.get(
+        Uri.parse(
+            '${ApiService.serverUrl}/event-participants?eventId=$eventId&type=$type'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> participantsList = jsonDecode(response.body);
+
+        // Explicitly cast each element to String
+        final List<String> participants = participantsList
+            .map((dynamic item) =>
+            (item as Map<String, dynamic>)['username'].toString())
+            .toList();
+
+        return participants;
+      } else {
+        throw Exception(
+            'Failed to load participants. Error: ${response.statusCode}');
+      }
+    } catch (e) {
+      print("Error fetching Participants");
+      print(e);
+      rethrow;
     }
   }
 

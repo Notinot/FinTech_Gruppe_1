@@ -255,7 +255,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> handleEventRequest(int recipientId, String recipientUsername, double amount, String message, String eventTitle, int eventId, String action) async {
     try {
 
-      if (await ApiService.joinEvent(recipientId, recipientUsername, amount, message, eventId) == 200) {
+      if (await ApiService.joinEvent(recipientUsername, amount, message, eventId) == 200) {
         showSuccessSnackBar(context, 'Request accepted successfully');
       } else {
         // Request failed, handle the error

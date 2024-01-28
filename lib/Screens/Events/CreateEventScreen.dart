@@ -10,6 +10,9 @@ import 'package:numberpicker/numberpicker.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart';
 import '../api_service.dart';
+import 'package:flutter_application_1/Screens/Events/Event.dart';
+import 'package:flutter_application_1/Screens/Events/InviteToEventScreen.dart';
+
 
 /*
  Recurrence Type
@@ -239,10 +242,44 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     print(createEventResponse);
 
     if (createEventResponse.statusCode == 200) {
-      Navigator.push(
-        this.context,
-        MaterialPageRoute(builder: (context) => const DashboardScreen()),
+
+      final res = await http.get(
+
+        Uri.parse('${ApiService.serverUrl}/fetch-latest-created-event'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $token',
+        },
       );
+
+      print(res.statusCode);
+
+      if(res.statusCode == 200){
+
+        final List<dynamic> data = jsonDecode(res.body);
+        final List<dynamic> eventsData = data;
+
+        List<Event> events = eventsData.map((eventData) {
+          return Event.fromJson(eventData as Map<String, dynamic>);
+        }).toList();
+
+        Event event = events[0];
+
+        Navigator.push(
+            this.context,
+            MaterialPageRoute(
+              builder: (context) => InviteToEventScreen(
+                eventId: event.eventID,
+                allowInvite: true,
+              ),
+            ),
+        );
+      }else{
+        Navigator.push(
+          this.context,
+          MaterialPageRoute(builder: (context) => const DashboardScreen()),
+        );
+      }
     } else if (createEventResponse.statusCode == 401) {
       setState(() {
         selectedCountry = '';

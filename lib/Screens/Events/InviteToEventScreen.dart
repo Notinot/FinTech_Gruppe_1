@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/Screens/Dashboard/dashBoardScreen.dart';
 import 'package:flutter_application_1/Screens/Events/EventScreen.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
@@ -31,6 +32,16 @@ class _InviteToEventScreenState extends State<InviteToEventScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Event Participants'),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            // Navigate back when the back button is pressed
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => DashboardScreen()),
+            );
+          },
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -144,11 +155,6 @@ class _InviteToEventScreenState extends State<InviteToEventScreen> {
                   return;
                 }
 
-                if (recipient.isEmpty) {
-                  showErrorSnackBar(context, 'Recipient can not be empty');
-                  return;
-                }
-
                 int res =
                     await ApiService.inviteEvent(widget.eventId, recipient);
                 if (res == 200) {
@@ -159,7 +165,11 @@ class _InviteToEventScreenState extends State<InviteToEventScreen> {
                 } else if (res == 401) {
                   showErrorSnackBar(
                       context, '$recipient already interacted with the Event');
-                } else if (res == 400 || res == 500) {
+                } else if (res == 402){
+                    showErrorSnackBar(
+                    context, '$recipient does not exist');
+                }
+                else if (res == 400 || res == 500) {
                   showErrorSnackBar(
                       context, 'Failed to send invite to $recipient');
                 }

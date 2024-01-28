@@ -371,7 +371,7 @@ class ApiService {
       }
 
       final inviteEventResponse = await http.post(
-        Uri.parse('${ApiService.serverUrl}/invite-event?'),
+        Uri.parse('${ApiService.serverUrl}/invite-event'),
         headers: {
           'Content-Type': 'application/json; charset=UTF-8',
           'Authorization': 'Bearer $token',
@@ -391,6 +391,12 @@ class ApiService {
         print(
             'inviteEvent function: $recipient already interacted with the event');
         return 401;
+      }
+
+      if(inviteEventResponse.statusCode == 402){
+        print(
+            'inviteEvent function: $recipient does not exist');
+        return 402;
       }
 
       print('inviteEvent function: Error inviting to Event');

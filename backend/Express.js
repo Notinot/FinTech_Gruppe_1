@@ -1237,6 +1237,26 @@ app.get('/fetch-single-event', authenticateToken, async(req, res) => {
     }
 });
 
+app.get('/fetch-latest-created-event', authenticateToken, async(req, res) => {
+
+    try{
+
+            const senderId = req.user.userId;
+
+            const [latestEvent] = await db.query(
+                `SELECT Event.*, Event.id AS event_id FROM Event WHERE id = (SELECT MAX(id) FROM Event);`
+            );
+
+            console.log(latestEvent);
+            res.json(latestEvent);
+        }
+        catch(error){
+           console.error('Error fetching Events:', error);
+           res.status(500).json({ message: 'Internal server error' });
+        }
+
+});
+
 app.get('/fetch-all-events', authenticateToken, async(req, res) => {
 
     try{
@@ -1469,6 +1489,12 @@ app.post('/invite-event', authenticateToken, async (req, res) => {
     }
 
     const [recipientData] = await db.query('SELECT user_id, username, email FROM User WHERE username = ? OR email = ?', [recipient, recipient]);
+
+    if (recipientData.length === 0){
+
+        return res.status(402).json({ message: 'This account does not exist' });
+    }
+
     const recipientId = recipientData[0].user_id;
     const recipientEmail = recipientData[0].email;
     const recipientUsername = recipientData[0].username;

@@ -1268,6 +1268,7 @@ app.get('/fetch-all-events', authenticateToken, async(req, res) => {
              Event.*,
                        Location.*,
                        User_Event.user_id,
+                       User_Event.status AS user_event_status,
                        User.username AS creator_username,
                        User.user_id AS creator_id
              FROM Event
@@ -1300,6 +1301,7 @@ app.get('/dashboard-events', authenticateToken, async (req, res) => {
              Event.*,
                        Location.*,
                        User_Event.user_id,
+                       User_Event.status AS user_event_status,
                        User.username AS creator_username,
                        User.user_id AS creator_id
              FROM Event

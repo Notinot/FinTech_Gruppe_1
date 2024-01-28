@@ -41,7 +41,7 @@ class Event {
   final creatorUsername;
   final creatorId;
   bool isCreator;
-  int? user_event_status;
+  int user_event_status;
 
   Event({
     required this.eventID,

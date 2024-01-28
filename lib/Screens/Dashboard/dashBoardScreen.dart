@@ -87,23 +87,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
       if(res.statusCode == 200){
 
-        final List<dynamic> data = jsonDecode(res.body);
-        final List<dynamic> eventsData = data;
+        try{
+          final List<dynamic> data = jsonDecode(res.body);
+          final List<dynamic> eventsData = data;
 
-        List<Event> events = eventsData.map((eventData) {
-        return Event.fromJson(eventData as Map<String, dynamic>);
-        }).toList();
+          List<Event> events = eventsData.map((eventData) {
+            return Event.fromJson(eventData as Map<String, dynamic>);
+          }).toList();
 
-        for (int i = 0; i < events.length; i++) {
-          for (int j = i + 1; j < events.length; j++) {
-            if (events[i].eventID == events[j].eventID) {
-              events.remove(events[i]);
+          for (int i = 0; i < events.length; i++) {
+            for (int j = i + 1; j < events.length; j++) {
+              if (events[i].eventID == events[j].eventID) {
+                events.remove(events[i]);
+              }
             }
           }
+            Event.eventService(events);
+        }catch(err){
+          print("Error at fetch-all-events response: $err");
         }
-        Event.eventService(events);
       }
-
 
       final response = await http.get(
         Uri.parse('${ApiService.serverUrl}/dashboard-events'),

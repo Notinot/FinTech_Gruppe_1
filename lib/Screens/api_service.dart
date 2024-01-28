@@ -424,6 +424,64 @@ class ApiService {
         throw Exception('Token not found');
       }
 
+      // Free Event
+      if (amount == 0) {
+        final joinEventResponse = await http.post(
+          Uri.parse('${ApiService.serverUrl}/join-event'),
+          headers: {
+            'Content-Type': 'application/json; charset=UTF-8',
+            'Authorization': 'Bearer $token',
+          },
+          body: jsonEncode({
+            'amount': amount.toString(),
+            'message': message,
+            'eventId': eventId.toString()
+          }),
+        );
+
+        if (joinEventResponse.statusCode == 200) {
+          print('joinEvent function: Joining Event was successful');
+          return 200;
+        }
+      }
+
+
+        // Event with costs
+        if (amount > 0) {
+          try {
+            final sendMoneyResponse = await http.post(
+              Uri.parse('${ApiService.serverUrl}/send-money'),
+              headers: {
+                'Content-Type': 'application/json; charset=UTF-8',
+                'Authorization': 'Bearer $token',
+              },
+              body: json.encode(<String, dynamic>{
+                'recipient': recipientUsername,
+                'amount': amount,
+                'message': message,
+                'event_id': eventId.toString(),
+              }),
+            );
+
+            if (sendMoneyResponse.statusCode == 200) {
+              // Money sent successfully
+              print('Sending money was successful');
+              print('joinEvent function: Joining Event was successful');
+              return 200;
+            }
+            else if (sendMoneyResponse.statusCode == 400) {
+              print('Not enough money to join the event');
+              return 402;
+            }
+          } catch (err) {
+            print("joinEvent function: Error sending money: $err");
+            rethrow;
+          }
+        }
+
+        return 400;
+
+      /*
       final joinEventResponse = await http.post(
         Uri.parse('${ApiService.serverUrl}/join-event'),
         headers: {
@@ -482,11 +540,15 @@ class ApiService {
       print(joinEventResponse.statusCode);
       print('joinEvent function: Error joining Event');
       return 400;
+
+       */
     } catch (e) {
       print('joinEvent function: Error joining Event: $e');
       print(e);
       return 400;
     }
+
+
   }
 
   static Future<int> leaveEvent(int eventId) async {

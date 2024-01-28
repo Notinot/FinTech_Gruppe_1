@@ -363,7 +363,7 @@ class EventInfoScreen extends StatelessWidget {
                         else if(result == 402){
                           Navigator.of(context).pop();
                           showErrorSnackBar(
-                              context, 'Something went wrong at the payment. Please check your account balance.');
+                              context, 'You do not have enough money to join the event.');
                         }
                         else if(result == 200){
                           Navigator.of(context).pop();

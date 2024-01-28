@@ -899,6 +899,12 @@ app.post('/send-money', authenticateToken, async (req, res) => {
     const recipientUsername = recipientData[0].username;
     const recipientEmail = recipientData[0].email;
 
+    const senderBalance = await getBalance(senderId);
+
+    if (senderBalance < amount) {
+        return res.status(400).json({ message: 'Insufficient funds' });
+    }
+
     // Insert transaction with message and event_id
     await db.query('INSERT INTO Transaction (sender_id, receiver_id, amount, transaction_type, created_at, message, processed, event_id) VALUES (?, ?, ?, ?, NOW(), ?, 1, ?)', [
       senderId,
@@ -910,12 +916,6 @@ app.post('/send-money', authenticateToken, async (req, res) => {
     ]);
 
     // Update sender and recipient balances
-    const senderBalance = await getBalance(senderId);
-
-    if (senderBalance < amount) {
-      return res.status(400).json({ message: 'Insufficient funds' });
-    }
-
     const recipientBalance = await getBalance(recipientId);
 
     // Update balances in the database

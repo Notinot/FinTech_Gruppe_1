@@ -1129,7 +1129,7 @@ app.post('/event-service', async (req, res) => {
 
     for (let i = 0; i < events.length; i++) {
 
-        [updateInformation] = await db.query('UPDATE Event SET datetime_event = ?, recurrence_interval = ? WHERE id = ?',
+        [updateInformation] = await db.query('UPDATE Event SET datetime_event = ?, recurrence_interval = ?, status = 1 WHERE id = ?',
         [
                 events[i].datetime_event,
                 events[i].recurrence_interval,
@@ -1139,7 +1139,7 @@ app.post('/event-service', async (req, res) => {
 
 
     const [updateEventStatusToActive] = await db.query(`
-            UPDATE Event SET status = 1 WHERE datetime_event > NOW() AND status != 0
+            UPDATE Event SET status = 1 WHERE datetime_event > NOW() AND status != 0 AND recurrence_type > 0;
         `);
 
         const [updateEventStatusToInactive] = await db.query(`

@@ -136,6 +136,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if(res.statusCode == 200){
 
       try{
+
         final List<dynamic> data = jsonDecode(res.body);
         final List<dynamic> eventsData = data;
 
@@ -151,6 +152,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
           }
         }
 
+
+        /*
+        for(var event in events){
+          if(event.recurrenceType == 0 || event.status == 0){
+            events.remove(event);
+          }
+        }
+         */
+
         Event.eventService(events);
 
       }catch(err){
@@ -162,7 +172,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
 
-    // RunEventService();
+    RunEventService();
 
     return FutureBuilder<Map<String, dynamic>>(
       future: userProfileFuture,

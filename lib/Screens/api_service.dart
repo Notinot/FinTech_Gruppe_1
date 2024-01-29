@@ -568,9 +568,10 @@ class ApiService {
             'kickParticipant function: Participant successfully kicked from the event');
         return true;
       }
-
-      print('kickParticipant function: Kicking participant failed');
-      return false;
+      else{
+        print('kickParticipant function: Kicking participant failed');
+        return false;
+      }
     } catch (e) {
       print('kickParticipant function: Kicking participant failed: $e');
       return false;

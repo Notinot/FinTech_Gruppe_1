@@ -17,6 +17,8 @@ class InviteToEventScreen extends StatefulWidget {
   _InviteToEventScreenState createState() => _InviteToEventScreenState();
 }
 
+
+
 class _InviteToEventScreenState extends State<InviteToEventScreen> {
   final TextEditingController recipientController = TextEditingController();
   Color recipientBorderColor = Colors.grey;
@@ -28,6 +30,7 @@ class _InviteToEventScreenState extends State<InviteToEventScreen> {
         ApiService.fetchParticipants(widget.eventId, 1);
     final Future<List<String>> invitedParticipants =
         ApiService.fetchParticipants(widget.eventId, 2);
+
 
     return Scaffold(
       appBar: AppBar(
@@ -68,7 +71,17 @@ class _InviteToEventScreenState extends State<InviteToEventScreen> {
                       itemBuilder: (context, index) {
                         return ListTile(
                           title: Text(snapshot.data![index]),
-                          // Add more details if needed
+                          trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                ElevatedButton(
+                                    onPressed: (){
+                                      ApiService.kickParticipant(widget.eventId ,snapshot.data![index]);
+                                    },
+                                    child: Text("Kick")
+                                ),
+                              ]
+                          ),
                         );
                       },
                     );
@@ -95,7 +108,6 @@ class _InviteToEventScreenState extends State<InviteToEventScreen> {
                       itemBuilder: (context, index) {
                         return ListTile(
                           title: Text(snapshot.data![index]),
-                          // Add more details if needed
                         );
                       },
                     );

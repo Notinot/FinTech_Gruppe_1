@@ -1244,7 +1244,13 @@ app.get('/fetch-latest-created-event', authenticateToken, async(req, res) => {
             const senderId = req.user.userId;
 
             const [latestEvent] = await db.query(
-                `SELECT Event.*, Event.id AS event_id FROM Event WHERE id = (SELECT MAX(id) FROM Event);`
+                `SELECT Event.*,
+                                  User_Event.status AS user_event_status,
+                                  Event.id AS event_id
+                                  FROM Event
+                                  JOIN
+                                  User_Event ON Event.id = User_Event.event_id
+                                  WHERE Event.id = (SELECT MAX(id) FROM Event);`
             );
 
             console.log(latestEvent);
@@ -1515,6 +1521,7 @@ app.post('/invite-event', authenticateToken, async (req, res) => {
                 `SELECT
                  Event.*,
                  User_Event.user_id,
+                 User_Event.status AS user_event_status,
                  User.username AS creator_username
                  FROM Event
                  JOIN
@@ -1633,6 +1640,7 @@ app.post('/cancel-event', authenticateToken, async (req, res) => {
                         `SELECT
                          Event.*,
                          User_Event.user_id,
+                         User_Event.status AS user_event_status,
                          User.username AS creator_username
                          FROM Event
                          JOIN
@@ -1696,6 +1704,59 @@ app.post('/cancel-event', authenticateToken, async (req, res) => {
     console.error('Error canceling event:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
+});
+
+app.post('/kick-participant',  authenticateToken, async (req, res) => {
+
+    try {
+
+        const senderId = req.user.userId;
+        const eventId = req.query.eventId;
+        const participantUsername = req.query.participantUsername;
+
+        if (!eventId || !participantUsername) {
+            console.log('Invalid Event Id or participant Username');
+            return res.status(400).json({ message: 'Invalid input' });
+        }
+
+        const [participantIdAndEmail] = await db.query(`
+            SELECT User.user_id AND User.email FROM User WHERE User.username = ?;
+            `, [participantUsername]);
+
+
+        const participantId = participantIdAndEmail[0].user_id;
+        const participantEmail = participantIdAndEmail[0].email;
+
+
+        const [eventInformation] = await db.query(`
+            SELECT
+            User.username AS creator_username,
+            Event.title WHERE Event.id = ?;
+            `, [eventId]);
+
+        const [kickParticipant] = await db.query(`
+                     UPDATE User_Event SET User_Event.status = 0
+                     WHERE User_Event.event_id = ?
+                     AND
+                     User_Event.user_id = ?;
+                   `, [eventId, participantId]);
+
+        // Decrease Participant number by one
+        const [decreaseParticipants] = await db.query('UPDATE Event SET participants = participants - 1 WHERE id = ?', [eventId]);
+        console.log(decreaseParticipants);
+
+        console.log('Participant successfully kicked from the event');
+
+        sendKickedFromEvent(participantEmail, participantUsername, eventInformation[0].creator_username, eventInformation[0].title);
+
+        res.status(200).json({message: 'Participant successfully kicked from the event'});
+
+
+      } catch (error) {
+        console.error('Error kicking participant: ', error);
+        res.status(500).json({ message: ' Error kicking participant ' });
+      }
+
 });
 
 // Fetch participants of event
@@ -2484,6 +2545,116 @@ function sendEventCanceledEmail(recipientEmail, recipientUsername, creatorUserna
               <br><br>
               <p class="text-size-14">
                 We are really sorry to inform you that the creator of the Event: ${eventTitle} decided to cancel the event.
+                In the case that you have already paid to take part in the event, we will transfer the money back to your account as quickly as possible.
+              </p>
+              <br><br>
+              <p class="text-size-14">
+                If you have any questions or concerns, please don't hesitate to contact us at <a href="mailto:payfriendzapp@gmail.com">payfriendzapp@gmail.com</a>.
+              </p>
+              <br><br>
+              <p class="text-size-14">
+                Thank you for being a part of Payfriendz!
+              </p>
+              <br><br>
+              <p class="text-size-14">
+              Best regards,
+              </p>
+              <br><br>
+              <p class="text-size-14">
+                Your Payfriendz Team
+              </p>
+            </p>
+          </div>
+          <p class="copyright">
+            &copy; Payfriendz 2023.  Payfriendz is a registered trademark of Payfriendz.
+          </p>
+        </div>
+      </body>
+    </html>
+  `
+  }
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.error('Error sending email:', error);
+    } else {
+      console.log('Email sent:', info.response);
+    }
+  });
+
+}
+
+function sendKickedFromEvent(recipientEmail, recipientUsername, creatorUsername, eventTitle) {
+
+  const mailOptions = {
+    from: 'Payfriendz App',
+    to: recipientEmail,
+    subject: 'Payfriendz: You were kicked from the Event: ' + eventTitle,
+    html: `
+    <html>
+      <head>
+        <style>
+          /* Inline CSS for styling */
+          .container {
+            background-color: #f4f4f4;
+            padding: 20px;
+            border-radius: 5px;
+            font-family: Arial, sans-serif;
+            width: 80%;
+            max-width: 600px;
+            margin: 0 auto;
+          }
+          .header {
+            background-color: #007bff;
+            color: white;
+            padding: 20px;
+            border-top-left-radius: 5px;
+            border-top-right-radius: 5px;
+            text-align: center;
+          }
+          .header h1 {
+            margin: 0;
+          }
+          .verification-box {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+          }
+          .code {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+            text-align: center;
+            margin-top: 20px;
+          }
+          .text-size-14 {
+            font-size: 14px;
+            color: #555;
+            text-align: center;
+          }
+          .copyright {
+            font-size: 10px;
+            color: #777;
+            text-align: center;
+            margin-top: 20px;
+          }
+          .email-text {
+            text-align: center;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>Event canceled</h1>
+          </div>
+          <div class="del-box email-text">
+            <h2 class="code">${creatorUsername} kicked you from the Event</h2>
+            <p class="text-size-14">Dear ${recipientUsername},
+              <br><br>
+              <p class="text-size-14">
+                We are really sorry to inform you that the creator of the Event: ${eventTitle} decided to kick you from the event.
                 In the case that you have already paid to take part in the event, we will transfer the money back to your account as quickly as possible.
               </p>
               <br><br>

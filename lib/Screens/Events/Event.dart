@@ -218,6 +218,8 @@ class Event {
                       // Money transfer failed, handle accordingly
                       print('Error sending money: ${sendMoneyResponse.body}');
                       // User Kicken!
+                      ApiService.kickParticipant(event.eventID, participant);
+                      // Send mail that user was kicked
                     }
                 }catch(err){
                   print('Error: $err');

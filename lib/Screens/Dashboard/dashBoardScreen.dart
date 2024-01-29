@@ -354,7 +354,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             'country': event.country,
             'city': event.city,
             'street': event.street,
-            'zipcode': event.zipcode
+            'zipcode': event.zipcode,
+            'user_event_status': event.user_event_status
           };
         }).toList();
       } else {
@@ -583,7 +584,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         creatorUsername: creatorUsername,
         creatorId: creatorId,
         isCreator: false,
-        user_event_status: 2);
+        user_event_status: eventRequest['user_event_status']);
 
 
 

@@ -547,8 +547,35 @@ class ApiService {
       print(e);
       return 400;
     }
+  }
 
+  static Future<bool> kickParticipant(int eventId, String participantUsername) async {
+    try {
+      const storage = FlutterSecureStorage();
+      final token = await storage.read(key: 'token');
+      if (token == null) {
+        throw Exception('Token not found');
+      }
 
+      final kickParticipantResponse = await http.post(
+          Uri.parse('${ApiService.serverUrl}/kick-participant?eventId=$eventId&participantUsername=$participantUsername'),
+          headers: {
+            'Content-Type': 'application/json; charset=UTF-8',
+            'Authorization': 'Bearer $token',
+          });
+
+      if (kickParticipantResponse.statusCode == 200) {
+        print('kickParticipant function: Participant successfully kicked from the event');
+        return true;
+      }
+
+      print('kickParticipant function: Kicking participant failed');
+      return false;
+
+    } catch (e) {
+      print('kickParticipant function: Kicking participant failed: $e');
+      return false;
+    }
   }
 
   static Future<int> leaveEvent(int eventId) async {
@@ -576,10 +603,10 @@ class ApiService {
         return 401;
       }
 
-      print('leaveEvent function: Error canceling Event');
+      print('leaveEvent function: Error leaving Event');
       return 0;
     } catch (e) {
-      print('cancelEvent function: Error canceling Event');
+      print('leaveEvent function: Error leaving Event');
       return 0;
     }
   }

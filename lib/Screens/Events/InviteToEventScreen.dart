@@ -77,7 +77,16 @@ class _InviteToEventScreenState extends State<InviteToEventScreen> {
                                 ElevatedButton(
                                     onPressed: (){
                                       ApiService.kickParticipant(widget.eventId ,snapshot.data![index]);
-                                    },
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => InviteToEventScreen(
+                                            eventId: widget.eventId,
+                                            allowInvite: true,
+                                          ),
+                                        ),
+                                      );
+                                      },
                                     child: Text("Kick")
                                 ),
                               ]

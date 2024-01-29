@@ -1721,7 +1721,7 @@ app.post('/kick-participant',  authenticateToken, async (req, res) => {
         }
 
         const [participantIdAndEmail] = await db.query(`
-            SELECT User.user_id AND User.email FROM User WHERE User.username = ?;
+            SELECT User.user_id, User.email FROM User WHERE User.username = ?;
             `, [participantUsername]);
 
 
@@ -1731,9 +1731,17 @@ app.post('/kick-participant',  authenticateToken, async (req, res) => {
 
         const [eventInformation] = await db.query(`
             SELECT
-            User.username AS creator_username,
-            Event.title WHERE Event.id = ?;
-            `, [eventId]);
+                User.username AS creator_username,
+                Event.title
+                FROM User
+                JOIN
+                Event ON Event.creator_id = User.user_id
+                WHERE
+                Event.id = ?
+                AND
+                User.user_id = ?;
+            `, [eventId, senderId]);
+
 
         const [kickParticipant] = await db.query(`
                      UPDATE User_Event SET User_Event.status = 0

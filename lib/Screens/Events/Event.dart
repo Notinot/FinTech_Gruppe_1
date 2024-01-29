@@ -163,24 +163,30 @@ class Event {
       }
 
       for (var event in checkingEvents) {
-        if (event.datetimeEvent.compareTo(DateTime.now()) < 0) {
+        if (event.datetimeEvent.toLocal().compareTo(DateTime.now()) < 0) {
           switch (event.recurrenceType) {
             case 1:
               event.datetimeEvent =
-                  event.datetimeEvent.add(Duration(days: 7));
+                  event.datetimeEvent.toLocal().add(Duration(days: 7));
               event.recurrenceInterval = (event.recurrenceInterval! + 1)!;
-              restartingEvents.add(event);
+              if(!restartingEvents.contains(event)){
+                restartingEvents.add(event);
+              }
             case 2:
             // Needs to be improved
               event.datetimeEvent =
-                  event.datetimeEvent.add(Duration(days: 30));
+                  event.datetimeEvent.toLocal().add(Duration(days: 30));
               event.recurrenceInterval = (event.recurrenceInterval! + 1)!;
-              restartingEvents.add(event);
+              if(!restartingEvents.contains(event)){
+                restartingEvents.add(event);
+              }
             case 3:
               event.datetimeEvent =
-                  event.datetimeEvent.add(Duration(days: 365));
+                  event.datetimeEvent.toLocal().add(Duration(days: 365));
               event.recurrenceInterval = (event.recurrenceInterval! + 1)!;
-              restartingEvents.add(event);
+              if(!restartingEvents.contains(event)){
+                restartingEvents.add(event);
+              }
           }
         }
       }
@@ -188,7 +194,6 @@ class Event {
       // Participants send money recurrence interval increases
       for(var event in restartingEvents){
         try {
-
             if(event.price > 0){
 
               List<String> participantsList = await ApiService.fetchParticipants(event.eventID, 1);
@@ -219,20 +224,16 @@ class Event {
                       print('Error sending money: ${sendMoneyResponse.body}');
                       // User Kicken!
                       ApiService.kickParticipant(event.eventID, participant);
-                      // Send mail that user was kicked
                     }
                 }catch(err){
                   print('Error: $err');
-
                 }
               }
             }
-
          } catch (error) {
            print('Error: $error');
          }
       }
-
       try {
         List<Map<String, dynamic>> eventsJson =
         checkingEvents.map((i) => i.toJson()).toList();
@@ -245,7 +246,7 @@ class Event {
       }
 
     } catch (e) {
-      print(e.toString());
+      print(e);
     }
   }
 

@@ -362,6 +362,7 @@ class ApiService {
     }
   }
 
+
   static Future<int> inviteEvent(int eventId, String recipient) async {
     try {
       const storage = FlutterSecureStorage();

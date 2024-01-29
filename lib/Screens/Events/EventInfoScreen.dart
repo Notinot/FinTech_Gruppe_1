@@ -370,7 +370,10 @@ class EventInfoScreen extends StatelessWidget {
                           showSuccessSnackBar(
                               context, 'Joining event was successful');
                         }
-                        Navigator.of(context).pop();
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => EventScreen())
+                        );
                       },
                       child: Text('Yes'),
                     )
@@ -460,6 +463,10 @@ class EventInfoScreen extends StatelessWidget {
                                 Navigator.of(context).pop();
                                 showSuccessSnackBar(
                                     context, 'Canceling event was successful!');
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => EventScreen())
+                                );
                               }
                             },
                             child: Text('Yes'),

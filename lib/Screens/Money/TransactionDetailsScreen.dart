@@ -582,21 +582,33 @@ class TransactionDetailsScreen extends StatelessWidget {
                                             }
                                             else{
 
-                                              Event event = snapshot.data!;
+                                              try{
 
-                                              return ElevatedButton(
-                                                      onPressed: () {
-                                                        Navigator.push(
-                                                          context,
-                                                          MaterialPageRoute(
-                                                            builder: (context) => EventInfoScreen(
-                                                              event: event,
-                                                            ),
-                                                          ),
-                                                        );
-                                                      },
-                                                      child: Text('View Event Details'),
-                                              );
+                                                Event event = snapshot.data!;
+
+                                                return ElevatedButton(
+                                                  onPressed: () {
+                                                    Navigator.push(
+                                                      context,
+                                                      MaterialPageRoute(
+                                                        builder: (context) => EventInfoScreen(
+                                                          event: event,
+                                                        ),
+                                                      ),
+                                                    );
+                                                  },
+                                                  child: Text('View Event Details'),
+                                                );
+
+                                              }catch(err){
+
+                                                print(err);
+                                                rethrow;
+                                              }
+
+
+
+
                                             }
                                           }
                                         ),

@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Screens/Dashboard/appDrawer.dart';
 import 'package:flutter_application_1/Screens/Dashboard/dashBoardScreen.dart';
+import 'package:flutter_application_1/Screens/Events/EditEventScreen.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
@@ -214,9 +216,14 @@ class _SendMoneyScreenState extends State<SendMoneyScreen> {
                         context, 'You cannot send money to yourself');
                     return;
                   }
+
+                  bool success = false;
+                  bool correctPassword = await verifyPassword();
+
                   // if user confirms the transaction, send the money
-                  bool success =
-                      await sendMoney(recipient, parsedAmount, message);
+                  if (correctPassword) {
+                    success = await sendMoney(recipient, parsedAmount, message);
+                  } else {}
 
                   if (success) {
                     // Clear the input fields after sending money
@@ -259,7 +266,6 @@ class _SendMoneyScreenState extends State<SendMoneyScreen> {
       if (kDebugMode) {
         print('token: $token');
       }
-
       // Continue with the send money request
       final sendMoneyResponse = await http.post(
         Uri.parse('${ApiService.serverUrl}/send-money'),
@@ -306,5 +312,86 @@ class _SendMoneyScreenState extends State<SendMoneyScreen> {
         backgroundColor: Colors.green,
       ),
     );
+  }
+
+  Future<bool> verifyPassword() async {
+    Completer<bool> completer = Completer<bool>();
+    TextEditingController currentPasswordController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Enter your current password'),
+          content: TextField(
+            controller: currentPasswordController,
+            obscureText: true,
+            decoration: InputDecoration(
+              hintText: 'Password',
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                completer.completeError('User cancelled');
+              },
+              child: Text('Close'),
+            ),
+            TextButton(
+              onPressed: () async {
+                try {
+                  // Make an HTTP request to verify the password on the backend
+                  Map<String, dynamic> request = {
+                    'userid': await ApiService.getUserId(),
+                    'password': currentPasswordController.text,
+                  };
+
+                  const storage = FlutterSecureStorage();
+                  final token = await storage.read(key: 'token');
+
+                  final response = await http.post(
+                    Uri.parse('${ApiService.serverUrl}/verifyPassword'),
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'Authorization': 'Bearer $token',
+                    },
+                    body: json.encode(request),
+                  );
+
+                  print(
+                      'Verification Response: ${response.statusCode} - ${response.body}');
+
+                  if (response.statusCode == 200) {
+                    // Password is correct, set completer to true
+                    Navigator.of(context).pop(); // Close the AlertDialog
+                    completer.complete(true);
+                  } else {
+                    // Password is incorrect, show an error message
+                    showSnackBar(
+                        isError: true,
+                        message: 'Incorrect password',
+                        context: context);
+                  }
+                } catch (error) {
+                  // Handle error or show an error message
+                  showSnackBar(
+                      isError: true,
+                      message: 'Error verifying password: $error',
+                      context: context);
+                }
+              },
+              child: Text('Submit'),
+            ),
+          ],
+        );
+      },
+    );
+
+    try {
+      return await completer.future;
+    } catch (error) {
+      return false; // Handle error or return a default value
+    }
   }
 }

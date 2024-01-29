@@ -713,7 +713,10 @@ void showSuccessSnackBar(BuildContext context, String message) {
   );
 }
 
-void showSnackBar({bool isError = false, required String message}) {
+void showSnackBar(
+    {bool isError = false,
+    required String message,
+    required BuildContext context}) {
   ScaffoldMessenger.of(context as BuildContext).showSnackBar(
     SnackBar(
       content: Text(message),

@@ -162,7 +162,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
 
-    RunEventService();
+    // RunEventService();
 
     return FutureBuilder<Map<String, dynamic>>(
       future: userProfileFuture,

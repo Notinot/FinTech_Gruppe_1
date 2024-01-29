@@ -239,7 +239,7 @@ class Event {
         checkingEvents.map((i) => i.toJson()).toList();
 
         String body = jsonEncode(eventsJson);
-        ApiService.EventService(body);
+        // ApiService.EventService(body);
 
       } catch (e) {
         print(e);

@@ -1268,7 +1268,6 @@ app.get('/fetch-latest-created-event', authenticateToken, async(req, res) => {
 app.get('/fetch-all-events', authenticateToken, async(req, res) => {
 
     try{
-
         const senderId = req.user.userId;
 
         const [allEvents] = await db.query(
@@ -1855,6 +1854,7 @@ app.get('/pending-events', authenticateToken, async (req, res) => {
                         Event.*,
                         Location.*,
                         User_Event.user_id,
+                        User_Event.status AS user_event_status,
                         User.username AS creator_username,
                         User.user_id AS creator_id
                     FROM

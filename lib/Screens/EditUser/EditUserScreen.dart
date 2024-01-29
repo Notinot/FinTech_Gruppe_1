@@ -163,7 +163,7 @@ class _EditUserState extends State<EditUser> {
         return AlertDialog(
           title: Text('Delete Account?'),
           content: Text(
-              'Are you sure you want to delete your account?\nThis can not be undone!'),
+              'Are you sure you want to delete your account?\nBe sure to leave all Events and handle all your businesses beforehand!\nThis can not be undone!'),
           actions: <Widget>[
             TextButton(
               onPressed: () {

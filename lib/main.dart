@@ -45,16 +45,16 @@ class _PayfriendzAppState extends State<PayfriendzApp> {
   }
 
   //Testing Stay Logged in function for future implementation
-  Future<void> checkStayLoggedIn() async {
-    const secureStorage = FlutterSecureStorage();
-    String? authToken = await secureStorage.read(key: 'token');
-    print(authToken);
-    if (authToken != null && authToken.isNotEmpty) {
-      setState(() {
-        isLoggedIn = true;
-      });
-    }
-  }
+  // Future<void> checkStayLoggedIn() async {
+  //   const secureStorage = FlutterSecureStorage();
+  //   String? authToken = await secureStorage.read(key: 'token');
+  //   print(authToken);
+  //   if (authToken != null && authToken.isNotEmpty) {
+  //     setState(() {
+  //       isLoggedIn = true;
+  //     });
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {

@@ -12,19 +12,22 @@ import '../api_service.dart';
 
 /* To-do:
 
-Suchen und Enter muss noch gehen
+Users nur anzeigen, adden usw ACTIVE = ture  & wenn nicht deleted
 
-Users nur anzeigen, adden usw wenn ACTIVE true
+adding friends when not declined oder auch dann? (man kann ja blockieren)
+
+überall gleiches "no profile picture" picture
 
 
 pendingFriends iwie anzeigen wenn mehr als 3 da seind (Icon mit arrow down, number etc)
+      - Scroll Bar/Indication
+      -anders anzeigen
+      -mit Arrow down button
+      -mit Glocke und ANzahl der Requests
 
 
   -dynamic spacing, width, heigth etc
    MediaQuery.of(context).size.width *  0.07
-
-  -Adding Friends
-    -only when not declined? cooldown?
 
   -FriendInfoScreen
     -show transaction history of Friend and yourself
@@ -83,8 +86,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
         ],
       ),
       drawer: FutureBuilder<Map<String, dynamic>>(
-        future: ApiService
-            .fetchUserProfile(), // Replace with your actual method to fetch user data
+        future: ApiService.fetchUserProfile(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Drawer(
@@ -1004,7 +1006,9 @@ class FriendsSearchBar extends SearchDelegate {
       ];
 
   @override
-  Widget buildResults(BuildContext context) => Center(child: Text(query));
+  Widget buildResults(BuildContext context) {
+    return buildSuggestions(context);
+  }
   //UserInfo mit Add Button?
 
   @override //less than 3 or 4 characters show friends - more show suggested
@@ -1219,7 +1223,7 @@ void addFriend(
     if (response.statusCode == 200) {
       debugPrint('Added friend successful');
       //hier lieber true/false mit message return?
-      showSuccessSnackBarr(context, 'Friend request sended to User: $username');
+      showSuccessSnackBarr(context, 'Friend request sent to User: $username');
     } else {
       print('Error MEssaage: ${response.body}');
       showErrorSnackBarr(context, json.decode(response.body));

@@ -626,6 +626,8 @@ app.post('/delete_user', authenticateToken, async (req, res) => {
     await db.query('UPDATE User SET active = 0, username = null,email = null, Picture = null,password_hash = null WHERE user_id = ?', [userid]);
     await db.query('DELETE FROM Friendship WHERE (requester_id = ? ) OR (addressee_id = ?)'
       , [userid, userid]);
+      await db.query('DELETE FROM User_Event WHERE user_id = ? '
+      , [userid]);
 
     res.json({ message: 'Account deleted' });
   }

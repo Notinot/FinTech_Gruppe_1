@@ -1,10 +1,12 @@
 // TransactionDetailScreen displays detailed information about a transaction
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Screens/Dashboard/dashBoardScreen.dart';
+import 'package:flutter_application_1/Screens/Events/CreateEventScreen.dart';
 import 'package:flutter_application_1/Screens/Friends/FriendsScreen.dart';
 import 'package:flutter_application_1/Screens/api_service.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -12,6 +14,7 @@ import 'package:intl/intl.dart';
 import 'package:flutter_application_1/Screens/Events/Event.dart';
 import 'package:flutter_application_1/Screens/Events/EventInfoScreen.dart';
 import 'package:http/http.dart' as http;
+import 'package:path/path.dart';
 import 'RequestMoneyScreen.dart';
 import 'SendMoneyScreen.dart';
 import 'package:flutter_application_1/Screens/Money/TransactionHistoryScreen.dart';
@@ -192,10 +195,8 @@ class TransactionDetailsScreen extends StatelessWidget {
     //   );
     // }
 
-    Future<Event> fetchEvent(int? eventId) async{
-
-      try{
-
+    Future<Event> fetchEvent(int? eventId) async {
+      try {
         const storage = FlutterSecureStorage();
         final token = await storage.read(key: 'token');
 
@@ -204,16 +205,15 @@ class TransactionDetailsScreen extends StatelessWidget {
         }
 
         final res = await http.get(
-
-          Uri.parse('${ApiService.serverUrl}/fetch-single-event?eventId=$eventId'),
+          Uri.parse(
+              '${ApiService.serverUrl}/fetch-single-event?eventId=$eventId'),
           headers: <String, String>{
             'Content-Type': 'application/json; charset=UTF-8',
             'Authorization': 'Bearer $token',
           },
         );
 
-        if(res.statusCode == 200){
-
+        if (res.statusCode == 200) {
           final List<dynamic> data = jsonDecode(res.body);
           final List<dynamic> eventsData = data;
 
@@ -223,23 +223,19 @@ class TransactionDetailsScreen extends StatelessWidget {
 
           String userId = await ApiService.fetchUserId();
 
-          if(userId == events[0].creatorId.toString()){
-              events[0].isCreator = true;
+          if (userId == events[0].creatorId.toString()) {
+            events[0].isCreator = true;
           }
 
           return events[0];
-        }
-        else {
-
+        } else {
           throw Exception('Unexpected response format for single event');
         }
-      }
-      catch(err){
+      } catch (err) {
         print(err);
         rethrow;
       }
     }
-
 
     //check if the user is already a friend
     return FutureBuilder<bool>(
@@ -549,7 +545,8 @@ class TransactionDetailsScreen extends StatelessWidget {
                                                 fontSize: 15,
                                               )),
                                           onPressed: () =>
-                                              acceptRequest(context),
+                                              verifyPasswordAccept(context),
+                                          // acceptRequest(context),
                                           child: Text('Accept Request'),
                                         ),
                                         SizedBox(width: 20),
@@ -561,46 +558,48 @@ class TransactionDetailsScreen extends StatelessWidget {
                                                   fontSize: 15,
                                                 )),
                                             onPressed: () =>
-                                                denyRequest(context),
+                                                verifyPasswordDeny(context),
                                             child: Text('Deny Request')),
                                       ],
                                     ),
                                   // Add a link to the event details screen if the transaction is associated with an event and the event is not null (Go to dashboard while event details screen is not implemented)
                                   if (transaction.eventId != null)
-                                  Column(
+                                    Column(
                                       children: [
                                         SizedBox(height: 20),
                                         FutureBuilder<Event>(
-                                          future: fetchEvent(transaction.eventId),
-                                          builder: (context, snapshot){
-                                            if(snapshot.connectionState == ConnectionState.waiting){
-                                              return CircularProgressIndicator();
-                                            } else if(snapshot.hasError){
-                                              return Text('Error: ${snapshot.error}');
-                                            } else if(!snapshot.hasData || snapshot.data == null){
-                                              return Text('No event found');
-                                            }
-                                            else{
+                                            future:
+                                                fetchEvent(transaction.eventId),
+                                            builder: (context, snapshot) {
+                                              if (snapshot.connectionState ==
+                                                  ConnectionState.waiting) {
+                                                return CircularProgressIndicator();
+                                              } else if (snapshot.hasError) {
+                                                return Text(
+                                                    'Error: ${snapshot.error}');
+                                              } else if (!snapshot.hasData ||
+                                                  snapshot.data == null) {
+                                                return Text('No event found');
+                                              } else {
+                                                Event event = snapshot.data!;
 
-                                              Event event = snapshot.data!;
-
-                                              return ElevatedButton(
-                                                      onPressed: () {
-                                                        Navigator.push(
-                                                          context,
-                                                          MaterialPageRoute(
-                                                            builder: (context) => EventInfoScreen(
-                                                              event: event,
-                                                            ),
-                                                          ),
-                                                        );
-                                                      },
-                                                      child: Text('View Event Details'),
-                                              );
-                                            }
-                                          }
-                                        ),
-
+                                                return ElevatedButton(
+                                                  onPressed: () {
+                                                    Navigator.push(
+                                                      context,
+                                                      MaterialPageRoute(
+                                                        builder: (context) =>
+                                                            EventInfoScreen(
+                                                          event: event,
+                                                        ),
+                                                      ),
+                                                    );
+                                                  },
+                                                  child: Text(
+                                                      'View Event Details'),
+                                                );
+                                              }
+                                            }),
                                       ],
                                     ),
                                   // Additional UI elements for user interactions (sending money, requests, adding as friend)
@@ -910,5 +909,169 @@ class TransactionDetailsScreen extends StatelessWidget {
         backgroundColor: Colors.red,
       ),
     );
+  }
+
+  Future<bool> verifyPasswordAccept(BuildContext context) async {
+    Completer<bool> completer = Completer<bool>();
+    TextEditingController currentPasswordController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Enter your current password'),
+          content: TextField(
+            controller: currentPasswordController,
+            obscureText: true,
+            decoration: InputDecoration(
+              hintText: 'Password',
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                completer.completeError('User cancelled');
+              },
+              child: Text('Close'),
+            ),
+            TextButton(
+              onPressed: () async {
+                try {
+                  // Make an HTTP request to verify the password on the backend
+                  Map<String, dynamic> request = {
+                    'userid': await ApiService.getUserId(),
+                    'password': currentPasswordController.text,
+                  };
+
+                  const storage = FlutterSecureStorage();
+                  final token = await storage.read(key: 'token');
+
+                  final response = await http.post(
+                    Uri.parse('${ApiService.serverUrl}/verifyPassword'),
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'Authorization': 'Bearer $token',
+                    },
+                    body: json.encode(request),
+                  );
+
+                  print(
+                      'Verification Response: ${response.statusCode} - ${response.body}');
+
+                  if (response.statusCode == 200) {
+                    // Password is correct, set completer to true
+                    acceptRequest(context);
+                    //Navigator.of(context).pop(); // Close the AlertDialog
+                    completer.complete(true);
+                  } else {
+                    // Password is incorrect, show an error message
+                    showSnackBar(
+                        isError: true,
+                        message: 'Incorrect password',
+                        context: context);
+                  }
+                } catch (error) {
+                  // Handle error or show an error message
+                  showSnackBar(
+                      isError: true,
+                      message: 'Error verifying password: $error',
+                      context: context);
+                }
+              },
+              child: Text('Submit'),
+            ),
+          ],
+        );
+      },
+    );
+
+    try {
+      return await completer.future;
+    } catch (error) {
+      return false; // Handle error or return a default value
+    }
+  }
+
+  Future<bool> verifyPasswordDeny(BuildContext context) async {
+    Completer<bool> completer = Completer<bool>();
+    TextEditingController currentPasswordController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Enter your current password'),
+          content: TextField(
+            controller: currentPasswordController,
+            obscureText: true,
+            decoration: InputDecoration(
+              hintText: 'Password',
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                completer.completeError('User cancelled');
+              },
+              child: Text('Close'),
+            ),
+            TextButton(
+              onPressed: () async {
+                try {
+                  // Make an HTTP request to verify the password on the backend
+                  Map<String, dynamic> request = {
+                    'userid': await ApiService.getUserId(),
+                    'password': currentPasswordController.text,
+                  };
+
+                  const storage = FlutterSecureStorage();
+                  final token = await storage.read(key: 'token');
+
+                  final response = await http.post(
+                    Uri.parse('${ApiService.serverUrl}/verifyPassword'),
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'Authorization': 'Bearer $token',
+                    },
+                    body: json.encode(request),
+                  );
+
+                  print(
+                      'Verification Response: ${response.statusCode} - ${response.body}');
+
+                  if (response.statusCode == 200) {
+                    // Password is correct, set completer to true
+                    denyRequest(context);
+                    //Navigator.of(context).pop(); // Close the AlertDialog
+                    completer.complete(true);
+                  } else {
+                    // Password is incorrect, show an error message
+                    showSnackBar(
+                        isError: true,
+                        message: 'Incorrect password',
+                        context: context);
+                  }
+                } catch (error) {
+                  // Handle error or show an error message
+                  showSnackBar(
+                      isError: true,
+                      message: 'Error verifying password: $error',
+                      context: context);
+                }
+              },
+              child: Text('Submit'),
+            ),
+          ],
+        );
+      },
+    );
+
+    try {
+      return await completer.future;
+    } catch (error) {
+      return false; // Handle error or return a default value
+    }
   }
 }

@@ -13,7 +13,6 @@ import '../api_service.dart';
 import 'package:flutter_application_1/Screens/Events/Event.dart';
 import 'package:flutter_application_1/Screens/Events/InviteToEventScreen.dart';
 
-
 /*
  Recurrence Type
  None = 0
@@ -242,9 +241,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     print(createEventResponse);
 
     if (createEventResponse.statusCode == 200) {
-
       final res = await http.get(
-
         Uri.parse('${ApiService.serverUrl}/fetch-latest-created-event'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
@@ -254,8 +251,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
 
       print(res.statusCode);
 
-      if(res.statusCode == 200){
-
+      if (res.statusCode == 200) {
         final List<dynamic> data = jsonDecode(res.body);
         final List<dynamic> eventsData = data;
 
@@ -266,15 +262,15 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         Event event = events[0];
 
         Navigator.push(
-            this.context,
-            MaterialPageRoute(
-              builder: (context) => InviteToEventScreen(
-                eventId: event.eventID,
-                allowInvite: true,
-              ),
+          this.context,
+          MaterialPageRoute(
+            builder: (context) => InviteToEventScreen(
+              eventId: event.eventID,
+              allowInvite: true,
             ),
+          ),
         );
-      }else{
+      } else {
         Navigator.push(
           this.context,
           MaterialPageRoute(builder: (context) => const DashboardScreen()),
@@ -619,7 +615,10 @@ void showSuccessSnackBar(BuildContext context, String message) {
   );
 }
 
-void showSnackBar({bool isError = false, required String message}) {
+void showSnackBar(
+    {bool isError = false,
+    required String message,
+    required BuildContext context}) {
   ScaffoldMessenger.of(context as BuildContext).showSnackBar(
     SnackBar(
       content: Text(message),

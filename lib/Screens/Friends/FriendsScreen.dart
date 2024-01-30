@@ -3,6 +3,8 @@ import 'dart:typed_data';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_application_1/Screens/Dashboard/appDrawer.dart';
 import 'package:flutter_application_1/Screens/Dashboard/dashBoardScreen.dart';
+import 'package:flutter_application_1/Screens/Money/TransactionHistoryScreen.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Screens/Money/RequestMoneyScreen.dart';
@@ -11,12 +13,18 @@ import 'package:flutter_application_1/Screens/Money/SendMoneyScreen.dart';
 import '../api_service.dart';
 
 /* To-do:
+JWT
+weniger api Abfragen
+überall gleiches no profile Picture Icon (Dashboard, AppDrawer, Transactions, FriendScreen user search)
 
-Users nur anzeigen, adden usw ACTIVE = ture  & wenn nicht deleted
+adding friends auch wenn declined
 
-adding friends when not declined oder auch dann? (man kann ja blockieren)
+FriendItem Send/request Money Icon ändern
 
-überall gleiches "no profile picture" picture
+schauen wo accept/decline submit/cancel überall ist (gleiche richtung, farbe usw)
+
+show transaction history of Friend and yourself
+  
 
 
 pendingFriends iwie anzeigen wenn mehr als 3 da seind (Icon mit arrow down, number etc)
@@ -29,12 +37,6 @@ pendingFriends iwie anzeigen wenn mehr als 3 da seind (Icon mit arrow down, numb
   -dynamic spacing, width, heigth etc
    MediaQuery.of(context).size.width *  0.07
 
-  -FriendInfoScreen
-    -show transaction history of Friend and yourself
-
-  - Decide whether cancel/decline Button should be on the left or the right
-  -Same Design of Accept /Decline etc
-  -Correct use of jwt everywhere
   -Check for correct error handling everywhere    
 */
 
@@ -50,68 +52,91 @@ class _FriendsScreenState extends State<FriendsScreen> {
     setState(() {});
   }
 
+  String? token = "";
+
+  Future readToken() async {
+    try {
+      token = await FlutterSecureStorage().read(key: 'token');
+    } catch (error) {
+      print('Error reading token: $error');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      resizeToAvoidBottomInset: false, //avoids overflow when keyboard is opened
-      appBar: AppBar(
-        titleSpacing: 15.0,
-        title: Text('Friends'),
-        actions: [
-          IconButton(
-            onPressed: () {
-              showSearch(
-                context: context,
-                delegate: FriendsSearchBar(callbackFunction: callback),
-              );
-            },
-            icon: Icon(Icons.search),
-          ),
-          IconButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => BlockedUsersScreen(),
+    return FutureBuilder(
+      future: readToken(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done) {
+          return Scaffold(
+            resizeToAvoidBottomInset:
+                false, //avoids overflow when keyboard is opened
+            appBar: AppBar(
+              titleSpacing: 15.0,
+              title: Text('Friends'),
+              actions: [
+                IconButton(
+                  onPressed: () {
+                    showSearch(
+                      context: context,
+                      delegate: FriendsSearchBar(
+                          callbackFunction: callback, token: token),
+                    );
+                  },
+                  icon: Icon(Icons.search),
                 ),
-              );
-            },
-            icon: Icon(
-              Icons.person_off,
-              size: MediaQuery.of(context).size.width *
-                  0.07, //Dynamic Icon size depending on screen res
+                IconButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => BlockedUsersScreen(token: token),
+                      ),
+                    );
+                  },
+                  icon: Icon(
+                    Icons.person_off,
+                    size: MediaQuery.of(context).size.width *
+                        0.07, //Dynamic Icon size depending on screen res
+                  ),
+                  padding: EdgeInsets.only(right: 15), //Distance to the right
+                ),
+              ],
             ),
-            padding: EdgeInsets.only(right: 15), //Distance to the right
-          ),
-        ],
-      ),
-      drawer: FutureBuilder<Map<String, dynamic>>(
-        future: ApiService.fetchUserProfile(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Drawer(
-              child: ListTile(
-                title: Text('Loading...'),
-              ),
-            );
-          } else if (snapshot.hasError) {
-            return Drawer(
-              child: ListTile(
-                title: Text('Error: ${snapshot.error}'),
-              ),
-            );
-          } else {
-            final Map<String, dynamic> user = snapshot.data!;
-            return AppDrawer(user: user);
-          }
-        },
-      ),
-      body: Column(
-        children: [
-          PendingFriends(callbackFunction: callback),
-          Friends(callbackFunction: callback),
-        ],
-      ),
+            drawer: FutureBuilder<Map<String, dynamic>>(
+              future: ApiService.fetchUserProfile(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Drawer(
+                    child: ListTile(
+                      title: Text('Loading...'),
+                    ),
+                  );
+                } else if (snapshot.hasError) {
+                  return Drawer(
+                    child: ListTile(
+                      title: Text('Error: ${snapshot.error}'),
+                    ),
+                  );
+                } else {
+                  final Map<String, dynamic> user = snapshot.data!;
+                  return AppDrawer(user: user);
+                }
+              },
+            ),
+            body: Column(
+              children: [
+                PendingFriends(callbackFunction: callback, token: token),
+                Friends(callbackFunction: callback, token: token),
+              ],
+            ),
+          );
+        } else {
+          return Container(
+            child: Text('Kaputt'),
+          );
+        }
+      },
     );
   }
 
@@ -160,19 +185,21 @@ class _FriendsScreenState extends State<FriendsScreen> {
 
 class PendingFriends extends StatelessWidget {
   final Function callbackFunction;
-  PendingFriends({super.key, required this.callbackFunction});
+  final String? token;
+  PendingFriends(
+      {super.key, required this.callbackFunction, required this.token});
 
   List<Friend> pendingFriends = [];
 
   Future getPendingFriends() async {
     pendingFriends = [];
 
-    //fetch user id
-    Map<String, dynamic> user = await ApiService.fetchUserProfile();
-    int user_id = user['user_id'];
-
     var response = await http
-        .get(Uri.parse('${ApiService.serverUrl}/friends/pending/$user_id'));
+        .get(Uri.parse('${ApiService.serverUrl}/friends/pending/'), headers: {
+      'Content-Type': 'application/json; charset=UTF-8',
+      'Authorization': 'Bearer $token',
+    });
+//    print(jsonDecode(response.body));
     Map<String, dynamic> data = jsonDecode(response.body);
 
     for (var user in data['pendingFriends']) {
@@ -217,6 +244,7 @@ class PendingFriends extends StatelessWidget {
                         itemCount: pendingFriends.length,
                         itemBuilder: (context, index) {
                           return FriendItem(
+                            token: token,
                             callbackFunction: callbackFunction,
                             isStillPending: true,
                             friend: pendingFriends[index],
@@ -238,18 +266,18 @@ class PendingFriends extends StatelessWidget {
 
 class Friends extends StatelessWidget {
   final Function callbackFunction;
-  Friends({super.key, required this.callbackFunction});
+  final String? token;
+  Friends({super.key, required this.callbackFunction, required this.token});
 
   List<Friend> friends = [];
 
   //get Friend from DB and saves into friends List
   Future getFriends() async {
-    //read jwt
-    Map<String, dynamic> user = await ApiService.fetchUserProfile();
-    int user_id = user['user_id'];
-
-    var response = //hier einfach jwt mitgeben anstatt user id auslesen??
-        await http.get(Uri.parse('${ApiService.serverUrl}/friends/$user_id'));
+    var response =
+        await http.get(Uri.parse('${ApiService.serverUrl}/friends/'), headers: {
+      'Content-Type': 'application/json; charset=UTF-8',
+      'Authorization': 'Bearer $token',
+    });
 
     Map<String, dynamic> data = jsonDecode(response.body);
     //debugPrint(data['friends'].runtimeType.toString());
@@ -292,6 +320,7 @@ class Friends extends StatelessWidget {
                           itemCount: friends.length,
                           itemBuilder: (context, index) {
                             return FriendItem(
+                                token: token,
                                 callbackFunction: callbackFunction,
                                 friend: friends[index],
                                 isStillPending: false);
@@ -312,7 +341,8 @@ class Friends extends StatelessWidget {
 }
 
 class BlockedUsersScreen extends StatefulWidget {
-  const BlockedUsersScreen({super.key});
+  final String? token;
+  const BlockedUsersScreen({super.key, required this.token});
 
   @override
   State<BlockedUsersScreen> createState() => _BlockedUsersScreenState();
@@ -333,7 +363,7 @@ class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
       ),
       body: Column(
         children: [
-          BlockedUsers(),
+          BlockedUsers(token: widget.token),
         ],
       ),
     );
@@ -342,19 +372,18 @@ class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
 
 ///Gets all blocked users from backend and displays them with option to un-block them again
 class BlockedUsers extends StatelessWidget {
-  BlockedUsers({super.key});
+  final String? token;
+  BlockedUsers({super.key, required this.token});
 
   List<Friend> blockedUsers = [];
 
   //get blocked users from DB and saves into List
   Future getBlockedUsers() async {
-    //read jwt
-    Map<String, dynamic> user = await ApiService.fetchUserProfile();
-    int user_id = user['user_id'];
-
-    var response = //hier einfach jwt mitgeben anstatt user id auslesen??
-        await http
-            .get(Uri.parse('${ApiService.serverUrl}/friends/block/$user_id'));
+    var response = await http
+        .get(Uri.parse('${ApiService.serverUrl}/friends/block/'), headers: {
+      'Content-Type': 'application/json; charset=UTF-8',
+      'Authorization': 'Bearer $token',
+    });
 
     Map<String, dynamic> data = jsonDecode(response.body);
 
@@ -395,6 +424,7 @@ class BlockedUsers extends StatelessWidget {
                           itemBuilder: (context, index) {
                             return Card(
                               child: BlockedUserItem(
+                                token: token,
                                 user: blockedUsers[index],
                               ),
                             );
@@ -441,11 +471,13 @@ class Friend {
 
 /// displays a single friend object in a ListTile
 class FriendItem extends StatelessWidget {
+  final String? token;
   final Friend friend;
   final bool isStillPending;
   final Function callbackFunction;
   const FriendItem(
       {super.key,
+      required this.token,
       required this.friend,
       required this.isStillPending,
       required this.callbackFunction});
@@ -460,14 +492,16 @@ class FriendItem extends StatelessWidget {
               ElevatedButton(
                 child: Text('Accept'),
                 onPressed: () {
-                  handleFriendRequestResponse(friend.userID, true);
+                  handleFriendRequestResponse(
+                      userID: friend.userID, accepted: true, token: token);
                   callbackFunction();
                 },
               ),
               TextButton(
                 child: Text('Decline'),
                 onPressed: () {
-                  handleFriendRequestResponse(friend.userID, false);
+                  handleFriendRequestResponse(
+                      userID: friend.userID, accepted: false, token: token);
                   callbackFunction();
                 },
               )
@@ -506,6 +540,7 @@ class FriendItem extends StatelessWidget {
                   //   )
                   //:
                   FriendInfoScreen(
+                token: token,
                 friend: friend,
                 callbackFunction: callbackFunction,
                 pendingFriendRequestReceived: isStillPending,
@@ -517,20 +552,21 @@ class FriendItem extends StatelessWidget {
     );
   }
 
-  void handleFriendRequestResponse(int userID, bool accepted) async {
-    //fetch user id
-    Map<String, dynamic> user = await ApiService.fetchUserProfile();
-    int user_id = user['user_id'];
+  void handleFriendRequestResponse(
+      {required int userID,
+      required bool accepted,
+      required String? token}) async {
     try {
       Map<String, dynamic> requestBody = {
         'friendId': userID, //hier friendID senden
         'accepted': accepted,
       };
       final response = await http.post(
-        Uri.parse('${ApiService.serverUrl}/friends/request/$user_id'),
+        Uri.parse('${ApiService.serverUrl}/friends/request/'),
         body: json.encode(requestBody),
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $token',
         },
       );
 
@@ -594,8 +630,9 @@ class FriendItem extends StatelessWidget {
 
 //PendingFriendItem
 class BlockedUserItem extends StatelessWidget {
+  final String? token;
   final Friend user;
-  const BlockedUserItem({super.key, required this.user});
+  const BlockedUserItem({super.key, required this.user, required this.token});
 
   @override
   Widget build(BuildContext context) {
@@ -631,7 +668,7 @@ class BlockedUserItem extends StatelessWidget {
                     ElevatedButton(
                       child: Text('Unblock'),
                       onPressed: () {
-                        handleUnblockUser(user.userID);
+                        handleUnblockUser(userID: user.userID, token: token);
                         //I mean, dadurch wird das Pop up & der Info Screen geschlossen
                         //und der Context für navigation ist wieder richtig. Gibt vllt ne bessere Lösung
                         Navigator.of(context).pop();
@@ -655,17 +692,15 @@ class BlockedUserItem extends StatelessWidget {
     );
   }
 
-  void handleUnblockUser(int userID) async {
-    Map<String, dynamic> user = await ApiService.fetchUserProfile();
-    int user_id = user['user_id'];
-
+  void handleUnblockUser({required int userID, required String? token}) async {
     try {
       Map<String, dynamic> requestBody = {'friendId': userID};
       final response = await http.post(
-        Uri.parse('${ApiService.serverUrl}/friends/unblock/$user_id'),
+        Uri.parse('${ApiService.serverUrl}/friends/unblock/'),
         body: json.encode(requestBody),
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $token',
         },
       );
       if (response.statusCode == 200) {
@@ -684,9 +719,11 @@ class FriendInfoScreen extends StatelessWidget {
   final Friend friend;
   final Function callbackFunction; // not necessary?
   final bool pendingFriendRequestReceived;
+  final String? token;
 
   const FriendInfoScreen(
       {super.key,
+      required this.token,
       required this.friend,
       required this.callbackFunction,
       required this.pendingFriendRequestReceived});
@@ -750,7 +787,8 @@ class FriendInfoScreen extends StatelessWidget {
                                 ElevatedButton(
                                   child: Text('Delete'),
                                   onPressed: () {
-                                    deleteFriend(friend.userID);
+                                    deleteFriend(
+                                        userID: friend.userID, token: token);
                                     //I mean, dadurch wird das Pop up & der Info Screen geschlossen
                                     //und der Context für navigation ist wieder richtig. Gibt vllt ne bessere Lösung
                                     Navigator.of(context).pop();
@@ -770,7 +808,9 @@ class FriendInfoScreen extends StatelessWidget {
                         },
                       ),
                 BlockUserButton(
-                    userID: friend.userID, userName: friend.username),
+                    token: token,
+                    userID: friend.userID,
+                    userName: friend.username),
               ],
             ),
             SizedBox(height: 20),
@@ -789,20 +829,18 @@ class FriendInfoScreen extends StatelessWidget {
     );
   }
 
-  void deleteFriend(int userID) async {
+  void deleteFriend({required int userID, required String? token}) async {
     //snackbar anzeigen mit deleted/error?
     //delete Friend and return to FriendScreen with updated List
-    //fetch user id
-    Map<String, dynamic> user = await ApiService.fetchUserProfile();
-    int user_id = user['user_id'];
 
     try {
       Map<String, dynamic> requestBody = {'friendId': userID};
       final response = await http.delete(
-        Uri.parse('${ApiService.serverUrl}/friends/$user_id'),
+        Uri.parse('${ApiService.serverUrl}/friends/'),
         body: json.encode(requestBody),
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $token',
         },
       );
       if (response.statusCode == 200) {
@@ -823,11 +861,13 @@ class UserInfoScreen extends StatelessWidget {
   final String userName;
   final Function callbackFunction; // not necessary?
   final bool friendRequestSend;
+  final String? token;
   //noEntry, requestAlreadySend,
   //TheySendYouRequest -< nicht anzeigen
 
   const UserInfoScreen(
       {super.key,
+      required this.token,
       required this.userID,
       required this.userName,
       required this.callbackFunction,
@@ -871,9 +911,11 @@ class UserInfoScreen extends StatelessWidget {
                 AddFriendButton(
                     userID: userID,
                     userName: userName,
+                    token: token,
                     friendRequestSend: friendRequestSend),
 
-                BlockUserButton(userID: userID, userName: userName),
+                BlockUserButton(
+                    userID: userID, userName: userName, token: token),
 
                 //hier kommen buttons hin, block zb
               ],
@@ -898,8 +940,13 @@ class UserInfoScreen extends StatelessWidget {
 class BlockUserButton extends StatelessWidget {
   int userID;
   String userName;
+  final String? token;
 
-  BlockUserButton({super.key, required this.userID, required this.userName});
+  BlockUserButton(
+      {super.key,
+      required this.userID,
+      required this.userName,
+      required this.token});
 
   @override
   Widget build(BuildContext context) {
@@ -921,7 +968,7 @@ class BlockUserButton extends StatelessWidget {
               ElevatedButton(
                 child: Text('Block'),
                 onPressed: () {
-                  blockFriend(userID);
+                  blockFriend(userID: userID, token: token);
                   //I mean, dadurch wird das Pop up & der Info Screen geschlossen
                   //und der Context für navigation ist wieder richtig. Gibt vllt ne bessere Lösung
                   Navigator.of(context).pop();
@@ -942,18 +989,17 @@ class BlockUserButton extends StatelessWidget {
     );
   }
 
-  void blockFriend(int userID) async {
+  void blockFriend({required int userID, required String? token}) async {
     //insert here DialogShow to Block Friend?
-    Map<String, dynamic> user = await ApiService.fetchUserProfile();
-    int user_id = user['user_id'];
 
     try {
       Map<String, dynamic> requestBody = {'friendId': userID};
       final response = await http.post(
-        Uri.parse('${ApiService.serverUrl}/friends/block/$user_id'),
+        Uri.parse('${ApiService.serverUrl}/friends/block/'),
         body: json.encode(requestBody),
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $token',
         },
       );
       if (response.statusCode == 200) {
@@ -970,10 +1016,12 @@ class BlockUserButton extends StatelessWidget {
 //SearchBar - --
 class FriendsSearchBar extends SearchDelegate {
   final Function callbackFunction;
+  final String? token;
   List<dynamic> suggestedUsers = [];
 
   FriendsSearchBar(
       {super.searchFieldLabel,
+      required this.token,
       super.searchFieldStyle,
       super.searchFieldDecorationTheme,
       super.keyboardType,
@@ -1017,7 +1065,7 @@ class FriendsSearchBar extends SearchDelegate {
 
     if (query.length >= 4) {
       return FutureBuilder(
-        future: getSuggestions(query),
+        future: getSuggestions(query: query, token: token),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
             //sort suggestions by status so friends are displayed first
@@ -1067,6 +1115,7 @@ class FriendsSearchBar extends SearchDelegate {
                           builder: (context) =>
                               suggestedUsers[index]['status'] == 'friend'
                                   ? FriendInfoScreen(
+                                      token: token,
                                       pendingFriendRequestReceived: false,
                                       friend: Friend(
                                           userID: suggestedUsers[index]
@@ -1094,6 +1143,7 @@ class FriendsSearchBar extends SearchDelegate {
                                       callbackFunction: callbackFunction, //!!,
                                     )
                                   : UserInfoScreen(
+                                      token: token,
                                       userID: suggestedUsers[index]['user_id'],
                                       userName: suggestedUsers[index]
                                           ['username'],
@@ -1125,18 +1175,15 @@ class FriendsSearchBar extends SearchDelegate {
     }
   }
 
-  Future getSuggestions(String query) async {
-    //read jwt
-    Map<String, dynamic> user = await ApiService.fetchUserProfile();
-    int user_id = user[
-        'user_id']; //sehr stupid weil nun jedes mal userId neu angefragt wird
+  Future getSuggestions({required String query, required String? token}) async {
     Map<String, dynamic> requestBody = {'query': query}; //!
 
     var response = await http.post(
-      Uri.parse('${ApiService.serverUrl}/users/$user_id'),
+      Uri.parse('${ApiService.serverUrl}/users/'),
       body: json.encode(requestBody),
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Authorization': 'Bearer $token',
       },
     );
 
@@ -1145,7 +1192,8 @@ class FriendsSearchBar extends SearchDelegate {
     // debugPrint('TYPE: ${data['matchingUsersFinal'].runtimeType}');
 
     suggestedUsers = [];
-    for (user in data['matchingUsersFinal']) {
+    for (var user in data['matchingUsersFinal']) {
+      //var user testing
       suggestedUsers.add(user);
     }
 
@@ -1170,12 +1218,14 @@ class FriendsSearchBar extends SearchDelegate {
 class AddFriendButton extends StatefulWidget {
   int userID;
   String userName;
+  final String? token;
 
   bool friendRequestSend;
 
   AddFriendButton(
       {super.key,
       required this.userID,
+      required this.token,
       required this.userName,
       required this.friendRequestSend});
 
@@ -1191,7 +1241,10 @@ class _AddFriendButtonState extends State<AddFriendButton> {
         : ElevatedButton(
             child: Text("Add"),
             onPressed: () {
-              addFriend(username: widget.userName, context: context);
+              addFriend(
+                  username: widget.userName,
+                  context: context,
+                  token: widget.token);
               setState(() {
                 widget.friendRequestSend =
                     true; //ist das so korrekt mit widget. ?
@@ -1204,20 +1257,19 @@ class _AddFriendButtonState extends State<AddFriendButton> {
 }
 
 void addFriend(
-    {required String username, required BuildContext context}) async {
+    {required String username,
+    required BuildContext context,
+    required String? token}) async {
   try {
-    //reads JWT again (need to be updated)
-    Map<String, dynamic> user = await ApiService.fetchUserProfile();
-    int user_id = user['user_id'];
-
     Map<String, dynamic> requestBody = {
       'friendUsername': username,
     };
     final response = await http.post(
-      Uri.parse('${ApiService.serverUrl}/friends/add/$user_id'),
+      Uri.parse('${ApiService.serverUrl}/friends/add/'),
       body: json.encode(requestBody),
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Authorization': 'Bearer $token',
       },
     );
     if (response.statusCode == 200) {

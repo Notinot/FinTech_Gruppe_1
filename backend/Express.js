@@ -300,50 +300,56 @@ app.post('/friendName', authenticateToken, async (req, res) => {
   }
 });
 
-//get friends of specific user
-//returns JSON with: 
-app.get('/friends/:user_id', async (req, res) => {
-  const user_id = req.params.user_id;
-  const query =
-    `SELECT
-  request_time,
-CASE
-    WHEN f.requester_id = ? THEN u_addressee.user_id
-    WHEN f.addressee_id = ? THEN u_requester.user_id
-END AS friend_user_id,
-CASE
-    WHEN f.requester_id = ? THEN u_addressee.username
-    WHEN f.addressee_id = ? THEN u_requester.username
-END AS friend_username,
-CASE
-    WHEN f.requester_id = ? THEN u_addressee.first_name
-    WHEN f.addressee_id = ? THEN u_requester.first_name
-END AS friend_first_name,
-CASE
-    WHEN f.requester_id = ? THEN u_addressee.last_name
-    WHEN f.addressee_id = ? THEN u_requester.last_name
-END AS friend_last_name,
-CASE
-    WHEN f.requester_id = ? THEN u_addressee.picture
-    WHEN f.addressee_id = ? THEN u_requester.picture
-END AS friend_picture
-FROM
-Friendship f
-JOIN
-User u_requester ON f.requester_id = u_requester.user_id
-JOIN
-User u_addressee ON f.addressee_id = u_addressee.user_id
-WHERE
-f.status = 'accepted'
-AND (f.requester_id = ? OR f.addressee_id = ?);
-`;
-  const [friends] = await db.query(query, [user_id, user_id, user_id, user_id, user_id, user_id, user_id, user_id, user_id, user_id, user_id, user_id]);
-  res.json({ friends });
+///get friends of specific user (in JWT)
+app.get('/friends', authenticateToken, async (req, res) => {
+  try{
+    const user_id = req.user.userId;
+    const query =
+      `SELECT
+    request_time,
+  CASE
+      WHEN f.requester_id = ? THEN u_addressee.user_id
+      WHEN f.addressee_id = ? THEN u_requester.user_id
+  END AS friend_user_id,
+  CASE
+      WHEN f.requester_id = ? THEN u_addressee.username
+      WHEN f.addressee_id = ? THEN u_requester.username
+  END AS friend_username,
+  CASE
+      WHEN f.requester_id = ? THEN u_addressee.first_name
+      WHEN f.addressee_id = ? THEN u_requester.first_name
+  END AS friend_first_name,
+  CASE
+      WHEN f.requester_id = ? THEN u_addressee.last_name
+      WHEN f.addressee_id = ? THEN u_requester.last_name
+  END AS friend_last_name,
+  CASE
+      WHEN f.requester_id = ? THEN u_addressee.picture
+      WHEN f.addressee_id = ? THEN u_requester.picture
+  END AS friend_picture
+  FROM
+  Friendship f
+  JOIN
+  User u_requester ON f.requester_id = u_requester.user_id
+  JOIN
+  User u_addressee ON f.addressee_id = u_addressee.user_id
+  WHERE
+  f.status = 'accepted'
+  AND (f.requester_id = ? OR f.addressee_id = ?);
+  `;
+    const [friends] = await db.query(query, [user_id, user_id, user_id, user_id, user_id, user_id, user_id, user_id, user_id, user_id, user_id, user_id]);
+    res.json({ friends });
+
+  }catch(error){
+    console.error('Error fetching friends: ', error);
+    res.status(500).json({message: 'Server: Error fetching friends'});
+  }
 });
 
 //get pending friend requests of specific user
-app.get('/friends/pending/:user_id', async (req, res) => {
-  const user_id = req.params.user_id;
+app.get('/friends/pending', authenticateToken,async (req, res) => {
+  const user_id = req.user.userId;
+
   const query =
     `SELECT  f.requester_id, u.username, u.first_name, u.last_name, u.picture
 FROM Friendship f
@@ -361,8 +367,8 @@ WHERE f.addressee_id = ? AND f.status = 'pending';
 Receives: boolean value whether request was accepted or declined
           ID of person who was accepted or declined
 */
-app.post('/friends/request/:user_id', async (req, res) => {
-  const user_id = req.params.user_id;
+app.post('/friends/request/', authenticateToken, async (req, res) => {
+  const user_id = req.user.userId;
   const { friendId, accepted } = req.body;
   var query = '';
   //hier noch überprüfen, dass Status auf "pending" ist?
@@ -384,8 +390,8 @@ app.post('/friends/request/:user_id', async (req, res) => {
 
 ///add friend (sending friend request)
 //names of routes are kinda misleading, needs to be updated
-app.post('/friends/add/:user_id', async (req, res) => {
-  const user_id = req.params.user_id;
+app.post('/friends/add',authenticateToken, async (req, res) => {
+  const user_id = req.user.userId;
   const { friendUsername } = req.body;
 
   //get user_id from username
@@ -425,8 +431,8 @@ app.post('/friends/add/:user_id', async (req, res) => {
 });
 
 //removing friend
-app.delete('/friends/:user_id', async (req, res) => {
-  const user_id = req.params.user_id;
+app.delete('/friends/',authenticateToken, async (req, res) => {
+  const user_id = req.user.userId;
   const { friendId } = req.body;
 
   const query = `
@@ -446,8 +452,8 @@ app.delete('/friends/:user_id', async (req, res) => {
 });
 
 //blocking user
-app.post('/friends/block/:user_id', async (req, res) => {
-  const user_id = req.params.user_id; //person who blocks - requester
+app.post('/friends/block', authenticateToken,async (req, res) => {
+  const user_id = req.user.userId; //person who blocks - requester
   const { friendId } = req.body; //person who gets blocked - addressee
 
   //delete friends entry first
@@ -480,8 +486,8 @@ app.post('/friends/block/:user_id', async (req, res) => {
 });
 
 //unblocking user
-app.post('/friends/unblock/:user_id', async (req, res) => {
-  const user_id = req.params.user_id; //person who blocked - requester
+app.post('/friends/unblock',authenticateToken, async (req, res) => {
+  const user_id = req.user.userId; //person who blocked - requester
   const { friendId } = req.body; //person who got blocked - addressee
   console.error(user_id);
   console.error(friendId);
@@ -500,8 +506,8 @@ app.post('/friends/unblock/:user_id', async (req, res) => {
 });
 
 //get users that are blocked
-app.get('/friends/block/:user_id', async (req, res) => {
-  const user_id = req.params.user_id; //person who blocked - requester
+app.get('/friends/block',authenticateToken, async (req, res) => {
+  const user_id = req.user.userId; //person who blocked - requester
 
   const query =
     `SELECT  f.addressee_id, f.request_time, u.username, u.first_name, u.last_name, u.picture
@@ -514,8 +520,8 @@ app.get('/friends/block/:user_id', async (req, res) => {
 });
 
 //get users which contain String for suggestions in Searchbar
-app.post('/users/:user_id', async (req, res) => {
-  const user_id = req.params.user_id;
+app.post('/users/', authenticateToken, async (req, res) => {
+  const user_id = req.user.userId;
   const searchQuery = req.body.query;
   console.log('user_id: ', user_id, ' searchQuery: ', searchQuery);
 

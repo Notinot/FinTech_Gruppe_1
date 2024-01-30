@@ -74,6 +74,8 @@ class _EditEventScreenState extends State<EditEventScreen> {
   @override
   void initState() {
     super.initState();
+    Future<List<String>> participants =
+        fetchParticipantMails(widget.event.eventID, 1);
     titleController = TextEditingController(text: widget.event.title);
     descriptionController =
         TextEditingController(text: widget.event.description);
@@ -85,7 +87,9 @@ class _EditEventScreenState extends State<EditEventScreen> {
     priceController =
         TextEditingController(text: widget.event.price.toString());
 
-    selectedTimestamp = widget.event.datetimeEvent.toString().substring(0, widget.event.datetimeEvent.toString().length - 1);
+    selectedTimestamp = widget.event.datetimeEvent
+        .toString()
+        .substring(0, widget.event.datetimeEvent.toString().length - 1);
     selectedCategory = widget.event.category;
     selectedCountry = widget.event.country;
     selectedMaxParticipants = widget.event.maxParticipants;
@@ -227,6 +231,15 @@ class _EditEventScreenState extends State<EditEventScreen> {
       setState(() {
         descriptionError = 'Please enter a brief description';
       });
+    }
+
+    if (selectedMaxParticipants < participants.length) {
+      setState(() {});
+
+      showErrorSnackBar(this.context,
+          'Max participants value can not be lower than actual participant number!');
+
+      return;
     }
 
     if (weekly == true) {
@@ -438,7 +451,9 @@ class _EditEventScreenState extends State<EditEventScreen> {
               Column(
                 children: [
                   if (selectedTimestamp != null)
-                    Text(selectedTimestamp.toString().substring(0, selectedTimestamp.toString().length - 7),
+                    Text(
+                        selectedTimestamp.toString().substring(
+                            0, selectedTimestamp.toString().length - 7),
                         style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.normal,
@@ -698,7 +713,10 @@ void showSuccessSnackBar(BuildContext context, String message) {
   );
 }
 
-void showSnackBar({bool isError = false, required String message}) {
+void showSnackBar(
+    {bool isError = false,
+    required String message,
+    required BuildContext context}) {
   ScaffoldMessenger.of(context as BuildContext).showSnackBar(
     SnackBar(
       content: Text(message),

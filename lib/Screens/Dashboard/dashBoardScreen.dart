@@ -68,44 +68,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   // Fetch events from the backend
   Future<List<Event>> fetchEvents() async {
+
     try {
       const storage = FlutterSecureStorage();
       final token = await storage.read(key: 'token');
 
       if (token == null) {
         throw Exception('Token not found');
-      }
-
-      // Event Service
-      final res = await http.get(
-        Uri.parse('${ApiService.serverUrl}/fetch-all-events'),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-          'Authorization': 'Bearer $token',
-        },
-      );
-
-      if(res.statusCode == 200){
-
-        try{
-          final List<dynamic> data = jsonDecode(res.body);
-          final List<dynamic> eventsData = data;
-
-          List<Event> events = eventsData.map((eventData) {
-            return Event.fromJson(eventData as Map<String, dynamic>);
-          }).toList();
-
-          for (int i = 0; i < events.length; i++) {
-            for (int j = i + 1; j < events.length; j++) {
-              if (events[i].eventID == events[j].eventID) {
-                events.remove(events[i]);
-              }
-            }
-          }
-            Event.eventService(events);
-        }catch(err){
-          print("Error at fetch-all-events response: $err");
-        }
       }
 
       final response = await http.get(
@@ -116,36 +85,95 @@ class _DashboardScreenState extends State<DashboardScreen> {
         },
       );
 
-      if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
+        if (response.statusCode == 200) {
+          final List<dynamic> data = jsonDecode(response.body);
+          final List<dynamic> eventsData = data;
+
+          List<Event> dashboardEvents = [];
+          List<Event> events = eventsData.map((eventData) {
+            return Event.fromJson(eventData as Map<String, dynamic>);
+          }).toList();
+
+          for (var event in events) {
+            if (event.status == 1 && dashboardEvents.length <= 3) {
+              event.checkIfCreator();
+              dashboardEvents.add(event);
+            }
+          }
+
+          dashboardEvents
+              .sort((a, b) => b.datetimeEvent.compareTo(a.datetimeEvent));
+
+          return dashboardEvents.reversed.toList();
+        } else {
+            throw Exception('Failed to load events. Error: ${response.statusCode}');
+        }
+
+    }catch(err){
+      print(err);
+      rethrow;
+    }
+  }
+
+  Future<void> RunEventService() async {
+
+    // Event Service
+      const storage = FlutterSecureStorage();
+      final token = await storage.read(key: 'token');
+
+      if (token == null) {
+        throw Exception('Token not found');
+      }
+
+    final res = await http.get(
+      Uri.parse('${ApiService.serverUrl}/fetch-all-events'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if(res.statusCode == 200){
+
+      try{
+
+        final List<dynamic> data = jsonDecode(res.body);
         final List<dynamic> eventsData = data;
 
-        List<Event> dashboardEvents = [];
         List<Event> events = eventsData.map((eventData) {
           return Event.fromJson(eventData as Map<String, dynamic>);
         }).toList();
 
-        for (var event in events) {
-          if (event.status == 1 && dashboardEvents.length <= 3) {
-            event.checkIfCreator();
-            dashboardEvents.add(event);
+        for (int i = 0; i < events.length; i++) {
+          for (int j = i + 1; j < events.length; j++) {
+            if (events[i].eventID == events[j].eventID) {
+              events.remove(events[i]);
+            }
           }
         }
 
-        dashboardEvents
-            .sort((a, b) => b.datetimeEvent.compareTo(a.datetimeEvent));
 
-        return dashboardEvents.reversed.toList();
-      } else {
-        throw Exception('Failed to load events. Error: ${response.statusCode}');
+        /*
+        for(var event in events){
+          if(event.recurrenceType == 0 || event.status == 0){
+            events.remove(event);
+          }
+        }
+         */
+
+        Event.eventService(events);
+
+      }catch(err){
+        print("Error at event-service: $err");
       }
-    } catch (e) {
-      rethrow;
     }
   }
 
   @override
   Widget build(BuildContext context) {
+
+    RunEventService();
+
     return FutureBuilder<Map<String, dynamic>>(
       future: userProfileFuture,
       builder: (context, snapshot) {
@@ -354,7 +382,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             'country': event.country,
             'city': event.city,
             'street': event.street,
-            'zipcode': event.zipcode
+            'zipcode': event.zipcode,
+            'user_event_status': event.user_event_status
           };
         }).toList();
       } else {
@@ -583,7 +612,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         creatorUsername: creatorUsername,
         creatorId: creatorId,
         isCreator: false,
-        user_event_status: 2);
+        user_event_status: eventRequest['user_event_status']);
 
 
 

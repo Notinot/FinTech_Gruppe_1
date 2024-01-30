@@ -362,6 +362,7 @@ class ApiService {
     }
   }
 
+
   static Future<int> inviteEvent(int eventId, String recipient) async {
     try {
       const storage = FlutterSecureStorage();
@@ -393,9 +394,8 @@ class ApiService {
         return 401;
       }
 
-      if(inviteEventResponse.statusCode == 402){
-        print(
-            'inviteEvent function: $recipient does not exist');
+      if (inviteEventResponse.statusCode == 402) {
+        print('inviteEvent function: $recipient does not exist');
         return 402;
       }
 
@@ -408,9 +408,8 @@ class ApiService {
     }
   }
 
-  static Future<int> joinEvent(String recipientUsername,
-      double amount, String message, int eventId) async {
-
+  static Future<int> joinEvent(String recipientUsername, double amount,
+      String message, int eventId) async {
     // Return Codes:
     // 200: success
     // 400: general failure
@@ -445,41 +444,39 @@ class ApiService {
         }
       }
 
+      // Event with costs
+      if (amount > 0) {
+        try {
+          final sendMoneyResponse = await http.post(
+            Uri.parse('${ApiService.serverUrl}/send-money'),
+            headers: {
+              'Content-Type': 'application/json; charset=UTF-8',
+              'Authorization': 'Bearer $token',
+            },
+            body: json.encode(<String, dynamic>{
+              'recipient': recipientUsername,
+              'amount': amount,
+              'message': message,
+              'event_id': eventId.toString(),
+            }),
+          );
 
-        // Event with costs
-        if (amount > 0) {
-          try {
-            final sendMoneyResponse = await http.post(
-              Uri.parse('${ApiService.serverUrl}/send-money'),
-              headers: {
-                'Content-Type': 'application/json; charset=UTF-8',
-                'Authorization': 'Bearer $token',
-              },
-              body: json.encode(<String, dynamic>{
-                'recipient': recipientUsername,
-                'amount': amount,
-                'message': message,
-                'event_id': eventId.toString(),
-              }),
-            );
-
-            if (sendMoneyResponse.statusCode == 200) {
-              // Money sent successfully
-              print('Sending money was successful');
-              print('joinEvent function: Joining Event was successful');
-              return 200;
-            }
-            else if (sendMoneyResponse.statusCode == 400) {
-              print('Not enough money to join the event');
-              return 402;
-            }
-          } catch (err) {
-            print("joinEvent function: Error sending money: $err");
-            rethrow;
+          if (sendMoneyResponse.statusCode == 200) {
+            // Money sent successfully
+            print('Sending money was successful');
+            print('joinEvent function: Joining Event was successful');
+            return 200;
+          } else if (sendMoneyResponse.statusCode == 400) {
+            print('Not enough money to join the event');
+            return 402;
           }
+        } catch (err) {
+          print("joinEvent function: Error sending money: $err");
+          rethrow;
         }
+      }
 
-        return 400;
+      return 400;
 
       /*
       final joinEventResponse = await http.post(
@@ -547,8 +544,38 @@ class ApiService {
       print(e);
       return 400;
     }
+  }
 
+  static Future<bool> kickParticipant(
+      int eventId, String participantUsername) async {
+    try {
+      const storage = FlutterSecureStorage();
+      final token = await storage.read(key: 'token');
+      if (token == null) {
+        throw Exception('Token not found');
+      }
 
+      final kickParticipantResponse = await http.post(
+          Uri.parse(
+              '${ApiService.serverUrl}/kick-participant?eventId=$eventId&participantUsername=$participantUsername'),
+          headers: {
+            'Content-Type': 'application/json; charset=UTF-8',
+            'Authorization': 'Bearer $token',
+          });
+
+      if (kickParticipantResponse.statusCode == 200) {
+        print(
+            'kickParticipant function: Participant successfully kicked from the event');
+        return true;
+      }
+      else{
+        print('kickParticipant function: Kicking participant failed');
+        return false;
+      }
+    } catch (e) {
+      print('kickParticipant function: Kicking participant failed: $e');
+      return false;
+    }
   }
 
   static Future<int> leaveEvent(int eventId) async {
@@ -576,17 +603,16 @@ class ApiService {
         return 401;
       }
 
-      print('leaveEvent function: Error canceling Event');
+      print('leaveEvent function: Error leaving Event');
       return 0;
     } catch (e) {
-      print('cancelEvent function: Error canceling Event');
+      print('leaveEvent function: Error leaving Event');
       return 0;
     }
   }
 
   static Future<List<String>> fetchParticipants(int eventId, int type) async {
     try {
-
       const storage = FlutterSecureStorage();
       final token = await storage.read(key: 'token');
 
@@ -609,7 +635,7 @@ class ApiService {
         // Explicitly cast each element to String
         final List<String> participants = participantsList
             .map((dynamic item) =>
-            (item as Map<String, dynamic>)['username'].toString())
+                (item as Map<String, dynamic>)['username'].toString())
             .toList();
 
         return participants;
@@ -656,7 +682,7 @@ class ApiService {
             // Explicitly cast each element to String
             final List<String> participants = participantsList
                 .map((dynamic item) =>
-                (item as Map<String, dynamic>)['email'].toString())
+                    (item as Map<String, dynamic>)['email'].toString())
                 .toList();
 
             return participants;
@@ -672,19 +698,15 @@ class ApiService {
       }
 
       // Fetch participant emails
-      List<String> participants =
-      await fetchParticipantMails(eventId, 1);
+      List<String> participants = await fetchParticipantMails(eventId, 1);
 
       final cancelEventResponse = await http.post(
-          Uri.parse('${ApiService.serverUrl}/cancel-event'),
-          headers: {
-            'Content-Type': 'application/json; charset=UTF-8',
-            'Authorization': 'Bearer $token',
-          },
-          body: jsonEncode({
-            'eventId': eventId,
-            'participants' : participants
-        }),
+        Uri.parse('${ApiService.serverUrl}/cancel-event'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({'eventId': eventId, 'participants': participants}),
       );
 
       if (cancelEventResponse.statusCode == 200) {

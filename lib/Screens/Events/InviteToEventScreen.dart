@@ -11,11 +11,14 @@ import 'package:flutter_application_1/Screens/api_service.dart';
 class InviteToEventScreen extends StatefulWidget {
   final int eventId;
   final bool allowInvite;
-  InviteToEventScreen({required this.eventId, required this.allowInvite});
+  final bool iAmParticipant;
+  InviteToEventScreen({required this.eventId, required this.allowInvite, required this.iAmParticipant});
 
   @override
   _InviteToEventScreenState createState() => _InviteToEventScreenState();
 }
+
+
 
 class _InviteToEventScreenState extends State<InviteToEventScreen> {
   final TextEditingController recipientController = TextEditingController();
@@ -29,6 +32,7 @@ class _InviteToEventScreenState extends State<InviteToEventScreen> {
     final Future<List<String>> invitedParticipants =
         ApiService.fetchParticipants(widget.eventId, 2);
 
+    if(widget.iAmParticipant == false)
     return Scaffold(
       appBar: AppBar(
         title: const Text('Event Participants'),
@@ -68,7 +72,27 @@ class _InviteToEventScreenState extends State<InviteToEventScreen> {
                       itemBuilder: (context, index) {
                         return ListTile(
                           title: Text(snapshot.data![index]),
-                          // Add more details if needed
+                          trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                ElevatedButton(
+                                    onPressed: (){
+                                      ApiService.kickParticipant(widget.eventId ,snapshot.data![index]);
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => InviteToEventScreen(
+                                            eventId: widget.eventId,
+                                            allowInvite: true,
+                                            iAmParticipant: false,
+                                          ),
+                                        ),
+                                      );
+                                      },
+                                    child: Text("Kick")
+                                ),
+                              ]
+                          ),
                         );
                       },
                     );
@@ -95,7 +119,6 @@ class _InviteToEventScreenState extends State<InviteToEventScreen> {
                       itemBuilder: (context, index) {
                         return ListTile(
                           title: Text(snapshot.data![index]),
-                          // Add more details if needed
                         );
                       },
                     );
@@ -107,6 +130,47 @@ class _InviteToEventScreenState extends State<InviteToEventScreen> {
         ),
       ),
     );
+    else
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Event Participants'),
+        ),
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              checkIfInvitesPossible(),
+              const SizedBox(height: 24),
+              Text("Participants: ",
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              Expanded(
+                child: FutureBuilder<List<String>>(
+                  future: joinedParticipants,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return CircularProgressIndicator();
+                    } else if (snapshot.hasError) {
+                      return Text('Error: ${snapshot.error}');
+                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      return Text('No participants found');
+                    } else {
+                      return ListView.builder(
+                        itemCount: snapshot.data!.length,
+                        itemBuilder: (context, index) {
+                          return ListTile(
+                            title: Text(snapshot.data![index]),
+                          );
+                        },
+                      );
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
   }
 
   Widget checkIfInvitesPossible() {

@@ -32,8 +32,8 @@ class Event {
   DateTime datetimeEvent;
   final double price;
   final int status;
-  int? recurrenceType;
-  int? recurrenceInterval;
+  int recurrenceType;
+  int recurrenceInterval;
   String? country;
   String? street;
   String? city;
@@ -126,8 +126,8 @@ class Event {
       description: json['description'],
       participants: json['participants'],
       maxParticipants: json['max_participants'],
-      datetimeCreated: DateTime.parse(json['datetime_created']),
-      datetimeEvent: DateTime.parse(json['datetime_event']),
+      datetimeCreated: DateTime.parse(json['datetime_created']).toLocal(),
+      datetimeEvent: DateTime.parse(json['datetime_event']).toLocal(),
       price: (json['price'] as num).toDouble(),
       status: json['status'],
       recurrenceType: json['recurrence_type'],
@@ -153,97 +153,112 @@ class Event {
       }
 
       List<Event> checkingEvents = [];
-      List<Event> restartingEvents = [];
+      List<Event> restartingEventsWithoutMoney = [];
+      List<Event> restartingEventsWithMoney = [];
 
       // Get all repeatable Events
       for (var event in events) {
-        if (event.recurrenceType != 0 && !checkingEvents.contains(event) && event.status != 0) {
+        if (event.recurrenceType > 0 && event.status > 0 && !checkingEvents.contains(event) ) {
           checkingEvents.add(event);
         }
       }
 
+
       for (var event in checkingEvents) {
-        if (event.datetimeEvent.compareTo(DateTime.now()) < 0) {
+        if (event.datetimeEvent.toLocal().compareTo(DateTime.now()) < 0) {
           switch (event.recurrenceType) {
             case 1:
               event.datetimeEvent =
-                  event.datetimeEvent.add(Duration(days: 7));
-              event.recurrenceInterval = (event.recurrenceInterval! + 1)!;
-              restartingEvents.add(event);
+                  event.datetimeEvent.toLocal().add(Duration(days: 7));
+              event.recurrenceInterval = (event.recurrenceInterval + 1)!;
+              if(event.price == 0 && !restartingEventsWithoutMoney.contains(event)){
+                restartingEventsWithoutMoney.add(event);
+              } else if(event.price > 0 && !restartingEventsWithMoney.contains(event)){
+                restartingEventsWithMoney.add(event);
+              }
             case 2:
             // Needs to be improved
               event.datetimeEvent =
-                  event.datetimeEvent.add(Duration(days: 30));
-              event.recurrenceInterval = (event.recurrenceInterval! + 1)!;
-              restartingEvents.add(event);
+                  event.datetimeEvent.toLocal().add(Duration(days: 30));
+              event.recurrenceInterval = (event.recurrenceInterval + 1)!;
+              if(event.price == 0 && !restartingEventsWithoutMoney.contains(event)){
+                restartingEventsWithoutMoney.add(event);
+              } else if(event.price > 0 && !restartingEventsWithMoney.contains(event)){
+                restartingEventsWithMoney.add(event);
+              }
             case 3:
               event.datetimeEvent =
-                  event.datetimeEvent.add(Duration(days: 365));
-              event.recurrenceInterval = (event.recurrenceInterval! + 1)!;
-              restartingEvents.add(event);
+                  event.datetimeEvent.toLocal().add(Duration(days: 365));
+              event.recurrenceInterval = (event.recurrenceInterval + 1)!;
+              if(event.price == 0 && !restartingEventsWithoutMoney.contains(event)){
+                restartingEventsWithoutMoney.add(event);
+              } else if(event.price > 0 && !restartingEventsWithMoney.contains(event)){
+                restartingEventsWithMoney.add(event);
+              }
           }
         }
       }
 
-      // Participants send money recurrence interval increases
-      for(var event in restartingEvents){
-        try {
 
-            if(event.price > 0){
+      // Send Request without money
+      if(restartingEventsWithoutMoney.length > 0){
 
-              List<String> participantsList = await ApiService.fetchParticipants(event.eventID, 1);
+        List<Map<String, dynamic>> eventsJson =
+        restartingEventsWithoutMoney.map((i) => i.toJson()).toList();
 
-              for(var participant in participantsList){
-                try{
-
-                    final sendMoneyResponse = await http.post(
-                      Uri.parse('${ApiService.serverUrl}/send-money'),
-                      headers: {
-                        'Content-Type': 'application/json; charset=UTF-8',
-                        'Authorization': 'Bearer $token',
-                      },
-                      body: json.encode(<String, dynamic>{
-                        'recipient': participant,
-                        'amount': event.price,
-                        'message': event.title,
-                        'event_id': event.eventID.toString(),
-                      }),
-                    );
-
-                    if (sendMoneyResponse.statusCode == 200) {
-                      // Money sent successfully
-                      print('Sending money was successful');
-                    } else {
-
-                      // Money transfer failed, handle accordingly
-                      print('Error sending money: ${sendMoneyResponse.body}');
-                      // User Kicken!
-                    }
-                }catch(err){
-                  print('Error: $err');
-
-                }
-              }
-            }
-
-         } catch (error) {
-           print('Error: $error');
-         }
+        String body = jsonEncode(eventsJson);
+        ApiService.EventService(body);
       }
 
-      try {
+      // Send Request with money
+      if(restartingEventsWithMoney.length > 0){
+
         List<Map<String, dynamic>> eventsJson =
-        checkingEvents.map((i) => i.toJson()).toList();
+        restartingEventsWithMoney.map((i) => i.toJson()).toList();
 
         String body = jsonEncode(eventsJson);
         ApiService.EventService(body);
 
-      } catch (e) {
-        print(e);
-      }
 
+        for(var event in restartingEventsWithMoney){
+          try{
+
+            List<String> participantsList = await ApiService.fetchParticipants(event.eventID, 1);
+
+            for(var participant in participantsList){
+
+              final sendMoneyResponse = await http.post(
+                Uri.parse('${ApiService.serverUrl}/send-money'),
+                headers: {
+                  'Content-Type': 'application/json; charset=UTF-8',
+                  'Authorization': 'Bearer $token',
+                },
+                body: json.encode(<String, dynamic>{
+                  'recipient': participant,
+                  'amount': event.price,
+                  'message': event.title,
+                  'event_id': event.eventID.toString(),
+                }),
+              );
+
+              if (sendMoneyResponse.statusCode == 200) {
+                // Money sent successfully
+                print('Sending money was successful');
+              } else if (sendMoneyResponse.statusCode == 400) {
+                // Participant has not enough money to pay again
+                print('Participant has not enough money to pay again');
+                // Kick here
+                ApiService.kickParticipant(event.eventID, participant);
+              }
+            }
+          }catch(err){
+            print(err);
+            rethrow;
+          }
+        }
+      }
     } catch (e) {
-      print(e.toString());
+      print(e);
     }
   }
 
@@ -252,7 +267,7 @@ class Event {
       'event_id': this.eventID,
       'datetime_event': this.datetimeEvent.toString().substring(
           0, this.datetimeEvent.toString().length - 5), // U
-      // se UTC time
+      // set UTC time
       'recurrence_interval': this.recurrenceInterval,
     };
   }

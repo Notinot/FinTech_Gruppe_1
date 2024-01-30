@@ -135,19 +135,7 @@ class EventInfoScreen extends StatelessWidget {
                         ),
                       ),
                       SizedBox(height: 12),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Icon(Icons.supervised_user_circle_rounded),
-                            Text(
-                              '  Participants: ${event.participants.toString()} / ${event.maxParticipants.toString()}',
-                              style: TextStyle(fontSize: 18),
-                            ),
-                          ],
-                        ),
-                      ),
+                      showParticipantsButton(event, context),
                       SizedBox(height: 4),
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: 16),
@@ -236,7 +224,48 @@ class EventInfoScreen extends StatelessWidget {
     );
   }
 
+  Widget showParticipantsButton(Event event, BuildContext context){
 
+    if(event.status == 1 && event.user_event_status == 1 && !event.isCreator){
+
+        return Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => InviteToEventScreen(eventId: event.eventID, allowInvite: false, iAmParticipant: true)),
+                  );
+                },
+                child: Icon(Icons.supervised_user_circle_rounded),
+              ),
+              Text(
+                '  Participants: ${event.participants.toString()} / ${event.maxParticipants.toString()}',
+                style: TextStyle(fontSize: 18),
+              ),
+            ],
+          ),
+        );
+    }
+    else{
+      return Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            Icon(Icons.supervised_user_circle_rounded),
+            Text(
+              '  Participants: ${event.participants.toString()} / ${event.maxParticipants.toString()}',
+              style: TextStyle(fontSize: 18),
+            ),
+          ],
+        ),
+      );
+    }
+  }
 
   Widget buildButton(Event event, BuildContext context) {
 
@@ -256,7 +285,7 @@ class EventInfoScreen extends StatelessWidget {
                 context,
                 MaterialPageRoute(
                   builder: (context) => InviteToEventScreen(
-                      eventId: event.eventID, allowInvite: true),
+                      eventId: event.eventID, allowInvite: true, iAmParticipant: false),
                 ),
               );
             },
@@ -274,7 +303,7 @@ class EventInfoScreen extends StatelessWidget {
                 context,
                 MaterialPageRoute(
                   builder: (context) => InviteToEventScreen(
-                      eventId: event.eventID, allowInvite: false),
+                      eventId: event.eventID, allowInvite: false, iAmParticipant: false),
                 ),
               );
             },
@@ -396,7 +425,7 @@ class EventInfoScreen extends StatelessWidget {
             context,
             MaterialPageRoute(
               builder: (context) => InviteToEventScreen(
-                  eventId: event.eventID, allowInvite: false),
+                  eventId: event.eventID, allowInvite: false, iAmParticipant: false),
             ),
           );
         },

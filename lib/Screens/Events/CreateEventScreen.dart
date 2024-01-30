@@ -267,6 +267,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
             builder: (context) => InviteToEventScreen(
               eventId: event.eventID,
               allowInvite: true,
+              iAmParticipant: false
             ),
           ),
         );

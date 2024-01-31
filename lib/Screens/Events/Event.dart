@@ -165,7 +165,8 @@ class Event {
 
 
       for (var event in checkingEvents) {
-        if (event.datetimeEvent.compareTo(DateTime.now()) < 0) {
+
+        if (event.datetimeEvent.compareTo(DateTime.now().add(Duration(hours: 1))) < 0) {
           switch (event.recurrenceType) {
             case 1:
               event.datetimeEvent =

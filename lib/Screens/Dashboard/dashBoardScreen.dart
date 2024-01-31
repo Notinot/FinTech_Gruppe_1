@@ -144,6 +144,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           return Event.fromJson(eventData as Map<String, dynamic>);
         }).toList();
 
+
         for (int i = 0; i < events.length; i++) {
           for (int j = i + 1; j < events.length; j++) {
             if (events[i].eventID == events[j].eventID) {
@@ -151,15 +152,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             }
           }
         }
-
-
-        /*
-        for(var event in events){
-          if(event.recurrenceType == 0 || event.status == 0){
-            events.remove(event);
-          }
-        }
-         */
 
         Event.eventService(events);
 

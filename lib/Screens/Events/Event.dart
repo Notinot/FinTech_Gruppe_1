@@ -126,8 +126,8 @@ class Event {
       description: json['description'],
       participants: json['participants'],
       maxParticipants: json['max_participants'],
-      datetimeCreated: DateTime.parse(json['datetime_created']).toLocal(),
-      datetimeEvent: DateTime.parse(json['datetime_event']).toLocal(),
+      datetimeCreated: DateTime.parse(json['datetime_created']).add(Duration(hours: 1)),
+      datetimeEvent: DateTime.parse(json['datetime_event']).add(Duration(hours: 1)),
       price: (json['price'] as num).toDouble(),
       status: json['status'],
       recurrenceType: json['recurrence_type'],
@@ -165,11 +165,11 @@ class Event {
 
 
       for (var event in checkingEvents) {
-        if (event.datetimeEvent.toLocal().compareTo(DateTime.now()) < 0) {
+        if (event.datetimeEvent.compareTo(DateTime.now()) < 0) {
           switch (event.recurrenceType) {
             case 1:
               event.datetimeEvent =
-                  event.datetimeEvent.toLocal().add(Duration(days: 7));
+                  event.datetimeEvent.add(Duration(days: 7));
               event.recurrenceInterval = (event.recurrenceInterval + 1)!;
               if(event.price == 0 && !restartingEventsWithoutMoney.contains(event)){
                 restartingEventsWithoutMoney.add(event);
@@ -179,7 +179,7 @@ class Event {
             case 2:
             // Needs to be improved
               event.datetimeEvent =
-                  event.datetimeEvent.toLocal().add(Duration(days: 30));
+                  event.datetimeEvent.add(Duration(days: 30));
               event.recurrenceInterval = (event.recurrenceInterval + 1)!;
               if(event.price == 0 && !restartingEventsWithoutMoney.contains(event)){
                 restartingEventsWithoutMoney.add(event);
@@ -188,7 +188,7 @@ class Event {
               }
             case 3:
               event.datetimeEvent =
-                  event.datetimeEvent.toLocal().add(Duration(days: 365));
+                  event.datetimeEvent.add(Duration(days: 365));
               event.recurrenceInterval = (event.recurrenceInterval + 1)!;
               if(event.price == 0 && !restartingEventsWithoutMoney.contains(event)){
                 restartingEventsWithoutMoney.add(event);

@@ -464,8 +464,27 @@ class ApiService {
           if (sendMoneyResponse.statusCode == 200) {
             // Money sent successfully
             print('Sending money was successful');
-            print('joinEvent function: Joining Event was successful');
-            return 200;
+
+            final joinEventResponse = await http.post(
+              Uri.parse('${ApiService.serverUrl}/join-event'),
+              headers: {
+                'Content-Type': 'application/json; charset=UTF-8',
+                'Authorization': 'Bearer $token',
+              },
+              body: jsonEncode({
+                'amount': amount.toString(),
+                'message': message,
+                'eventId': eventId.toString()
+              }),
+            );
+
+            if (joinEventResponse.statusCode == 200) {
+              print('joinEvent function: Joining Event was successful');
+              return 200;
+            }
+            else{
+              return 400;
+            }
           } else if (sendMoneyResponse.statusCode == 400) {
             print('Not enough money to join the event');
             return 402;

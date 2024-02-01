@@ -40,7 +40,10 @@ class _InviteToEventScreenState extends State<InviteToEventScreen> {
             icon: Icon(Icons.arrow_back),
             onPressed: () {
               // Navigate back when the back button is pressed
-              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => DashboardScreen()),
+              );
             },
           ),
         ),

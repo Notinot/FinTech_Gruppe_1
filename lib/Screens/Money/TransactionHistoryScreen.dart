@@ -733,13 +733,18 @@ class TransactionItem extends StatelessWidget {
                 ),
                 // Display the event name if the transaction is associated with an event
                 if (transaction.eventId != null)
-                  Text(
-                    'Event: ${transaction.eventId}',
-                    style: TextStyle(color: textColor),
+                  Row(
+                    children: [
+                      Icon(Icons.event_rounded, size: 20),
+                      SizedBox(width: 2),
+                      Text(
+                        '${transaction.message}',
+                      ),
+                    ],
                   ),
-
                 // Display the message if the transaction has a message. If the message is too long, display only the first 30 characters
-                if (transaction.message.isNotEmpty)
+                if (transaction.message.isNotEmpty &&
+                    transaction.eventId == null)
                   Text(
                     '${transaction.message.length > 30 ? transaction.message.substring(0, 30) + '...' : transaction.message}',
                     style: TextStyle(

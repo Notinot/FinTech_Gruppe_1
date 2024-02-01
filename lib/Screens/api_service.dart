@@ -362,7 +362,6 @@ class ApiService {
     }
   }
 
-
   static Future<int> inviteEvent(int eventId, String recipient) async {
     try {
       const storage = FlutterSecureStorage();
@@ -481,8 +480,7 @@ class ApiService {
             if (joinEventResponse.statusCode == 200) {
               print('joinEvent function: Joining Event was successful');
               return 200;
-            }
-            else{
+            } else {
               return 400;
             }
           } else if (sendMoneyResponse.statusCode == 400) {
@@ -586,8 +584,7 @@ class ApiService {
         print(
             'kickParticipant function: Participant successfully kicked from the event');
         return true;
-      }
-      else{
+      } else {
         print('kickParticipant function: Kicking participant failed');
         return false;
       }

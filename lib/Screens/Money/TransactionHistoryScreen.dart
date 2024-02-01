@@ -752,9 +752,11 @@ class TransactionItem extends StatelessWidget {
                   ),
               ],
             ),
+
+            // add one hour to the transaction time to adjust for timezone
             // Display the date and time of the transaction in the trailing position
             trailing: Text(
-              '${DateFormat('dd/MM/yyyy').format(transaction.createdAt)}\n${DateFormat('HH:mm').format(transaction.createdAt)}',
+              '${DateFormat('dd/MM/yyyy').format(transaction.createdAt)}\n${DateFormat('HH:mm').format(transaction.createdAt.add(Duration(hours: 1)))}',
               textAlign: TextAlign.right,
               style: TextStyle(color: textColor),
             ),

@@ -326,7 +326,7 @@ class TransactionDetailsScreen extends StatelessWidget {
                                       Icon(Icons.access_time_rounded),
                                       SizedBox(width: 10),
                                       Text(
-                                        '${DateFormat('HH:mm').format(transaction.createdAt)}',
+                                        '${DateFormat('HH:mm').format(transaction.createdAt.add(Duration(hours: 1)))}',
                                         style: TextStyle(fontSize: 20),
                                       ),
                                     ],

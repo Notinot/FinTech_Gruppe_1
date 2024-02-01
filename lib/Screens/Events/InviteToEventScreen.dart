@@ -72,21 +72,20 @@ class _InviteToEventScreenState extends State<InviteToEventScreen> {
                         itemBuilder: (context, index) {
                           return ListTile(
                             title: Text(snapshot.data![index]),
-                            trailing:
-                                Row(mainAxisSize: MainAxisSize.min, children: [
-                              ElevatedButton(
-                                  onPressed: () {
-                                    ApiService.kickParticipant(
-                                        widget.eventId, snapshot.data![index]);
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            InviteToEventScreen(
-                                          eventId: widget.eventId,
-                                          allowInvite: true,
-                                          iAmParticipant: false,
-                                        ),
+                            trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  ElevatedButton(
+                                      onPressed: (){
+                                        ApiService.kickParticipant(widget.eventId ,snapshot.data![index]);
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => InviteToEventScreen(
+                                              eventId: widget.eventId,
+                                              allowInvite: true,
+                                              iAmParticipant: false,
+                                            ),
                                       ),
                                     );
                                   },

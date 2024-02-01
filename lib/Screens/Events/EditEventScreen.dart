@@ -368,28 +368,28 @@ class _EditEventScreenState extends State<EditEventScreen> {
     ];
 
     return Scaffold(
-      drawer: FutureBuilder<Map<String, dynamic>>(
-        future: ApiService
-            .fetchUserProfile(), // Replace with your actual method to fetch user data
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Drawer(
-              child: ListTile(
-                title: Text('Loading...'),
-              ),
-            );
-          } else if (snapshot.hasError) {
-            return Drawer(
-              child: ListTile(
-                title: Text('Error: ${snapshot.error}'),
-              ),
-            );
-          } else {
-            final Map<String, dynamic> user = snapshot.data!;
-            return AppDrawer(user: user);
-          }
-        },
-      ),
+      // drawer: FutureBuilder<Map<String, dynamic>>(
+      //   future: ApiService
+      //       .fetchUserProfile(), // Replace with your actual method to fetch user data
+      //   builder: (context, snapshot) {
+      //     if (snapshot.connectionState == ConnectionState.waiting) {
+      //       return Drawer(
+      //         child: ListTile(
+      //           title: Text('Loading...'),
+      //         ),
+      //       );
+      //     } else if (snapshot.hasError) {
+      //       return Drawer(
+      //         child: ListTile(
+      //           title: Text('Error: ${snapshot.error}'),
+      //         ),
+      //       );
+      //     } else {
+      //       final Map<String, dynamic> user = snapshot.data!;
+      //       return AppDrawer(user: user);
+      //     }
+      //   },
+      // ),
       appBar: AppBar(
         title: const Text('Edit Event'),
       ),

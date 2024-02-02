@@ -84,6 +84,17 @@ class _AddMoneyScreenState extends State<AddMoneyScreen> {
     final normalizedAmountText = cleanedAmountText.replaceAll(',', '.');
     final parsedAmount = double.tryParse(normalizedAmountText) ?? 0.0;
 
+    //set limit for adding money to 50.000,00
+    if (parsedAmount > 50000) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('You can add maximum 50.000,00 €'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     final success = await ApiService.addMoney(parsedAmount);
 
     if (success) {

@@ -13,7 +13,6 @@ class LoginScreen extends StatefulWidget {
 
   @override
   _LoginScreenState createState() => _LoginScreenState();
-
 }
 
 class _LoginScreenState extends State<LoginScreen> {
@@ -100,6 +99,20 @@ class _LoginScreenState extends State<LoginScreen> {
             builder: (context) => DashboardScreen(),
           ),
         );
+      } else if (response.statusCode == 402) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+                'Account has been locked. Please check your email for a verification code.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        emailController.clear();
+        passwordController.clear();
+        verificationCodeController.clear();
+        setState(() {
+          requiresVerification = false;
+        });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -108,6 +121,14 @@ class _LoginScreenState extends State<LoginScreen> {
             backgroundColor: Colors.red,
           ),
         );
+
+        emailController.clear();
+        passwordController.clear();
+        verificationCodeController.clear();
+        //remove verification code field
+        setState(() {
+          requiresVerification = false;
+        });
       }
     }
   }

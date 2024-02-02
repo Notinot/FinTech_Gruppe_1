@@ -241,10 +241,32 @@ app.post('/login', async (req, res) => {
     // Fetch and include the user's data in the response
     const userData = user[0];
 
+    //set wrong_password_attempts to 0
+    await db.query('UPDATE User SET wrong_password_attempts = 0 WHERE email = ?', [email]);
+
     // Send the token and the user_id to the frontend
     res.json({ message: 'Login successful', token, user_id });
-  } else {
-    res.status(401).json({ message: 'Invalid email or password' });
+
+  } 
+
+  // If the password does not match, set wrong_password_attempts + 1
+  // If wrong_password_attempts > 3, set active = 0 and send email with verification code
+  // if active is already 0 and wrong_password_attempts > 3, dont send another email
+  else if (!passwordMatch){
+    const wrong_password_attempts = user[0].wrong_password_attempts + 1;
+    await db.query('UPDATE User SET wrong_password_attempts = ? WHERE email = ?', [wrong_password_attempts, email]);
+    if (wrong_password_attempts > 3 && user[0].active === 1) {
+      const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+      await db.query('UPDATE User SET active = 0, verification_code = ? WHERE email = ?', [verificationCode, email]);
+      sendVerificationEmail(email, verificationCode);
+      return res.status(402).json({ message: 'Account locked' });
+    }
+    else if (wrong_password_attempts > 3 && user[0].active === 0) {
+      return res.status(402).json({ message: 'Account locked' });
+    }
+    else {
+      return res.status(401).json({ message: 'Invalid email or password' });
+    }
   }
 });
 

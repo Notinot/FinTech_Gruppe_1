@@ -531,7 +531,7 @@ class _EditUserState extends State<EditUser> {
           // Once data is loaded, display the dashboard
           final Map<String, dynamic> user = snapshot.data!;
 
-          user['picture'] = _imageProvider;
+          //user['picture'] = _imageProvider; //AUSKOMMENTIERT. NOTEWENDIG ??????????----
 
           return Scaffold(
             appBar: AppBar(

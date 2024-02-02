@@ -38,13 +38,28 @@ class AppDrawer extends StatelessWidget {
           UserAccountsDrawerHeader(
             accountName: Text(user['username']),
             accountEmail: Text(user['email']),
-            currentAccountPicture: CircleAvatar(
-              backgroundImage: user['picture'] != null &&
-                      user['picture'] is Map<String, dynamic> &&
-                      user['picture']['data'] != null
-                  ? MemoryImage(
-                      Uint8List.fromList(user['picture']['data'].cast<int>()))
-                  : AssetImage('lib/assets/profile_img.png') as ImageProvider,
+            currentAccountPicture: GestureDetector(
+              onTap: () =>
+                  ApiService.navigateWithAnimation(context, EditUser()),
+              child: CircleAvatar(
+                backgroundColor: Colors
+                    .grey, //change background colour when no profile picture
+                backgroundImage: user['picture'] != null &&
+                        user['picture'] is Map<String, dynamic> &&
+                        user['picture']['data'] != null
+                    ? MemoryImage(
+                        Uint8List.fromList(user['picture']['data'].cast<int>()))
+                    : null,
+                radius: 50,
+                child:
+                    user['picture'] != null && user['picture']['data'] != null
+                        ? null
+                        : Text(
+                            '${user["first_name"][0]}${user["last_name"][0]}',
+                            style: TextStyle(
+                                fontSize: 35), // Change the size of initials
+                          ),
+              ),
             ),
           ),
           ListTile(

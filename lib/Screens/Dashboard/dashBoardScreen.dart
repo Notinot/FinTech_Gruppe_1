@@ -15,6 +15,7 @@ import 'package:flutter_application_1/Screens/api_service.dart';
 import 'package:flutter_application_1/Screens/Dashboard/quickActionsMenu.dart';
 import 'package:flutter_application_1/Screens/Dashboard/userProfileSection.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter_application_1/Screens/Friends/FriendsScreen.dart';
 import 'package:http/http.dart' as http;
 import 'package:badges/badges.dart' as Badge;
 import 'package:intl/intl.dart';
@@ -68,7 +69,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   // Fetch events from the backend
   Future<List<Event>> fetchEvents() async {
-
     try {
       const storage = FlutterSecureStorage();
       final token = await storage.read(key: 'token');
@@ -85,45 +85,43 @@ class _DashboardScreenState extends State<DashboardScreen> {
         },
       );
 
-        if (response.statusCode == 200) {
-          final List<dynamic> data = jsonDecode(response.body);
-          final List<dynamic> eventsData = data;
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        final List<dynamic> eventsData = data;
 
-          List<Event> dashboardEvents = [];
-          List<Event> events = eventsData.map((eventData) {
-            return Event.fromJson(eventData as Map<String, dynamic>);
-          }).toList();
+        List<Event> dashboardEvents = [];
+        List<Event> events = eventsData.map((eventData) {
+          return Event.fromJson(eventData as Map<String, dynamic>);
+        }).toList();
 
-          for (var event in events) {
-            if (event.status == 1 && dashboardEvents.length <= 3) {
-              event.checkIfCreator();
-              dashboardEvents.add(event);
-            }
+        for (var event in events) {
+          if (event.status == 1 && dashboardEvents.length <= 3) {
+            event.checkIfCreator();
+            dashboardEvents.add(event);
           }
-
-          dashboardEvents
-              .sort((a, b) => b.datetimeEvent.compareTo(a.datetimeEvent));
-
-          return dashboardEvents.reversed.toList();
-        } else {
-            throw Exception('Failed to load events. Error: ${response.statusCode}');
         }
 
-    }catch(err){
+        dashboardEvents
+            .sort((a, b) => b.datetimeEvent.compareTo(a.datetimeEvent));
+
+        return dashboardEvents.reversed.toList();
+      } else {
+        throw Exception('Failed to load events. Error: ${response.statusCode}');
+      }
+    } catch (err) {
       print(err);
       rethrow;
     }
   }
 
   Future<void> RunEventService() async {
-
     // Event Service
-      const storage = FlutterSecureStorage();
-      final token = await storage.read(key: 'token');
+    const storage = FlutterSecureStorage();
+    final token = await storage.read(key: 'token');
 
-      if (token == null) {
-        throw Exception('Token not found');
-      }
+    if (token == null) {
+      throw Exception('Token not found');
+    }
 
     final res = await http.get(
       Uri.parse('${ApiService.serverUrl}/fetch-all-events'),
@@ -133,17 +131,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
       },
     );
 
-    if(res.statusCode == 200){
-
-      try{
-
+    if (res.statusCode == 200) {
+      try {
         final List<dynamic> data = jsonDecode(res.body);
         final List<dynamic> eventsData = data;
 
         List<Event> events = eventsData.map((eventData) {
           return Event.fromJson(eventData as Map<String, dynamic>);
         }).toList();
-
 
         for (int i = 0; i < events.length; i++) {
           for (int j = i + 1; j < events.length; j++) {
@@ -154,8 +149,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         }
 
         Event.eventService(events);
-
-      }catch(err){
+      } catch (err) {
         print("Error at event-service: $err");
       }
     }
@@ -163,7 +157,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-
     RunEventService();
 
     return FutureBuilder<Map<String, dynamic>>(
@@ -218,33 +211,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Future<void> handleFriendRequest(
-      int friendId, bool accepted, int user_id) async {
-    try {
-      Map<String, dynamic> requestBody = {
-        'friendId': friendId,
-        'accepted': accepted,
-      };
+  // Future<void> handleFriendRequest(
+  //     int friendId, bool accepted, int user_id) async {
+  //   try {
+  //     Map<String, dynamic> requestBody = {
+  //       'friendId': friendId,
+  //       'accepted': accepted,
+  //     };
 
-      final response = await http.post(
-        Uri.parse('${ApiService.serverUrl}/friends/request/$user_id'),
-        body: json.encode(requestBody),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      );
+  //     final response = await http.post(
+  //       Uri.parse('${ApiService.serverUrl}/friends/request/$user_id'),
+  //       body: json.encode(requestBody),
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //     );
 
-      if (response.statusCode == 200) {
-        await fetchPendingFriends();
-      } else {
-        print(
-            'Failed to accept friend request. Status code: ${response.statusCode}');
-      }
-    } catch (e) {
-      print('Error accepting friend request: $e');
-      // You may want to throw an exception here or handle the error accordingly
-    }
-  }
+  //     if (response.statusCode == 200) {
+  //       await fetchPendingFriends();
+  //     } else {
+  //       print(
+  //           'Failed to accept friend request. Status code: ${response.statusCode}');
+  //     }
+  //   } catch (e) {
+  //     print('Error accepting friend request: $e');
+  //     // You may want to throw an exception here or handle the error accordingly
+  //   }
+  // }
 
   Future<void> handleTransactionRequest(
       int TransactionId, String action) async {
@@ -275,10 +268,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  Future<void> handleEventRequest(int recipientId, String recipientUsername, double amount, String message, String eventTitle, int eventId, String action) async {
+  Future<void> handleEventRequest(
+      int recipientId,
+      String recipientUsername,
+      double amount,
+      String message,
+      String eventTitle,
+      int eventId,
+      String action) async {
     try {
-
-      if (await ApiService.joinEvent(recipientUsername, amount, message, eventId) == 200) {
+      if (await ApiService.joinEvent(
+              recipientUsername, amount, message, eventId) ==
+          200) {
         showSuccessSnackBar(context, 'Request accepted successfully');
       } else {
         // Request failed, handle the error
@@ -292,11 +293,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> fetchPendingFriends() async {
     try {
-      final userProfile = await userProfileFuture;
-      final response = await http.get(
-        Uri.parse(
-            '${ApiService.serverUrl}/friends/pending/${userProfile['user_id']}'),
-      );
+      final token = await FlutterSecureStorage().read(key: 'token');
+
+      //final userProfile = await userProfileFuture;
+      final response = await http
+          .get(Uri.parse('${ApiService.serverUrl}/friends/pending/'), headers: {
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Authorization': 'Bearer $token',
+      });
 
       if (response.statusCode == 200) {
         Map<String, dynamic> data = json.decode(response.body);
@@ -366,11 +370,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             'participants': event.participants,
             'max_participants': event.maxParticipants,
             'datetime_event': event.datetimeEvent,
-            'datetime_created' : event.datetimeCreated,
+            'datetime_created': event.datetimeCreated,
             'price': event.price,
             'status': event.status,
             'creator_username': event.creatorUsername,
-            'creator_id' : event.creatorId,
+            'creator_id': event.creatorId,
             'country': event.country,
             'city': event.city,
             'street': event.street,
@@ -471,6 +475,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     String requesterName =
         await ApiService.fetchFriendUsername(friendRequest['requester_id']);
 
+    const storage = FlutterSecureStorage();
+    final token = await storage.read(key: 'token');
+
+    if (token == null) {
+      throw Exception('Token not found');
+    }
+
     return PopupMenuItem<String>(
       key: Key(friendRequest['requester_id'].toString()),
       child: Row(
@@ -484,11 +495,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
           IconButton(
             icon: Icon(Icons.check, color: Colors.green),
             onPressed: () {
-              handleFriendRequest(
-                friendRequest['requester_id'],
-                true,
-                user['user_id'],
-              ).then((_) {
+              handleFriendRequestResponse(
+                      userID: friendRequest['requester_id'],
+                      accepted: true,
+                      //user['user_id'],
+                      token: token)
+                  .then((_) {
                 items.removeWhere((item) =>
                     item.key == Key(friendRequest['requester_id'].toString()));
                 Navigator.pop(context);
@@ -499,11 +511,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
           IconButton(
             icon: Icon(Icons.close, color: Colors.red),
             onPressed: () {
-              handleFriendRequest(
-                friendRequest['requester_id'],
-                false,
-                user['user_id'],
-              ).then((_) {
+              handleFriendRequestResponse(
+                      userID: friendRequest['requester_id'],
+                      accepted: false,
+                      // user['user_id'],
+                      token: token)
+                  .then((_) {
                 items.removeWhere((item) =>
                     item.key == Key(friendRequest['requester_id'].toString()));
                 Navigator.pop(context);
@@ -577,7 +590,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     Map<String, dynamic> eventRequest,
     Map<String, dynamic> user,
   ) async {
-
     int creatorId = eventRequest['creator_id'];
     String creatorUsername = eventRequest['creator_username'];
     double amount = eventRequest['price'];
@@ -605,8 +617,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         creatorId: creatorId,
         isCreator: false,
         user_event_status: eventRequest['user_event_status']);
-
-
 
     return PopupMenuItem<String>(
       key: Key(eventId.toString()),

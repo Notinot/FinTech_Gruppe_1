@@ -32,7 +32,7 @@ const db = mysql.createPool({
   password: 'ER0nIAbQy5qyAeSd4ZCV',
   database: 'btxppofwkgo3xl10tfwy',*/
 
-  host: '87.144.250.22',
+  host: '80.130.111.254',
   user: 'payfriendz',
   password: 'payfriendz',
   database: 'Payfriendz',

@@ -12,7 +12,7 @@ class UserProfileSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Image image;
+    //Image image;
 
     void handleCircleAvatarTap() {
       // Handle the button click event here
@@ -21,26 +21,34 @@ class UserProfileSection extends StatelessWidget {
     }
 
     // Use a fallback image if the image data is not available in the JSON data
-    image = Image.asset(
-      "lib/assets/profile_image.png",
-      width: 40,
-      height: 40,
-    );
+    // image = Image.asset(
+    //   "lib/assets/profile_image.png",
+    //   width: 40,
+    //   height: 40,
+    // );
 
     return Column(
       children: <Widget>[
         GestureDetector(
           onTap: handleCircleAvatarTap,
           child: CircleAvatar(
+            backgroundColor: Theme.of(context).primaryColor,
             backgroundImage: user['picture'] != null &&
                     user['picture'] is Map<String, dynamic> &&
                     user['picture']['data'] != null
                 ? MemoryImage(
                     Uint8List.fromList(user['picture']['data'].cast<int>()))
-                : image.image,
+                : null,
             radius: 50,
-            //   backgroundColor: Colors.grey, // Fallback background color
-            //   backgroundColor: Theme.of(context).primaryColor,
+            child: user['picture'] != null && user['picture']['data'] != null
+                ? null
+                : Text(
+                    '${user["first_name"][0]}${user["last_name"][0]}',
+                    style: TextStyle(
+                        fontSize: 55,
+                        color: Theme.of(context)
+                            .secondaryHeaderColor), //change size of initiales
+                  ),
           ),
         ),
         const SizedBox(height: 16),

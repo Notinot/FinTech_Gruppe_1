@@ -13,17 +13,26 @@ import 'package:flutter_application_1/Screens/Money/SendMoneyScreen.dart';
 import '../api_service.dart';
 
 /* To-do:
-JWT
-weniger api Abfragen
 überall gleiches no profile Picture Icon (Dashboard, AppDrawer, Transactions, FriendScreen user search)
+  -Transactions Details -> gleiche wie bei FriendSearchBar wenn unbekannter User
+  -HomeScreen -> ProfilePicture or Initialien
+  -AppDrawer auch (wenn man aufs Bild drückt dann auf Profile Informationen navigieren??)
+
+auch alle Buttons mit Theme.of(context).primaryColor ?  und Text dann so ähnlich
+
 
 adding friends auch wenn declined
+
+von FriendSearch auch money send/request können?
 
 FriendItem Send/request Money Icon ändern
 
 schauen wo accept/decline submit/cancel überall ist (gleiche richtung, farbe usw)
 
 show transaction history of Friend and yourself
+
+
+
   
 
 
@@ -552,35 +561,6 @@ class FriendItem extends StatelessWidget {
     );
   }
 
-  void handleFriendRequestResponse(
-      {required int userID,
-      required bool accepted,
-      required String? token}) async {
-    try {
-      Map<String, dynamic> requestBody = {
-        'friendId': userID, //hier friendID senden
-        'accepted': accepted,
-      };
-      final response = await http.post(
-        Uri.parse('${ApiService.serverUrl}/friends/request/'),
-        body: json.encode(requestBody),
-        headers: {
-          'Content-Type': 'application/json; charset=UTF-8',
-          'Authorization': 'Bearer $token',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        //nur updaten wenn es keine Probleme mit DB gab?
-      } else {
-        print(
-            'Failed to accept friend request. Status code: ${response.statusCode}');
-      }
-    } catch (e) {
-      print('Error handling friend request: $e');
-    }
-  }
-
   Future<dynamic> requestOrSendMoneyDialog(BuildContext context) {
     return showDialog(
       context: context,
@@ -625,6 +605,35 @@ class FriendItem extends StatelessWidget {
         );
       },
     );
+  }
+}
+
+Future<void> handleFriendRequestResponse(
+    {required int userID,
+    required bool accepted,
+    required String? token}) async {
+  try {
+    Map<String, dynamic> requestBody = {
+      'friendId': userID, //hier friendID senden
+      'accepted': accepted,
+    };
+    final response = await http.post(
+      Uri.parse('${ApiService.serverUrl}/friends/request/'),
+      body: json.encode(requestBody),
+      headers: {
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      //nur updaten wenn es keine Probleme mit DB gab?
+    } else {
+      print(
+          'Failed to accept friend request. Status code: ${response.statusCode}');
+    }
+  } catch (e) {
+    print('Error handling friend request: $e');
   }
 }
 

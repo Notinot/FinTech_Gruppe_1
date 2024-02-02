@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Screens/Dashboard/appDrawer.dart';
 import 'package:flutter_application_1/Screens/Dashboard/dashBoardScreen.dart';
 import 'package:flutter_application_1/Screens/Events/EditEventScreen.dart';
+import 'package:flutter_application_1/Screens/Money/TransactionHistoryScreen.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
@@ -39,28 +40,6 @@ class _SendMoneyScreenState extends State<SendMoneyScreen> {
         : null;
 
     return Scaffold(
-      drawer: FutureBuilder<Map<String, dynamic>>(
-        future: ApiService
-            .fetchUserProfile(), // Replace with your actual method to fetch user data
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Drawer(
-              child: ListTile(
-                title: Text('Loading...'),
-              ),
-            );
-          } else if (snapshot.hasError) {
-            return Drawer(
-              child: ListTile(
-                title: Text('Error: ${snapshot.error}'),
-              ),
-            );
-          } else {
-            final Map<String, dynamic> user = snapshot.data!;
-            return AppDrawer(user: user);
-          }
-        },
-      ),
       appBar: AppBar(
         title: const Text('Send Money'),
       ),
@@ -139,6 +118,18 @@ class _SendMoneyScreenState extends State<SendMoneyScreen> {
                   print(amount);
                   final message = messageController.text;
 
+                  //message limit of 250 characters
+                  if (message.length > 250) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content:
+                            Text('Message limit of 250 characters reached'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                    return;
+                  }
+
                   // Remove euro sign, periods and spaces
                   final cleanedAmountText = amount
                       .replaceAll('€', '')
@@ -154,7 +145,16 @@ class _SendMoneyScreenState extends State<SendMoneyScreen> {
                       double.tryParse(normalizedAmountText) ?? 0.0;
 
                   print(parsedAmount);
-
+                  //set limit for adding money to 50.000,00
+                  if (parsedAmount > 50000) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Limit of 50.000,00€ reached'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                    return;
+                  }
                   if (recipient.trim().isEmpty) {
                     setState(() {
                       recipientBorderColor = Colors.red;
@@ -236,6 +236,12 @@ class _SendMoneyScreenState extends State<SendMoneyScreen> {
                         '€$parsedAmount sent successfully to $recipient');
 
                     Navigator.pop(context);
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => TransactionHistoryScreen(),
+                      ),
+                    );
                   } else {
                     // Show error snackbar
                     showErrorSnackBar(context, 'Failed to send money');

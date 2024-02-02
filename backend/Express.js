@@ -411,7 +411,7 @@ app.post('/friends/request/', authenticateToken, async (req, res) => {
 });
 
 ///add friend (sending friend request)
-//names of routes are kinda misleading, needs to be updated
+//names of routes are kinda misleading, maybe update
 app.post('/friends/add',authenticateToken, async (req, res) => {
   const user_id = req.user.userId;
   const { friendUsername } = req.body;
@@ -428,14 +428,28 @@ app.post('/friends/add',authenticateToken, async (req, res) => {
       ` 
           SELECT * 
           FROM Friendship 
-          WHERE (requester_id = ? AND addressee_id = ?)
-          OR    (requester_id = ? AND addressee_id = ?)
-          `
+          WHERE ((requester_id = ? AND addressee_id = ?)
+          OR    (requester_id = ? AND addressee_id = ?)) 
+          `  //AND status != 'declined'//added this line
       , [user_id, friendId,
         friendId, user_id]);
 
+       //HIER DANN TESTEN OB status declined ist und wenn ja, Entry löschen bevor man einen neuen macht
+      if(friends[0] !=null ){
+        console.log('entry found');
+        if(friends[0]['status']=='declined'){
+          console.log('declined: deleting entry')
+            //Delete entry
+            await db.query(`
+            DELETE FROM Friendship
+            WHERE (requester_id = ? AND addressee_id = ?) 
+                OR (requester_id = ? AND addressee_id = ?)
+            `,[user_id, friendId,
+              friendId, user_id]);
+        }
+      }
     //when they are not already friends
-    if (friends[0] == null) {
+    if (friends[0] == null || friends[0]['status']=='declined') {
       const query = `
       INSERT INTO Friendship 
       (requester_id, addressee_id, status, request_time) 
@@ -588,11 +602,11 @@ app.post('/users/', authenticateToken, async (req, res) => {
           return { ...mUser, status: 'friend' , request_time: matchingEntry['request_time']};
 
         case 'declined':
-          if (callerIsRequester) {
-            return null; //caller got declined, dont show. (maybe show after cooldown)
-          } else {
-            return { user_id: mUser['user_id'],username : mUser['username'], status: 'user' };//so wie new user
-          }
+          // if (callerIsRequester) {
+          //   return { user_id: mUser['user_id'],username : mUser['username'], status: 'user' }; //caller got declined, so wie new user anzeigen
+          // } else {
+          // }
+          return { user_id: mUser['user_id'],username : mUser['username'], status: 'user' };//so wie new user
         case 'blocked'://so oder so nicht anzeigen?
           return null;
 

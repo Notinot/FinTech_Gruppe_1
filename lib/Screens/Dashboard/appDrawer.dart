@@ -42,8 +42,8 @@ class AppDrawer extends StatelessWidget {
               onTap: () =>
                   ApiService.navigateWithAnimation(context, EditUser()),
               child: CircleAvatar(
-                backgroundColor: Colors
-                    .grey, //change background colour when no profile picture
+                // backgroundColor: Colors
+                //     .grey, //change background colour when no profile picture
                 backgroundImage: user['picture'] != null &&
                         user['picture'] is Map<String, dynamic> &&
                         user['picture']['data'] != null
@@ -51,14 +51,14 @@ class AppDrawer extends StatelessWidget {
                         Uint8List.fromList(user['picture']['data'].cast<int>()))
                     : null,
                 radius: 50,
-                child:
-                    user['picture'] != null && user['picture']['data'] != null
-                        ? null
-                        : Text(
-                            '${user["first_name"][0]}${user["last_name"][0]}',
-                            style: TextStyle(
-                                fontSize: 35), // Change the size of initials
-                          ),
+                child: user['picture'] != null &&
+                        user['picture']['data'] != null
+                    ? null
+                    : Text(
+                        '${user["first_name"][0].toUpperCase()}${user["last_name"][0].toUpperCase()}',
+                        style: TextStyle(
+                            fontSize: 50 * 0.8), // Change the size of initials
+                      ),
               ),
             ),
           ),

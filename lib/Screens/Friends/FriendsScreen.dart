@@ -13,27 +13,13 @@ import 'package:flutter_application_1/Screens/Money/SendMoneyScreen.dart';
 import '../api_service.dart';
 
 /* To-do:
-überall gleiches no profile Picture Icon (Dashboard, AppDrawer, Transactions, FriendScreen user search)
-  -Transactions Details -> gleiche wie bei FriendSearchBar wenn unbekannter User
-  -HomeScreen -> ProfilePicture or Initialien
-  -AppDrawer auch (wenn man aufs Bild drückt dann auf Profile Informationen navigieren??)
-
-auch alle Buttons mit Theme.of(context).primaryColor ?  und Text dann so ähnlich
-
-
-adding friends auch wenn declined
+EditProfilePicture Icon ändern?
 
 von FriendSearch auch money send/request können?
-
-FriendItem Send/request Money Icon ändern
 
 schauen wo accept/decline submit/cancel überall ist (gleiche richtung, farbe usw)
 
 show transaction history of Friend and yourself
-
-
-
-  
 
 
 pendingFriends iwie anzeigen wenn mehr als 3 da seind (Icon mit arrow down, number etc)
@@ -522,7 +508,8 @@ class FriendItem extends StatelessWidget {
               requestOrSendMoneyDialog(context);
             },
             icon: Icon(
-              Icons.attach_money,
+              Icons.add,
+              //Icons.currency_exchange_outlined,
               size: 35,
             ));
 
@@ -678,14 +665,12 @@ class BlockedUserItem extends StatelessWidget {
                       child: Text('Unblock'),
                       onPressed: () {
                         handleUnblockUser(userID: user.userID, token: token);
-                        //I mean, dadurch wird das Pop up & der Info Screen geschlossen
-                        //und der Context für navigation ist wieder richtig. Gibt vllt ne bessere Lösung
-                        Navigator.of(context).pop();
-                        Navigator.of(context).pop();
+                        Navigator.pop(context);
                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => FriendsScreen(),
+                            builder: (context) =>
+                                BlockedUsersScreen(token: token),
                           ),
                         );
                         //callbackFunction();
@@ -800,7 +785,7 @@ class FriendInfoScreen extends StatelessWidget {
                                         userID: friend.userID, token: token);
                                     //I mean, dadurch wird das Pop up & der Info Screen geschlossen
                                     //und der Context für navigation ist wieder richtig. Gibt vllt ne bessere Lösung
-                                    Navigator.of(context).pop();
+                                    // Navigator.of(context).pop();
                                     Navigator.of(context).pop();
                                     Navigator.pushReplacement(
                                       context,
@@ -1339,11 +1324,12 @@ class ShowProfilePicture extends StatelessWidget {
       child: CircleAvatar(
         radius: size,
         backgroundImage: image != null ? Image.memory(image!).image : null,
-        backgroundColor: Colors.grey,
+        //backgroundColor:
+        // Colors.grey,
         child: image == null
             ? Text(
                 '${initial.toUpperCase()}',
-                style: TextStyle(fontSize: size),
+                style: TextStyle(fontSize: size * 0.8),
               )
             : null,
       ),

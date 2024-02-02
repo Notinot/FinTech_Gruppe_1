@@ -32,7 +32,7 @@ class UserProfileSection extends StatelessWidget {
         GestureDetector(
           onTap: handleCircleAvatarTap,
           child: CircleAvatar(
-            backgroundColor: Theme.of(context).primaryColor,
+            //backgroundColor: Theme.of(context).primaryColor,
             backgroundImage: user['picture'] != null &&
                     user['picture'] is Map<String, dynamic> &&
                     user['picture']['data'] != null
@@ -43,11 +43,11 @@ class UserProfileSection extends StatelessWidget {
             child: user['picture'] != null && user['picture']['data'] != null
                 ? null
                 : Text(
-                    '${user["first_name"][0]}${user["last_name"][0]}',
+                    '${user["first_name"][0].toUpperCase()}${user["last_name"][0].toUpperCase()}',
                     style: TextStyle(
-                        fontSize: 55,
-                        color: Theme.of(context)
-                            .secondaryHeaderColor), //change size of initiales
+                      fontSize: 50 * 1,
+                      //color: Theme.of(context).secondaryHeaderColor
+                    ), //change size of initiales
                   ),
           ),
         ),

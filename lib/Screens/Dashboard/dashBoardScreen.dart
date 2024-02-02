@@ -19,6 +19,7 @@ import 'package:flutter_application_1/Screens/Friends/FriendsScreen.dart';
 import 'package:http/http.dart' as http;
 import 'package:badges/badges.dart' as Badge;
 import 'package:intl/intl.dart';
+import 'package:cron/cron.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({Key? key}) : super(key: key);
@@ -115,6 +116,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> RunEventService() async {
+
     // Event Service
     const storage = FlutterSecureStorage();
     final token = await storage.read(key: 'token');
@@ -157,7 +159,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    RunEventService();
+
+
+    // Timer? timer;
+    // timer = Timer.periodic(Duration(seconds: 60), (Timer t) => RunEventService());
+    // RunEventService();
 
     return FutureBuilder<Map<String, dynamic>>(
       future: userProfileFuture,

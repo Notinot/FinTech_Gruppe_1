@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Screens/Dashboard/appDrawer.dart';
 import 'package:flutter_application_1/Screens/Dashboard/dashBoardScreen.dart';
 import 'package:flutter_application_1/Screens/Events/EditEventScreen.dart';
+import 'package:flutter_application_1/Screens/Money/TransactionHistoryScreen.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
@@ -235,6 +236,12 @@ class _SendMoneyScreenState extends State<SendMoneyScreen> {
                         '€$parsedAmount sent successfully to $recipient');
 
                     Navigator.pop(context);
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => TransactionHistoryScreen(),
+                      ),
+                    );
                   } else {
                     // Show error snackbar
                     showErrorSnackBar(context, 'Failed to send money');

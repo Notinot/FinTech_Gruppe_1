@@ -229,6 +229,12 @@ class _RequestMoneyScreenState extends State<RequestMoneyScreen> {
 
                     //navigate to transaction history
                     Navigator.pop(context);
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => TransactionHistoryScreen(),
+                      ),
+                    );
                   } else {
                     // Show error snackbar
                     showErrorSnackBar(context, 'Error requesting money');

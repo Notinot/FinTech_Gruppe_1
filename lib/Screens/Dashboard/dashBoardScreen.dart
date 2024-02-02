@@ -375,6 +375,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             'status': event.status,
             'creator_username': event.creatorUsername,
             'creator_id': event.creatorId,
+            'recurrence_type': event.recurrenceType,
+            'recurrence_interval': event.recurrenceInterval,
             'country': event.country,
             'city': event.city,
             'street': event.street,

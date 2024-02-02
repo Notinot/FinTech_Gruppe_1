@@ -1601,11 +1601,6 @@ app.post('/join-event', authenticateToken, async (req, res) => {
             return res.status(401).json({ message: 'Event is already joined' });
        }
 
-/*
-       const [checkSpace] = await db.query('SELECT * FROM Event WHERE id = ?', [eventId]);
-       const maxParticipants = checkSpace[0].max_participants;
-       const currentParticipants = checkSpace[0].
-       */
 
     const [joinQuery] = await db.query('UPDATE User_Event SET status = 1 WHERE event_id = ? AND user_id = ?', [eventId, senderId]);
     console.log(joinQuery);
@@ -1702,6 +1697,7 @@ app.post('/cancel-event', authenticateToken, async (req, res) => {
     // Set Event Status to canceled
     const creatorUsername = event[0].creator_username;
     const eventTitle = event[0].title;
+    const eventPrice = event[0].price;
 
 
 
@@ -1715,6 +1711,7 @@ app.post('/cancel-event', authenticateToken, async (req, res) => {
 
     // Send Email to participants
     const participantsUsername = [];
+    const participantsId = [];
 
     // Loop through the participants and query their data
     for (let i = 0; i < participants.length; i++) {
@@ -1727,7 +1724,57 @@ app.post('/cancel-event', authenticateToken, async (req, res) => {
       }
     }
 
+    // Loop through the participants and query their data
+        for (let i = 0; i < participants.length; i++) {
+          const [participantId] = await db.query('SELECT User.user_id FROM User WHERE User.email = ?', [participants[i]]);
+
+
+          // Check if participant data is found
+          if (participantId) {
+            participantsId.push(participantId);
+          }
+        }
+
+
+
     for(let i = 0; i < participants.length; i++){
+
+
+        if(eventPrice > 0){
+
+                    const senderBalance = await getBalance(senderId);
+                    console.log(senderBalance);
+
+                    /* // Case if User does not have enough money to apy all participants
+                    if(senderBalance < eventPrice){
+
+                        console.log("User does not have enough money to refund the event costs")
+                        return res.status(402).json({ message: ' User does not have enough money to refund the event costs  ' });
+                    }
+                    */
+
+                    const message = "Event costs paid back";
+
+                    await db.query('INSERT INTO Transaction (sender_id, receiver_id, amount, transaction_type, created_at, message, processed, event_id) VALUES (?, ?, ?, ?, NOW(), ?, 1, ?);',
+                    [senderId,
+                     participantsId[i][0].user_id,
+                     eventPrice,
+                     'Payment',
+                     message,
+                     eventId]);
+
+
+                    await updateBalance(senderId, -eventPrice);
+                    await updateBalance(participantsId[i][0].user_id, +eventPrice);
+
+                    const [kickParticipant] = await db.query(`
+                                         UPDATE User_Event SET User_Event.status = 0
+                                         WHERE User_Event.event_id = ?
+                                         AND
+                                         User_Event.user_id = ?;
+                                       `, [eventId, participantsId[i][0].user_id]);
+                }
+
 
         sendEventCanceledEmail(participants[i], participantsUsername[i][0].username, creatorUsername, eventTitle);
     }
@@ -1766,23 +1813,65 @@ app.post('/kick-participant',  authenticateToken, async (req, res) => {
         const [eventInformation] = await db.query(`
             SELECT
                 User.username AS creator_username,
-                Event.title
-                FROM User
-                JOIN
+                Event.*,
+                User_Event.status AS user_event_status
+            FROM
+                User
+            JOIN
                 Event ON Event.creator_id = User.user_id
-                WHERE
+            JOIN
+                User_Event ON Event.id = User_Event.event_id
+            WHERE
                 Event.id = ?
                 AND
                 User.user_id = ?;
             `, [eventId, senderId]);
 
 
-        const [kickParticipant] = await db.query(`
-                     UPDATE User_Event SET User_Event.status = 0
-                     WHERE User_Event.event_id = ?
-                     AND
-                     User_Event.user_id = ?;
-                   `, [eventId, participantId]);
+        const eventPrice = eventInformation[0].price;
+        const user_event_status = eventInformation[0].user_event_status;
+
+        if(user_event_status != 1){
+            return res.status(401).json({ message: ' User already kicked from the Event' });
+        }
+
+        if(eventPrice == 0){
+
+            const [kickParticipant] = await db.query(`
+                                 UPDATE User_Event SET User_Event.status = 0
+                                 WHERE User_Event.event_id = ?
+                                 AND
+                                 User_Event.user_id = ?;
+                               `, [eventId, participantId]);
+        }
+
+        if(eventPrice > 0){
+
+            const senderBalance = await getBalance(senderId);
+            console.log(senderBalance);
+
+            if(senderBalance < eventPrice){
+
+                console.log("User does not have enough money to refund the event costs")
+                return res.status(402).json({ message: ' User does not have enough money to refund the event costs  ' });
+            }
+
+            const message = "Event costs paid back";
+
+            await db.query('INSERT INTO Transaction (sender_id, receiver_id, amount, transaction_type, created_at, message, processed, event_id) VALUES (?, ?, ?, ?, NOW(), ?, 1, ?);',
+            [senderId, participantId, eventPrice, 'Payment', message, eventId]);
+
+
+            await updateBalance(senderId, -eventPrice);
+            await updateBalance(participantId, +eventPrice);
+
+            const [kickParticipant] = await db.query(`
+                                 UPDATE User_Event SET User_Event.status = 0
+                                 WHERE User_Event.event_id = ?
+                                 AND
+                                 User_Event.user_id = ?;
+                               `, [eventId, participantId]);
+        }
 
         // Decrease Participant number by one
         const [decreaseParticipants] = await db.query('UPDATE Event SET participants = participants - 1 WHERE id = ?', [eventId]);
@@ -2691,7 +2780,7 @@ function sendKickedFromEvent(recipientEmail, recipientUsername, creatorUsername,
       <body>
         <div class="container">
           <div class="header">
-            <h1>Event canceled</h1>
+            <h1>Kicked from event</h1>
           </div>
           <div class="del-box email-text">
             <h2 class="code">${creatorUsername} kicked you from the Event</h2>

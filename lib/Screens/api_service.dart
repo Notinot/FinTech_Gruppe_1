@@ -563,7 +563,7 @@ class ApiService {
     }
   }
 
-  static Future<bool> kickParticipant(
+  static Future<int> kickParticipant(
       int eventId, String participantUsername) async {
     try {
       const storage = FlutterSecureStorage();
@@ -583,14 +583,23 @@ class ApiService {
       if (kickParticipantResponse.statusCode == 200) {
         print(
             'kickParticipant function: Participant successfully kicked from the event');
-        return true;
-      } else {
+        return 200;
+      }
+      else if (kickParticipantResponse.statusCode == 401){
+        print('User is already kicked from the event');
+        return 401;
+      }
+      else if (kickParticipantResponse.statusCode == 402){
+        print('Event Creator does not have enough money to refund the event costs to the participant');
+        return 402;
+      }
+      else {
         print('kickParticipant function: Kicking participant failed');
-        return false;
+        return 400;
       }
     } catch (e) {
       print('kickParticipant function: Kicking participant failed: $e');
-      return false;
+      return 400;
     }
   }
 

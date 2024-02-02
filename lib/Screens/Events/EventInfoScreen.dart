@@ -418,7 +418,7 @@ class EventInfoScreen extends StatelessWidget {
         }
         else{
           // User is not joined but event is full
-          return ElevatedButton(
+          return ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
                 textStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
             onPressed: () {
@@ -447,7 +447,10 @@ class EventInfoScreen extends StatelessWidget {
                             Navigator.of(context).pop();
                             showErrorSnackBar(context, 'Removing event failed!');
                           } else if (result == 1) {
-                            Navigator.of(context).pop();
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => EventScreen()),
+                            );
                             showSuccessSnackBar(
                                 context, 'Removing event was successful!');
                           }
@@ -459,9 +462,9 @@ class EventInfoScreen extends StatelessWidget {
                 },
               );
             },
-            child: Text('Remove'),
+            label: Text('Remove'),
+            icon: Icon(Icons.disabled_visible_rounded),
           );
-
         }
 
       }

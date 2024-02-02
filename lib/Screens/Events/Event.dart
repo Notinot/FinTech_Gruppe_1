@@ -83,6 +83,7 @@ class Event {
     'Professional': Icons.business_center_rounded,
   };
 
+
   IconData getIconForCategory(String category) {
     // Check if the category exists in the map, otherwise use a default icon
     if (status != 1) {
@@ -91,9 +92,14 @@ class Event {
         DateTime.now().millisecondsSinceEpoch) {
       return Icons.update_disabled_rounded;
     }
-
-    return iconMap.containsKey(category) ? iconMap[category]! : Icons.category;
+    else if(status == 1 && !isCreator && user_event_status == 2 && participants >= maxParticipants){
+      return Icons.disabled_visible_rounded;
+    }
+    else{
+      return iconMap.containsKey(category) ? iconMap[category]! : Icons.category;
+    }
   }
+
 
   Future<void> checkIfCreator() async {
 

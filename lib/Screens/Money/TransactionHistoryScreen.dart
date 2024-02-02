@@ -260,7 +260,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                         return AlertDialog(
                           title: const Text("Info"),
                           content: const Text(
-                              "This is the Login Screen. Here you can login with your email and password. If you don't have an account yet, you can register by clicking on the link below."),
+                              "This is your transaction history. \n\nYou can search for transactions by username, message, or type.\n\n You can also sort transactions by date, amount, type, or event.\n\n Click on a transaction to view more details."),
                           actions: [
                             TextButton(
                                 onPressed: () {

@@ -61,6 +61,8 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     });
     searchBar = search_bar.SearchBar(
       showClearButton: true,
+      closeOnSubmit: false,
+      clearOnSubmit: false,
       inBar: true,
       setState: setState,
       onSubmitted: onSubmitted,

@@ -38,9 +38,10 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     'Amount (↓)',
     // 'User (A-Z)',
     // 'User (Z-A)',
-    // 'Requests',
-    // 'Payments',
-    // 'Deposits',
+    'Requests',
+    'Payments',
+    'Deposits',
+    'Event',
   ];
   List<String> sortOptions2 = [
     'Requests',
@@ -85,12 +86,22 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
       allTransactions.sort((a, b) => a.amount.compareTo(b.amount));
     } else if (sortOrder == 'Amount (↓)') {
       allTransactions.sort((a, b) => b.amount.compareTo(a.amount));
-    } else if (sortOrder == 'User (A-Z)') {
-      allTransactions
-          .sort((a, b) => a.senderUsername.compareTo(b.senderUsername));
-    } else if (sortOrder == 'User (Z-A)') {
-      allTransactions
-          .sort((a, b) => b.senderUsername.compareTo(a.senderUsername));
+    } else if (sortOrder == 'Requests') {
+      allTransactions = originalTransactions
+          .where((transaction) => transaction.transactionType == 'Request')
+          .toList();
+    } else if (sortOrder == 'Payments') {
+      allTransactions = originalTransactions
+          .where((transaction) => transaction.transactionType == 'Payment')
+          .toList();
+    } else if (sortOrder == 'Deposits') {
+      allTransactions = originalTransactions
+          .where((transaction) => transaction.transactionType == 'Deposit')
+          .toList();
+    } else if (sortOrder == 'Event') {
+      allTransactions = originalTransactions
+          .where((transaction) => transaction.eventId != null)
+          .toList();
     }
 
     // Update the Future to reflect the new sorted list
@@ -597,7 +608,7 @@ class TransactionItem extends StatelessWidget {
             : (iconColor = Colors.red, textColor = null);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 10),
+      padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 10),
       child: Hero(
         tag:
             'transaction_${transaction.transactionId}', // Unique tag for Hero transition

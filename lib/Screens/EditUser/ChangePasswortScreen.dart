@@ -151,75 +151,78 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              ('Confirming your identity'),
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16.0),
-            const Text(
-              ('Please enter the verification code'),
-              style: TextStyle(
-                fontSize: 18,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              const Text(
+                ('Confirming your identity'),
+                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
               ),
-            ),
-            const SizedBox(height: 40.0),
-            OtpTextField(
-              numberOfFields: 6,
-              //      borderColor: Color(0xFF512DA8),
-              showFieldAsBox: true,
-              keyboardType: TextInputType.number,
-              //       focusedBorderColor: Colors.blue,
-              autoFocus: true,
-              onSubmit: (String verifcationCode) {
-                if (double.tryParse(verifcationCode) == null) {
-                  showSnackBar(
-                      isError: true,
-                      message: 'Verification code needs to consist of digits');
-                  return;
-                }
-                code = verifcationCode;
-              },
-            ),
-            const SizedBox(height: 40.0),
-            TextField(
-              controller: newPasswordController,
-              obscureText: true,
-              decoration: InputDecoration(
-                labelText: 'New Password',
-                border: const OutlineInputBorder(),
-                errorText: newPasswordError,
-              ),
-            ),
-            const SizedBox(height: 16.0),
-            TextField(
-              controller: newPasswordAgainController,
-              obscureText: true,
-              decoration: InputDecoration(
-                labelText: 'Confirm Password',
-                border: const OutlineInputBorder(),
-                errorText: newPasswordAgainError,
-              ),
-            ),
-            const SizedBox(height: 40.0),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                //     primary: Colors.blue, // Button background color
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
-              ),
-              onPressed: handleChangePassword,
-              child: const Text(
-                'Confirm',
+              const SizedBox(height: 16.0),
+              const Text(
+                ('Please enter the verification code'),
                 style: TextStyle(
-                  fontSize: 18.0,
-                  //         color: Colors.white, // Button text color
+                  fontSize: 18,
                 ),
               ),
-            ),
-          ],
+              const SizedBox(height: 40.0),
+              OtpTextField(
+                numberOfFields: 6,
+                //      borderColor: Color(0xFF512DA8),
+                showFieldAsBox: true,
+                keyboardType: TextInputType.number,
+                //       focusedBorderColor: Colors.blue,
+                autoFocus: true,
+                onSubmit: (String verifcationCode) {
+                  if (double.tryParse(verifcationCode) == null) {
+                    showSnackBar(
+                        isError: true,
+                        message:
+                            'Verification code needs to consist of digits');
+                    return;
+                  }
+                  code = verifcationCode;
+                },
+              ),
+              const SizedBox(height: 40.0),
+              TextField(
+                controller: newPasswordController,
+                obscureText: true,
+                decoration: InputDecoration(
+                  labelText: 'New Password',
+                  border: const OutlineInputBorder(),
+                  errorText: newPasswordError,
+                ),
+              ),
+              const SizedBox(height: 16.0),
+              TextField(
+                controller: newPasswordAgainController,
+                obscureText: true,
+                decoration: InputDecoration(
+                  labelText: 'Confirm Password',
+                  border: const OutlineInputBorder(),
+                  errorText: newPasswordAgainError,
+                ),
+              ),
+              const SizedBox(height: 40.0),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  //     primary: Colors.blue, // Button background color
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+                ),
+                onPressed: handleChangePassword,
+                child: const Text(
+                  'Confirm',
+                  style: TextStyle(
+                    fontSize: 18.0,
+                    //         color: Colors.white, // Button text color
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

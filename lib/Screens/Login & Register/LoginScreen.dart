@@ -62,6 +62,14 @@ class _LoginScreenState extends State<LoginScreen> {
       // Call checkUserActiveStatus to determine if the user requires verification
       await checkUserActiveStatus(email);
       if (accountLocked) {
+        accountLocked = false;
+        //navigate to forgot password screen
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => ChangePasswordScreen(email: email)),
+        );
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
@@ -70,19 +78,13 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         );
 
-        //navigate to forgot password screen
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) => ChangePasswordScreen(email: email)),
-        );
-
         emailController.clear();
         passwordController.clear();
         verificationCodeController.clear();
+
         return;
       }
-      accountLocked = false;
+
       if (requiresVerification) {
         final verificationCode = verificationCodeController.text;
         if (verificationCode.isEmpty) {
@@ -143,6 +145,11 @@ class _LoginScreenState extends State<LoginScreen> {
         emailController.clear();
         passwordController.clear();
         verificationCodeController.clear();
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => ChangePasswordScreen(email: email)),
+        );
         setState(() {
           requiresVerification = false;
         });

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class AccountSummary extends StatelessWidget {
   final double balance; // Replace with actual user data
@@ -26,7 +27,7 @@ class AccountSummary extends StatelessWidget {
               ),
             ),
             Text(
-              '\€${balance.toStringAsFixed(2)}',
+              '${NumberFormat("#,##0.00", "de_DE").format(balance)} €',
               style: const TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,

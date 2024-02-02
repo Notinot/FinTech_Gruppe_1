@@ -1697,6 +1697,7 @@ app.post('/cancel-event', authenticateToken, async (req, res) => {
     // Set Event Status to canceled
     const creatorUsername = event[0].creator_username;
     const eventTitle = event[0].title;
+    const eventPrice = event[0].price;
 
 
 
@@ -1710,6 +1711,7 @@ app.post('/cancel-event', authenticateToken, async (req, res) => {
 
     // Send Email to participants
     const participantsUsername = [];
+    const participantsId = [];
 
     // Loop through the participants and query their data
     for (let i = 0; i < participants.length; i++) {
@@ -1722,7 +1724,57 @@ app.post('/cancel-event', authenticateToken, async (req, res) => {
       }
     }
 
+    // Loop through the participants and query their data
+        for (let i = 0; i < participants.length; i++) {
+          const [participantId] = await db.query('SELECT User.user_id FROM User WHERE User.email = ?', [participants[i]]);
+
+
+          // Check if participant data is found
+          if (participantId) {
+            participantsId.push(participantId);
+          }
+        }
+
+
+
     for(let i = 0; i < participants.length; i++){
+
+
+        if(eventPrice > 0){
+
+                    const senderBalance = await getBalance(senderId);
+                    console.log(senderBalance);
+
+                    /* // Case if User does not have enough money to apy all participants
+                    if(senderBalance < eventPrice){
+
+                        console.log("User does not have enough money to refund the event costs")
+                        return res.status(402).json({ message: ' User does not have enough money to refund the event costs  ' });
+                    }
+                    */
+
+                    const message = "Event costs paid back";
+
+                    await db.query('INSERT INTO Transaction (sender_id, receiver_id, amount, transaction_type, created_at, message, processed, event_id) VALUES (?, ?, ?, ?, NOW(), ?, 1, ?);',
+                    [senderId,
+                     participantsId[i][0].user_id,
+                     eventPrice,
+                     'Payment',
+                     message,
+                     eventId]);
+
+
+                    await updateBalance(senderId, -eventPrice);
+                    await updateBalance(participantsId[i][0].user_id, +eventPrice);
+
+                    const [kickParticipant] = await db.query(`
+                                         UPDATE User_Event SET User_Event.status = 0
+                                         WHERE User_Event.event_id = ?
+                                         AND
+                                         User_Event.user_id = ?;
+                                       `, [eventId, participantsId[i][0].user_id]);
+                }
+
 
         sendEventCanceledEmail(participants[i], participantsUsername[i][0].username, creatorUsername, eventTitle);
     }

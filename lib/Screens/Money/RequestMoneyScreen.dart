@@ -37,6 +37,29 @@ class _RequestMoneyScreenState extends State<RequestMoneyScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Request Money'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            onPressed: () {
+              showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: const Text("Info"),
+                      content: const Text(
+                          "This feature allows you to request money from other users. You can enter the recipient's name or email, the amount you want to request and an optional message. The recipient will receive a notification and can accept or decline your request."),
+                      actions: [
+                        TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            child: const Text("Close"))
+                      ],
+                    );
+                  });
+            },
+          )
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

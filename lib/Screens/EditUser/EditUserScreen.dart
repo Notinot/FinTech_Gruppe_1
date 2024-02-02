@@ -548,8 +548,33 @@ class _EditUserState extends State<EditUser> {
                     );
                   }),*/
               //automaticallyImplyLeading: false,
+
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.info_outline),
+                  onPressed: () {
+                    showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: const Text("Info"),
+                            content: const Text(
+                                "Here you can edit your profile. You can change your email, first name, last name and your profile picture."),
+                            actions: [
+                              TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                  child: const Text("Close"))
+                            ],
+                          );
+                        });
+                  },
+                )
+              ],
             ),
             //drawer: AppDrawer(user: user),
+
             body: SingleChildScrollView(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),

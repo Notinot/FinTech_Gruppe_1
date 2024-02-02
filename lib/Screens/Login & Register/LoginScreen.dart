@@ -82,6 +82,7 @@ class _LoginScreenState extends State<LoginScreen> {
         verificationCodeController.clear();
         return;
       }
+      accountLocked = false;
       if (requiresVerification) {
         final verificationCode = verificationCodeController.text;
         if (verificationCode.isEmpty) {

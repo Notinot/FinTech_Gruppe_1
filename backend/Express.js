@@ -257,11 +257,11 @@ app.post('/login', async (req, res) => {
     await db.query('UPDATE User SET wrong_password_attempts = ? WHERE email = ?', [wrong_password_attempts, email]);
     if (wrong_password_attempts > 3 && user[0].active === 1) {
       const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-      await db.query('UPDATE User SET active = 0, verification_code = ? WHERE email = ?', [verificationCode, email]);
+      await db.query('UPDATE User SET active = 2, verification_code = ? WHERE email = ?', [verificationCode, email]);
       sendVerificationEmail(email, verificationCode);
       return res.status(402).json({ message: 'Account locked' });
     }
-    else if (wrong_password_attempts > 3 && user[0].active === 0) {
+    else if (wrong_password_attempts > 3 && user[0].active === 2) {
       return res.status(402).json({ message: 'Account locked' });
     }
     else {
@@ -888,12 +888,12 @@ app.post('/check-active', async (req, res) => {
   // Check if the user with the provided email exists
   const [user] = await db.query('SELECT active FROM User WHERE email = ?', [email]);
 
+
   if (user.length === 0) {
     return res.status(404).json({ message: 'User not found' });
   }
-
+  // Send the user's active status as the response
   const isActive = user[0].active;
-
   res.json({ active: isActive });
 });
 

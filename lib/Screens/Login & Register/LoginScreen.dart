@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/gestures.dart';
+import 'package:flutter_application_1/Screens/EditUser/ChangePasswortScreen.dart';
 import 'package:flutter_application_1/Screens/Login%20&%20Register/ForgotPasswortScreen.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/material.dart';
@@ -23,6 +24,7 @@ class _LoginScreenState extends State<LoginScreen> {
       TextEditingController();
 
   bool requiresVerification = false;
+  bool accountLocked = false;
 
   Future<void> checkUserActiveStatus(String email) async {
     final response = await http.post(
@@ -37,9 +39,19 @@ class _LoginScreenState extends State<LoginScreen> {
       final Map<String, dynamic> data = json.decode(response.body);
       final isActive = data['active'];
 
-      setState(() {
-        requiresVerification = isActive == 0;
-      });
+      if (isActive == 0) {
+        setState(() {
+          requiresVerification = true;
+        });
+      } else if (isActive == 1) {
+        setState(() {
+          requiresVerification = false;
+        });
+      } else if (isActive == 2) {
+        setState(() {
+          accountLocked = true;
+        });
+      }
     } else {}
   }
 
@@ -49,7 +61,27 @@ class _LoginScreenState extends State<LoginScreen> {
     if (_formKey.currentState!.validate()) {
       // Call checkUserActiveStatus to determine if the user requires verification
       await checkUserActiveStatus(email);
+      if (accountLocked) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+                'Account has been locked. Please check your email for a verification code.'),
+            backgroundColor: Colors.red,
+          ),
+        );
 
+        //navigate to forgot password screen
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => ChangePasswordScreen(email: email)),
+        );
+
+        emailController.clear();
+        passwordController.clear();
+        verificationCodeController.clear();
+        return;
+      }
       if (requiresVerification) {
         final verificationCode = verificationCodeController.text;
         if (verificationCode.isEmpty) {

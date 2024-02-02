@@ -28,6 +28,9 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
   // Future to hold a list of transactions
   List<Transaction> originalTransactions = [];
 
+  bool isSearchMode = false;
+  final TextEditingController searchController = TextEditingController();
+
   late Future<List<Transaction>> transactionsFuture;
   late search_bar.SearchBar searchBar;
   String currentSortOrder = 'Date (↓)'; // Default sort order
@@ -59,37 +62,41 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
           List.from(transactions); // Store the original transactions
       return transactions;
     });
-    searchBar = search_bar.SearchBar(
-      showClearButton: true,
-      closeOnSubmit: false,
-      clearOnSubmit: false,
-      inBar: true,
-      setState: setState,
-      onSubmitted: onSubmitted,
-      onChanged: onChanged,
-      onCleared: onCleared,
-      onClosed: onClosed,
-      buildDefaultAppBar: buildAppBar,
-      hintText: "Search by username, message, type",
-    );
+    // searchBar = search_bar.SearchBar(
+    //   showClearButton: true,
+    //   closeOnSubmit: false,
+    //   clearOnSubmit: false,
+    //   inBar: true,
+    //   setState: setState,
+    //   onSubmitted: onSubmitted,
+    //   onChanged: onChanged,
+    //   onCleared: onCleared,
+    //   onClosed: onClosed,
+    //   buildDefaultAppBar: buildAppBar,
+    //   hintText: "Search by username, message, type",
+    // );
   }
 
   // Function to sort transactions
   void sortTransactions(String sortOrder) {
     //reset the transactions list to the original list
-    // allTransactions = List.from(originalTransactions);
+    allTransactions = List.from(originalTransactions);
 
     // Sort the transactions based on the sort order
     if (sortOrder == 'Date (↑)') {
-      allTransactions.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+      originalTransactions.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+      allTransactions = originalTransactions;
     } else if (sortOrder == 'Date (↓)') {
-      allTransactions.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      originalTransactions.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      allTransactions = originalTransactions;
     } else if (sortOrder == 'Amount (↑)') {
-      allTransactions.sort((a, b) => a.amount.compareTo(b.amount));
+      originalTransactions.sort((a, b) => a.amount.compareTo(b.amount));
+      allTransactions = originalTransactions;
     } else if (sortOrder == 'Amount (↓)') {
-      allTransactions.sort((a, b) => b.amount.compareTo(a.amount));
+      originalTransactions.sort((a, b) => b.amount.compareTo(a.amount));
+      allTransactions = originalTransactions;
     } else if (sortOrder == 'Requests') {
-      allTransactions = originalTransactions
+      allTransactions = allTransactions
           .where((transaction) => transaction.transactionType == 'Request')
           .toList();
     } else if (sortOrder == 'Payments') {
@@ -158,107 +165,188 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
   // Function to build the AppBar
   AppBar buildAppBar(BuildContext context) {
     return AppBar(
-      title: Text('History'),
-      actions: [
-        DropdownButton<String>(
-          value: currentSortOrder,
-          icon: Icon(Icons.sort),
-          onChanged: (String? newValue) {
-            if (newValue != null) {
-              setState(() {
-                currentSortOrder = newValue;
-                sortTransactions(currentSortOrder);
-              });
-            }
-          },
-          items: sortOptions.map<DropdownMenuItem<String>>((String value) {
-            return DropdownMenuItem<String>(
-              value: value,
-              child: Text(value),
-              onTap: () {
-                setState(() {
-                  currentSortOrder = value;
-                  sortTransactions(currentSortOrder);
-                });
-              },
-            );
-          }).toList(),
-        ),
-        searchBar.getSearchAction(context),
-      ],
+      title: isSearchMode
+          ? TextField(
+              controller: searchController,
+              autofocus: true,
+              decoration: InputDecoration(
+                hintText: "Search transactions...",
+                border: InputBorder.none,
+              ),
+              onChanged: onSearchTextChanged,
+            )
+          : Text(' History'),
+      actions: isSearchMode
+          ? [
+              IconButton(
+                icon: Icon(Icons.close),
+                onPressed: () {
+                  setState(() {
+                    isSearchMode = false;
+                    searchController.clear();
+                    onSearchTextChanged('');
+                  });
+                },
+              ),
+              // DropdownButton<String>(
+              //   value: currentSortOrder,
+              //   // icon: Icon(Icons.sort),
+              //   onChanged: (String? newValue) {
+              //     if (newValue != null) {
+              //       setState(() {
+              //         currentSortOrder = newValue;
+              //         sortTransactions(currentSortOrder);
+              //       });
+              //     }
+              //   },
+              //   items:
+              //       sortOptions.map<DropdownMenuItem<String>>((String value) {
+              //     return DropdownMenuItem<String>(
+              //       value: value,
+              //       child: Text(value),
+              //       onTap: () {
+              //         setState(() {
+              //           currentSortOrder = value;
+              //           sortTransactions(currentSortOrder);
+              //         });
+              //       },
+              //     );
+              //   }).toList(),
+              // ),
+            ]
+          : [
+              IconButton(
+                icon: Icon(Icons.search),
+                onPressed: () {
+                  setState(() {
+                    isSearchMode = true;
+                    currentSortOrder = 'Date (↓)';
+                  });
+                },
+              ),
+              DropdownButton<String>(
+                value: currentSortOrder,
+                icon: Icon(Icons.sort),
+                onChanged: (String? newValue) {
+                  if (newValue != null) {
+                    setState(() {
+                      currentSortOrder = newValue;
+                      sortTransactions(currentSortOrder);
+                    });
+                  }
+                },
+                items:
+                    sortOptions.map<DropdownMenuItem<String>>((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                    onTap: () {
+                      setState(() {
+                        currentSortOrder = value;
+                        sortTransactions(currentSortOrder);
+                      });
+                    },
+                  );
+                }).toList(),
+              ),
+            ],
     );
   }
 
-  Future<void> onSubmitted(String value) async {
-    // Apply the filter only if the user has entered a search query
-    if (value.isNotEmpty) {
-      List<Transaction> filteredTransactions = allTransactions
-          .where((transaction) =>
-              transaction.transactionType
-                  .toLowerCase()
-                  .contains(value.toLowerCase()) ||
-              transaction.senderUsername
-                  .toLowerCase()
-                  .contains(value.toLowerCase()) ||
-              transaction.message.toLowerCase().contains(value.toLowerCase()) ||
-              transaction.receiverUsername
-                  .toLowerCase()
-                  .contains(value.toLowerCase()))
-          .toList();
-      setState(() {
-        transactionsFuture = Future.value(filteredTransactions);
-      });
+  void onSearchTextChanged(String query) {
+    List<Transaction> filteredTransactions = [];
+    if (query.isEmpty) {
+      filteredTransactions = originalTransactions;
     } else {
-      setState(() {
-        transactionsFuture = fetchTransactions();
-      });
+      filteredTransactions = originalTransactions.where((transaction) {
+        return transaction.senderUsername
+                .toLowerCase()
+                .contains(query.toLowerCase()) ||
+            transaction.receiverUsername
+                .toLowerCase()
+                .contains(query.toLowerCase()) ||
+            transaction.message.toLowerCase().contains(query.toLowerCase()) ||
+            transaction.transactionType
+                .toLowerCase()
+                .contains(query.toLowerCase());
+      }).toList();
     }
-  }
-
-  Future<void> onChanged(String value) async {
-    if (value.isNotEmpty) {
-      List<Transaction> filteredTransactions = originalTransactions
-          .where((transaction) =>
-              transaction.transactionType
-                  .toLowerCase()
-                  .contains(value.toLowerCase()) ||
-              transaction.senderUsername
-                  .toLowerCase()
-                  .contains(value.toLowerCase()) ||
-              transaction.message.toLowerCase().contains(value.toLowerCase()) ||
-              transaction.receiverUsername
-                  .toLowerCase()
-                  .contains(value.toLowerCase()))
-          .toList();
-      setState(() {
-        transactionsFuture = Future.value(filteredTransactions);
-      });
-    } else {
-      setState(() {
-        transactionsFuture = Future.value(List.from(originalTransactions));
-      });
-    }
-  }
-
-  Future<void> onCleared() async {
-    // Handle search bar cleared
-    // Update the UI to show the original list without filtering
     setState(() {
-      transactionsFuture = fetchTransactions();
+      transactionsFuture = Future.value(filteredTransactions);
     });
   }
 
-  Future<void> onClosed() async {
-    //update the UI to show the original list without filtering
-    setState(() {
-      transactionsFuture = fetchTransactions();
-    });
-  }
+  // Future<void> onSubmitted(String value) async {
+  //   // Apply the filter only if the user has entered a search query
+  //   if (value.isNotEmpty) {
+  //     List<Transaction> filteredTransactions = allTransactions
+  //         .where((transaction) =>
+  //             transaction.transactionType
+  //                 .toLowerCase()
+  //                 .contains(value.toLowerCase()) ||
+  //             transaction.senderUsername
+  //                 .toLowerCase()
+  //                 .contains(value.toLowerCase()) ||
+  //             transaction.message.toLowerCase().contains(value.toLowerCase()) ||
+  //             transaction.receiverUsername
+  //                 .toLowerCase()
+  //                 .contains(value.toLowerCase()))
+  //         .toList();
+  //     setState(() {
+  //       transactionsFuture = Future.value(filteredTransactions);
+  //     });
+  //   } else {
+  //     setState(() {
+  //       transactionsFuture = fetchTransactions();
+  //     });
+  //   }
+  // }
+
+  // Future<void> onChanged(String value) async {
+  //   if (value.isNotEmpty) {
+  //     List<Transaction> filteredTransactions = originalTransactions
+  //         .where((transaction) =>
+  //             transaction.transactionType
+  //                 .toLowerCase()
+  //                 .contains(value.toLowerCase()) ||
+  //             transaction.senderUsername
+  //                 .toLowerCase()
+  //                 .contains(value.toLowerCase()) ||
+  //             transaction.message.toLowerCase().contains(value.toLowerCase()) ||
+  //             transaction.receiverUsername
+  //                 .toLowerCase()
+  //                 .contains(value.toLowerCase()))
+  //         .toList();
+  //     setState(() {
+  //       transactionsFuture = Future.value(filteredTransactions);
+  //     });
+  //   } else {
+  //     setState(() {
+  //       transactionsFuture = Future.value(List.from(originalTransactions));
+  //     });
+  //   }
+  // }
+
+  // Future<void> onCleared() async {
+  //   // Handle search bar cleared
+  //   // Update the UI to show the original list without filtering
+  //   setState(() {
+  //     transactionsFuture = fetchTransactions();
+  //   });
+  // }
+
+  // Future<void> onClosed() async {
+  //   //update the UI to show the original list without filtering
+  //   setState(() {
+  //     transactionsFuture = fetchTransactions();
+  //   });
+  // }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: searchBar.build(context),
+      // appBar: searchBar.build(context),
+      appBar: buildAppBar(context),
       drawer: FutureBuilder<Map<String, dynamic>>(
         // Fetch user profile data for the drawer
         future: ApiService.fetchUserProfile(),
@@ -277,6 +365,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
         onPressed: () {
           setState(() {
             transactionsFuture = fetchTransactions();
+            currentSortOrder = 'Date (↓)';
           });
         },
         child: const Icon(Icons.refresh),

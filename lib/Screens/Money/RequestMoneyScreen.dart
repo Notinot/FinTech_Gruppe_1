@@ -44,14 +44,14 @@ class _RequestMoneyScreenState extends State<RequestMoneyScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             const Text(
-              'Request from:',
+              'Send request to:',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             TextFormField(
               controller: requesterController,
               decoration: InputDecoration(
-                hintText: 'Enter your name or email',
+                hintText: 'Enter name or email',
                 border: OutlineInputBorder(),
                 prefixIcon: const Icon(Icons.person),
               ),
@@ -100,7 +100,7 @@ class _RequestMoneyScreenState extends State<RequestMoneyScreen> {
             TextFormField(
               controller: messageController,
               decoration: const InputDecoration(
-                hintText: 'Enter a message for the payer',
+                hintText: 'Enter a message (optional)',
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.chat),
               ),

@@ -1579,6 +1579,12 @@ app.post('/join-event', authenticateToken, async (req, res) => {
             return res.status(401).json({ message: 'Event is already joined' });
        }
 
+/*
+       const [checkSpace] = await db.query('SELECT * FROM Event WHERE id = ?', [eventId]);
+       const maxParticipants = checkSpace[0].max_participants;
+       const currentParticipants = checkSpace[0].
+       */
+
     const [joinQuery] = await db.query('UPDATE User_Event SET status = 1 WHERE event_id = ? AND user_id = ?', [eventId, senderId]);
     console.log(joinQuery);
 

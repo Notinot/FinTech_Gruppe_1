@@ -358,61 +358,112 @@ class EventInfoScreen extends StatelessWidget {
         );
       }
       else if (event.user_event_status == 2){
-        // User is not joined
-        return ElevatedButton(
-          style: ElevatedButton.styleFrom(
-              textStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-          onPressed: () {
-            showDialog(
-              context: context,
-              builder: (BuildContext context) {
-                return AlertDialog(
-                  title: Text('Joining ${event.title}'),
-                  content: Text(
-                      'Do you want to join "${event.title}"?'),
-                  actions: <Widget>[
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                      child: Text('Back'),
-                    ),
-                    TextButton(
-                      onPressed: () async {
-                        int result = await ApiService.joinEvent(event.creatorUsername, event.price, event.title, event.eventID);
-                        if (result == 400) {
+        if(event.maxParticipants > event.participants){
+
+          // User is not joined
+          return ElevatedButton(
+            style: ElevatedButton.styleFrom(
+                textStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: Text('Joining ${event.title}'),
+                    content: Text(
+                        'Do you want to join "${event.title}"?'),
+                    actions: <Widget>[
+                      TextButton(
+                        onPressed: () {
                           Navigator.of(context).pop();
-                          showErrorSnackBar(context, 'Joining event failed');
-                        }
-                        else if(result == 401){
+                        },
+                        child: Text('Back'),
+                      ),
+                      TextButton(
+                        onPressed: () async {
+                          int result = await ApiService.joinEvent(event.creatorUsername, event.price, event.title, event.eventID);
+                          if (result == 400) {
+                            Navigator.of(context).pop();
+                            showErrorSnackBar(context, 'Joining event failed');
+                          }
+                          else if(result == 401){
+                            Navigator.of(context).pop();
+                            showErrorSnackBar(
+                                context, 'You already joined the event');
+                          }
+                          else if(result == 402){
+                            Navigator.of(context).pop();
+                            showErrorSnackBar(
+                                context, 'You do not have enough money to join the event.');
+                          }
+                          else if(result == 200){
+                            Navigator.of(context).pop();
+                            showSuccessSnackBar(
+                                context, 'Joining event was successful');
+                          }
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => EventScreen())
+                          );
+                        },
+                        child: Text('Yes'),
+                      )
+                    ],
+                  );
+                },
+              );
+            },
+            child: Text('Join'),
+          );
+        }
+        else{
+          // User is not joined but event is full
+          return ElevatedButton(
+            style: ElevatedButton.styleFrom(
+                textStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: Text('Remove ${event.title}'),
+                    content: Text(
+                        'Are you sure you want to remove the Event "${event.title}"?'),
+                    actions: <Widget>[
+                      TextButton(
+                        onPressed: () {
                           Navigator.of(context).pop();
-                          showErrorSnackBar(
-                              context, 'You already joined the event');
-                        }
-                        else if(result == 402){
-                          Navigator.of(context).pop();
-                          showErrorSnackBar(
-                              context, 'You do not have enough money to join the event.');
-                        }
-                        else if(result == 200){
-                          Navigator.of(context).pop();
-                          showSuccessSnackBar(
-                              context, 'Joining event was successful');
-                        }
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => EventScreen())
-                        );
-                      },
-                      child: Text('Yes'),
-                    )
-                  ],
-                );
-              },
-            );
-          },
-          child: Text('Join'),
-        );
+                        },
+                        child: Text('Back'),
+                      ),
+                      TextButton(
+                        onPressed: () async {
+                          int result = await ApiService.leaveEvent(event.eventID);
+                          if (result == 401) {
+                            Navigator.of(context).pop();
+                            showErrorSnackBar(
+                                context, 'Event was already removed!');
+                          } else if (result == 0) {
+                            Navigator.of(context).pop();
+                            showErrorSnackBar(context, 'Removing event failed!');
+                          } else if (result == 1) {
+                            Navigator.of(context).pop();
+                            showSuccessSnackBar(
+                                context, 'Removing event was successful!');
+                          }
+                        },
+                        child: Text('Yes'),
+                      )
+                    ],
+                  );
+                },
+              );
+            },
+            child: Text('Remove'),
+          );
+
+        }
+
       }
     }
     if (event.isCreator) {

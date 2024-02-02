@@ -326,7 +326,7 @@ class TransactionDetailsScreen extends StatelessWidget {
                                       Icon(Icons.access_time_rounded),
                                       SizedBox(width: 10),
                                       Text(
-                                        '${DateFormat('HH:mm').format(transaction.createdAt)}',
+                                        '${DateFormat('HH:mm').format(transaction.createdAt.add(Duration(hours: 1)))}',
                                         style: TextStyle(fontSize: 20),
                                       ),
                                     ],
@@ -499,9 +499,23 @@ class TransactionDetailsScreen extends StatelessWidget {
                                         ),
                                       ],
                                     ),
+
+                                  // Display the event name if the transaction is associated with an event
+                                  if (transaction.eventId != null)
+                                    Row(
+                                      children: [
+                                        Icon(Icons.event_rounded),
+                                        SizedBox(width: 10),
+                                        Text(
+                                          'Event: ${transaction.message}',
+                                          style: TextStyle(fontSize: 20),
+                                        ),
+                                      ],
+                                    ),
                                   SizedBox(height: 10),
 // Display the message if the transaction has a message
-                                  if (transaction.message.isEmpty == false)
+                                  if (transaction.message.isEmpty == false &&
+                                      transaction.eventId == null)
                                     Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
@@ -516,19 +530,7 @@ class TransactionDetailsScreen extends StatelessWidget {
                                     ),
 
                                   SizedBox(height: 10),
-                                  // Display the event name if the transaction is associated with an event
-                                  if (transaction.eventId != null)
-                                    Row(
-                                      children: [
-                                        Icon(Icons.event_rounded),
-                                        SizedBox(width: 10),
-                                        Text(
-                                          'Event: ${transaction.message}',
-                                          style: TextStyle(fontSize: 20),
-                                        ),
-                                      ],
-                                    ),
-                                  SizedBox(height: 10),
+
                                   // buttons for accepting and denying the request
                                   // buttons only appear when the transaction is a request and the transaction is unprocessed and the sender is not the current user
                                   if (transaction.transactionType ==
@@ -568,17 +570,19 @@ class TransactionDetailsScreen extends StatelessWidget {
                                       children: [
                                         SizedBox(height: 20),
                                         FutureBuilder<Event>(
-                                          future: fetchEvent(transaction.eventId),
-                                          builder: (context, snapshot){
-                                            if(snapshot.connectionState == ConnectionState.waiting){
-                                              return CircularProgressIndicator();
-                                            } else if(snapshot.hasError){
-                                              return Text('Error: ${snapshot.error}');
-                                            } else if(!snapshot.hasData || snapshot.data == null){
-                                              return Text('No event found');
-                                            }
-                                            else{
-
+                                            future:
+                                                fetchEvent(transaction.eventId),
+                                            builder: (context, snapshot) {
+                                              if (snapshot.connectionState ==
+                                                  ConnectionState.waiting) {
+                                                return CircularProgressIndicator();
+                                              } else if (snapshot.hasError) {
+                                                return Text(
+                                                    'Error: ${snapshot.error}');
+                                              } else if (!snapshot.hasData ||
+                                                  snapshot.data == null) {
+                                                return Text('No event found');
+                                              } else {
                                                 Event event = snapshot.data!;
                                                 return ElevatedButton(
                                                   onPressed: () {
@@ -592,7 +596,8 @@ class TransactionDetailsScreen extends StatelessWidget {
                                                       ),
                                                     );
                                                   },
-                                                  child: Text('View Event Details'),
+                                                  child: Text(
+                                                      'View Event Details'),
                                                 );
                                               }
                                             }),

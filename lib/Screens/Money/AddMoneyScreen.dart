@@ -88,7 +88,7 @@ class _AddMoneyScreenState extends State<AddMoneyScreen> {
     if (parsedAmount > 50000) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('You can add maximum 50.000,00 €'),
+          content: Text('Limit of 50.000,00€ reached'),
           backgroundColor: Colors.red,
         ),
       );

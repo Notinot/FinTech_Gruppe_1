@@ -35,28 +35,6 @@ class _RequestMoneyScreenState extends State<RequestMoneyScreen> {
         ? requesterController.text = widget.requester
         : null;
     return Scaffold(
-      drawer: FutureBuilder<Map<String, dynamic>>(
-        future: ApiService
-            .fetchUserProfile(), // Replace with your actual method to fetch user data
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Drawer(
-              child: ListTile(
-                title: Text('Loading...'),
-              ),
-            );
-          } else if (snapshot.hasError) {
-            return Drawer(
-              child: ListTile(
-                title: Text('Error: ${snapshot.error}'),
-              ),
-            );
-          } else {
-            final Map<String, dynamic> user = snapshot.data!;
-            return AppDrawer(user: user);
-          }
-        },
-      ),
       appBar: AppBar(
         title: const Text('Request Money'),
       ),
@@ -136,6 +114,18 @@ class _RequestMoneyScreenState extends State<RequestMoneyScreen> {
                   print(amount);
                   final message = messageController.text;
 
+                  //message limit of 250 characters
+                  if (message.length > 250) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content:
+                            Text('Message limit of 250 characters reached'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                    return;
+                  }
+
                   // Remove euro sign, periods and spaces
                   final cleanedAmountText = amount
                       .replaceAll('€', '')
@@ -151,6 +141,16 @@ class _RequestMoneyScreenState extends State<RequestMoneyScreen> {
                       double.tryParse(normalizedAmountText) ?? 0.0;
 
                   print(parsedAmount);
+                  //set limit for adding money to 50.000,00
+                  if (parsedAmount > 50000) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Limit of 50.000,00€ reached'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                    return;
+                  }
 // Check if the recipient is empty
                   if (recipient.trim().isEmpty) {
                     setState(() {

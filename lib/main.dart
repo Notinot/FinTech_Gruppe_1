@@ -35,7 +35,6 @@ class _PayfriendzAppState extends State<PayfriendzApp> {
   Timer? timer;
 
   Future<void> RunEventService() async {
-
     print("Start eventservice");
 
     // Event Service
@@ -82,7 +81,8 @@ class _PayfriendzAppState extends State<PayfriendzApp> {
   void initState() {
     super.initState();
     checkServerAvailability();
-    timer = Timer.periodic(Duration(seconds: 60), (Timer t) => RunEventService());
+    timer =
+        Timer.periodic(Duration(seconds: 60), (Timer t) => RunEventService());
 
     //checkStayLoggedIn(); //COMMENT THIS OUT TO STAY LOGGED IN (in theory)
   }

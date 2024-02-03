@@ -534,15 +534,12 @@ class FriendItem extends StatelessWidget {
             ],
           )
         //build item WITHOUT accept/decline buttons BUT with Icon Button
-        : IconButton(
+        : ElevatedButton(
+            child: Icon(Icons.currency_exchange),
             onPressed: () {
               requestOrSendMoneyDialog(context);
             },
-            icon: Icon(
-              Icons.add,
-              //Icons.currency_exchange_outlined,
-              size: 35,
-            ));
+          );
 
     return Card(
       child: ListTile(

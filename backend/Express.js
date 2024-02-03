@@ -1,5 +1,6 @@
 // Import required dependencies
 const express = require('express');
+const bodyParser = require('body-parser');
 const mysql = require('mysql2/promise');
 const bcrypt = require('bcrypt');
 const cors = require('cors');
@@ -14,7 +15,10 @@ const jwtOptions = {
   expiresIn: '5h', // Token expiration time
 };
 
+
+app.use(bodyParser.json({ limit: '50mb' }));
 app.use(express.json());
+
 // Middleware to extract and verify JWT
 
 // Enable CORS to allow requests from any origin and restrict to POST requests

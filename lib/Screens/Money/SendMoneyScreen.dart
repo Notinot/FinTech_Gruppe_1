@@ -207,7 +207,7 @@ class _SendMoneyScreenState extends State<SendMoneyScreen> {
                     builder: (context) {
                       return AlertDialog(
                         title: const Text('Confirm'),
-                        content: Text('send \n€$parsedAmount to $recipient?'),
+                        content: Text('send €$parsedAmount to $recipient?'),
                         actions: [
                           TextButton(
                             onPressed: () {
@@ -215,7 +215,7 @@ class _SendMoneyScreenState extends State<SendMoneyScreen> {
                             },
                             child: const Text('Cancel'),
                           ),
-                          TextButton(
+                          ElevatedButton(
                             onPressed: () {
                               Navigator.pop(context, true);
                             },
@@ -367,7 +367,7 @@ class _SendMoneyScreenState extends State<SendMoneyScreen> {
               },
               child: Text('Close'),
             ),
-            TextButton(
+            ElevatedButton(
               onPressed: () async {
                 try {
                   // Make an HTTP request to verify the password on the backend

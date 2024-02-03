@@ -351,7 +351,7 @@ class EventInfoScreen extends StatelessWidget {
                               context, 'Leaving event was successful!');
                         }
                       },
-                      child: Text('Yes'),
+                      child: Text('Leave'),
                     )
                   ],
                 );
@@ -429,17 +429,17 @@ class EventInfoScreen extends StatelessWidget {
                 context: context,
                 builder: (BuildContext context) {
                   return AlertDialog(
-                    title: Text('Remove ${event.title}'),
+                    title: Text('Leave ${event.title}'),
                     content: Text(
-                        'Are you sure you want to remove the Event "${event.title}"?'),
+                        'Are you sure you want to leave the Event "${event.title}"?'),
                     actions: <Widget>[
                       TextButton(
                         onPressed: () {
                           Navigator.of(context).pop();
                         },
-                        child: Text('Back'),
+                        child: Text('Cancel'),
                       ),
-                      TextButton(
+                      ElevatedButton(
                         onPressed: () async {
                           int result =
                               await ApiService.leaveEvent(event.eventID);
@@ -461,14 +461,15 @@ class EventInfoScreen extends StatelessWidget {
                                 context, 'Removing event was successful!');
                           }
                         },
-                        child: Text('Yes'),
+                        child: Text('Leave'),
                       )
                     ],
                   );
                 },
               );
             },
-            label: Text('Remove'),
+            // label: Text('Remove'),
+            label: Text('Leave Event'),
             icon: Icon(Icons.disabled_visible_rounded),
           );
         }
@@ -526,7 +527,7 @@ class EventInfoScreen extends StatelessWidget {
                     context: context,
                     builder: (BuildContext context) {
                       return AlertDialog(
-                        title: Text('${event.title}'),
+                        title: Text('Cancel ${event.title}'),
                         content: Text(
                             'Are you sure you want to cancel the Event "${event.title}"?'),
                         actions: <Widget>[
@@ -537,7 +538,7 @@ class EventInfoScreen extends StatelessWidget {
                             child: Text('No'),
                           ),
                           SizedBox(width: 32),
-                          TextButton(
+                          ElevatedButton(
                             onPressed: () async {
                               int result =
                                   await ApiService.cancelEvent(event.eventID);

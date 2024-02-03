@@ -499,7 +499,7 @@ class TransactionDetailsScreen extends StatelessWidget {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Confirm'),
+          title: const Text('Send Money'),
           content: Text(
               'Are you sure you want to send \n${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}\€ to ${transaction.senderUsername}?'),
           actions: [
@@ -509,7 +509,7 @@ class TransactionDetailsScreen extends StatelessWidget {
               },
               child: const Text('Cancel'),
             ),
-            TextButton(
+            ElevatedButton(
               onPressed: () {
                 Navigator.pop(context, true);
               },
@@ -808,7 +808,7 @@ class TransactionDetailsScreen extends StatelessWidget {
               },
               child: Text('Close'),
             ),
-            TextButton(
+            ElevatedButton(
               onPressed: () async {
                 try {
                   // Make an HTTP request to verify the password on the backend

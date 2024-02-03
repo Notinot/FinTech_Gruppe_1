@@ -532,7 +532,11 @@ class _EditUserState extends State<EditUser> {
           final Map<String, dynamic> user = snapshot.data!;
 
           //user['picture'] = _imageProvider; //AUSKOMMENTIERT. NOTEWENDIG ??????????----
-
+          bool profilePictureSet = user['picture'] != null &&
+                  user['picture'] is Map<String, dynamic> &&
+                  user['picture']['data'] != null
+              ? true
+              : false;
           return Scaffold(
             appBar: AppBar(
               title: const Text('Edit Profile'),
@@ -574,7 +578,6 @@ class _EditUserState extends State<EditUser> {
               ],
             ),
             //drawer: AppDrawer(user: user),
-
             body: SingleChildScrollView(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -584,18 +587,19 @@ class _EditUserState extends State<EditUser> {
                     ClipOval(
                       child: CircleAvatar(
                         radius: 80,
-                        backgroundImage: user['picture'] != null &&
-                                user['picture'] is Map<String, dynamic> &&
-                                user['picture']['data'] != null
+                        backgroundImage: profilePictureSet
                             ? MemoryImage(Uint8List.fromList(
                                 user['picture']['data'].cast<int>()))
                             : null,
                         //_imageProvider,
-                        child: Text(
-                          '${user["first_name"][0].toUpperCase()}${user["last_name"][0].toUpperCase()}',
-                          style: TextStyle(
-                              fontSize: 75), // Change the size of initials
-                        ),
+                        child: profilePictureSet
+                            ? Text(
+                                '${user["first_name"][0].toUpperCase()}${user["last_name"][0].toUpperCase()}',
+                                style: TextStyle(
+                                    fontSize:
+                                        75), // Change the size of initials
+                              )
+                            : null,
                       ),
                     ),
                     Visibility(

@@ -808,7 +808,7 @@ class TransactionDetailsScreen extends StatelessWidget {
               },
               child: Text('Close'),
             ),
-            TextButton(
+            ElevatedButton(
               onPressed: () async {
                 try {
                   // Make an HTTP request to verify the password on the backend

@@ -1615,15 +1615,11 @@ app.post('/invite-event', authenticateToken, async (req, res) => {
   try {
     const senderId = req.user.userId;
     const { eventId, recipient } = req.body;
-     //check if users have each other blocked
-   const [blocked] = await db.query('SELECT * FROM Friendship WHERE (requester_id = ? AND addressee_id = ?) OR (requester_id = ? AND addressee_id = ?) AND status = "blocked"', [senderId, recipient, recipient, senderId]);
-  if (blocked.length > 0) {
-   return res.status(400).json({ message: 'Users have each other blocked' });
- } 
+    
     if (!eventId || !recipient) {
       return res.status(400).json({ message: 'Invalid Event Id or Recipient' });
     }
-
+    
     const [recipientData] = await db.query('SELECT user_id, username, email FROM User WHERE username = ? OR email = ?', [recipient, recipient]);
 
     if (recipientData.length === 0){
@@ -1634,13 +1630,17 @@ app.post('/invite-event', authenticateToken, async (req, res) => {
     const recipientId = recipientData[0].user_id;
     const recipientEmail = recipientData[0].email;
     const recipientUsername = recipientData[0].username;
-
+     
     const [checkForSpam] = await db.query('SELECT * FROM User_Event WHERE event_id = ? and user_id = ?', [eventId, recipientId]);
     if (checkForSpam.length > 0) {
 
       return res.status(401).json({ message: 'User already interacted with the Event' });
     }
-
+     //check if users have each other blocked
+     const [blocked] = await db.query('SELECT * FROM Friendship WHERE (requester_id = ? AND addressee_id = ?) OR (requester_id = ? AND addressee_id = ?) AND status = "blocked"', [senderId, recipientId, recipientId, senderId]);
+     if (blocked.length > 0) {
+       return res.status(400).json({ message: 'Users have each other blocked' });
+     } 
     const [inviteQuery] = await db.query('INSERT INTO User_Event (event_id, user_id, status) VALUES (?, ?, 2)', [eventId, recipientId]);
     console.log(inviteQuery);
 

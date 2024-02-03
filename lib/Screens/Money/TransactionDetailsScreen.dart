@@ -1,12 +1,9 @@
 // TransactionDetailScreen displays detailed information about a transaction
 import 'dart:async';
 import 'dart:convert';
-import 'dart:ffi';
-import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/Screens/Dashboard/dashBoardScreen.dart';
 import 'package:flutter_application_1/Screens/Events/CreateEventScreen.dart';
 import 'package:flutter_application_1/Screens/Friends/FriendsScreen.dart';
 import 'package:flutter_application_1/Screens/api_service.dart';
@@ -15,11 +12,9 @@ import 'package:intl/intl.dart';
 import 'package:flutter_application_1/Screens/Events/Event.dart';
 import 'package:flutter_application_1/Screens/Events/EventInfoScreen.dart';
 import 'package:http/http.dart' as http;
-import 'package:path/path.dart';
 import 'RequestMoneyScreen.dart';
 import 'SendMoneyScreen.dart';
 import 'package:flutter_application_1/Screens/Money/TransactionHistoryScreen.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 
 class TransactionDetailsScreen extends StatelessWidget {
   final Transaction transaction;

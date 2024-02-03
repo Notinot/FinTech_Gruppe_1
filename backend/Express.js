@@ -1069,9 +1069,11 @@ app.get('/transactions', authenticateToken, async (req, res) => {
 app.get('/checkIfFriends', authenticateToken, async (req, res) => {
   const user_id = req.user.userId;
   const friendId = req.query.friendId;
+
+  //check if entry exists and status is accepted
   const query = `SELECT * FROM Friendship WHERE (requester_id = ? AND addressee_id = ?) OR (requester_id = ? AND addressee_id = ?)`;
-  const [friends] = await db.query(query, [user_id, friendId, friendId, user_id]);
-  const isFriend = friends[0] != null;
+  const [friendship] = await db.query(query, [user_id, friendId, friendId, user_id]);
+  const isFriend = friendship.length > 0 && friendship[0].status === 'accepted';
   console.log('isFriend:', isFriend);
   res.json({ isFriend: isFriend });
 

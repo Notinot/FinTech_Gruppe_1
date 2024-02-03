@@ -76,8 +76,8 @@ class _EditUserState extends State<EditUser> {
     // Use the user Future's result to initialize the controllers
     user.then((userData) {
       setState(() {
-        usernameController = TextEditingController(text: userData['username']);
         emailController = TextEditingController(text: userData['email']);
+        usernameController = TextEditingController(text: userData['username']);
         passwordController = TextEditingController();
         confirmPasswordController = TextEditingController();
         firstnameController =

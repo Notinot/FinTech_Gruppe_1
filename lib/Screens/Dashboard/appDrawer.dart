@@ -51,14 +51,14 @@ class AppDrawer extends StatelessWidget {
                         Uint8List.fromList(user['picture']['data'].cast<int>()))
                     : null,
                 radius: 50,
-                child: user['picture'] != null &&
-                        user['picture']['data'] != null
-                    ? null
-                    : Text(
-                        '${user["first_name"][0].toUpperCase()}${user["last_name"][0].toUpperCase()}',
-                        style: TextStyle(
-                            fontSize: 50 * 0.8), // Change the size of initials
-                      ),
+                child:
+                    user['picture'] != null && user['picture']['data'] != null
+                        ? null
+                        : Text(
+                            '${user["first_name"][0].toUpperCase()}${user["last_name"][0].toUpperCase()}',
+                            style: TextStyle(
+                                fontSize: 32), // Change the size of initials
+                          ),
               ),
             ),
           ),

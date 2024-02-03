@@ -146,9 +146,9 @@ app.post('/changepassword', async (req, res) => {
   }
 
   try {
+    await db.query('UPDATE User SET password_hash = ?, salt = ?, verification_code = NULL, wrong_password_attempts = 0, active = 1 WHERE email = ?', [hashedPassword, salt, email]);
 
-    await db.query('UPDATE User SET password_hash = ?, salt = ?, verification_code = NULL WHERE email = ?', [hashedPassword, salt, email]);
-    return res.json({ message: 'Account verified successfully' });
+    res.json({ message: 'Password changed successfully' });
 
   } catch {
 

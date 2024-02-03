@@ -42,6 +42,29 @@ class _SendMoneyScreenState extends State<SendMoneyScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Send Money'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            onPressed: () {
+              showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: const Text("Info"),
+                      content: const Text(
+                          "This is the send money screen. Here you can send money to other users. Please enter the recipient's name or email, the amount and an optional message. After clicking the 'Send Money' button, you will be asked to confirm the transaction. If you have any questions, please contact our support team."),
+                      actions: [
+                        TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            child: const Text("Close"))
+                      ],
+                    );
+                  });
+            },
+          )
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -49,14 +72,14 @@ class _SendMoneyScreenState extends State<SendMoneyScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             const Text(
-              'Recipient:',
+              'Send money to:',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             TextFormField(
               controller: recipientController,
               decoration: InputDecoration(
-                hintText: 'Enter recipient name or email',
+                hintText: 'Enter name or email',
                 border: OutlineInputBorder(),
                 prefixIcon: const Icon(Icons.person),
               ),
@@ -104,7 +127,7 @@ class _SendMoneyScreenState extends State<SendMoneyScreen> {
             TextFormField(
               controller: messageController,
               decoration: const InputDecoration(
-                hintText: 'Enter a message for the recipient',
+                hintText: 'Enter a message (optional)',
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.chat),
               ),

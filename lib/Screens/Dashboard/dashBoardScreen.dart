@@ -35,14 +35,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
   late List<Map<String, dynamic>> TransactionRequests = [];
   late List<Map<String, dynamic>> EventRequests = [];
   late Map<String, dynamic> user;
+  late int numberofRequests;
 
   @override
   void initState() {
     super.initState();
     userProfileFuture = ApiService.fetchUserProfile();
-    fetchPendingFriends();
     userProfileFuture.then((userData) {
       user = userData;
+      fetchPendingRequests(context, user);
 
       Notifications.fetchTransactions().then((List<Transaction>? transactions) {
         if (transactions != null) {
@@ -64,8 +65,101 @@ class _DashboardScreenState extends State<DashboardScreen> {
         } else {
           TransactionRequests = [];
         }
+        pendingFriends;
+        TransactionRequests;
+        EventRequests;
+        setState(() {});
       });
     });
+  }
+
+  Future<void> fetchPendingRequests(
+      BuildContext context, Map<String, dynamic> user) async {
+    await fetchPendingFriends();
+    await fetchPendingEventRequests().then((List<Event>? events) {
+      if (events != null) {
+        EventRequests = events.map((Event event) {
+          return {
+            'event_id': event.eventID,
+            'title': event.title,
+            'category': event.category,
+            'description': event.description,
+            'participants': event.participants,
+            'max_participants': event.maxParticipants,
+            'datetime_event': event.datetimeEvent,
+            'datetime_created': event.datetimeCreated,
+            'price': event.price,
+            'status': event.status,
+            'creator_username': event.creatorUsername,
+            'creator_id': event.creatorId,
+            'recurrence_type': event.recurrenceType,
+            'recurrence_interval': event.recurrenceInterval,
+            'country': event.country,
+            'city': event.city,
+            'street': event.street,
+            'zipcode': event.zipcode,
+            'user_event_status': event.user_event_status
+          };
+        }).toList();
+      } else {
+        EventRequests = [];
+      }
+    });
+    await Notifications.fetchTransactions()
+        .then((List<Transaction>? transactions) {
+      if (transactions != null) {
+        TransactionRequests = transactions
+            .where((transaction) =>
+                transaction.processed == 0 &&
+                transaction.senderId != transaction.receiverId &&
+                transaction.senderId != user['user_id'])
+            .map((Transaction transaction) {
+          return {
+            'sender_id': transaction.senderId,
+            'amount': transaction.amount,
+            'transaction_id': transaction.transactionId,
+            'senderName': transaction.senderUsername,
+            'createdAt': transaction.createdAt
+          };
+        }).toList();
+      } else {
+        TransactionRequests = [];
+      }
+    });
+
+    items.clear(); // Clear the existing items list
+
+    if (pendingFriends.isEmpty &&
+        TransactionRequests.isEmpty &&
+        EventRequests.isEmpty) {
+      items.add(buildNoNotificationsItem());
+    } else {
+      for (int i = 0; i < pendingFriends.length; i++) {
+        PopupMenuItem<String> item =
+            await buildNotificationItem(context, pendingFriends[i], user);
+        items.add(item);
+      }
+      if (TransactionRequests.isNotEmpty) {
+        for (int i = 0; i < TransactionRequests.length; i++) {
+          PopupMenuItem<String> item = await buildNotificationItemTransaction(
+            context,
+            TransactionRequests[i],
+            user,
+          );
+          items.add(item);
+        }
+      }
+      if (EventRequests.isNotEmpty) {
+        for (int i = 0; i < EventRequests.length; i++) {
+          PopupMenuItem<String> item = await buildNotificationItemEvent(
+            context,
+            EventRequests[i],
+            user,
+          );
+          items.add(item);
+        }
+      }
+    }
   }
 
   // Fetch events from the backend
@@ -116,7 +210,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> RunEventService() async {
-
     // Event Service
     const storage = FlutterSecureStorage();
     final token = await storage.read(key: 'token');
@@ -159,8 +252,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-
-
     // Timer? timer;
     // timer = Timer.periodic(Duration(seconds: 60), (Timer t) => RunEventService());
     // RunEventService();
@@ -178,11 +269,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
             appBar: AppBar(
               title: const Text('Dashboard'),
               actions: [
+                IconButton(
+                  icon: const Icon(Icons.info_outline),
+                  onPressed: () {
+                    showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: const Text("Info"),
+                            content: const Text(
+                                "This is the Dashboard Screen. Here you can see your account summary, notifications and upcoming events. \n\nYou can also access the menu by clicking on the icon in the top right corner, or by swiping from the left edge of the screen.\n\nYou can also access the quick menu by clicking on the icon in the bottom right corner."),
+                            actions: [
+                              TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                  child: const Text("Close"))
+                            ],
+                          );
+                        });
+                  },
+                ),
                 Badge.Badge(
                   badgeContent: Text(
                     (pendingFriends.length +
-                            TransactionRequests.length +
-                            EventRequests.length)
+                            EventRequests.length +
+                            TransactionRequests.length)
                         .toString(),
                     style: TextStyle(color: Colors.white),
                   ),
@@ -512,6 +624,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 items.removeWhere((item) =>
                     item.key == Key(friendRequest['requester_id'].toString()));
                 Navigator.pop(context);
+
                 fetchAndBuildNotifications(context, user);
               });
             },
@@ -583,6 +696,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 items.removeWhere((item) =>
                     item.key ==
                     Key(transactionRequest['transaction_id'].toString()));
+                reloadFutureBuilder();
                 Navigator.pop(context);
                 fetchAndBuildNotifications(context, user);
               });
@@ -671,5 +785,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ],
       ),
     );
+  }
+
+  void reloadFutureBuilder() {
+    setState(() {
+      userProfileFuture = ApiService.fetchUserProfile();
+    });
   }
 }

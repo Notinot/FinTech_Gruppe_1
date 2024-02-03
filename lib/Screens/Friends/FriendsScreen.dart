@@ -94,8 +94,29 @@ class _FriendsScreenState extends State<FriendsScreen> {
                     size: MediaQuery.of(context).size.width *
                         0.07, //Dynamic Icon size depending on screen res
                   ),
-                  padding: EdgeInsets.only(right: 15), //Distance to the right
+                  // padding: EdgeInsets.only(right: 15), //Distance to the right
                 ),
+                IconButton(
+                  icon: const Icon(Icons.info_outline),
+                  onPressed: () {
+                    showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: const Text("Info"),
+                            content: const Text(
+                                "To add a friend, click on the 'Add' button and enter the username of the person you want to add. To remove a friend, click on the 'Delete' button next to the friend's name. You can also block a friend by clicking on the 'Block' button."),
+                            actions: [
+                              TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                  child: const Text("Close"))
+                            ],
+                          );
+                        });
+                  },
+                )
               ],
             ),
             drawer: FutureBuilder<Map<String, dynamic>>(

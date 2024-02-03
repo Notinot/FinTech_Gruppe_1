@@ -261,6 +261,29 @@ class TransactionDetailsScreen extends StatelessWidget {
                     return Scaffold(
                       appBar: AppBar(
                         title: Text('Transaction Details'),
+                        actions: [
+                          IconButton(
+                            icon: const Icon(Icons.info_outline),
+                            onPressed: () {
+                              showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return AlertDialog(
+                                      title: const Text("Info"),
+                                      content: const Text(
+                                          "This is the Transaction Details Screen. Here you can see the details of a transaction. If you want to accept or deny a request, you can do so by clicking on the buttons below. If you want to add the user as a friend, send money or request money, you can do so by clicking on the buttons below. If you want to see the profile picture of the user, you can do so by clicking on the profile picture."),
+                                      actions: [
+                                        TextButton(
+                                            onPressed: () {
+                                              Navigator.of(context).pop();
+                                            },
+                                            child: const Text("Close"))
+                                      ],
+                                    );
+                                  });
+                            },
+                          )
+                        ],
                       ),
                       body: Hero(
                         tag: 'transaction_${transaction.transactionId}',

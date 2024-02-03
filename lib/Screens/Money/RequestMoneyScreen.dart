@@ -37,6 +37,29 @@ class _RequestMoneyScreenState extends State<RequestMoneyScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Request Money'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            onPressed: () {
+              showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: const Text("Info"),
+                      content: const Text(
+                          "This feature allows you to request money from other users. You can enter the recipient's name or email, the amount you want to request and an optional message. The recipient will receive a notification and can accept or decline your request."),
+                      actions: [
+                        TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            child: const Text("Close"))
+                      ],
+                    );
+                  });
+            },
+          )
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -44,14 +67,14 @@ class _RequestMoneyScreenState extends State<RequestMoneyScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             const Text(
-              'Request from:',
+              'Send request to:',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             TextFormField(
               controller: requesterController,
               decoration: InputDecoration(
-                hintText: 'Enter your name or email',
+                hintText: 'Enter name or email',
                 border: OutlineInputBorder(),
                 prefixIcon: const Icon(Icons.person),
               ),
@@ -100,7 +123,7 @@ class _RequestMoneyScreenState extends State<RequestMoneyScreen> {
             TextFormField(
               controller: messageController,
               decoration: const InputDecoration(
-                hintText: 'Enter a message for the payer',
+                hintText: 'Enter a message (optional)',
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.chat),
               ),

@@ -128,6 +128,29 @@ class _AddMoneyScreenState extends State<AddMoneyScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Add Money'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            onPressed: () {
+              showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: const Text("Info"),
+                      content: const Text(
+                          "To add money to your account, enter the amount you want to add and click on the 'Add' button. The maximum amount you can add is 50.000,00€."),
+                      actions: [
+                        TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            child: const Text("Close"))
+                      ],
+                    );
+                  });
+            },
+          )
+        ],
       ),
       drawer: FutureBuilder<Map<String, dynamic>>(
         // Fetch user profile data for the drawer

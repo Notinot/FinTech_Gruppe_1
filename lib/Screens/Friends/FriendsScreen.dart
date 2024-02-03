@@ -10,7 +10,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Screens/Money/RequestMoneyScreen.dart';
 import 'package:flutter_application_1/Screens/Money/SendMoneyScreen.dart';
 import 'package:flutter_application_1/fonts/custom_icons_icons.dart';
+import 'package:intl/intl.dart';
 
+import '../Money/TransactionDetailsScreen.dart';
 import '../api_service.dart';
 
 /* To-do:
@@ -754,103 +756,231 @@ class FriendInfoScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     //debugPrint('profile picture: ${friend.profileImage?.length}');
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Friend Details'),
-      ),
-      body: SizedBox(
-        width: double.infinity,
-        height: double.infinity,
-        child: Column(
-          children: [
-            ShowProfilePicture(
-                image: friend.profileImage,
-                initial: friend.firstName[0] + friend.lastName[0],
-                size: 60),
-            SizedBox(height: 20),
-            Text(
-              friend.username,
-              style: TextStyle(fontSize: 30),
-            ),
-            SizedBox(height: 20),
-            Text(
-              '${friend.firstName} ${friend.lastName}',
-              style: TextStyle(fontSize: 20),
-            ),
-            SizedBox(height: 20),
-            pendingFriendRequestReceived
-                ? Container()
-                : Text(
-                    'Friends since: ${friend.requestTime?.month}-${friend.requestTime?.day}-${friend.requestTime?.year}',
-                    style: TextStyle(fontSize: 20)),
 
-            SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text("Actions: "),
-                pendingFriendRequestReceived
-                    ? Container()
-                    : OutlinedButton(
-                        child: Text("Delete"),
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: Text('Delete'),
-                              content: Text(
-                                  "Do you want to remove ${friend.username} as your friend?"),
-                              actions: [
-                                TextButton(
-                                  child: Text('Cancel'),
-                                  onPressed: () {
-                                    Navigator.of(context).pop();
-                                  },
-                                ),
-                                ElevatedButton(
-                                  child: Text('Delete'),
-                                  onPressed: () {
-                                    deleteFriend(
-                                        userID: friend.userID, token: token);
-                                    //I mean, dadurch wird das Pop up & der Info Screen geschlossen
-                                    //und der Context für navigation ist wieder richtig. Gibt vllt ne bessere Lösung
-                                    // Navigator.of(context).pop();
-                                    Navigator.of(context).pop();
-                                    Navigator.pushReplacement(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => FriendsScreen(),
-                                      ),
-                                    );
-                                    //callbackFunction();
-                                  },
-                                ),
-                              ],
-                            ),
-                          );
-                        },
+    return FutureBuilder<String>(
+      future: ApiService.fetchUserId(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          // Handle errors
+          return Text('Error: ${snapshot.error}');
+        } else {
+          if (snapshot.connectionState == ConnectionState.done) {
+            final int userId = int.parse(snapshot.data!);
+
+            return Scaffold(
+              appBar: AppBar(
+                title: Text('Friend Details'),
+              ),
+              body: SizedBox(
+                width: double.infinity,
+                height: double.infinity,
+                child: Column(
+                  children: [
+                    ShowProfilePicture(
+                        image: friend.profileImage,
+                        initial: friend.firstName[0] + friend.lastName[0],
+                        size: 60),
+                    SizedBox(height: 20),
+                    Text(
+                      friend.username,
+                      style: TextStyle(fontSize: 30),
+                    ),
+                    SizedBox(height: 20),
+                    Text(
+                      '${friend.firstName} ${friend.lastName}',
+                      style: TextStyle(fontSize: 20),
+                    ),
+                    SizedBox(height: 20),
+                    pendingFriendRequestReceived
+                        ? Container()
+                        : Text(
+                            'Friends since: ${friend.requestTime?.month}-${friend.requestTime?.day}-${friend.requestTime?.year}',
+                            style: TextStyle(fontSize: 20)),
+                    SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text("Actions: "),
+                        pendingFriendRequestReceived
+                            ? Container()
+                            : OutlinedButton(
+                                child: Text("Delete"),
+                                onPressed: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) => AlertDialog(
+                                      title: Text('Delete'),
+                                      content: Text(
+                                          "Do you want to remove ${friend.username} as your friend?"),
+                                      actions: [
+                                        TextButton(
+                                          child: Text('Cancel'),
+                                          onPressed: () {
+                                            Navigator.of(context).pop();
+                                          },
+                                        ),
+                                        ElevatedButton(
+                                          child: Text('Delete'),
+                                          onPressed: () {
+                                            deleteFriend(
+                                                userID: friend.userID,
+                                                token: token);
+                                            //I mean, dadurch wird das Pop up & der Info Screen geschlossen
+                                            //und der Context für navigation ist wieder richtig. Gibt vllt ne bessere Lösung
+                                            // Navigator.of(context).pop();
+                                            Navigator.of(context).pop();
+                                            Navigator.pushReplacement(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    FriendsScreen(),
+                                              ),
+                                            );
+                                            //callbackFunction();
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+                        BlockUserButton(
+                            token: token,
+                            userID: friend.userID,
+                            userName: friend.username),
+                      ],
+                    ),
+                    SizedBox(height: 20),
+                    Text(
+                      'Transaction History: ',
+                      style: TextStyle(fontSize: 30),
+                    ),
+                    // show transaction history of friend with widget
+                    Expanded(
+                      child: TransactionListWidget(
+                        userId: userId,
+                        friendId: friend.userID,
+                        friendUsername:
+                            friend.username, // Pass friend's username
                       ),
-                BlockUserButton(
-                    token: token,
-                    userID: friend.userID,
-                    userName: friend.username),
-              ],
-            ),
-            SizedBox(height: 20),
-            Text(
-              'Transaction History: ',
-              style: TextStyle(fontSize: 30),
-            ),
-            // Container(
-            //   child: TransactionHistoryScreen(),
-            //   height: 100,
-            //   width: 100,
-            // ),
-          ],
-        ),
-      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          } else {
+            return Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+        }
+      },
     );
   }
+
+  //   child: Scaffold(
+
+  //     appBar: AppBar(
+  //       title: Text('Friend Details'),
+  //     ),
+  //     body: SizedBox(
+  //       width: double.infinity,
+  //       height: double.infinity,
+  //       child: Column(
+  //         children: [
+  //           ShowProfilePicture(
+  //               image: friend.profileImage,
+  //               initial: friend.firstName[0] + friend.lastName[0],
+  //               size: 60),
+  //           SizedBox(height: 20),
+  //           Text(
+  //             friend.username,
+  //             style: TextStyle(fontSize: 30),
+  //           ),
+  //           SizedBox(height: 20),
+  //           Text(
+  //             '${friend.firstName} ${friend.lastName}',
+  //             style: TextStyle(fontSize: 20),
+  //           ),
+  //           SizedBox(height: 20),
+  //           pendingFriendRequestReceived
+  //               ? Container()
+  //               : Text(
+  //                   'Friends since: ${friend.requestTime?.month}-${friend.requestTime?.day}-${friend.requestTime?.year}',
+  //                   style: TextStyle(fontSize: 20)),
+
+  //           SizedBox(height: 20),
+  //           Row(
+  //             mainAxisAlignment: MainAxisAlignment.center,
+  //             children: [
+  //               Text("Actions: "),
+  //               pendingFriendRequestReceived
+  //                   ? Container()
+  //                   : OutlinedButton(
+  //                       child: Text("Delete"),
+  //                       onPressed: () {
+  //                         showDialog(
+  //                           context: context,
+  //                           builder: (context) => AlertDialog(
+  //                             title: Text('Delete'),
+  //                             content: Text(
+  //                                 "Do you want to remove ${friend.username} as your friend?"),
+  //                             actions: [
+  //                               TextButton(
+  //                                 child: Text('Cancel'),
+  //                                 onPressed: () {
+  //                                   Navigator.of(context).pop();
+  //                                 },
+  //                               ),
+  //                               ElevatedButton(
+  //                                 child: Text('Delete'),
+  //                                 onPressed: () {
+  //                                   deleteFriend(
+  //                                       userID: friend.userID, token: token);
+  //                                   //I mean, dadurch wird das Pop up & der Info Screen geschlossen
+  //                                   //und der Context für navigation ist wieder richtig. Gibt vllt ne bessere Lösung
+  //                                   // Navigator.of(context).pop();
+  //                                   Navigator.of(context).pop();
+  //                                   Navigator.pushReplacement(
+  //                                     context,
+  //                                     MaterialPageRoute(
+  //                                       builder: (context) => FriendsScreen(),
+  //                                     ),
+  //                                   );
+  //                                   //callbackFunction();
+  //                                 },
+  //                               ),
+  //                             ],
+  //                           ),
+  //                         );
+  //                       },
+  //                     ),
+  //               BlockUserButton(
+  //                   token: token,
+  //                   userID: friend.userID,
+  //                   userName: friend.username),
+  //             ],
+  //           ),
+  //           SizedBox(height: 20),
+  //           Text(
+  //             'Transaction History: ',
+  //             style: TextStyle(fontSize: 30),
+  //           ),
+  //           // show transaction history of friend with widget
+  //           SingleChildScrollView(
+
+  //             child: TransactionListWidget(
+  //               userId: userId,
+  //               friendId: friend.userID,
+  //               friendUsername: friend.username, // Pass friend's username
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //     ),
+  //   ),
+  // );
+  // }
 
   void deleteFriend({required int userID, required String? token}) async {
     //snackbar anzeigen mit deleted/error?
@@ -899,63 +1029,83 @@ class UserInfoScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     //debugPrint('profile picture: ${friend.profileImage?.length}');
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('User Details'),
-      ),
-      body: SizedBox(
-        width: double.infinity,
-        height: double.infinity,
-        child: Column(
-          children: [
-            //not even show initiales?
-            // ShowProfilePicture(
-            //     image: null, //dont show profile picture of strangers
-            //     initial: user.firstName[0] + user.lastName[0],
-            //     size: 60),
-            SizedBox(height: 20),
-            Text(
-              userName,
-              style: TextStyle(fontSize: 30),
-            ),
-            SizedBox(height: 20),
-            // Text(
-            //   '${user.firstName} ${user.lastName}',
-            //   style: TextStyle(fontSize: 20),
-            // ),
-            // SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text("Actions: "),
+    return FutureBuilder<String>(
+      future: ApiService.fetchUserId(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          // Handle errors
+          return Text('Error: ${snapshot.error}');
+        } else {
+          if (snapshot.connectionState == ConnectionState.done) {
+            final int userId = int.parse(snapshot.data!);
 
-                //ADD FrIned button als statefull und denn dann ändern wenn man den gedrückt hat???
+            return Scaffold(
+              appBar: AppBar(
+                title: Text('User Details'),
+              ),
+              body: SizedBox(
+                width: double.infinity,
+                height: double.infinity,
+                child: Column(
+                  children: [
+                    //not even show initiales?
+                    // ShowProfilePicture(
+                    //     image: null, //dont show profile picture of strangers
+                    //     initial: user.firstName[0] + user.lastName[0],
+                    //     size: 60),
+                    SizedBox(height: 20),
+                    Text(
+                      userName,
+                      style: TextStyle(fontSize: 30),
+                    ),
+                    SizedBox(height: 20),
+                    // Text(
+                    //   '${user.firstName} ${user.lastName}',
+                    //   style: TextStyle(fontSize: 20),
+                    // ),
+                    // SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text("Actions: "),
 
-                AddFriendButton(
-                    userID: userID,
-                    userName: userName,
-                    token: token,
-                    friendRequestSend: friendRequestSend),
+                        //ADD FrIned button als statefull und denn dann ändern wenn man den gedrückt hat???
 
-                BlockUserButton(
-                    userID: userID, userName: userName, token: token),
+                        AddFriendButton(
+                            userID: userID,
+                            userName: userName,
+                            token: token,
+                            friendRequestSend: friendRequestSend),
 
-                //hier kommen buttons hin, block zb
-              ],
-            ),
-            SizedBox(height: 20),
-            Text(
-              'Transaction History: ',
-              style: TextStyle(fontSize: 30),
-            ),
-            // Container(
-            //   child: TransactionHistoryScreen(),
-            //   height: 100,
-            //   width: 100,
-            // ),
-          ],
-        ),
-      ),
+                        BlockUserButton(
+                            userID: userID, userName: userName, token: token),
+
+                        //hier kommen buttons hin, block zb
+                      ],
+                    ),
+                    SizedBox(height: 20),
+                    Text(
+                      'Transaction History: ',
+                      style: TextStyle(fontSize: 30),
+                    ),
+                    Expanded(
+                      child: TransactionListWidget(
+                        userId: userId,
+                        friendId: userID,
+                        friendUsername: userName,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          } else {
+            return Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+        }
+      },
     );
   }
 }
@@ -1362,6 +1512,112 @@ class ShowProfilePicture extends StatelessWidget {
               )
             : null,
       ),
+    );
+  }
+}
+
+class TransactionListWidget extends StatefulWidget {
+  final int userId;
+  final String friendUsername;
+  final int friendId;
+  const TransactionListWidget(
+      {Key? key,
+      required this.userId,
+      required this.friendId,
+      required this.friendUsername})
+      : super(key: key);
+
+  @override
+  _TransactionListWidgetState createState() => _TransactionListWidgetState();
+}
+
+class _TransactionListWidgetState extends State<TransactionListWidget> {
+  late Future<List<Transaction>> transactionsFuture;
+  List<Transaction> allTransactions = [];
+
+  @override
+  void initState() {
+    super.initState();
+    transactionsFuture = fetchTransactions();
+  }
+
+  Future<List<Transaction>> fetchTransactions() async {
+    // Fetch and process transactions just like in TransactionHistoryScreen
+    try {
+      // Retrieve the user's authentication token from secure storage
+      const storage = FlutterSecureStorage();
+      final token = await storage.read(key: 'token');
+
+      // Handle the case where the token is not available
+      if (token == null) {
+        throw Exception('Token not found');
+      }
+
+      // Make an HTTP GET request to fetch transactions
+      final response = await http.get(
+        Uri.parse('${ApiService.serverUrl}/transactions'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      // Check if the request was successful
+      if (response.statusCode == 200) {
+        // Parse the JSON response and create a list of Transaction objects
+        final List<dynamic> data = json.decode(response.body);
+        final List<dynamic> transactionsData = data[0];
+        List<Transaction> transactions =
+            transactionsData.map((transactionData) {
+          return Transaction.fromJson(transactionData as Map<String, dynamic>);
+        }).toList();
+
+        // Sort transactions in descending order based on the createdAt field
+        transactions.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+        // Filter transactions to only include those involving the friend
+        transactions = transactions.where((transaction) {
+          return transaction.senderId == widget.friendId ||
+              transaction.receiverId == widget.friendId;
+        }).toList();
+        return transactions;
+      } else {
+        // Handle errors if the request is not successful
+        throw Exception(
+            'Error fetching transactions. Status Code: ${response.statusCode}');
+      }
+    } catch (e) {
+      // Handle errors if the request fails
+      throw Exception('Error fetching transactions: $e');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<Transaction>>(
+      future: transactionsFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Center(child: Text('No transactions found.'));
+        } else {
+          // Save all transactions for reference
+          allTransactions = snapshot.data!;
+          return ListView.builder(
+            itemCount: allTransactions.length,
+            itemBuilder: (context, index) {
+              return TransactionItem(
+                transaction: allTransactions[index],
+                userId: widget.userId,
+                username: widget.friendUsername,
+              );
+            },
+          );
+        }
+      },
     );
   }
 }

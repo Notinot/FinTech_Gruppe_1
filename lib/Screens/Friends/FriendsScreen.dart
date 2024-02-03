@@ -501,12 +501,22 @@ class FriendItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var trailing = isStillPending
-        //build item with accept and decline buttons
         ? Row(
+            //build item with accept and decline buttons
             mainAxisSize: MainAxisSize.min,
             children: [
               ElevatedButton(
-                child: Text('Accept'),
+                child: Row(
+                  children: [
+                    Icon(Icons.person_add,
+                        size: MediaQuery.of(context).size.height * 0.025),
+                    Padding(padding: EdgeInsets.only(right: 7)),
+                    Text(
+                      'Accept',
+                      style: TextStyle(fontSize: 14),
+                    ),
+                  ],
+                ),
                 onPressed: () {
                   handleFriendRequestResponse(
                       userID: friend.userID, accepted: true, token: token);
@@ -514,13 +524,13 @@ class FriendItem extends StatelessWidget {
                 },
               ),
               TextButton(
-                child: Text('Decline'),
+                child: Icon(Icons.close),
                 onPressed: () {
                   handleFriendRequestResponse(
                       userID: friend.userID, accepted: false, token: token);
                   callbackFunction();
                 },
-              )
+              ),
             ],
           )
         //build item WITHOUT accept/decline buttons BUT with Icon Button
@@ -540,8 +550,10 @@ class FriendItem extends StatelessWidget {
             image: friend.profileImage,
             initial: friend.firstName[0] + friend.lastName[0],
             size: 25),
-        title: Text(friend.username),
-        subtitle: Text('${friend.firstName} ${friend.lastName}'),
+        title:
+            Text(friend.username, maxLines: 1, overflow: TextOverflow.ellipsis),
+        subtitle: Text('${friend.firstName} ${friend.lastName}',
+            maxLines: 1, overflow: TextOverflow.ellipsis),
         trailing: trailing,
         onTap: () {
           Navigator.push(

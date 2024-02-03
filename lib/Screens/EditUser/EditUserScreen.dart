@@ -589,7 +589,13 @@ class _EditUserState extends State<EditUser> {
                                 user['picture']['data'] != null
                             ? MemoryImage(Uint8List.fromList(
                                 user['picture']['data'].cast<int>()))
-                            : _imageProvider,
+                            : null,
+                        //_imageProvider,
+                        child: Text(
+                          '${user["first_name"][0].toUpperCase()}${user["last_name"][0].toUpperCase()}',
+                          style: TextStyle(
+                              fontSize: 75), // Change the size of initials
+                        ),
                       ),
                     ),
                     Visibility(

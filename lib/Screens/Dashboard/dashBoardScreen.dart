@@ -43,6 +43,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     userProfileFuture = ApiService.fetchUserProfile();
     userProfileFuture.then((userData) {
       user = userData;
+      fetchPendingEventRequests();
       fetchPendingRequests(context, user);
 
       Notifications.fetchTransactions().then((List<Transaction>? transactions) {

@@ -32,6 +32,7 @@ const db = mysql.createPool({
   password: 'ER0nIAbQy5qyAeSd4ZCV',
   database: 'btxppofwkgo3xl10tfwy',*/
 
+
   host: '80.130.111.254',
   user: 'payfriendz',
   password: 'payfriendz',
@@ -1203,7 +1204,62 @@ app.post('/event-service', async (req, res) => {
   }
 });
 
+app.get('/eventservice-status', async (req, res) => {
+  try {
 
+         // Status = 0 ==> Ready
+         // Status = 1 ==> Cooldown
+
+        const [checkStatus] = await db.query(`SELECT * FROM Service WHERE id = 1`);
+
+        const now = new Date();
+        const lastStart = checkStatus[0].lastStart;
+        const state = checkStatus[0].state;
+
+        /*
+        if(state == 1){
+            res.status(400).json({ message: 'Event Service is not ready' });
+        }
+        */
+
+
+        const difference = now - lastStart;
+        const oneMinute = 60 * 1000;
+        const waitTimeInMilliseconds = 3 * 1000;
+
+        console.log(difference);
+        console.log(oneMinute);
+
+        async function updateService() {
+          try {
+            const [interactedEvents] = await db.query(`
+              UPDATE Service
+              SET lastStart = NOW()
+              WHERE id = 1;
+            `);
+            console.log('Service updated successfully');
+          } catch (error) {
+            console.error('Error updating service:', error);
+          }
+        }
+
+
+        if (difference > oneMinute) {
+          setTimeout(async () => {
+            await updateService(); // Call the async function
+            console.log('Ready');
+            res.status(200).json({ message: 'Event Service is ready' });
+          }, waitTimeInMilliseconds);
+        } else {
+          console.log('Not ready yet');
+          res.status(400).json({ message: 'Event Service is not ready' });
+        }
+  }
+  catch (e) {
+    console.log(e);
+    res.status(500).json({ message: 'Event Service failed' });
+  }
+});
 
 //route to get the events the user is part of with JWT authentication
 app.get('/events', authenticateToken, async (req, res) => {

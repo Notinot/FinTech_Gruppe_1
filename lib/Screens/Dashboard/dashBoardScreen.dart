@@ -19,7 +19,6 @@ import 'package:flutter_application_1/Screens/Friends/FriendsScreen.dart';
 import 'package:http/http.dart' as http;
 import 'package:badges/badges.dart' as Badge;
 import 'package:intl/intl.dart';
-import 'package:cron/cron.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({Key? key}) : super(key: key);
@@ -209,7 +208,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  /*
   Future<void> RunEventService() async {
+
+    // await wait(Duration(seconds: 5));
+
     // Event Service
     const storage = FlutterSecureStorage();
     final token = await storage.read(key: 'token');
@@ -218,42 +221,57 @@ class _DashboardScreenState extends State<DashboardScreen> {
       throw Exception('Token not found');
     }
 
-    final res = await http.get(
-      Uri.parse('${ApiService.serverUrl}/fetch-all-events'),
+    final checkIfEventServiceReady = await http.get(
+      Uri.parse('${ApiService.serverUrl}/eventservice-status'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': 'Bearer $token',
       },
     );
 
-    if (res.statusCode == 200) {
-      try {
-        final List<dynamic> data = jsonDecode(res.body);
-        final List<dynamic> eventsData = data;
+    if(checkIfEventServiceReady.statusCode == 200){
 
-        List<Event> events = eventsData.map((eventData) {
-          return Event.fromJson(eventData as Map<String, dynamic>);
-        }).toList();
+      final res = await http.get(
+        Uri.parse('${ApiService.serverUrl}/fetch-all-events'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $token',
+        },
+      );
 
-        for (int i = 0; i < events.length; i++) {
-          for (int j = i + 1; j < events.length; j++) {
-            if (events[i].eventID == events[j].eventID) {
-              events.remove(events[i]);
+      if (res.statusCode == 200) {
+        try {
+          final List<dynamic> data = jsonDecode(res.body);
+          final List<dynamic> eventsData = data;
+
+          List<Event> events = eventsData.map((eventData) {
+            return Event.fromJson(eventData as Map<String, dynamic>);
+          }).toList();
+
+          for (int i = 0; i < events.length; i++) {
+            for (int j = i + 1; j < events.length; j++) {
+              if (events[i].eventID == events[j].eventID) {
+                events.remove(events[i]);
+              }
             }
           }
-        }
 
-        Event.eventService(events);
-      } catch (err) {
-        print("Error at event-service: $err");
+          Event.eventService(events);
+        } catch (err) {
+          print("Error at event-service: $err");
+        }
       }
     }
   }
 
+  Future<void> wait(Duration duration) {
+    return Future.delayed(duration);
+  }
+  */
+
   @override
   Widget build(BuildContext context) {
-    // Timer? timer;
-    // timer = Timer.periodic(Duration(seconds: 60), (Timer t) => RunEventService());
+
     // RunEventService();
 
     return FutureBuilder<Map<String, dynamic>>(

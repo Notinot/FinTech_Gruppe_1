@@ -246,6 +246,17 @@ class EventInfoScreen extends StatelessWidget {
                 '  Participants: ${event.participants.toString()} / ${event.maxParticipants.toString()}',
                 style: TextStyle(fontSize: 18),
               ),
+
+              const SizedBox(width: 40),
+              TextButton(
+                  onPressed: () {
+                      Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => InviteToEventScreen(eventId: event.eventID, allowInvite: false, iAmParticipant: true)),
+                );
+              },
+
+                  child: Text('View')),
             ],
           ),
         );

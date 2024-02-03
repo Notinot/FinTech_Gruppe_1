@@ -498,7 +498,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
               const Divider(height: 8, thickness: 2),
               const SizedBox(height: 16),
               Text(
-                'Price',
+                'Price (optional)',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16.0),
@@ -532,6 +532,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 },
               ),
               const SizedBox(height: 16),
+              /*
               const Divider(height: 8, thickness: 2),
               const SizedBox(height: 16),
               Text(
@@ -573,6 +574,8 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 },
                 title: const Text('Yearly'),
               ),
+
+               */
               const SizedBox(height: 40.0),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
@@ -589,6 +592,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                   ),
                 ),
               ),
+              const SizedBox(height: 8.0),
             ],
           ),
         ),

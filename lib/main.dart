@@ -32,58 +32,11 @@ class PayfriendzApp extends StatefulWidget {
 class _PayfriendzAppState extends State<PayfriendzApp> {
   bool serverAvailable = false;
   bool isLoggedIn = false;
-  Timer? timer;
-
-  Future<void> RunEventService() async {
-
-    print("Start eventservice");
-
-    // Event Service
-    const storage = FlutterSecureStorage();
-    final token = await storage.read(key: 'token');
-
-    if (token == null) {
-      throw Exception('Token not found');
-    }
-
-    final res = await http.get(
-      Uri.parse('${ApiService.serverUrl}/fetch-all-events'),
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': 'Bearer $token',
-      },
-    );
-
-    if (res.statusCode == 200) {
-      try {
-        final List<dynamic> data = jsonDecode(res.body);
-        final List<dynamic> eventsData = data;
-
-        List<Event> events = eventsData.map((eventData) {
-          return Event.fromJson(eventData as Map<String, dynamic>);
-        }).toList();
-
-        for (int i = 0; i < events.length; i++) {
-          for (int j = i + 1; j < events.length; j++) {
-            if (events[i].eventID == events[j].eventID) {
-              events.remove(events[i]);
-            }
-          }
-        }
-
-        Event.eventService(events);
-      } catch (err) {
-        print("Error at event-service: $err");
-      }
-    }
-  }
 
   @override
   void initState() {
     super.initState();
     checkServerAvailability();
-    timer = Timer.periodic(Duration(seconds: 60), (Timer t) => RunEventService());
-
     //checkStayLoggedIn(); //COMMENT THIS OUT TO STAY LOGGED IN (in theory)
   }
 

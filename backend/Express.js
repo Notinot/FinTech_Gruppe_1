@@ -1162,7 +1162,7 @@ app.post('/send-money', authenticateToken, async (req, res) => {
       message,
       event_id, // Assuming event_id is passed in the request body
     ]);
-
+    
     // Update sender and recipient balances
     const recipientBalance = await getBalance(recipientId);
 

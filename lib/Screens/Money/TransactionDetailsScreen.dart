@@ -46,7 +46,7 @@ class TransactionDetailsScreen extends StatelessWidget {
     Icon? transactionIcon;
     bool isDeposit = transaction.transactionType == 'Deposit';
     ImageProvider<Object> _imageProvider =
-        const AssetImage('lib/assets/profile_img.png');
+        const AssetImage('lib/assets/profile_image.png');
     Uint8List? profileImageBytes;
     //turn assetimage into bytes and then into Uint8List
     _imageProvider

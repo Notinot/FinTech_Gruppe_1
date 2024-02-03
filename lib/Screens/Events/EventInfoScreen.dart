@@ -227,7 +227,7 @@ class EventInfoScreen extends StatelessWidget {
 
   Widget showParticipantsButton(Event event, BuildContext context){
 
-    if(event.status == 1 && event.user_event_status != 1 && !event.isCreator){
+    if(event.status == 1 && event.user_event_status != 0 && !event.isCreator){
 
         return Padding(
           padding: EdgeInsets.symmetric(horizontal: 16),
@@ -247,7 +247,6 @@ class EventInfoScreen extends StatelessWidget {
                 '  Participants: ${event.participants.toString()} / ${event.maxParticipants.toString()}',
                 style: TextStyle(fontSize: 18),
               ),
-
               const SizedBox(width: 40),
               TextButton(
                   onPressed: () {
@@ -384,7 +383,10 @@ class EventInfoScreen extends StatelessWidget {
                 builder: (BuildContext context) {
                   return AlertDialog(
                     title: Text('Joining ${event.title}'),
-                    content: Text('Do you want to join "${event.title}"?'),
+                    content:
+                    Text('Attention!\n No refund if you decide to leave the event at a later time!\n Do you want to join "${event.title}"?', style: TextStyle(
+                        fontSize: 16)
+                    ),
                     actions: <Widget>[
                       TextButton(
                         onPressed: () {
@@ -442,7 +444,7 @@ class EventInfoScreen extends StatelessWidget {
                   return AlertDialog(
                     title: Text('Leave ${event.title}'),
                     content: Text(
-                        'Are you sure you want to leave the Event "${event.title}"?'),
+                        'Are you sure you want to remove the Event "${event.title}"?'),
                     actions: <Widget>[
                       TextButton(
                         onPressed: () {
@@ -472,15 +474,15 @@ class EventInfoScreen extends StatelessWidget {
                                 context, 'Removing event was successful!');
                           }
                         },
-                        child: Text('Leave'),
+                        child: Text('Remove'),
                       )
                     ],
                   );
                 },
               );
             },
-            // label: Text('Remove'),
-            label: Text('Leave Event'),
+            label: Text('Remove'),
+            // label: Text('Leave Event'),
             icon: Icon(Icons.disabled_visible_rounded),
           );
         }

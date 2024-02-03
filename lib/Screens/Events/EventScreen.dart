@@ -590,14 +590,13 @@ class EventItem extends StatelessWidget {
       iconColor = Colors.red;
     } else if (event.isCreator && event.status == 1) {
       iconColor = Colors.blue;
-    } else if (event.user_event_status == 1) {
+    } else if (event.user_event_status == 1 && event.status == 1) {
       iconColor = Colors.green;
     } else if (event.user_event_status == 2) {
       iconColor = Colors.orange;
-    } else if (event.user_event_status == 0) {
+    } else if (event.status == 0) {
       iconColor = Colors.red;
     }
-
     return Padding(
         padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 10),
         child: Hero(

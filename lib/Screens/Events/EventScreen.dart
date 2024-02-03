@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Screens/Dashboard/appDrawer.dart';
 import 'package:flutter_application_1/Screens/Dashboard/dashBoardScreen.dart';
+import 'package:flutter_application_1/Screens/Events/CreateEventScreen.dart';
 import 'package:flutter_application_1/Screens/Events/InviteToEventScreen.dart';
 import 'package:flutter_application_1/Screens/api_service.dart'; // Assumed path
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -87,7 +88,8 @@ class _EventScreenState extends State<EventScreen> {
         allEvents.removeWhere((event) => event.creatorId != currentUserId);
         break;
       case 'Invites':
-        allEvents.removeWhere((event) => event.user_event_status != 2 || event.status != 1);
+        allEvents.removeWhere(
+            (event) => event.user_event_status != 2 || event.status != 1);
         break;
       case 'Active':
         allEvents.removeWhere((event) =>
@@ -488,6 +490,31 @@ class _EventScreenState extends State<EventScreen> {
         },
         child: const Icon(Icons.refresh),
       ),
+      //button to get to CreateEventScreen
+      persistentFooterButtons: [
+        FloatingActionButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => CreateEventScreen(),
+              ),
+            );
+          },
+          child: const Icon(Icons.add),
+        ),
+        FloatingActionButton(
+          onPressed: () {
+            setState(() {
+              currentSortOrder = 'All events';
+              currentCategoryOption = 'Category';
+              eventsFuture = fetchEvents();
+            });
+          },
+          child: const Icon(Icons.refresh),
+        ),
+      ],
+      // FutureBuilder to display the events
       body: FutureBuilder<List<Event>>(
         future: eventsFuture,
         builder: (context, snapshot) {
@@ -616,10 +643,10 @@ class EventItem extends StatelessWidget {
                       padding: EdgeInsets.all(2),
                       child: isFree()
                           ? Text('Free',
-                          style: TextStyle(fontWeight: FontWeight.bold))
+                              style: TextStyle(fontWeight: FontWeight.bold))
                           : Text(
-                        '${NumberFormat("#,##0.00", "de_DE").format(event.price)}\€',
-                      )),
+                              '${NumberFormat("#,##0.00", "de_DE").format(event.price)}\€',
+                            )),
                   Container(
                     padding: EdgeInsets.all(2),
                     child: Text(event.creatorUsername),

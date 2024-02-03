@@ -204,11 +204,10 @@ class _EditUserState extends State<EditUser> {
           context,
           MaterialPageRoute(builder: (context) => const LoginScreen()),
         );
-      }
-      else if(response.statusCode == 401){
-        showErrorSnackBar(context, "You still have open events that has a price. Please cancel these to be able to delete your account'");
-      }
-      else {
+      } else if (response.statusCode == 401) {
+        showErrorSnackBar(context,
+            "You still have open events that has a price. Please cancel these to be able to delete your account'");
+      } else {
         print('Failed to delete profile. Status code: ${response.statusCode}');
       }
     } else {
@@ -568,7 +567,7 @@ class _EditUserState extends State<EditUser> {
                           return AlertDialog(
                             title: const Text("Info"),
                             content: const Text(
-                                "Here you can edit your profile. You can change your email, first name, last name and your profile picture."),
+                                "Here you can edit your profile.\n\nYou can change your email, first name, last name and your profile picture, as well as your password.\n\nIf you want to delete your account, you can do so here as well. Please be aware that this action is irreversible."),
                             actions: [
                               TextButton(
                                   onPressed: () {

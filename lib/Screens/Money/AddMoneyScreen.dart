@@ -138,7 +138,7 @@ class _AddMoneyScreenState extends State<AddMoneyScreen> {
                     return AlertDialog(
                       title: const Text("Info"),
                       content: const Text(
-                          "To add money to your account, enter the amount you want to add and click on the 'Add' button. The maximum amount you can add is 50.000,00€."),
+                          "To add money to your account, click on the button below your balance, enter the amount you want to add and confirm with the 'Add' button.\n\nThe maximum amount you can add is 50.000,00€."),
                       actions: [
                         TextButton(
                             onPressed: () {

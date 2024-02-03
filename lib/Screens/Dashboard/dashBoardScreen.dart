@@ -272,7 +272,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-
     // RunEventService();
 
     return FutureBuilder<Map<String, dynamic>>(
@@ -297,7 +296,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           return AlertDialog(
                             title: const Text("Info"),
                             content: const Text(
-                                "This is the Dashboard Screen. Here you can see your account summary, notifications and upcoming events. \n\nYou can also access the menu by clicking on the icon in the top right corner, or by swiping from the left edge of the screen.\n\nYou can also access the quick menu by clicking on the icon in the bottom right corner."),
+                                "This is the Dashboard Screen. Here you can see your account summary, notifications, recent transactions and upcoming events. \n\nYou can also access the menu by clicking on the icon in the top left corner\n\nAccess the quick menu by clicking on the icon in the bottom right corner."),
                             actions: [
                               TextButton(
                                   onPressed: () {

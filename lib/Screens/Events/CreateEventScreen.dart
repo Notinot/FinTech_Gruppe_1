@@ -338,6 +338,29 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       // ),
       appBar: AppBar(
         title: const Text('Create Event'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            onPressed: () {
+              showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: const Text("Info"),
+                      content: const Text(
+                          "To create an event, fill in the form with the event details and click on the 'Confirm' button.\n\nThe event will be created and you will be redirected to the event page where you can invite people to join."),
+                      actions: [
+                        TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            child: const Text("Close"))
+                      ],
+                    );
+                  });
+            },
+          )
+        ],
       ),
       body: SingleChildScrollView(
         child: Padding(

@@ -26,6 +26,29 @@ class EventInfoScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(event.title),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            onPressed: () {
+              showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: const Text("Info"),
+                      content: const Text(
+                          "This is the event information screen. Here you can see all the information about the selected event.\n\nYou can also edit or cancel the event if you are the creator of the event\n\nIf you are not the creator of the event, you can join the event if it is not full or leave the event if you are already joined."),
+                      actions: [
+                        TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            child: const Text("Close"))
+                      ],
+                    );
+                  });
+            },
+          ),
+        ],
       ),
       body: Hero(
         tag: 'event_${event.eventID}',
@@ -224,44 +247,47 @@ class EventInfoScreen extends StatelessWidget {
     );
   }
 
-
-  Widget showParticipantsButton(Event event, BuildContext context){
-
-    if(event.status == 1 && event.user_event_status != 0 && !event.isCreator){
-
-        return Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => InviteToEventScreen(eventId: event.eventID, allowInvite: false, iAmParticipant: true)),
-                  );
-                },
-                child: Icon(Icons.supervised_user_circle_rounded),
-              ),
-              Text(
-                '  Participants: ${event.participants.toString()} / ${event.maxParticipants.toString()}',
-                style: TextStyle(fontSize: 18),
-              ),
-              const SizedBox(width: 40),
-              TextButton(
-                  onPressed: () {
-                      Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => InviteToEventScreen(eventId: event.eventID, allowInvite: false, iAmParticipant: true)),
+  Widget showParticipantsButton(Event event, BuildContext context) {
+    if (event.status == 1 && event.user_event_status != 0 && !event.isCreator) {
+      return Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => InviteToEventScreen(
+                          eventId: event.eventID,
+                          allowInvite: false,
+                          iAmParticipant: true)),
                 );
               },
-
-                  child: Text('View')),
-            ],
-          ),
-        );
-    }
-    else{
+              child: Icon(Icons.supervised_user_circle_rounded),
+            ),
+            Text(
+              '  Participants: ${event.participants.toString()} / ${event.maxParticipants.toString()}',
+              style: TextStyle(fontSize: 18),
+            ),
+            const SizedBox(width: 40),
+            TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => InviteToEventScreen(
+                            eventId: event.eventID,
+                            allowInvite: false,
+                            iAmParticipant: true)),
+                  );
+                },
+                child: Text('View')),
+          ],
+        ),
+      );
+    } else {
       return Padding(
         padding: EdgeInsets.symmetric(horizontal: 16),
         child: Row(
@@ -383,10 +409,9 @@ class EventInfoScreen extends StatelessWidget {
                 builder: (BuildContext context) {
                   return AlertDialog(
                     title: Text('Joining ${event.title}'),
-                    content:
-                    Text('Attention!\n No refund if you decide to leave the event at a later time!\n Do you want to join "${event.title}"?', style: TextStyle(
-                        fontSize: 16)
-                    ),
+                    content: Text(
+                        'Attention!\n No refund if you decide to leave the event at a later time!\n Do you want to join "${event.title}"?',
+                        style: TextStyle(fontSize: 16)),
                     actions: <Widget>[
                       TextButton(
                         onPressed: () {

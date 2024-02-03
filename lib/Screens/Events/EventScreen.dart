@@ -87,7 +87,7 @@ class _EventScreenState extends State<EventScreen> {
         allEvents.removeWhere((event) => event.creatorId != currentUserId);
         break;
       case 'Invites':
-        allEvents.removeWhere((event) => event.user_event_status != 2);
+        allEvents.removeWhere((event) => event.user_event_status != 2 || event.status != 1);
         break;
       case 'Active':
         allEvents.removeWhere((event) =>

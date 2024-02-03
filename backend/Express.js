@@ -671,38 +671,38 @@ app.post('/delete_user', authenticateToken, async (req, res) => {
     const { username, email } = userInfo[0];
 
     const [participatedEvents] = await db.query(`
-           SELECT
-                    Event.*,
-                    User_Event.user_id,
-                    User_Event.status AS user_event_status
-                   FROM
-                        Event
-                    JOIN
-                        User_Event ON User_Event.event_id = Event.id
-                    WHERE
-                        User_Event.status != 0
-                        AND
-                        User_Event.user_id = ?
-                        AND
-                        User_Event.user_id != creator_id;
+                SELECT
+                Event.*,
+                User_Event.user_id,
+                User_Event.status AS user_event_status
+                FROM
+                Event
+                JOIN
+                User_Event ON User_Event.event_id = Event.id
+                WHERE
+                User_Event.status != 0
+                AND
+                User_Event.user_id = ?
+                AND
+                User_Event.user_id != creator_id;
         `, [userid]);
 
         const [createdEvents] = await db.query(`
-                                         SELECT
-                                         Event.*,
-                                         User_Event.user_id,
-                                                      User_Event.status AS user_event_status
-                                                  FROM
-                                                      Event
-                                                  JOIN
-                                                      User_Event ON User_Event.event_id = Event.id
-                                                  WHERE
-                                                      User_Event.status != 0
-                                                      AND
-                                                      User_Event.user_id = ?
-                                                      AND
-                                                      User_Event.user_id = creator_id;
-                                      `, [userid]);
+                SELECT
+                Event.*,
+                User_Event.user_id,
+                User_Event.status AS user_event_status
+                FROM
+                Event
+                JOIN
+                User_Event ON User_Event.event_id = Event.id
+                WHERE
+                User_Event.status != 0
+                AND
+                User_Event.user_id = ?
+                AND
+                User_Event.user_id = creator_id;
+        `, [userid]);
 
 
         const participatedEventIds = [];
@@ -737,134 +737,37 @@ app.post('/delete_user', authenticateToken, async (req, res) => {
 
         for(let i = 0; i < createdEventIds.length; i++){
 
-            const [event] = await db.query(
-                                    `SELECT
-                                     Event.*,
-                                     User_Event.user_id,
-                                     User_Event.status AS user_event_status,
-                                     User.username AS creator_username
-                                     FROM Event
-                                     JOIN
-                                        User_Event ON User_Event.event_id = Event.id
-                                     JOIN
-                                        User ON Event.creator_id = User.user_id
-                                     WHERE
-                                     Event.id = ?
-                                     AND
-                                     User_Event.user_id = ?;
-                                   `, [createdEventIds[i], userid]
-                   );
 
+                try{
 
-                   const [joinedParticipants] = await db.query(`
-                                SELECT
-                                	User.email
-                                   FROM User
-                                   JOIN
-                                   User_Event
-                                   ON User.user_id = User_Event.user_id
-                                   WHERE User_Event.event_id = ?
-                                   AND
-                                   User.user_id != ?
-                                   AND
-                                   User_Event.status = 1;
-                              `, [createdEventIds[i], userid]);
+                    const [deleteLocation] = await db.query('DELETE FROM Location WHERE event_id = ?',
+                        [
+                            createdEventIds[i]
+                        ]);
 
-                   const participants = [];
+                    const [deleteUser_Event] = await db.query('DELETE FROM User_Event WHERE event_id = ?',
+                        [
+                            createdEventIds[i]
+                        ]);
 
-                   if(joinedParticipants > 0){
+                    const [deleteTransactions] = await db.query('DELETE FROM User_Event WHERE event_id = ?',
+                        [
+                            createdEventIds[i]
+                        ]);
 
-                        participants.push(joinedParticipants);
-                   }
-
-
-                // Set Event Status to canceled
-                const creatorUsername = event[0].creator_username;
-                const eventTitle = event[0].title;
-                const eventPrice = event[0].price;
-
-
-
-                const [cancelQuery] = await db.query('UPDATE Event SET status = 0 WHERE id = ? AND creator_id = ?',
-                  [
-                    createdEventIds[i],
-                    userid
-                  ]);
-
-                console.log(cancelQuery);
-
-                // Send Email to participants
-                const participantsUsername = [];
-                const participantsId = [];
-
-                // Loop through the participants and query their data
-                for (let i = 0; i < participants.length; i++) {
-                  const [participant] = await db.query('SELECT User.username FROM User WHERE User.email = ?', [participants[i]]);
-
-
-                  // Check if participant data is found
-                  if (participant) {
-                    participantsUsername.push(participant);
-                  }
+                    const [deleteEvent] = await db.query('DELETE FROM Event WHERE id = ? AND creator_id = ?',
+                        [
+                            createdEventIds[i],
+                            userid
+                        ]);
                 }
+                catch(err){
 
-                // Loop through the participants and query their data
-                    for (let i = 0; i < participants.length; i++) {
-                      const [participantId] = await db.query('SELECT User.user_id FROM User WHERE User.email = ?', [participants[i]]);
-
-
-                      // Check if participant data is found
-                      if (participantId) {
-                        participantsId.push(participantId);
-                      }
-                    }
-
-
-
-                for(let i = 0; i < participants.length; i++){
-
-
-                    if(eventPrice > 0){
-
-                                const senderBalance = await getBalance(senderId);
-                                console.log(senderBalance);
-
-                                /* // Case if User does not have enough money to apy all participants
-                                if(senderBalance < eventPrice){
-
-                                    console.log("User does not have enough money to refund the event costs")
-                                    return res.status(402).json({ message: ' User does not have enough money to refund the event costs  ' });
-                                }
-                                */
-
-                                const message = "Event costs paid back";
-
-                                await db.query('INSERT INTO Transaction (sender_id, receiver_id, amount, transaction_type, created_at, message, processed, event_id) VALUES (?, ?, ?, ?, NOW(), ?, 1, ?);',
-                                [senderId,
-                                 participantsId[i][0].user_id,
-                                 eventPrice,
-                                 'Payment',
-                                 message,
-                                 eventId]);
-
-
-                                await updateBalance(senderId, -eventPrice);
-                                await updateBalance(participantsId[i][0].user_id, +eventPrice);
-
-                                const [kickParticipant] = await db.query(`
-                                                     UPDATE User_Event SET User_Event.status = 0
-                                                     WHERE User_Event.event_id = ?
-                                                     AND
-                                                     User_Event.user_id = ?;
-                                                   `, [eventId, participantsId[i][0].user_id]);
-                            }
-
+                    console.log(err);
+                    console.log("Event could not be deleted");
+                    res.status(400).json({ message: 'Events could not be deleted' });
                 }
-
         }
-
-
-
 
 
     sendDeletionEmail(email, username);

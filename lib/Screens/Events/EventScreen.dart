@@ -617,10 +617,10 @@ class EventItem extends StatelessWidget {
                       padding: EdgeInsets.all(2),
                       child: isFree()
                           ? Text('Free',
-                              style: TextStyle(fontWeight: FontWeight.bold))
+                          style: TextStyle(fontWeight: FontWeight.bold))
                           : Text(
-                              '${NumberFormat("#,##0.00", "de_DE").format(event.price)}\€',
-                            )),
+                        '${NumberFormat("#,##0.00", "de_DE").format(event.price)}\€',
+                      )),
                   Container(
                     padding: EdgeInsets.all(2),
                     child: Text(event.creatorUsername),

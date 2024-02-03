@@ -338,7 +338,7 @@ class _EditUserState extends State<EditUser> {
       return;
     }
 
-    if (!new_password.contains(RegExp(r'[#&@~!@?}\[%!?_*+-]')) &&
+    if (!new_password.contains(RegExp(r'[$#&@~!@?}\[%!?_*+-]')) &&
         new_password.isNotEmpty) {
       // Check if password contains at least one special character
       setState(() {

@@ -1,6 +1,7 @@
 // TransactionDetailScreen displays detailed information about a transaction
 import 'dart:async';
 import 'dart:convert';
+import 'dart:ffi';
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui';
@@ -412,8 +413,7 @@ class TransactionDetailsScreen extends StatelessWidget {
                                                 fontSize: 15,
                                               )),
                                           onPressed: () =>
-                                              verifyPasswordAccept(context),
-                                          // acceptRequest(context),
+                                              acceptRequest(context),
                                           child: Text('Accept Request'),
                                         ),
                                         SizedBox(width: 20),
@@ -425,7 +425,7 @@ class TransactionDetailsScreen extends StatelessWidget {
                                                   fontSize: 15,
                                                 )),
                                             onPressed: () =>
-                                                verifyPasswordDeny(context),
+                                                denyRequest(context),
                                             child: Text('Deny Request')),
                                       ],
                                     ),
@@ -499,7 +499,7 @@ class TransactionDetailsScreen extends StatelessWidget {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Confirm'),
+          title: const Text('Send Money'),
           content: Text(
               'Are you sure you want to send \n${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}\€ to ${transaction.senderUsername}?'),
           actions: [
@@ -509,7 +509,7 @@ class TransactionDetailsScreen extends StatelessWidget {
               },
               child: const Text('Cancel'),
             ),
-            TextButton(
+            ElevatedButton(
               onPressed: () {
                 Navigator.pop(context, true);
               },
@@ -523,6 +523,11 @@ class TransactionDetailsScreen extends StatelessWidget {
       // User cancelled the transaction
       return;
     }
+    //promt user to enter password
+    if (!await verifyPassword(context)) {
+      return;
+    }
+
     try {
       const storage = FlutterSecureStorage();
       final token = await storage.read(key: 'token');
@@ -604,6 +609,8 @@ class TransactionDetailsScreen extends StatelessWidget {
       // User cancelled the transaction
       return;
     }
+
+    // Make a request to  backend API to deny the request
     try {
       const storage = FlutterSecureStorage();
       final token = await storage.read(key: 'token');
@@ -777,7 +784,7 @@ class TransactionDetailsScreen extends StatelessWidget {
     );
   }
 
-  Future<bool> verifyPasswordAccept(BuildContext context) async {
+  Future<bool> verifyPassword(BuildContext context) async {
     Completer<bool> completer = Completer<bool>();
     TextEditingController currentPasswordController = TextEditingController();
 
@@ -801,7 +808,7 @@ class TransactionDetailsScreen extends StatelessWidget {
               },
               child: Text('Close'),
             ),
-            TextButton(
+            ElevatedButton(
               onPressed: () async {
                 try {
                   // Make an HTTP request to verify the password on the backend
@@ -827,90 +834,7 @@ class TransactionDetailsScreen extends StatelessWidget {
 
                   if (response.statusCode == 200) {
                     // Password is correct, set completer to true
-                    acceptRequest(context);
-                    //Navigator.of(context).pop(); // Close the AlertDialog
-                    completer.complete(true);
-                  } else {
-                    // Password is incorrect, show an error message
-                    showSnackBar(
-                        isError: true,
-                        message: 'Incorrect password',
-                        context: context);
-                  }
-                } catch (error) {
-                  // Handle error or show an error message
-                  showSnackBar(
-                      isError: true,
-                      message: 'Error verifying password: $error',
-                      context: context);
-                }
-              },
-              child: Text('Submit'),
-            ),
-          ],
-        );
-      },
-    );
-
-    try {
-      return await completer.future;
-    } catch (error) {
-      return false; // Handle error or return a default value
-    }
-  }
-
-  Future<bool> verifyPasswordDeny(BuildContext context) async {
-    Completer<bool> completer = Completer<bool>();
-    TextEditingController currentPasswordController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Enter your current password'),
-          content: TextField(
-            controller: currentPasswordController,
-            obscureText: true,
-            decoration: InputDecoration(
-              hintText: 'Password',
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                completer.completeError('User cancelled');
-              },
-              child: Text('Close'),
-            ),
-            TextButton(
-              onPressed: () async {
-                try {
-                  // Make an HTTP request to verify the password on the backend
-                  Map<String, dynamic> request = {
-                    'userid': await ApiService.getUserId(),
-                    'password': currentPasswordController.text,
-                  };
-
-                  const storage = FlutterSecureStorage();
-                  final token = await storage.read(key: 'token');
-
-                  final response = await http.post(
-                    Uri.parse('${ApiService.serverUrl}/verifyPassword'),
-                    headers: {
-                      'Content-Type': 'application/json',
-                      'Authorization': 'Bearer $token',
-                    },
-                    body: json.encode(request),
-                  );
-
-                  print(
-                      'Verification Response: ${response.statusCode} - ${response.body}');
-
-                  if (response.statusCode == 200) {
-                    // Password is correct, set completer to true
-                    denyRequest(context);
-                    //Navigator.of(context).pop(); // Close the AlertDialog
+                    Navigator.of(context).pop(); // Close the AlertDialog
                     completer.complete(true);
                   } else {
                     // Password is incorrect, show an error message

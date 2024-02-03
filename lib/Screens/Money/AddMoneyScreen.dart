@@ -62,14 +62,14 @@ class _AddMoneyScreenState extends State<AddMoneyScreen> {
           ),
           actions: [
             TextButton(
-              onPressed: () => _addMoney(),
-              child: Text('Add'),
-            ),
-            TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
               },
               child: Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => _addMoney(),
+              child: Text('Add'),
             ),
           ],
         );

@@ -1098,7 +1098,7 @@ app.post('/send-money-checkBlocked', authenticateToken, async (req, res) => {
     }
 
     //check if users have each other blocked
-    const [blocked] = await db.query('SELECT * FROM Friendship WHERE (requester_id = ? AND addressee_id = ?) OR (requester_id = ? AND addressee_id = ?) AND status = "blocked"', [senderId, recipient, recipient, senderId]);
+    const [blocked] = await db.query('SELECT * FROM Friendship WHERE (requester_id = ? AND addressee_id = ?) AND status = "blocked" OR (requester_id = ? AND addressee_id = ?) AND status = "blocked"', [senderId, recipient, recipient, senderId]);
     if (blocked.length > 0) {
       return res.status(400).json({ message: 'Users have each other blocked' });
     }
@@ -1157,11 +1157,6 @@ app.post('/request-money', authenticateToken, async (req, res) => {
     const requesterId = req.user.userId;
     console.log('requesterId:', requesterId);
 
- //check if users have each other blocked
- const [blocked] = await db.query('SELECT * FROM Friendship WHERE (requester_id = ? AND addressee_id = ?) OR (requester_id = ? AND addressee_id = ?) AND status = "blocked"', [senderId, recipient, recipient, senderId]);
- if (blocked.length > 0) {
-   return res.status(400).json({ message: 'Users have each other blocked' });
- }
 
     //Get onyl the users email and username
     const [requesterData] = await db.query('SELECT email, username FROM User WHERE user_id = ?', [requesterId]);
@@ -1190,6 +1185,14 @@ app.post('/request-money', authenticateToken, async (req, res) => {
     const recipientId = recipientData[0].user_id;
     const recipientUsername = recipientData[0].username;
     const recipientEmail = recipientData[0].email;
+
+     //check if users have each other blocked
+ const [blocked] = await db.query('SELECT * FROM Friendship WHERE (requester_id = ? AND addressee_id = ?) AND status = "blocked" OR (requester_id = ? AND addressee_id = ?) AND status = "blocked"', [requesterId, recipientId, recipientId, requesterId]);
+ if (blocked.length > 0) {
+  console.log('Users have each other blocked');
+   return res.status(400).json({ message: 'Users have each other blocked' });
+ }
+
     // Insert transaction with message and set transaction_type to "Request"
     await db.query('INSERT INTO Transaction (sender_id, receiver_id, amount, transaction_type, created_at, message, processed) VALUES (?, ?, ?, ?, NOW(), ?, 0)', [
       requesterId,

@@ -182,6 +182,8 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                 icon: Icon(Icons.close),
                 onPressed: () {
                   setState(() {
+                    //reset the transactions list to the original list
+                    allTransactions = List.from(originalTransactions);
                     isSearchMode = false;
                     searchController.clear();
                     onSearchTextChanged('');
@@ -260,7 +262,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                         return AlertDialog(
                           title: const Text("Info"),
                           content: const Text(
-                              "This is your transaction history. \n\nYou can search for transactions by username, message, or type.\n\n You can also sort transactions by date, amount, type, or event.\n\n Click on a transaction to view more details."),
+                              "This is your transaction history. \n\nYou can search for transactions by username, message, or type.\n\n You can also sort transactions by date, amount, type, or event.\n\n Click on a transaction to view more details.\n\nRefresh the transaction history by clicking the refresh button at the bottom right."),
                           actions: [
                             TextButton(
                                 onPressed: () {
@@ -279,9 +281,22 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
   void onSearchTextChanged(String query) {
     List<Transaction> filteredTransactions = [];
     if (query.isEmpty) {
-      filteredTransactions = originalTransactions;
+      // filteredTransactions = originalTransactions;
+      filteredTransactions = allTransactions;
     } else {
-      filteredTransactions = originalTransactions.where((transaction) {
+      // filteredTransactions = originalTransactions.where((transaction) {
+      //   return transaction.senderUsername
+      //           .toLowerCase()
+      //           .contains(query.toLowerCase()) ||
+      //       transaction.receiverUsername
+      //           .toLowerCase()
+      //           .contains(query.toLowerCase()) ||
+      //       transaction.message.toLowerCase().contains(query.toLowerCase()) ||
+      //       transaction.transactionType
+      //           .toLowerCase()
+      //           .contains(query.toLowerCase());
+      // }).toList();
+      filteredTransactions = allTransactions.where((transaction) {
         return transaction.senderUsername
                 .toLowerCase()
                 .contains(query.toLowerCase()) ||

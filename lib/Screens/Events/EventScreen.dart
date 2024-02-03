@@ -578,7 +578,25 @@ class EventItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Color? iconColor;
-    event.status != 1 ? iconColor = Colors.red : iconColor;
+    // event.status != 1 ? iconColor = Colors.red : iconColor;
+
+    // determine the color of the icon and text based on if the user is part of the event
+    //check if event is canceled, if so, set icon color to red always
+    // if the user is part of the event, the icon will be green
+    // if the user is not part of the event, and the event is not full or canceled, the icon will be orange
+    // if the user is the creator of the event, the icon will be blue
+    // if the user is not part of the event and the event is full, the icon will be red
+    if (event.status == 0) {
+      iconColor = Colors.red;
+    } else if (event.isCreator && event.status == 1) {
+      iconColor = Colors.blue;
+    } else if (event.user_event_status == 1) {
+      iconColor = Colors.green;
+    } else if (event.user_event_status == 2) {
+      iconColor = Colors.orange;
+    } else if (event.user_event_status == 0) {
+      iconColor = Colors.red;
+    }
 
     return Padding(
         padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 10),

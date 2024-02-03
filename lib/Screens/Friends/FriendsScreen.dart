@@ -9,6 +9,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Screens/Money/RequestMoneyScreen.dart';
 import 'package:flutter_application_1/Screens/Money/SendMoneyScreen.dart';
+import 'package:flutter_application_1/fonts/custom_icons_icons.dart';
 
 import '../api_service.dart';
 
@@ -535,11 +536,15 @@ class FriendItem extends StatelessWidget {
           )
         //build item WITHOUT accept/decline buttons BUT with Icon Button
         : ElevatedButton(
-            child: Icon(Icons.currency_exchange),
             onPressed: () {
               requestOrSendMoneyDialog(context);
             },
-          );
+            child: Icon(
+              MyFlutterApp.exchange,
+              //Icons.add,
+              //Icons.currency_exchange_outlined,
+              size: 25,
+            ));
 
     return Card(
       child: ListTile(

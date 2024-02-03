@@ -215,16 +215,9 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
               // ),
             ]
           : [
-              IconButton(
-                icon: Icon(Icons.search),
-                onPressed: () {
-                  setState(() {
-                    isSearchMode = true;
-                    currentSortOrder = 'Date (↓)';
-                  });
-                },
-              ),
               DropdownButton<String>(
+                alignment: Alignment.center,
+                underline: Container(),
                 value: currentSortOrder,
                 icon: Icon(Icons.sort),
                 onChanged: (String? newValue) {
@@ -249,6 +242,36 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                   );
                 }).toList(),
               ),
+              IconButton(
+                icon: Icon(Icons.search),
+                onPressed: () {
+                  setState(() {
+                    isSearchMode = true;
+                    currentSortOrder = 'Date (↓)';
+                  });
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.info_outline),
+                onPressed: () {
+                  showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: const Text("Info"),
+                          content: const Text(
+                              "This is your transaction history. \n\nYou can search for transactions by username, message, or type.\n\n You can also sort transactions by date, amount, type, or event.\n\n Click on a transaction to view more details."),
+                          actions: [
+                            TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                                child: const Text("Close"))
+                          ],
+                        );
+                      });
+                },
+              ),
             ],
     );
   }
@@ -271,6 +294,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                 .contains(query.toLowerCase());
       }).toList();
     }
+
     setState(() {
       transactionsFuture = Future.value(filteredTransactions);
     });

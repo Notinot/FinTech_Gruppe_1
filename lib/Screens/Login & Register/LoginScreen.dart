@@ -191,7 +191,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       return AlertDialog(
                         title: const Text("Info"),
                         content: const Text(
-                            "This is the Login Screen. Here you can login with your email and password. If you don't have an account yet, you can register by clicking on the link below."),
+                            "This is the Login Screen. Here you can login with your email and password.\n\nIf you don't have an account yet, you can register by clicking on the link below."),
                         actions: [
                           TextButton(
                               onPressed: () {

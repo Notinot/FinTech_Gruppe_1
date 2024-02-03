@@ -269,6 +269,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
             appBar: AppBar(
               title: const Text('Dashboard'),
               actions: [
+                IconButton(
+                  icon: const Icon(Icons.info_outline),
+                  onPressed: () {
+                    showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: const Text("Info"),
+                            content: const Text(
+                                "This is the Dashboard Screen. Here you can see your account summary, notifications and upcoming events. \n\nYou can also access the menu by clicking on the icon in the top right corner, or by swiping from the left edge of the screen.\n\nYou can also access the quick menu by clicking on the icon in the bottom right corner."),
+                            actions: [
+                              TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                  child: const Text("Close"))
+                            ],
+                          );
+                        });
+                  },
+                ),
                 Badge.Badge(
                   badgeContent: Text(
                     (pendingFriends.length +

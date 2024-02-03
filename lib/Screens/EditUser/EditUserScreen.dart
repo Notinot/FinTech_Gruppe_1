@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_application_1/Screens/Dashboard/appDrawer.dart';
 import 'package:flutter_application_1/Screens/Dashboard/dashBoardScreen.dart';
+import 'package:flutter_application_1/Screens/Events/CreateEventScreen.dart';
 import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
 import 'package:flutter_application_1/Screens/Login & Register/LoginScreen.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -203,7 +204,11 @@ class _EditUserState extends State<EditUser> {
           context,
           MaterialPageRoute(builder: (context) => const LoginScreen()),
         );
-      } else {
+      }
+      else if(response.statusCode == 401){
+        showErrorSnackBar(context, "You still have open events that has a price. Please cancel these to be able to delete your account'");
+      }
+      else {
         print('Failed to delete profile. Status code: ${response.statusCode}');
       }
     } else {

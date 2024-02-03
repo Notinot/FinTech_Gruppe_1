@@ -737,44 +737,44 @@ app.post('/delete_user', authenticateToken, async (req, res) => {
 
         for(let i = 0; i < createdEventIds.length; i++){
 
+                    const [events] = await db.query('SELECT * FROM Event WHERE status != 0 AND id = ?', [createdEventIds[i]]);
 
-                try{
+                    if(events.length > 0){
+                         const eventPrice = events[0].price;
 
-                    const [deleteLocation] = await db.query('DELETE FROM Location WHERE event_id = ?',
-                        [
+                         if(eventPrice > 0){
+                            return res.status(401).json({ message: 'You still have open events that has a price. Please cancel these to be able to delete your account' });
+                         }
+
+                         // DELETE EVENT WORKS
+                         const [deleteLocation] = await db.query('DELETE FROM Location WHERE event_id = ?',
+                         [
                             createdEventIds[i]
-                        ]);
+                         ]);
 
-                    const [deleteUser_Event] = await db.query('DELETE FROM User_Event WHERE event_id = ?',
-                        [
-                            createdEventIds[i]
-                        ]);
+                         const [deleteUser_Event] = await db.query('DELETE FROM User_Event WHERE event_id = ?',
+                         [
+                                createdEventIds[i]
+                         ]);
 
-                    const [deleteTransactions] = await db.query('DELETE FROM User_Event WHERE event_id = ?',
-                        [
-                            createdEventIds[i]
-                        ]);
+                         const [deleteTransactions] = await db.query('DELETE FROM Transaction WHERE event_id = ?;',
+                         [
+                               createdEventIds[i]
+                         ]);
 
-                    const [deleteEvent] = await db.query('DELETE FROM Event WHERE id = ? AND creator_id = ?',
-                        [
-                            createdEventIds[i],
-                            userid
-                        ]);
-                }
-                catch(err){
-
-                    console.log(err);
-                    console.log("Event could not be deleted");
-                    res.status(400).json({ message: 'Events could not be deleted' });
-                }
+                         const [deleteEvent] = await db.query('DELETE FROM Event WHERE id = ? AND creator_id = ?',
+                         [
+                               createdEventIds[i],
+                               userid
+                         ]);
+                    }
         }
-
 
     sendDeletionEmail(email, username);
     await db.query('UPDATE User SET active = 0, username = null,email = null, Picture = null,password_hash = null WHERE user_id = ?', [userid]);
     await db.query('DELETE FROM Friendship WHERE (requester_id = ? ) OR (addressee_id = ?)'
       , [userid, userid]);
-      await db.query('DELETE FROM User_Event WHERE user_id = ? '
+      await db.query('DELETE FROM User_Event WHERE user_id = ?'
       , [userid]);
 
 
@@ -782,7 +782,7 @@ app.post('/delete_user', authenticateToken, async (req, res) => {
   }
   catch (error) {
     console.error('User deletion failed. Error:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    return res.status(500).json({ message: 'Internal server error' });
   }
 });
 

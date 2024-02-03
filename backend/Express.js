@@ -1759,7 +1759,7 @@ app.post('/edit-event', authenticateToken, async (req, res) => {
     //console.log(user_eventQuery);
 
     sendEventEditedEmail(participantMails,creatorName,OLD_title, title,
-      category, description, country, city, street, zipcode, price, recurrence_type, datetime_event)
+      category, description, country, city, street, zipcode, price, datetime_event)
 
     res.status(200).json({ message: 'Event created successfully' });
 
@@ -3087,7 +3087,7 @@ function sendKickedFromEvent(recipientEmail, recipientUsername, creatorUsername,
 }
 
 function sendEventEditedEmail(recipientEmails, creatorUsername,OLD_eventTitle, eventTitle,
-  category, description, country, city, street, zipcode, price, recurrence_type, datetime_event) {
+  category, description, country, city, street, zipcode, price,datetime_event) {
 
   const options = {
     year: 'numeric',
@@ -3166,7 +3166,6 @@ function sendEventEditedEmail(recipientEmails, creatorUsername,OLD_eventTitle, e
             <p class="text-size-14"><span class="bold">Description:</span> ${description}</p>
             <p class="text-size-14"><span class="bold">Location:</span> ${street}, ${city}, ${zipcode}, ${country}</p>
             <p class="text-size-14"><span class="bold">Price:</span> ${price}</p>
-            <p class="text-size-14"><span class="bold">Recurrence Type:</span> ${recurrence_type}</p>
             <p class="text-size-14"><span class="bold">Event Date and Time:</span> ${formattedDateTime}</p>
           </div>
           <p class="text-size-14">

@@ -1,5 +1,6 @@
 // Import required dependencies
 const express = require('express');
+const bodyParser = require('body-parser');
 const mysql = require('mysql2/promise');
 const bcrypt = require('bcrypt');
 const cors = require('cors');
@@ -14,7 +15,10 @@ const jwtOptions = {
   expiresIn: '5h', // Token expiration time
 };
 
+
+app.use(bodyParser.json({ limit: '50mb' }));
 app.use(express.json());
+
 // Middleware to extract and verify JWT
 
 // Enable CORS to allow requests from any origin and restrict to POST requests
@@ -1265,9 +1269,11 @@ app.get('/transactions', authenticateToken, async (req, res) => {
 app.get('/checkIfFriends', authenticateToken, async (req, res) => {
   const user_id = req.user.userId;
   const friendId = req.query.friendId;
+
+  //check if entry exists and status is accepted
   const query = `SELECT * FROM Friendship WHERE (requester_id = ? AND addressee_id = ?) OR (requester_id = ? AND addressee_id = ?)`;
-  const [friends] = await db.query(query, [user_id, friendId, friendId, user_id]);
-  const isFriend = friends[0] != null;
+  const [friendship] = await db.query(query, [user_id, friendId, friendId, user_id]);
+  const isFriend = friendship.length > 0 && friendship[0].status === 'accepted';
   console.log('isFriend:', isFriend);
   res.json({ isFriend: isFriend });
 

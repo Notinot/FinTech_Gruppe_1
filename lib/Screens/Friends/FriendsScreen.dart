@@ -9,6 +9,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Screens/Money/RequestMoneyScreen.dart';
 import 'package:flutter_application_1/Screens/Money/SendMoneyScreen.dart';
+import 'package:flutter_application_1/fonts/custom_icons_icons.dart';
 
 import '../api_service.dart';
 
@@ -105,7 +106,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
                           return AlertDialog(
                             title: const Text("Info"),
                             content: const Text(
-                                "To add a friend, click on the 'Add' button and enter the username of the person you want to add. To remove a friend, click on the 'Delete' button next to the friend's name. You can also block a friend by clicking on the 'Block' button."),
+                                "To add a friend, click on the Search Icon and enter the username of the person you want to add. To remove a friend, click on a friend in the list, then click the 'Delete' button . You can also block a friend by clicking on the 'Block' button."),
                             actions: [
                               TextButton(
                                   onPressed: () {
@@ -501,12 +502,22 @@ class FriendItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var trailing = isStillPending
-        //build item with accept and decline buttons
         ? Row(
+            //build item with accept and decline buttons
             mainAxisSize: MainAxisSize.min,
             children: [
               ElevatedButton(
-                child: Text('Accept'),
+                child: Row(
+                  children: [
+                    Icon(Icons.person_add,
+                        size: MediaQuery.of(context).size.height * 0.025),
+                    Padding(padding: EdgeInsets.only(right: 7)),
+                    Text(
+                      'Accept',
+                      style: TextStyle(fontSize: 14),
+                    ),
+                  ],
+                ),
                 onPressed: () {
                   handleFriendRequestResponse(
                       userID: friend.userID, accepted: true, token: token);
@@ -514,24 +525,25 @@ class FriendItem extends StatelessWidget {
                 },
               ),
               TextButton(
-                child: Text('Decline'),
+                child: Icon(Icons.close),
                 onPressed: () {
                   handleFriendRequestResponse(
                       userID: friend.userID, accepted: false, token: token);
                   callbackFunction();
                 },
-              )
+              ),
             ],
           )
         //build item WITHOUT accept/decline buttons BUT with Icon Button
-        : IconButton(
+        : ElevatedButton(
             onPressed: () {
               requestOrSendMoneyDialog(context);
             },
-            icon: Icon(
-              Icons.add,
+            child: Icon(
+              MyFlutterApp.exchange,
+              //Icons.add,
               //Icons.currency_exchange_outlined,
-              size: 35,
+              size: 25,
             ));
 
     return Card(
@@ -540,8 +552,10 @@ class FriendItem extends StatelessWidget {
             image: friend.profileImage,
             initial: friend.firstName[0] + friend.lastName[0],
             size: 25),
-        title: Text(friend.username),
-        subtitle: Text('${friend.firstName} ${friend.lastName}'),
+        title:
+            Text(friend.username, maxLines: 1, overflow: TextOverflow.ellipsis),
+        subtitle: Text('${friend.firstName} ${friend.lastName}',
+            maxLines: 1, overflow: TextOverflow.ellipsis),
         trailing: trailing,
         onTap: () {
           Navigator.push(

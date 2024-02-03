@@ -92,7 +92,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       return;
     }
 
-    if (!newPassword.contains(RegExp(r'[#&@~!@?}\[%!?_*+-]'))) {
+    if (!newPassword.contains(RegExp(r'[$#&@~!@?}\[%!?_*+-]'))) {
       // Check if password contains at least one special character
       setState(() {
         newPasswordError =

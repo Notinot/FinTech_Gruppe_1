@@ -81,6 +81,7 @@ class Event {
     'Technology and Innovation': Icons.biotech_outlined,
     'Travel and Adventure': Icons.travel_explore_rounded,
     'Professional': Icons.business_center_rounded,
+    'Other': Icons.category_rounded
   };
 
 

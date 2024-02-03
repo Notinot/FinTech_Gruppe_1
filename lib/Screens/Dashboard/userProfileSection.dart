@@ -45,7 +45,7 @@ class UserProfileSection extends StatelessWidget {
                 : Text(
                     '${user["first_name"][0].toUpperCase()}${user["last_name"][0].toUpperCase()}',
                     style: TextStyle(
-                      fontSize: 50 * 1,
+                      fontSize: 45 * 1,
                       //color: Theme.of(context).secondaryHeaderColor
                     ), //change size of initiales
                   ),

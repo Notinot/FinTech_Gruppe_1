@@ -364,7 +364,8 @@ class _EditEventScreenState extends State<EditEventScreen> {
       'Sport',
       'Technology and Innovation',
       'Travel and Adventure',
-      'Professional'
+      'Professional',
+      'Other'
     ];
 
     return Scaffold(

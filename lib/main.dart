@@ -37,6 +37,7 @@ class _PayfriendzAppState extends State<PayfriendzApp> {
   void initState() {
     super.initState();
     checkServerAvailability();
+
     //checkStayLoggedIn(); //COMMENT THIS OUT TO STAY LOGGED IN (in theory)
   }
 

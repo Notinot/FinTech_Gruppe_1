@@ -226,7 +226,7 @@ class EventInfoScreen extends StatelessWidget {
 
   Widget showParticipantsButton(Event event, BuildContext context){
 
-    if(event.status == 1 && event.user_event_status == 1 && !event.isCreator){
+    if(event.status == 1 && event.user_event_status != 1 && !event.isCreator){
 
         return Padding(
           padding: EdgeInsets.symmetric(horizontal: 16),

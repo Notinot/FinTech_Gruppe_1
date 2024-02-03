@@ -309,7 +309,8 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       'Sport',
       'Technology and Innovation',
       'Travel and Adventure',
-      'Professional'
+      'Professional',
+      'Other'
     ];
 
     return Scaffold(

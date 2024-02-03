@@ -131,7 +131,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
     if (RegExp(r'\s').hasMatch(username) ||
         username.toLowerCase().trim() == "deleteduser" ||
-        username.toLowerCase().trim() == "deleted") {
+        username.toLowerCase().trim() == "deleted" ||
+        username.toLowerCase().trim() == "null") {
       setState(() {
         usernameError = 'This Username is invalid, choose a different one!';
       });
@@ -142,12 +143,60 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       return;
     }
 
+    // Check if username is at least 3 characters long
+    if (username.length < 3) {
+      setState(() {
+        usernameError = 'Username must be at least 3 characters long';
+      });
+      showSnackBar(
+          isError: true,
+          message: 'Username must be at least 3 characters long');
+      return;
+    }
+    //username cant contain spaces
+    if (RegExp(r'\s').hasMatch(username)) {
+      setState(() {
+        usernameError = 'Username cannot contain spaces';
+      });
+      showSnackBar(isError: true, message: 'Username cannot contain spaces');
+      return;
+    }
+
+    // Check if username is at most 20 characters long
+    if (username.length > 20) {
+      setState(() {
+        usernameError = 'Username must be at most 20 characters long';
+      });
+      showSnackBar(
+          isError: true,
+          message: 'Username must be at most 20 characters long');
+      return;
+    }
+
     if (email.trim().isEmpty) {
       // Check if email is empty
       setState(() {
         emailError = 'Email cannot be empty';
       });
       showSnackBar(isError: true, message: 'Email cannot be empty');
+      return;
+    }
+    //email cant contain spaces
+    if (RegExp(r'\s').hasMatch(email)) {
+      setState(() {
+        emailError = 'Email cannot contain spaces';
+      });
+      showSnackBar(isError: true, message: 'Email cannot contain spaces');
+      return;
+    }
+
+    //check if email is at most 50 characters long
+    if (email.length > 50) {
+      setState(() {
+        emailError = 'Email must be at most 50 characters long';
+      });
+      showSnackBar(
+          isError: true, message: 'Email must be at most 50 characters long');
       return;
     }
 
@@ -170,7 +219,14 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           message: 'First name must be at least two characters long');
       return;
     }
-
+    //firstname cant contain spaces
+    if (RegExp(r'\s').hasMatch(firstname)) {
+      setState(() {
+        firstnameError = 'First name cannot contain spaces';
+      });
+      showSnackBar(isError: true, message: 'First name cannot contain spaces');
+      return;
+    }
     if (lastname.trim().isEmpty) {
       // Check if last name is empty
       setState(() {
@@ -179,7 +235,14 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       showSnackBar(isError: true, message: 'Last name cannot be empty');
       return;
     }
-
+    //lastname cant contain spaces
+    if (RegExp(r'\s').hasMatch(lastname)) {
+      setState(() {
+        lastnameError = 'Last name cannot contain spaces';
+      });
+      showSnackBar(isError: true, message: 'Last name cannot contain spaces');
+      return;
+    }
     if (lastname.length < 2) {
       // Check if last name is at least two characters long
       setState(() {
@@ -219,7 +282,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       return;
     }
 
-    if (!password.contains(RegExp(r'[#&@~!@?}\[%!?_*+-]'))) {
+    if (!password.contains(RegExp(r'[$#&@~!@?}\[%!?_*+-]'))) {
       // Check if password contains at least one special character
       setState(() {
         passwordError =
@@ -297,6 +360,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         context,
         MaterialPageRoute(builder: (context) => const LoginScreen()),
       );
+    } else if (response.statusCode == 400) {
+      showSnackBar(
+          isError: true, message: 'Email address or username already in use');
     } else {
       // Registration failed, handle accordingly
       showSnackBar(isError: true, message: 'Registration failed');

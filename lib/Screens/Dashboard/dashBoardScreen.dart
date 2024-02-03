@@ -378,25 +378,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> handleTransactionRequest(
       int TransactionId, String action) async {
     try {
-      const storage = FlutterSecureStorage();
-      final token = await storage.read(key: 'token');
-      // Make a request to your backend API to accept the request
-      final response = await http.post(
-        Uri.parse('${ApiService.serverUrl}/transactions/$TransactionId'),
-        headers: {
-          'Content-Type': 'application/json; charset=UTF-8',
-          'Authorization': 'Bearer $token',
-        },
-        body: json.encode({'action': action}),
-      );
+      if (await verifyPassword() == true) {
+        const storage = FlutterSecureStorage();
+        final token = await storage.read(key: 'token');
+        // Make a request to your backend API to accept the request
+        final response = await http.post(
+          Uri.parse('${ApiService.serverUrl}/transactions/$TransactionId'),
+          headers: {
+            'Content-Type': 'application/json; charset=UTF-8',
+            'Authorization': 'Bearer $token',
+          },
+          body: json.encode({'action': action}),
+        );
 
-      if (response.statusCode == 200) {
-        // Request successful
-        showSuccessSnackBar(context, 'Request accepted successfully');
-      } else {
-        // Request failed, handle the error
+        if (response.statusCode == 200) {
+          // Request successful
+          showSuccessSnackBar(context, 'Request accepted successfully');
+        } else {
+          // Request failed, handle the error
 
-        showErrorSnackBar(context, 'Error accepting request, please try again');
+          showErrorSnackBar(
+              context, 'Error accepting request, please try again');
+        }
       }
     } catch (error) {
       // Handle exceptions
@@ -809,5 +812,80 @@ class _DashboardScreenState extends State<DashboardScreen> {
     setState(() {
       userProfileFuture = ApiService.fetchUserProfile();
     });
+  }
+
+  Future<bool> verifyPassword() async {
+    Completer<bool> completer = Completer<bool>();
+    TextEditingController currentPasswordController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Enter your current password'),
+          content: TextField(
+            controller: currentPasswordController,
+            obscureText: true,
+            decoration: InputDecoration(
+              hintText: 'Password',
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                completer.completeError('User cancelled');
+              },
+              child: Text('Close'),
+            ),
+            TextButton(
+              onPressed: () async {
+                try {
+                  // Make an HTTP request to verify the password on the backend
+                  Map<String, dynamic> request = {
+                    'userid': await ApiService.getUserId(),
+                    'password': currentPasswordController.text,
+                  };
+
+                  const storage = FlutterSecureStorage();
+                  final token = await storage.read(key: 'token');
+
+                  final response = await http.post(
+                    Uri.parse('${ApiService.serverUrl}/verifyPassword'),
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'Authorization': 'Bearer $token',
+                    },
+                    body: json.encode(request),
+                  );
+
+                  print(
+                      'Verification Response: ${response.statusCode} - ${response.body}');
+
+                  if (response.statusCode == 200) {
+                    // Password is correct, set completer to true
+                    Navigator.of(context).pop(); // Close the AlertDialog
+                    completer.complete(true);
+                  } else {
+                    // Password is incorrect, show an error message
+                    showErrorSnackBar(context, 'Incorrect password');
+                  }
+                } catch (error) {
+                  // Handle error or show an error message
+                  showErrorSnackBar(context, 'Error verifying password');
+                }
+              },
+              child: Text('Submit'),
+            ),
+          ],
+        );
+      },
+    );
+
+    try {
+      return await completer.future;
+    } catch (error) {
+      return false; // Handle error or return a default value
+    }
   }
 }

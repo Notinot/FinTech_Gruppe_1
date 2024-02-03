@@ -14,8 +14,6 @@ import 'package:flutter_application_1/fonts/custom_icons_icons.dart';
 import '../api_service.dart';
 
 /* To-do:
-EditProfilePicture Icon ändern?
-
 von FriendSearch auch money send/request können?
 
 schauen wo accept/decline submit/cancel überall ist (gleiche richtung, farbe usw)
@@ -23,17 +21,8 @@ schauen wo accept/decline submit/cancel überall ist (gleiche richtung, farbe us
 show transaction history of Friend and yourself
 
 
-pendingFriends iwie anzeigen wenn mehr als 3 da seind (Icon mit arrow down, number etc)
-      - Scroll Bar/Indication
-      -anders anzeigen
-      -mit Arrow down button
-      -mit Glocke und ANzahl der Requests
-
-
   -dynamic spacing, width, heigth etc
    MediaQuery.of(context).size.width *  0.07
-
-  -Check for correct error handling everywhere    
 */
 
 class FriendsScreen extends StatefulWidget {
@@ -79,7 +68,11 @@ class _FriendsScreenState extends State<FriendsScreen> {
                           callbackFunction: callback, token: token),
                     );
                   },
-                  icon: Icon(Icons.search),
+                  icon: Icon(
+                    Icons.search,
+                    size: MediaQuery.of(context).size.width *
+                        0.07, //Dynamic Icon size depending on screen res
+                  ),
                 ),
                 IconButton(
                   onPressed: () {
@@ -589,8 +582,13 @@ class FriendItem extends StatelessWidget {
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text(friend.username),
-          content: Text('Send or request money'),
+          //title: Text('Send/Request money'),
+          content: Text('Send or Request money?'),
           actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.pop(context, 'Cancel'),
+              child: const Text('Cancel'),
+            ),
             ElevatedButton(
               child: Text('Send'),
               onPressed: () {
@@ -618,10 +616,6 @@ class FriendItem extends StatelessWidget {
                   ),
                 );
               },
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, 'Cancel'),
-              child: const Text('Cancel'),
             ),
           ],
         );

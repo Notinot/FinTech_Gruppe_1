@@ -213,9 +213,10 @@ class _RequestMoneyScreenState extends State<RequestMoneyScreen> {
                     context: context,
                     builder: (context) {
                       return AlertDialog(
-                        title: const Text('Confirm'),
+                        title: const Text('Request Money'),
                         content: Text(
-                            'Are you sure you want to request \n€$parsedAmount from $recipient?'),
+                          'Are you sure you want to request €$parsedAmount from $recipient?',
+                        ),
                         actions: [
                           TextButton(
                             onPressed: () {
@@ -223,7 +224,7 @@ class _RequestMoneyScreenState extends State<RequestMoneyScreen> {
                             },
                             child: const Text('Cancel'),
                           ),
-                          TextButton(
+                          ElevatedButton(
                             onPressed: () {
                               Navigator.pop(context, true);
                             },

@@ -11,6 +11,7 @@ import 'package:intl/intl.dart';
 import 'package:flutter_search_bar/flutter_search_bar.dart' as search_bar;
 import 'package:flutter_application_1/Screens/Events/Event.dart';
 import 'package:flutter_application_1/Screens/Events/EventInfoScreen.dart';
+import 'package:path/path.dart';
 
 /*
 Status Overview
@@ -34,30 +35,77 @@ class EventScreen extends StatefulWidget {
 class _EventScreenState extends State<EventScreen> {
   late Future<List<Event>> eventsFuture;
   late search_bar.SearchBar searchBar;
-
+  bool isSearchMode = false;
+  final TextEditingController searchController = TextEditingController();
   String currentSortOrder = 'All events';
-  List<String> sortOptions = ['All events', 'My events', 'Requests', 'Active', 'Inactive'];
+  List<String> sortOptions = [
+    'All events',
+    'My events',
+    'Invites',
+    'Active',
+    'Inactive'
+  ];
+
+  late int currentUserId;
 
   String currentCategoryOption = 'Category';
   List<String> possibleCategories = ['Category'];
 
   List<Event> events = [];
-
+  List<Event> originalEvents = [];
   @override
   void initState() {
     super.initState();
     eventsFuture = fetchEvents();
-    searchBar = search_bar.SearchBar(
-      showClearButton: true,
-      inBar: true,
-      setState: setState,
-      onSubmitted: onSubmitted,
-      onChanged: onChanged,
-      onCleared: onCleared,
-      onClosed: onClosed,
-      buildDefaultAppBar: buildAppBar,
-      hintText: "Search",
-    );
+    eventsFuture = fetchEvents().then((events) {
+      originalEvents = List.from(events);
+      return events;
+    });
+    // searchBar = search_bar.SearchBar(
+    //   showClearButton: true,
+    //   inBar: true,
+    //   setState: setState,
+    //   onSubmitted: onSubmitted,
+    //   onChanged: onChanged,
+    //   onCleared: onCleared,
+    //   onClosed: onClosed,
+    //   buildDefaultAppBar: buildAppBar,
+    //   hintText: "Search",
+    // );
+  }
+
+  List<Event> allEvents = [];
+  void sortEvents(String sortOrder) {
+    //reset the transactions list to the original list
+    allEvents = List.from(originalEvents);
+    print(currentUserId);
+    // Sort the events based on the sort order
+    switch (sortOrder) {
+      case 'All events':
+        break;
+      case 'My events':
+        allEvents.removeWhere((event) => event.creatorId != currentUserId);
+        break;
+      case 'Invites':
+        allEvents.removeWhere((event) => event.user_event_status != 2);
+        break;
+      case 'Active':
+        allEvents.removeWhere((event) =>
+            event.status != 1 ||
+            event.datetimeEvent.millisecondsSinceEpoch <
+                DateTime.now().millisecondsSinceEpoch);
+        break;
+      case 'Inactive':
+        allEvents.removeWhere((event) =>
+            event.status == 1 &&
+            event.datetimeEvent.millisecondsSinceEpoch >
+                DateTime.now().millisecondsSinceEpoch);
+        break;
+    }
+    // Update the Future to reflect the new sorted list
+    setState(() {
+      eventsFuture = Future.value(allEvents);
+    });
   }
 
   // Fetch events from the backend
@@ -80,6 +128,7 @@ class _EventScreenState extends State<EventScreen> {
 
       if (response.statusCode == 200) {
         String userId = await ApiService.fetchUserId();
+        currentUserId = int.parse(userId);
         final List<dynamic> data = jsonDecode(response.body);
         final List<dynamic> eventsData = data;
 
@@ -97,7 +146,8 @@ class _EventScreenState extends State<EventScreen> {
             return 1; // b is active, a is not; move b up
           } else {
             // Both events have the same status, sort by datetimeEvent in reverse order
-            return a.datetimeEvent.compareTo(b.datetimeEvent); // Swap a and b here
+            return a.datetimeEvent
+                .compareTo(b.datetimeEvent); // Swap a and b here
           }
         });
 
@@ -118,95 +168,96 @@ class _EventScreenState extends State<EventScreen> {
           }
         }
 
-
-        switch (currentSortOrder) {
-          case 'All events':
-            if (currentCategoryOption == 'Category') {
-              return events;
-            } else if (currentCategoryOption != 'Category') {
-              for (var event in events) {
-                if (currentCategoryOption == event.category &&
-                    !filteredEvents.contains(event)) {
-                  filteredEvents.add(event);
-                }
-              }
-              return filteredEvents;
-            }
-          case 'My events':
-            if (currentCategoryOption == 'Category') {
-              for (var event in events) {
-                if (userId == event.creatorId.toString() &&
-                    !filteredEvents.contains(event)) {
-                  filteredEvents.add(event);
-                }
-              }
-              return filteredEvents;
-            } else if (currentCategoryOption != 'Category') {
-              for (var event in events) {
-                if (userId == event.creatorId.toString() &&
-                    currentCategoryOption == event.category &&
-                    !filteredEvents.contains(event)) {
-                  filteredEvents.add(event);
-                }
-              }
-              return filteredEvents;
-            }
-          case 'Requests':
-            for (var event in events){
-              if (event.status == 1 && event.user_event_status == 2 && !filteredEvents.contains(event)){
-                  filteredEvents.add(event);
-              }
-            }
-            return filteredEvents;
-          case 'Active':
-            if (currentCategoryOption == 'Category') {
-              for (var event in events) {
-                if (event.status == 1 &&
-                    event.datetimeEvent.millisecondsSinceEpoch >
-                        DateTime.now().millisecondsSinceEpoch &&
-                    !filteredEvents.contains(event)) {
-                  filteredEvents.add(event);
-                }
-              }
-              return filteredEvents;
-            } else if (currentCategoryOption != 'Category') {
-              for (var event in events) {
-                if (event.status == 1 &&
-                    currentCategoryOption == event.category &&
-                    event.datetimeEvent.millisecondsSinceEpoch >
-                        DateTime.now().millisecondsSinceEpoch &&
-                    !filteredEvents.contains(event)) {
-                  filteredEvents.add(event);
-                }
-              }
-              return filteredEvents;
-            }
-          case 'Inactive':
-            if (currentCategoryOption == 'Category') {
-              for (var event in events) {
-                if (event.status != 1 ||
-                    event.datetimeEvent.millisecondsSinceEpoch <
-                        DateTime.now().millisecondsSinceEpoch) {
-                  if (!filteredEvents.contains(event)) {
-                    filteredEvents.add(event);
-                  }
-                }
-              }
-              return filteredEvents;
-            } else if (currentCategoryOption != 'Category') {
-              for (var event in events) {
-                if (event.status != 1 ||
-                    event.datetimeEvent.millisecondsSinceEpoch <
-                        DateTime.now().millisecondsSinceEpoch) {
-                  if (currentCategoryOption == event.category &&
-                      !filteredEvents.contains(event)) {
-                    filteredEvents.add(event);
-                  }
-                }
-              }
-              return filteredEvents;
-            }
-        }
+        // switch (currentSortOrder) {
+        //   case 'All events':
+        //     if (currentCategoryOption == 'Category') {
+        //       return events;
+        //     } else if (currentCategoryOption != 'Category') {
+        //       for (var event in events) {
+        //         if (currentCategoryOption == event.category &&
+        //             !filteredEvents.contains(event)) {
+        //           filteredEvents.add(event);
+        //         }
+        //       }
+        //       return filteredEvents;
+        //     }
+        //   case 'My events':
+        //     if (currentCategoryOption == 'Category') {
+        //       for (var event in events) {
+        //         if (userId == event.creatorId.toString() &&
+        //             !filteredEvents.contains(event)) {
+        //           filteredEvents.add(event);
+        //         }
+        //       }
+        //       return filteredEvents;
+        //     } else if (currentCategoryOption != 'Category') {
+        //       for (var event in events) {
+        //         if (userId == event.creatorId.toString() &&
+        //             currentCategoryOption == event.category &&
+        //             !filteredEvents.contains(event)) {
+        //           filteredEvents.add(event);
+        //         }
+        //       }
+        //       return filteredEvents;
+        //     }
+        //   case 'Requests':
+        //     for (var event in events) {
+        //       if (event.status == 1 &&
+        //           event.user_event_status == 2 &&
+        //           !filteredEvents.contains(event)) {
+        //         filteredEvents.add(event);
+        //       }
+        //     }
+        //     return filteredEvents;
+        //   case 'Active':
+        //     if (currentCategoryOption == 'Category') {
+        //       for (var event in events) {
+        //         if (event.status == 1 &&
+        //             event.datetimeEvent.millisecondsSinceEpoch >
+        //                 DateTime.now().millisecondsSinceEpoch &&
+        //             !filteredEvents.contains(event)) {
+        //           filteredEvents.add(event);
+        //         }
+        //       }
+        //       return filteredEvents;
+        //     } else if (currentCategoryOption != 'Category') {
+        //       for (var event in events) {
+        //         if (event.status == 1 &&
+        //             currentCategoryOption == event.category &&
+        //             event.datetimeEvent.millisecondsSinceEpoch >
+        //                 DateTime.now().millisecondsSinceEpoch &&
+        //             !filteredEvents.contains(event)) {
+        //           filteredEvents.add(event);
+        //         }
+        //       }
+        //       return filteredEvents;
+        //     }
+        //   case 'Inactive':
+        //     if (currentCategoryOption == 'Category') {
+        //       for (var event in events) {
+        //         if (event.status != 1 ||
+        //             event.datetimeEvent.millisecondsSinceEpoch <
+        //                 DateTime.now().millisecondsSinceEpoch) {
+        //           if (!filteredEvents.contains(event)) {
+        //             filteredEvents.add(event);
+        //           }
+        //         }
+        //       }
+        //       return filteredEvents;
+        //     } else if (currentCategoryOption != 'Category') {
+        //       for (var event in events) {
+        //         if (event.status != 1 ||
+        //             event.datetimeEvent.millisecondsSinceEpoch <
+        //                 DateTime.now().millisecondsSinceEpoch) {
+        //           if (currentCategoryOption == event.category &&
+        //               !filteredEvents.contains(event)) {
+        //             filteredEvents.add(event);
+        //           }
+        //         }
+        //       }
+        //       return filteredEvents;
+        //     }
+        // }
         return events;
       } else {
         throw Exception('Failed to load events. Error: ${response.statusCode}');
@@ -219,33 +270,114 @@ class _EventScreenState extends State<EventScreen> {
   // Function to build the AppBar
   AppBar buildAppBar(BuildContext context) {
     return AppBar(
-      title: Text('Events'),
-      actions: [
-        DropdownButton<String>(
-          value: currentSortOrder,
-          icon: Icon(Icons.sort),
-          onChanged: (String? newValue) {
-            if (newValue != null) {
-              setState(() {
-                currentSortOrder = newValue;
-              });
-            }
-          },
-          items: sortOptions.map<DropdownMenuItem<String>>((String value) {
-            return DropdownMenuItem<String>(
-              value: value,
-              child: Text(value),
-              onTap: () {
-                setState(() {
-                  currentSortOrder = value;
-                  eventsFuture = fetchEvents();
-                });
-              },
-            );
-          }).toList(),
-        ),
-        // Not implemented because of missing Space!
-        /*
+      title: isSearchMode
+          ? TextField(
+              controller: searchController,
+              autofocus: true,
+              decoration: InputDecoration(
+                hintText: "Search Events...",
+                border: InputBorder.none,
+              ),
+              onChanged: onSearchTextChanged,
+            )
+          : Text(' History'),
+      actions: isSearchMode
+          ? [
+              IconButton(
+                icon: Icon(Icons.close),
+                onPressed: () {
+                  setState(() {
+                    allEvents = List.from(originalEvents);
+                    isSearchMode = false;
+                    searchController.clear();
+                    onSearchTextChanged('');
+                  });
+                },
+              ),
+            ]
+          : [
+              DropdownButton<String>(
+                alignment: Alignment.center,
+                underline: Container(),
+                value: currentSortOrder,
+                icon: Icon(Icons.sort),
+                onChanged: (String? newValue) {
+                  if (newValue != null) {
+                    setState(() {
+                      currentSortOrder = newValue;
+                      sortEvents(currentSortOrder);
+                    });
+                  }
+                },
+                items:
+                    sortOptions.map<DropdownMenuItem<String>>((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                    onTap: () {
+                      setState(() {
+                        currentSortOrder = value;
+                        sortEvents(currentSortOrder);
+                      });
+                    },
+                  );
+                }).toList(),
+              ),
+              IconButton(
+                icon: Icon(Icons.search),
+                onPressed: () {
+                  setState(() {
+                    isSearchMode = true;
+                    currentSortOrder = 'All events';
+                  });
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.info_outline),
+                onPressed: () {
+                  showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: const Text("Info"),
+                          content: const Text(
+                              "This is the event screen. Here you can see all events, join them, create new events and invite other users to your events.\n\nYou can also filter the events by category and sort them by different criteria.\n\nRefresh the event list by tapping the refresh button on the bottom right."),
+                          actions: [
+                            TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                                child: const Text("Close"))
+                          ],
+                        );
+                      });
+                },
+              ),
+            ],
+    );
+  }
+
+  void onSearchTextChanged(String query) {
+    List<Event> filteredEvents = [];
+    if (query.isEmpty) {
+      filteredEvents = allEvents;
+    } else {
+      filteredEvents = allEvents.where((transaction) {
+        return transaction.title.toLowerCase().contains(query.toLowerCase()) ||
+            transaction.creatorUsername
+                .toLowerCase()
+                .contains(query.toLowerCase()) ||
+            transaction.category.toLowerCase().contains(query.toLowerCase()) ||
+            transaction.description.toLowerCase().contains(query.toLowerCase());
+      }).toList();
+    }
+
+    setState(() {
+      eventsFuture = Future.value(filteredEvents);
+    });
+  }
+  // Not implemented because of missing Space!
+  /*
         DropdownButton<String>(
           value: currentCategoryOption,
           icon: Icon(Icons.sort),
@@ -270,68 +402,69 @@ class _EventScreenState extends State<EventScreen> {
           }).toList(),
         ),
         */
-        searchBar.getSearchAction(context)
-      ],
-    );
-  }
+  //       searchBar.getSearchAction(context)
+  //     ],
+  //   );
+  // }
 
-  Future<void> onSubmitted(String value) async {
-    if (value.isNotEmpty) {
-      List<Event> filteredEvents = events
-          .where((events) =>
-              events.title.toLowerCase().contains(value.toLowerCase()) ||
-              events.creatorUsername
-                  .toLowerCase()
-                  .contains(value.toLowerCase()))
-          .toList();
-      setState(() {
-        eventsFuture = Future.value(filteredEvents);
-      });
-    } else {
-      setState(() {
-        eventsFuture = fetchEvents();
-      });
-    }
-  }
+  // Future<void> onSubmitted(String value) async {
+  //   if (value.isNotEmpty) {
+  //     List<Event> filteredEvents = events
+  //         .where((events) =>
+  //             events.title.toLowerCase().contains(value.toLowerCase()) ||
+  //             events.creatorUsername
+  //                 .toLowerCase()
+  //                 .contains(value.toLowerCase()))
+  //         .toList();
+  //     setState(() {
+  //       eventsFuture = Future.value(filteredEvents);
+  //     });
+  //   } else {
+  //     setState(() {
+  //       eventsFuture = fetchEvents();
+  //     });
+  //   }
+  // }
 
-  Future<void> onChanged(String value) async {
-    if (value.isNotEmpty) {
-      List<Event> filteredEvents = events
-          .where((events) =>
-              events.title.toLowerCase().contains(value.toLowerCase()) ||
-              events.creatorUsername
-                  .toLowerCase()
-                  .contains(value.toLowerCase()))
-          .toList();
-      setState(() {
-        eventsFuture = Future.value(filteredEvents);
-      });
-    } else {
-      setState(() {
-        eventsFuture = fetchEvents();
-      });
-    }
-  }
+  // Future<void> onChanged(String value) async {
+  //   if (value.isNotEmpty) {
+  //     List<Event> filteredEvents = events
+  //         .where((events) =>
+  //             events.title.toLowerCase().contains(value.toLowerCase()) ||
+  //             events.creatorUsername
+  //                 .toLowerCase()
+  //                 .contains(value.toLowerCase()))
+  //         .toList();
+  //     setState(() {
+  //       eventsFuture = Future.value(filteredEvents);
+  //     });
+  //   } else {
+  //     setState(() {
+  //       eventsFuture = fetchEvents();
+  //     });
+  //   }
+  // }
 
-  Future<void> onCleared() async {
-    // Handle search bar cleared
-    // Update the UI to show the original list without filtering
-    setState(() {
-      eventsFuture = fetchEvents();
-    });
-  }
+  // Future<void> onCleared() async {
+  //   // Handle search bar cleared
+  //   // Update the UI to show the original list without filtering
+  //   setState(() {
+  //     eventsFuture = fetchEvents();
+  //   });
+  // }
 
-  Future<void> onClosed() async {
-    //update the UI to show the original list without filtering
-    setState(() {
-      eventsFuture = fetchEvents();
-    });
-  }
+  // Future<void> onClosed() async {
+  //   //update the UI to show the original list without filtering
+  //   setState(() {
+  //     eventsFuture = fetchEvents();
+  //   });
+  // }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: searchBar.build(context),
+      // appBar: searchBar.build(context),
+      appBar: buildAppBar(context),
       drawer: FutureBuilder<Map<String, dynamic>>(
         future: ApiService.fetchUserProfile(),
         builder: (context, snapshot) {
@@ -562,7 +695,7 @@ class UpcomingEvents extends StatelessWidget {
           return Text('No upcoming events');
         } else {
           List<Event> events = snapshot.data!;
-          if (events.isNotEmpty){
+          if (events.isNotEmpty) {
             return Column(
               children: <Widget>[
                 const Text(
@@ -579,13 +712,12 @@ class UpcomingEvents extends StatelessWidget {
                 ),
               ],
             );
-          }
-          else{
+          } else {
             return Column(
               children: [
                 const Text('No upcoming Events',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)
-                )],
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))
+              ],
             );
           }
         }

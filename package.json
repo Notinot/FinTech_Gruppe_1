@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "body-parser": "^1.20.2",
     "geocoder": "^0.2.3",
     "jsonwebtoken": "^9.0.2"
   }

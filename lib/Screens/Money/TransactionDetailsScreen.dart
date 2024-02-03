@@ -111,11 +111,6 @@ class TransactionDetailsScreen extends StatelessWidget {
                 ? transaction.senderUsername
                 : transaction.receiverUsername);
 
-    Text title = Text(
-      titleText,
-      style: TextStyle(color: textColor),
-    );
-
     transaction.transactionType == 'Request'
         ? isProcessed
             ? isReceived
@@ -132,69 +127,7 @@ class TransactionDetailsScreen extends StatelessWidget {
                 ? friendUsername = ''
                 : SizedBox(height: 10);
 
-    // Add GestureDetector for the avatar
-    // GestureDetector _buildAvatar(Uint8List? profilePictureData) {
-    //   return GestureDetector(
-    //     onTap: () {
-    //       showDialog(
-    //         context: context,
-    //         builder: (BuildContext context) {
-    //           return Animate(
-    //             effects: [FadeEffect()],
-    //             child: AlertDialog(
-    //               content: Container(
-    //                 width: double.maxFinite,
-    //                 child: Column(
-    //                   mainAxisSize: MainAxisSize.min,
-    //                   children: <Widget>[
-    //                     CircleAvatar(
-    //                       radius: 120, // Larger radius for enhanced view
-    //                       backgroundColor: Colors.white,
-    //                       backgroundImage: profilePictureData != null
-    //                           ? MemoryImage(profilePictureData)
-    //                           : null,
-    //                       child: profilePictureData == null
-    //                           ? Icon(Icons.person_rounded,
-    //                               size: 100) // Larger icon size
-    //                           : null,
-    //                     ),
-    //                     // SizedBox(height: 10),
-    //                     // Text(friendUsername,
-    //                     //     style: TextStyle(
-    //                     //         fontSize: 24)), // Optional: show username
-    //                   ],
-    //                 ),
-    //               ),
-    //               actions: <Widget>[
-    //                 TextButton(
-    //                   child: Text('Close'),
-    //                   onPressed: () {
-    //                     Navigator.of(context).pop();
-    //                   },
-    //                 ),
-    //               ],
-    //             ),
-    //           );
-    //         },
-    //       );
-    //     },
-    //     child: CircleAvatar(
-    //       radius: 40,
-    //       backgroundColor: null,
-    //       child: CircleAvatar(
-    //         radius: 38,
-    //         backgroundColor: Colors.white,
-    //         backgroundImage: profilePictureData != null
-    //             ? MemoryImage(profilePictureData)
-    //             : null,
-    //         child: profilePictureData == null
-    //             ? Icon(Icons.person_rounded, size: 38)
-    //             : null,
-    //       ),
-    //     ),
-    //   );
-    // }
-
+    // Function to fetch the event associated with the transaction
     Future<Event> fetchEvent(int? eventId) async {
       try {
         const storage = FlutterSecureStorage();
@@ -247,7 +180,7 @@ class TransactionDetailsScreen extends StatelessWidget {
           } else {
             final bool isFriend = snapshot.data ?? false;
 
-            //fetch Profile picture of friend
+            //fetch Profile picture of friend if the friend is not the current user
             return FutureBuilder<Uint8List?>(
                 future: ApiService.fetchProfilePicture(friendId!),
                 builder: (context, snapshot) {
@@ -256,8 +189,14 @@ class TransactionDetailsScreen extends StatelessWidget {
                     return Text('Error: ${snapshot.error}');
                   } else {
                     final profilePictureData = snapshot.data;
-                    final bool hasProfilePicture = profilePictureData != null;
+                    bool hasProfilePicture = profilePictureData != null;
 
+                    //set profile picture to default if the user is not a friend
+                    if (isFriend == false) {
+                      hasProfilePicture = false;
+                    }
+
+                    // Display the transaction details
                     return Scaffold(
                       appBar: AppBar(
                         title: Text('Transaction Details'),
@@ -367,110 +306,13 @@ class TransactionDetailsScreen extends StatelessWidget {
                                       ),
                                     ],
                                   ),
-                                  //SizedBox(height: 10),
-
-                                  // // Display the username of the sender or receiver based on the transaction type and whether the user received or sent money
-                                  // Container(
-                                  //   child: transaction.transactionType ==
-                                  //           'Request'
-                                  //       ? isProcessed
-                                  //           ? isReceived
-                                  //               ? Row(
-                                  //                   children: [
-                                  //                     Icon(Icons.person_rounded),
-                                  //                     SizedBox(width: 10),
-                                  //                     Text(
-                                  //                       '${transaction.senderUsername}',
-                                  //                       style: TextStyle(
-                                  //                           fontSize: 20),
-                                  //                     ),
-                                  //                   ],
-                                  //                 )
-                                  //               : Row(
-                                  //                   children: [
-                                  //                     Icon(Icons.person_rounded),
-                                  //                     SizedBox(width: 10),
-                                  //                     Text(
-                                  //                       '${transaction.receiverUsername}',
-                                  //                       style: TextStyle(
-                                  //                           fontSize: 20),
-                                  //                     ),
-                                  //                   ],
-                                  //                 )
-                                  //           : userIsSender
-                                  //               ? Row(
-                                  //                   children: [
-                                  //                     Icon(Icons.person_rounded),
-                                  //                     SizedBox(width: 10),
-                                  //                     Text(
-                                  //                       '${transaction.receiverUsername}',
-                                  //                       style: TextStyle(
-                                  //                           fontSize: 20),
-                                  //                     ),
-                                  //                   ],
-                                  //                 )
-                                  //               : Row(
-                                  //                   children: [
-                                  //                     Icon(Icons.person_rounded),
-                                  //                     SizedBox(width: 10),
-                                  //                     Text(
-                                  //                       '${transaction.senderUsername}',
-                                  //                       style: TextStyle(
-                                  //                           fontSize: 20),
-                                  //                     ),
-                                  //                   ],
-                                  //                 )
-                                  //       : transaction.transactionType == 'Deposit'
-                                  //           ? SizedBox(height: 10)
-                                  //           : isReceived
-                                  //               ? Row(
-                                  //                   children: [
-                                  //                     Icon(Icons.person_rounded),
-                                  //                     SizedBox(width: 10),
-                                  //                     Text(
-                                  //                       '${transaction.senderUsername}',
-                                  //                       style: TextStyle(
-                                  //                           fontSize: 20),
-                                  //                     ),
-                                  //                   ],
-                                  //                 )
-                                  //               : Row(
-                                  //                   children: [
-                                  //                     Icon(Icons.person_rounded),
-                                  //                     SizedBox(width: 10),
-                                  //                     Text(
-                                  //                       '${transaction.receiverUsername}',
-                                  //                       style: TextStyle(
-                                  //                           fontSize: 20),
-                                  //                     ),
-                                  //                   ],
-                                  //                 ),
-                                  // ),
 
                                   SizedBox(height: 10),
 
                                   // Display the amount of the transaction based on the transaction type and whether the user received or sent money
                                   Container(
                                     // padding: EdgeInsets.all(5),
-                                    decoration: BoxDecoration(
-                                        // color:
-                                        //     transaction.transactionType == 'Request'
-                                        //         ? isProcessed
-                                        //             ? isReceived
-                                        //                 ? Colors.red[300]
-                                        //                 : Colors.green[300]
-                                        //             : isReceived
-                                        //                 ? isDenied
-                                        //                     ? Colors.grey[300]
-                                        //                     : Colors.orange[300]
-                                        //                 : isDenied
-                                        //                     ? Colors.grey[300]
-                                        //                     : Colors.orange[300]
-                                        //         : isReceived
-                                        //             ? Colors.green[300]
-                                        //             : Colors.red[300],
-                                        // borderRadius: BorderRadius.circular(5),
-                                        ),
+                                    decoration: BoxDecoration(),
                                     child: Row(
                                       children: [
                                         Icon(Icons.euro_rounded),

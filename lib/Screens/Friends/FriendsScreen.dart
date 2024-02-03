@@ -105,7 +105,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
                           return AlertDialog(
                             title: const Text("Info"),
                             content: const Text(
-                                "To add a friend, click on the 'Add' button and enter the username of the person you want to add. To remove a friend, click on the 'Delete' button next to the friend's name. You can also block a friend by clicking on the 'Block' button."),
+                                "To add a friend, click on the Search Icon and enter the username of the person you want to add. To remove a friend, click on a friend in the list, then click the 'Delete' button . You can also block a friend by clicking on the 'Block' button."),
                             actions: [
                               TextButton(
                                   onPressed: () {

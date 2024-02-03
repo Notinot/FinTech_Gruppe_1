@@ -224,33 +224,34 @@ class EventInfoScreen extends StatelessWidget {
     );
   }
 
-  Widget showParticipantsButton(Event event, BuildContext context){
-
-    if(event.status == 1 && event.user_event_status == 1 && !event.isCreator){
-
-        return Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => InviteToEventScreen(eventId: event.eventID, allowInvite: false, iAmParticipant: true)),
-                  );
-                },
-                child: Icon(Icons.supervised_user_circle_rounded),
-              ),
-              Text(
-                '  Participants: ${event.participants.toString()} / ${event.maxParticipants.toString()}',
-                style: TextStyle(fontSize: 18),
-              ),
-            ],
-          ),
-        );
-    }
-    else{
+  Widget showParticipantsButton(Event event, BuildContext context) {
+    if (event.status == 1 && event.user_event_status == 1 && !event.isCreator) {
+      return Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => InviteToEventScreen(
+                          eventId: event.eventID,
+                          allowInvite: false,
+                          iAmParticipant: true)),
+                );
+              },
+              child: Icon(Icons.supervised_user_circle_rounded),
+            ),
+            Text(
+              '  Participants: ${event.participants.toString()} / ${event.maxParticipants.toString()}',
+              style: TextStyle(fontSize: 18),
+            ),
+          ],
+        ),
+      );
+    } else {
       return Padding(
         padding: EdgeInsets.symmetric(horizontal: 16),
         child: Row(
@@ -268,7 +269,6 @@ class EventInfoScreen extends StatelessWidget {
   }
 
   Widget buildButton(Event event, BuildContext context) {
-
     // Event is active
     if (event.status == 1) {
       // User is Creator
@@ -285,7 +285,9 @@ class EventInfoScreen extends StatelessWidget {
                 context,
                 MaterialPageRoute(
                   builder: (context) => InviteToEventScreen(
-                      eventId: event.eventID, allowInvite: true, iAmParticipant: false),
+                      eventId: event.eventID,
+                      allowInvite: true,
+                      iAmParticipant: false),
                 ),
               );
             },
@@ -303,7 +305,9 @@ class EventInfoScreen extends StatelessWidget {
                 context,
                 MaterialPageRoute(
                   builder: (context) => InviteToEventScreen(
-                      eventId: event.eventID, allowInvite: false, iAmParticipant: false),
+                      eventId: event.eventID,
+                      allowInvite: false,
+                      iAmParticipant: false),
                 ),
               );
             },
@@ -311,7 +315,7 @@ class EventInfoScreen extends StatelessWidget {
             label: Text('View participants'),
           );
         }
-      } else if(event.user_event_status  == 1){
+      } else if (event.user_event_status == 1) {
         // Event is Active && User not Creator && User is already joined
         return ElevatedButton(
           style: ElevatedButton.styleFrom(
@@ -356,22 +360,20 @@ class EventInfoScreen extends StatelessWidget {
           },
           child: Text('Leave'),
         );
-      }
-      else if (event.user_event_status == 2){
-        if(event.maxParticipants > event.participants){
-
+      } else if (event.user_event_status == 2) {
+        if (event.maxParticipants > event.participants) {
           // User is not joined
           return ElevatedButton(
             style: ElevatedButton.styleFrom(
-                textStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                textStyle:
+                    TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
             onPressed: () {
               showDialog(
                 context: context,
                 builder: (BuildContext context) {
                   return AlertDialog(
                     title: Text('Joining ${event.title}'),
-                    content: Text(
-                        'Do you want to join "${event.title}"?'),
+                    content: Text('Do you want to join "${event.title}"?'),
                     actions: <Widget>[
                       TextButton(
                         onPressed: () {
@@ -381,30 +383,31 @@ class EventInfoScreen extends StatelessWidget {
                       ),
                       TextButton(
                         onPressed: () async {
-                          int result = await ApiService.joinEvent(event.creatorUsername, event.price, event.title, event.eventID);
+                          int result = await ApiService.joinEvent(
+                              event.creatorUsername,
+                              event.price,
+                              event.title,
+                              event.eventID);
                           if (result == 400) {
                             Navigator.of(context).pop();
                             showErrorSnackBar(context, 'Joining event failed');
-                          }
-                          else if(result == 401){
+                          } else if (result == 401) {
                             Navigator.of(context).pop();
                             showErrorSnackBar(
                                 context, 'You already joined the event');
-                          }
-                          else if(result == 402){
+                          } else if (result == 402) {
                             Navigator.of(context).pop();
-                            showErrorSnackBar(
-                                context, 'You do not have enough money to join the event.');
-                          }
-                          else if(result == 200){
+                            showErrorSnackBar(context,
+                                'You do not have enough money to join the event.');
+                          } else if (result == 200) {
                             Navigator.of(context).pop();
                             showSuccessSnackBar(
                                 context, 'Joining event was successful');
                           }
                           Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => EventScreen())
-                          );
+                              MaterialPageRoute(
+                                  builder: (context) => EventScreen()));
                         },
                         child: Text('Yes'),
                       )
@@ -415,12 +418,12 @@ class EventInfoScreen extends StatelessWidget {
             },
             child: Text('Join'),
           );
-        }
-        else{
+        } else {
           // User is not joined but event is full
           return ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
-                textStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                textStyle:
+                    TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
             onPressed: () {
               showDialog(
                 context: context,
@@ -438,18 +441,21 @@ class EventInfoScreen extends StatelessWidget {
                       ),
                       TextButton(
                         onPressed: () async {
-                          int result = await ApiService.leaveEvent(event.eventID);
+                          int result =
+                              await ApiService.leaveEvent(event.eventID);
                           if (result == 401) {
                             Navigator.of(context).pop();
                             showErrorSnackBar(
                                 context, 'Event was already removed!');
                           } else if (result == 0) {
                             Navigator.of(context).pop();
-                            showErrorSnackBar(context, 'Removing event failed!');
+                            showErrorSnackBar(
+                                context, 'Removing event failed!');
                           } else if (result == 1) {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => EventScreen()),
+                              MaterialPageRoute(
+                                  builder: (context) => EventScreen()),
                             );
                             showSuccessSnackBar(
                                 context, 'Removing event was successful!');
@@ -466,7 +472,6 @@ class EventInfoScreen extends StatelessWidget {
             icon: Icon(Icons.disabled_visible_rounded),
           );
         }
-
       }
     }
     if (event.isCreator) {
@@ -479,7 +484,9 @@ class EventInfoScreen extends StatelessWidget {
             context,
             MaterialPageRoute(
               builder: (context) => InviteToEventScreen(
-                  eventId: event.eventID, allowInvite: false, iAmParticipant: false),
+                  eventId: event.eventID,
+                  allowInvite: false,
+                  iAmParticipant: false),
             ),
           );
         },
@@ -496,7 +503,6 @@ class EventInfoScreen extends StatelessWidget {
   }
 
   Future<dynamic> editOrcancelEvent(BuildContext context) async {
-
     return showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -510,7 +516,8 @@ class EventInfoScreen extends StatelessWidget {
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                  textStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                  textStyle:
+                      TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
               child: Text('Cancel'),
               onPressed: () {
                 Navigator.pop(
@@ -548,8 +555,8 @@ class EventInfoScreen extends StatelessWidget {
                                     context, 'Canceling event was successful!');
                                 Navigator.push(
                                     context,
-                                    MaterialPageRoute(builder: (context) => EventScreen())
-                                );
+                                    MaterialPageRoute(
+                                        builder: (context) => EventScreen()));
                               }
                             },
                             child: Text('Yes'),
@@ -561,7 +568,8 @@ class EventInfoScreen extends StatelessWidget {
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                  textStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                  textStyle:
+                      TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
               child: Text('Edit'),
               onPressed: () {
                 Navigator.pop(

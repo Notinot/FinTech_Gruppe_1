@@ -1082,12 +1082,86 @@ app.post('/send-money', authenticateToken, async (req, res) => {
   }
 });
 
+//route for requesting money with JWT authentication and check users have each other blocked
+app.post('/send-money-checkBlocked', authenticateToken, async (req, res) => {
+  try {
+    // Extract the authenticated user ID from the request
+    const senderId = req.user.userId;
+    console.log('senderId:', senderId);
+
+    // Extract other information from the request body
+    const { recipient, amount, message, event_id } = req.body;
+
+    // Validate input
+    if (!recipient || !amount || amount <= 0) {
+      return res.status(400).json({ message: 'Invalid input' });
+    }
+
+    //check if users have each other blocked
+    const [blocked] = await db.query('SELECT * FROM Friendship WHERE (requester_id = ? AND addressee_id = ?) OR (requester_id = ? AND addressee_id = ?) AND status = "blocked"', [senderId, recipient, recipient, senderId]);
+    if (blocked.length > 0) {
+      return res.status(400).json({ message: 'Users have each other blocked' });
+    }
+
+    //Fetch sender username and email
+    const [senderData] = await db.query('SELECT username, email FROM User WHERE user_id = ?', [senderId]);
+    const senderUsername = senderData[0].username;
+    const senderEmail = senderData[0].email;
+
+    // Fetch recipient ID based on the recipient username or email
+    const [recipientData] = await db.query('SELECT user_id, username, email FROM User WHERE username = ? OR email = ?', [recipient, recipient]);
+
+    if (recipientData.length === 0) {
+      return res.status(404).json({ message: 'Recipient not found' });
+    }
+
+    const recipientId = recipientData[0].user_id;
+    const recipientUsername = recipientData[0].username;
+    const recipientEmail = recipientData[0].email;
+
+    const senderBalance = await getBalance(senderId);
+
+    if (senderBalance < amount) {
+        return res.status(400).json({ message: 'Insufficient funds' });
+    }
+
+    // Insert transaction with message and event_id
+    await db.query('INSERT INTO Transaction (sender_id, receiver_id, amount, transaction_type, created_at, message, processed, event_id) VALUES (?, ?, ?, ?, NOW(), ?, 1, ?)', [
+      senderId,
+      recipientId,
+      amount,
+      'Payment',
+      message,
+      event_id, // Assuming event_id is passed in the request body
+    ]);
+    
+    // Update sender and recipient balances
+    const recipientBalance = await getBalance(recipientId);
+
+    // Update balances in the database
+    await updateBalance(senderId, -amount);
+    await updateBalance(recipientId, +amount);
+
+    sendConfirmationEmail(senderEmail, senderUsername, recipientUsername, "Payment", amount, recipientEmail);
+
+    res.json({ message: 'Money transfer successful' });
+  } catch (error) {
+    console.error('Error transferring money:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
 // Route for requesting money with JWT authentication
 app.post('/request-money', authenticateToken, async (req, res) => {
   try {
     // Extract the authenticated user ID from the request
     const requesterId = req.user.userId;
     console.log('requesterId:', requesterId);
+
+ //check if users have each other blocked
+ const [blocked] = await db.query('SELECT * FROM Friendship WHERE (requester_id = ? AND addressee_id = ?) OR (requester_id = ? AND addressee_id = ?) AND status = "blocked"', [senderId, recipient, recipient, senderId]);
+ if (blocked.length > 0) {
+   return res.status(400).json({ message: 'Users have each other blocked' });
+ }
 
     //Get onyl the users email and username
     const [requesterData] = await db.query('SELECT email, username FROM User WHERE user_id = ?', [requesterId]);
@@ -1104,7 +1178,8 @@ app.post('/request-money', authenticateToken, async (req, res) => {
     if (!recipient || !amount || amount <= 0) {
       return res.status(400).json({ message: 'Invalid input' });
     }
-
+    
+ 
     // Fetch recipient ID based on the recipient username or email
     const [recipientData] = await db.query('SELECT user_id, username, email FROM User WHERE username = ? OR email = ?', [recipient, recipient]);
 
@@ -1698,11 +1773,11 @@ app.post('/invite-event', authenticateToken, async (req, res) => {
   try {
     const senderId = req.user.userId;
     const { eventId, recipient } = req.body;
-
+    
     if (!eventId || !recipient) {
       return res.status(400).json({ message: 'Invalid Event Id or Recipient' });
     }
-
+    
     const [recipientData] = await db.query('SELECT user_id, username, email FROM User WHERE username = ? OR email = ?', [recipient, recipient]);
 
     if (recipientData.length === 0){
@@ -1713,13 +1788,17 @@ app.post('/invite-event', authenticateToken, async (req, res) => {
     const recipientId = recipientData[0].user_id;
     const recipientEmail = recipientData[0].email;
     const recipientUsername = recipientData[0].username;
-
+     
     const [checkForSpam] = await db.query('SELECT * FROM User_Event WHERE event_id = ? and user_id = ?', [eventId, recipientId]);
     if (checkForSpam.length > 0) {
 
       return res.status(401).json({ message: 'User already interacted with the Event' });
     }
-
+     //check if users have each other blocked
+     const [blocked] = await db.query('SELECT * FROM Friendship WHERE (requester_id = ? AND addressee_id = ?) OR (requester_id = ? AND addressee_id = ?) AND status = "blocked"', [senderId, recipientId, recipientId, senderId]);
+     if (blocked.length > 0) {
+       return res.status(400).json({ message: 'Users have each other blocked' });
+     } 
     const [inviteQuery] = await db.query('INSERT INTO User_Event (event_id, user_id, status) VALUES (?, ?, 2)', [eventId, recipientId]);
     console.log(inviteQuery);
 

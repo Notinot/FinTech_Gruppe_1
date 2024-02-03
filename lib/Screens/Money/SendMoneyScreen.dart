@@ -297,7 +297,7 @@ class _SendMoneyScreenState extends State<SendMoneyScreen> {
       }
       // Continue with the send money request
       final sendMoneyResponse = await http.post(
-        Uri.parse('${ApiService.serverUrl}/send-money'),
+        Uri.parse('${ApiService.serverUrl}/send-money-checkBlocked'),
         headers: {
           'Content-Type': 'application/json; charset=UTF-8',
           'Authorization': 'Bearer $token',

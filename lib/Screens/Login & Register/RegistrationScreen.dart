@@ -297,6 +297,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         context,
         MaterialPageRoute(builder: (context) => const LoginScreen()),
       );
+    } else if (response.statusCode == 400) {
+      showSnackBar(
+          isError: true, message: 'Email address or username already in use');
     } else {
       // Registration failed, handle accordingly
       showSnackBar(isError: true, message: 'Registration failed');

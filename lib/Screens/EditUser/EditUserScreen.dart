@@ -592,7 +592,7 @@ class _EditUserState extends State<EditUser> {
                                 user['picture']['data'].cast<int>()))
                             : null,
                         //_imageProvider,
-                        child: profilePictureSet
+                        child: !profilePictureSet
                             ? Text(
                                 '${user["first_name"][0].toUpperCase()}${user["last_name"][0].toUpperCase()}',
                                 style: TextStyle(

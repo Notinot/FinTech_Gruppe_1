@@ -86,7 +86,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             'description': event.description,
             'participants': event.participants,
             'max_participants': event.maxParticipants,
-            'datetime_event': event.datetimeEvent,
+            'datetime_event': event.datetimeEvent.add(Duration(hours: 1)),
             'datetime_created': event.datetimeCreated,
             'price': event.price,
             'status': event.status,
@@ -508,7 +508,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             'description': event.description,
             'participants': event.participants,
             'max_participants': event.maxParticipants,
-            'datetime_event': event.datetimeEvent,
+            'datetime_event': event.datetimeEvent.add(Duration(hours: 1)),
             'datetime_created': event.datetimeCreated,
             'price': event.price,
             'status': event.status,
@@ -793,7 +793,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           IconButton(
             icon: Icon(Icons.close, color: Colors.red),
             onPressed: () {
-              ApiService.leaveEvent(
+              ApiService.declineEvent(
                 eventRequest['event_id'],
               ).then((_) {
                 items.removeWhere((item) =>

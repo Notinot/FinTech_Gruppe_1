@@ -87,7 +87,7 @@ class _EditEventScreenState extends State<EditEventScreen> {
     priceController =
         TextEditingController(text: widget.event.price.toString());
 
-    selectedTimestamp = widget.event.datetimeEvent
+    selectedTimestamp = widget.event.datetimeEvent.add(Duration(hours: 1))
         .toString()
         .substring(0, widget.event.datetimeEvent.toString().length - 1);
     selectedCategory = widget.event.category;
@@ -592,47 +592,6 @@ class _EditEventScreenState extends State<EditEventScreen> {
                 },
               ),
               const SizedBox(height: 16),
-              const Divider(height: 8, thickness: 2),
-              const SizedBox(height: 16),
-              Text(
-                'Repeatable Event',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              CheckboxListTile(
-                value: weekly ?? false,
-                onChanged: (bool? value) {
-                  setState(() {
-                    weekly = value ?? false;
-                    monthly = false;
-                    yearly = false;
-                  });
-                },
-                title: const Text('Weekly'),
-              ),
-              const Divider(height: 0, thickness: 1),
-              CheckboxListTile(
-                value: monthly ?? false,
-                onChanged: (bool? value) {
-                  setState(() {
-                    monthly = value ?? false;
-                    weekly = false;
-                    yearly = false;
-                  });
-                },
-                title: const Text('Monthly'),
-              ),
-              const Divider(height: 0, thickness: 1),
-              CheckboxListTile(
-                value: yearly ?? false,
-                onChanged: (bool? value) {
-                  setState(() {
-                    yearly = value ?? false;
-                    weekly = false;
-                    monthly = false;
-                  });
-                },
-                title: const Text('Yearly'),
-              ),
               const SizedBox(height: 40.0),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(

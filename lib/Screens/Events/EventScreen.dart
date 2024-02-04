@@ -480,6 +480,7 @@ class _EventScreenState extends State<EventScreen> {
           }
         },
       ),
+      /*
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           setState(() {
@@ -490,9 +491,11 @@ class _EventScreenState extends State<EventScreen> {
         },
         child: const Icon(Icons.refresh),
       ),
+       */
       //button to get to CreateEventScreen
       persistentFooterButtons: [
         FloatingActionButton(
+          heroTag: "CreateButton",
           onPressed: () {
             Navigator.push(
               context,
@@ -504,6 +507,7 @@ class _EventScreenState extends State<EventScreen> {
           child: const Icon(Icons.add),
         ),
         FloatingActionButton(
+          heroTag: "RefreshButton",
           onPressed: () {
             setState(() {
               currentSortOrder = 'All events';
@@ -654,7 +658,7 @@ class EventItem extends StatelessWidget {
                 ],
               ),
               trailing: Text(
-                '${DateFormat('dd/MM/yyyy').format(event.datetimeEvent)}\n${DateFormat('HH:mm').format(event.datetimeEvent)}',
+                '${DateFormat('dd/MM/yyyy').format(event.datetimeEvent)}\n${DateFormat('HH:mm').format(event.datetimeEvent.add(Duration(hours: 1)))}',
                 textAlign: TextAlign.right,
               ),
               onTap: () {
@@ -713,7 +717,7 @@ class EventTimeSection extends StatelessWidget {
             Icon(Icons.access_time_rounded),
             SizedBox(width: 8),
             Text(
-              DateFormat('HH:mm').format(event.datetimeEvent),
+              DateFormat('HH:mm').format(event.datetimeEvent.add(Duration(hours: 1))),
               style: TextStyle(fontSize: 18),
             ),
           ],

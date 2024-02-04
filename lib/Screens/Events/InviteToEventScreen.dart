@@ -72,40 +72,46 @@ class _InviteToEventScreenState extends State<InviteToEventScreen> {
                         itemBuilder: (context, index) {
                           return ListTile(
                             title: Text(snapshot.data![index]),
-                            trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  ElevatedButton(
-                                      onPressed: () async {
-                                        if(await ApiService.kickParticipant(widget.eventId ,snapshot.data![index]) == 200){
-                                          Navigator.of(context).pop();
-                                          showSuccessSnackBar(
-                                              context, 'Kicking ${snapshot.data![index]} was successful');
-                                          Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) => InviteToEventScreen(
-                                                  eventId: widget.eventId,
-                                                  allowInvite: true,
-                                                  iAmParticipant: false,
-                                                ),
-                                              ),
-                                          );
-                                        }
-                                        else if(await ApiService.kickParticipant(widget.eventId ,snapshot.data![index]) == 401){
-                                          showErrorSnackBar(context,
+                            trailing:
+                                Row(mainAxisSize: MainAxisSize.min, children: [
+                              ElevatedButton(
+                                  onPressed: () async {
+                                    if (await ApiService.kickParticipant(
+                                            widget.eventId,
+                                            snapshot.data![index]) ==
+                                        200) {
+                                      Navigator.of(context).pop();
+                                      showSuccessSnackBar(context,
+                                          'Kicking ${snapshot.data![index]} was successful');
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              InviteToEventScreen(
+                                            eventId: widget.eventId,
+                                            allowInvite: true,
+                                            iAmParticipant: false,
+                                          ),
+                                        ),
+                                      );
+                                    } else if (await ApiService.kickParticipant(
+                                            widget.eventId,
+                                            snapshot.data![index]) ==
+                                        401) {
+                                      showErrorSnackBar(context,
                                           '${snapshot.data![index]} was already kicked from the event');
-                                        }
-                                        else if(await ApiService.kickParticipant(widget.eventId ,snapshot.data![index]) == 402){
-                                          showErrorSnackBar(context,
-                                              'You do not have enough money to refund ${snapshot.data![index]} the event costs');
-                                        }
-                                        else{
-                                          showErrorSnackBar(context,
-                                              'Something went wrong trying to kick ${snapshot.data![index]}');
-                                        }
+                                    } else if (await ApiService.kickParticipant(
+                                            widget.eventId,
+                                            snapshot.data![index]) ==
+                                        402) {
+                                      showErrorSnackBar(context,
+                                          'You do not have enough money to refund ${snapshot.data![index]} the event costs');
+                                    } else {
+                                      showErrorSnackBar(context,
+                                          'Something went wrong trying to kick ${snapshot.data![index]}');
+                                    }
                                   },
-                                    child: Text("Kick")),
+                                  child: Text("Kick")),
                             ]),
                           );
                         },
@@ -201,7 +207,7 @@ class _InviteToEventScreenState extends State<InviteToEventScreen> {
           TextFormField(
             controller: recipientController,
             decoration: InputDecoration(
-              hintText: 'Enter recipient name or email',
+              hintText: 'Enter username',
               border: OutlineInputBorder(),
               prefixIcon: const Icon(Icons.person),
             ),
@@ -227,6 +233,7 @@ class _InviteToEventScreenState extends State<InviteToEventScreen> {
                 final Map<String, dynamic> user =
                     await ApiService.fetchUserProfile();
 
+                // Check if recipient is the same as the user
                 if (recipient == user['username'] ||
                     recipient == user['email']) {
                   showErrorSnackBar(
@@ -246,7 +253,11 @@ class _InviteToEventScreenState extends State<InviteToEventScreen> {
                       context, '$recipient already interacted with the Event');
                 } else if (res == 402) {
                   showErrorSnackBar(context, '$recipient does not exist');
-                } else if (res == 400 || res == 500) {
+                }
+                else if (res == 403){
+                  showErrorSnackBar(context, 'You and $recipient have each other blocked');
+                }
+                else if (res == 400 || res == 500) {
                   showErrorSnackBar(
                       context, 'Failed to send invite to $recipient');
                 }

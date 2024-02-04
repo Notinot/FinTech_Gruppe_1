@@ -17,8 +17,13 @@ class ApiService {
     } else if (Platform.isIOS) {
       // iOS emulator and physical device can use localhost directly
       return 'http://localhost:3000';
+    } else if (Platform.isMacOS) {
+      // macOS emulator and physical device can use localhost directly
+      print('macOS detected');
+      return 'http://localhost:3000';
+      // return 'http:/127.0.0.1:3000';
     } else {
-      // Default URL or add more checks for other platforms if needed
+      // Default URL
       return 'http://localhost:3000';
     }
   }
@@ -415,6 +420,11 @@ class ApiService {
         return 402;
       }
 
+      if(inviteEventResponse.statusCode == 403){
+        print('Users have blocked each other');
+        return 403;
+      }
+
       print('inviteEvent function: Error inviting to Event');
       print('StatusCode: ${inviteEventResponse.statusCode}');
       return 400;
@@ -651,6 +661,39 @@ class ApiService {
     }
   }
 
+  static Future<int> declineEvent(int eventId) async {
+    try {
+      const storage = FlutterSecureStorage();
+      final token = await storage.read(key: 'token');
+      if (token == null) {
+        throw Exception('Token not found');
+      }
+
+      final declineEventResponse = await http.post(
+          Uri.parse('${ApiService.serverUrl}/decline-event?eventId=$eventId'),
+          headers: {
+            'Content-Type': 'application/json; charset=UTF-8',
+            'Authorization': 'Bearer $token',
+          });
+
+      if (declineEventResponse.statusCode == 200) {
+        print('declineEvent function: Leaving Event was successful');
+        return 1;
+      }
+
+      if (declineEventResponse.statusCode == 401) {
+        print('declineEvent function: Event was already canceled');
+        return 401;
+      }
+
+      print('leaveEvent function: Error leaving Event');
+      return 0;
+    } catch (e) {
+      print('leaveEvent function: Error leaving Event');
+      return 0;
+    }
+  }
+
   static Future<List<String>> fetchParticipants(int eventId, int type) async {
     try {
       const storage = FlutterSecureStorage();
@@ -691,9 +734,7 @@ class ApiService {
   }
 
   static Future<int> deleteEvent(int eventId) async {
-
-    try{
-
+    try {
       const storage = FlutterSecureStorage();
       final token = await storage.read(key: 'token');
       if (token == null) {
@@ -701,25 +742,22 @@ class ApiService {
       }
 
       final response = await http.post(
-        Uri.parse(
-            '${ApiService.serverUrl}/delete-event?eventId=$eventId'),
+        Uri.parse('${ApiService.serverUrl}/delete-event?eventId=$eventId'),
         headers: {
           'Content-Type': 'application/json; charset=UTF-8',
           'Authorization': 'Bearer $token',
         },
       );
 
-      if(response.statusCode == 200){
+      if (response.statusCode == 200) {
         print("Event deleted successfully");
         return 200;
-      }
-      else if(response.statusCode == 401){
+      } else if (response.statusCode == 401) {
         return 401;
       }
 
       return 400;
-
-    }catch(err){
+    } catch (err) {
       print("Error in deleteEvent function: $err");
       return 400;
     }

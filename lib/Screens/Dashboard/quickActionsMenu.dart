@@ -18,11 +18,11 @@ class QuickMenu extends StatelessWidget {
       children: [
         FloatingActionButton.large(
           heroTag: null,
-          //child: const Icon(Icons.attach_money),
+          //child: const Icon(Icons.euro),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.attach_money),
+              Icon(Icons.euro),
               SizedBox(height: 8.0), // Adjust the spacing as needed
               Text('Send\nMoney'),
             ],

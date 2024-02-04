@@ -73,7 +73,7 @@ class AppDrawer extends StatelessWidget {
           ),
 
           ListTile(
-            leading: const Icon(Icons.monetization_on),
+            leading: const Icon(Icons.euro),
             title: const Text('Transactions'),
             onTap: () {
               Navigator.push(

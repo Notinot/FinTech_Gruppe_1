@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -104,14 +103,14 @@ class ApiService {
   static Future<String> fetchUserId() async {
     const storage = FlutterSecureStorage();
     final userId = await storage.read(key: 'user_id');
-    print("APIService: user id = " + userId.toString());
+    print("APIService: user id = $userId");
     return userId.toString();
   }
 
   static Future<int> getUserId() async {
     const storage = FlutterSecureStorage();
     final userId = await storage.read(key: 'user_id');
-    print("APIService: user id = " + userId.toString());
+    print("APIService: user id = $userId");
     return int.parse(userId!);
   }
 
@@ -351,6 +350,7 @@ class ApiService {
       print('fetchProfilePicture function: Error fetching data: $e');
       return null;
     }
+    return null;
   }
 
   static Future<bool> EventService(String body) async {

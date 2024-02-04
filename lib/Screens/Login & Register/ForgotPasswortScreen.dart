@@ -2,8 +2,6 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Screens/EditUser/ChangePasswortScreen.dart';
-import 'LoginScreen.dart';
-import 'RegistrationScreen.dart';
 import 'package:http/http.dart' as http;
 import '../api_service.dart';
 

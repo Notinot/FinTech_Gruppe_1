@@ -41,11 +41,11 @@ class TransactionDetailsScreen extends StatelessWidget {
     Color? textColor;
     Icon? transactionIcon;
     bool isDeposit = transaction.transactionType == 'Deposit';
-    ImageProvider<Object> _imageProvider =
+    ImageProvider<Object> imageProvider =
         const AssetImage('lib/assets/profile_image.png');
     Uint8List? profileImageBytes;
     //turn assetimage into bytes and then into Uint8List
-    _imageProvider
+    imageProvider
         .resolve(const ImageConfiguration())
         .addListener(ImageStreamListener((ImageInfo info, bool _) async {
       final ByteData? bytes =
@@ -168,7 +168,7 @@ class TransactionDetailsScreen extends StatelessWidget {
 
     //check if the user is already a friend
     return FutureBuilder<bool>(
-        future: ApiService.checkIfFriends(friendId!),
+        future: ApiService.checkIfFriends(friendId),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             // Handle errors
@@ -271,7 +271,7 @@ class TransactionDetailsScreen extends StatelessWidget {
                                       Icon(Icons.calendar_today_rounded),
                                       SizedBox(width: 10),
                                       Text(
-                                        '${DateFormat('dd.MM.yyyy').format(transaction.createdAt)}',
+                                        DateFormat('dd.MM.yyyy').format(transaction.createdAt),
                                         style: TextStyle(fontSize: 20),
                                       ),
                                     ],
@@ -284,7 +284,7 @@ class TransactionDetailsScreen extends StatelessWidget {
                                       Icon(Icons.access_time_rounded),
                                       SizedBox(width: 10),
                                       Text(
-                                        '${DateFormat('HH:mm').format(transaction.createdAt.add(Duration(hours: 1)))}',
+                                        DateFormat('HH:mm').format(transaction.createdAt.add(Duration(hours: 1))),
                                         style: TextStyle(fontSize: 20),
                                       ),
                                     ],
@@ -297,7 +297,7 @@ class TransactionDetailsScreen extends StatelessWidget {
                                       transactionIcon!,
                                       SizedBox(width: 10),
                                       Text(
-                                        '${transaction.transactionType}',
+                                        transaction.transactionType,
                                         style: TextStyle(fontSize: 20),
                                       ),
                                     ],
@@ -384,7 +384,7 @@ class TransactionDetailsScreen extends StatelessWidget {
                                         Icon(Icons.message_rounded),
                                         SizedBox(width: 10),
                                         Text(
-                                          '${transaction.message}',
+                                          transaction.message,
                                           style: TextStyle(fontSize: 20),
                                         ),
                                       ],
@@ -402,7 +402,7 @@ class TransactionDetailsScreen extends StatelessWidget {
                                       children: [
                                         ElevatedButton(
                                           style: ElevatedButton.styleFrom(
-                                              primary: Colors.green[300],
+                                              backgroundColor: Colors.green[300],
                                               textStyle: TextStyle(
                                                 fontWeight: FontWeight.bold,
                                                 fontSize: 15,
@@ -414,7 +414,7 @@ class TransactionDetailsScreen extends StatelessWidget {
                                         SizedBox(width: 20),
                                         ElevatedButton(
                                             style: ElevatedButton.styleFrom(
-                                                primary: Colors.red[300],
+                                                backgroundColor: Colors.red[300],
                                                 textStyle: TextStyle(
                                                   fontWeight: FontWeight.bold,
                                                   fontSize: 15,
@@ -496,7 +496,7 @@ class TransactionDetailsScreen extends StatelessWidget {
         return AlertDialog(
           title: const Text('Send Money'),
           content: Text(
-              'Are you sure you want to send \n${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}\€ to ${transaction.senderUsername}?'),
+              'Are you sure you want to send \n${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}€ to ${transaction.senderUsername}?'),
           actions: [
             TextButton(
               onPressed: () {
@@ -704,7 +704,7 @@ class TransactionDetailsScreen extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       builder: (context) {
-        return Container(
+        return SizedBox(
           height: 200,
           child: Column(
             children: [

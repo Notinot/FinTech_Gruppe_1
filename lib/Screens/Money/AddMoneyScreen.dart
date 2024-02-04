@@ -35,7 +35,7 @@ class _AddMoneyScreenState extends State<AddMoneyScreen> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text('Add Money'),
-          content: Container(
+          content: SizedBox(
             width: 250,
             child: TextFormField(
               controller: amountController,

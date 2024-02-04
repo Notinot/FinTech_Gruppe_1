@@ -145,7 +145,8 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
           datetimeButton = Colors.red;
         });
 
-        showErrorSnackBar(this.context, 'Please pick date and time');
+        showErrorSnackBar(
+            this.context, 'Please pick date and time of the event');
 
         return;
       }
@@ -180,16 +181,38 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     // Parse the amount
     final parsedPrice = double.tryParse(normalizedAmountText) ?? 0.0;
 
+    //max amount = 50k
+    if (parsedPrice > 50000) {
+      setState(() {
+        priceError = 'The price cannot exceed 50.000,00 €';
+      });
+      showSnackBar(
+          isError: true,
+          message: 'The price cannot exceed 50.000,00 €',
+          context: this.context);
+      return;
+    }
+
     if (title.trim().isEmpty) {
       setState(() {
         titleError = 'Event title cannot be empty';
       });
+      showSnackBar(
+          isError: true,
+          message: 'Event title cannot be empty',
+          context: this.context);
+      return;
     }
 
     if (description.trim().isEmpty) {
       setState(() {
         descriptionError = 'Please enter a brief description';
       });
+      showSnackBar(
+          isError: true,
+          message: 'Please enter a brief description',
+          context: this.context);
+      return;
     }
 
     if (weekly == true) {

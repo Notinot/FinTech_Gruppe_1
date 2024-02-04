@@ -70,7 +70,7 @@ class _EditEventScreenState extends State<EditEventScreen> {
   bool? yearly;
 
   bool countryButtonUsed = false;
-
+  bool dateTimePickerUsed = false;
   @override
   void initState() {
     super.initState();
@@ -87,7 +87,8 @@ class _EditEventScreenState extends State<EditEventScreen> {
     priceController =
         TextEditingController(text: widget.event.price.toString());
 
-    selectedTimestamp = widget.event.datetimeEvent.add(Duration(hours: 1))
+    selectedTimestamp = widget.event.datetimeEvent
+        //.add(Duration(hours: 1))
         .toString()
         .substring(0, widget.event.datetimeEvent.toString().length - 1);
     selectedCategory = widget.event.category;
@@ -104,6 +105,8 @@ class _EditEventScreenState extends State<EditEventScreen> {
     } else {
       recurrenceType = 0;
     }
+
+    dateTimePickerUsed = true;
   }
 
   void clearErrors() {
@@ -142,23 +145,27 @@ class _EditEventScreenState extends State<EditEventScreen> {
     final TimeOfDay? selectedTime = await showTimePicker(
         context: context, initialTime: TimeOfDay.fromDateTime(selectedDate));
 
-    setState(() {
-      datetimeButton = Colors.blue;
-    });
+    if (selectedTime != null) {
+      dateTimePickerUsed = true;
 
-    selectedTime == null;
-    selectedTimestamp = DateTime(selectedDate.year, selectedDate.month,
-        selectedDate.day, selectedTime!.hour, selectedTime.minute);
+      setState(() {
+        datetimeButton = Colors.blue;
+      });
 
-    unixTimestamp = selectedTimestamp.toString();
-    unixTimestamp = DateTime.parse(unixTimestamp).millisecondsSinceEpoch;
+      selectedTime == null;
+      selectedTimestamp = DateTime(selectedDate.year, selectedDate.month,
+          selectedDate.day, selectedTime!.hour, selectedTime.minute);
 
-    displayTimestamp = selectedTimestamp.toString().substring(0, 16);
+      unixTimestamp = selectedTimestamp.toString();
+      unixTimestamp = DateTime.parse(unixTimestamp).millisecondsSinceEpoch;
 
-    return selectedTime == null
-        ? selectedDate
-        : DateTime(selectedDate.year, selectedDate.month, selectedDate.day,
-            selectedTime.hour, selectedTime.minute);
+      displayTimestamp = selectedTimestamp.toString().substring(0, 16);
+
+      return selectedTime == null
+          ? selectedDate
+          : DateTime(selectedDate.year, selectedDate.month, selectedDate.day,
+              selectedTime.hour, selectedTime.minute);
+    }
   }
 
   Future<void> handleEditEvent() async {
@@ -181,13 +188,13 @@ class _EditEventScreenState extends State<EditEventScreen> {
     int recurrenceType;
 
     try {
-      if (unixTimestamp == null || unixTimestamp == '') {
+      if (!dateTimePickerUsed &&
+          (unixTimestamp == null || unixTimestamp == '')) {
         setState(() {
           datetimeButton = Colors.red;
         });
 
         showErrorSnackBar(this.context, 'Please pick date and time');
-
         return;
       }
 
@@ -225,20 +232,31 @@ class _EditEventScreenState extends State<EditEventScreen> {
       setState(() {
         titleError = 'Event title cannot be empty';
       });
+      showSnackBar(
+          isError: true,
+          message: 'Event title cannot be empty',
+          context: this.context);
+      return;
     }
 
     if (description.trim().isEmpty) {
       setState(() {
         descriptionError = 'Please enter a brief description';
       });
+      showSnackBar(
+          isError: true,
+          message: 'Please enter a brief description',
+          context: this.context);
+      return;
     }
 
     if (selectedMaxParticipants < participants.length) {
-      setState(() {});
-
+      setState(() {
+        maxParticipantsError =
+            'The number of participants cannot be less than the number of participants already registered';
+      });
       showErrorSnackBar(this.context,
-          'Max participants value can not be lower than actual participant number!');
-
+          'The number of participants cannot be less than the number of participants already registered');
       return;
     }
 

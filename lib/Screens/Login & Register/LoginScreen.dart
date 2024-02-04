@@ -293,17 +293,31 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildTextField(
       TextEditingController controller, String label, IconData icon,
       {bool isPassword = false}) {
-    return TextField(
-      controller: controller,
-      obscureText: isPassword,
-      decoration: InputDecoration(
-        prefixIcon: Icon(icon),
-        labelText: label,
-        border: OutlineInputBorder(),
-        //   fillColor: Colors.blueGrey[50],
-        filled: true,
-      ),
-    );
+    TextField textField;
+    Theme.of(context).brightness == Brightness.dark
+        ? textField = TextField(
+            controller: controller,
+            obscureText: isPassword,
+            decoration: InputDecoration(
+              prefixIcon: Icon(icon),
+              labelText: label,
+              border: OutlineInputBorder(),
+              //  fillColor: Colors.blueGrey[50],
+              filled: true,
+            ),
+          )
+        : textField = TextField(
+            controller: controller,
+            obscureText: isPassword,
+            decoration: InputDecoration(
+              prefixIcon: Icon(icon),
+              labelText: label,
+              border: OutlineInputBorder(),
+              fillColor: Colors.blueGrey[50],
+              filled: true,
+            ),
+          );
+    return textField;
   }
 
   // Helper method for rich text
@@ -313,7 +327,7 @@ class _LoginScreenState extends State<LoginScreen> {
       text: Theme.of(context).brightness == Brightness.dark
           ? TextSpan(
               //  style: const TextStyle(color: Colors.black, fontSize: 16.0),
-              // style: const TextStyle(fontSize: 16.0),
+              style: const TextStyle(fontSize: 16.0),
               children: [
                 TextSpan(text: normalText),
                 TextSpan(

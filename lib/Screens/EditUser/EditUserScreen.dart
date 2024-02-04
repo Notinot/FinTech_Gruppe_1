@@ -1,10 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_application_1/Screens/Dashboard/appDrawer.dart';
-import 'package:flutter_application_1/Screens/Dashboard/dashBoardScreen.dart';
 import 'package:flutter_application_1/Screens/Events/CreateEventScreen.dart';
 import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
 import 'package:flutter_application_1/Screens/Login & Register/LoginScreen.dart';
@@ -223,10 +221,10 @@ class _EditUserState extends State<EditUser> {
     String email = emailController.text;
     String firstname = firstnameController.text;
     String lastname = lastnameController.text;
-    String new_password = passwordController.text;
+    String newPassword = passwordController.text;
     String confirmPassword = confirmPasswordController.text;
-    bool pw_change = false;
-    bool email_change = false;
+    bool pwChange = false;
+    bool emailChange = false;
     //final user_id = userData?['user_id'];
     String code = '';
     late http.Response resp = http.Response('null', 500);
@@ -315,14 +313,14 @@ class _EditUserState extends State<EditUser> {
       });
     }
 
-    if (new_password.isEmpty && confirmPassword.isEmpty) {
+    if (newPassword.isEmpty && confirmPassword.isEmpty) {
       // Check if password fields are empty
       setState(() {
-        pw_change = false;
+        pwChange = false;
       });
     }
 
-    if (new_password.length < 12 && new_password.isNotEmpty) {
+    if (newPassword.length < 12 && newPassword.isNotEmpty) {
       // Check if password is at least 12 characters long
       setState(() {
         passwordError = 'Password must have at least 12 characters';
@@ -332,7 +330,7 @@ class _EditUserState extends State<EditUser> {
       return;
     }
 
-    if (!new_password.contains(RegExp(r'[0-9]')) && new_password.isNotEmpty) {
+    if (!newPassword.contains(RegExp(r'[0-9]')) && newPassword.isNotEmpty) {
       // Check if password contains at least one number
       setState(() {
         passwordError = 'Password must contain at least one number';
@@ -341,8 +339,8 @@ class _EditUserState extends State<EditUser> {
       return;
     }
 
-    if (!new_password.contains(RegExp(r'[$#&@~!@?}\[%!?_*+-]')) &&
-        new_password.isNotEmpty) {
+    if (!newPassword.contains(RegExp(r'[$#&@~!@?}\[%!?_*+-]')) &&
+        newPassword.isNotEmpty) {
       // Check if password contains at least one special character
       setState(() {
         passwordError =
@@ -353,7 +351,7 @@ class _EditUserState extends State<EditUser> {
       return;
     }
 
-    if (new_password != confirmPassword) {
+    if (newPassword != confirmPassword) {
       // Check if passwords match
       setState(() {
         confirmPasswordError = 'Passwords do not match';
@@ -362,8 +360,8 @@ class _EditUserState extends State<EditUser> {
       return;
     }
 
-    if ((new_password == confirmPassword && new_password.isNotEmpty)) {
-      pw_change = true;
+    if ((newPassword == confirmPassword && newPassword.isNotEmpty)) {
+      pwChange = true;
     }
 
     if (!EmailValid(email) && email.isNotEmpty) {
@@ -388,7 +386,7 @@ class _EditUserState extends State<EditUser> {
     bool verificationSuccess = true;
 
     if (email.isNotEmpty && email != email_old) {
-      email_change = true;
+      emailChange = true;
       Map<String, dynamic> request;
       const storage = FlutterSecureStorage();
       final token = await storage.read(key: 'token');
@@ -440,10 +438,10 @@ class _EditUserState extends State<EditUser> {
           'email': email,
           'firstname': firstname,
           'lastname': lastname,
-          'new_password': new_password,
+          'new_password': newPassword,
           'userid': user_id,
-          'pw_change': pw_change,
-          'email_change': email_change,
+          'pw_change': pwChange,
+          'email_change': emailChange,
           'code': code,
           'picture': profileImageBytes != null
               ? base64Encode(
@@ -456,14 +454,14 @@ class _EditUserState extends State<EditUser> {
           'email': email,
           'firstname': firstname,
           'lastname': lastname,
-          'new_password': new_password,
+          'new_password': newPassword,
           'userid': user_id,
-          'email_change': email_change,
+          'email_change': emailChange,
           'code': code,
-          'pw_change': pw_change
+          'pw_change': pwChange
         };
       }
-      if (pw_change == false) {
+      if (pwChange == false) {
         requestBody.remove('password');
       }
 
@@ -687,8 +685,8 @@ class _EditUserState extends State<EditUser> {
                         )),
                     const SizedBox(height: 16.0),
                     ElevatedButton(
-                      child: Icon(isEditing ? Icons.save : Icons.edit),
                       onPressed: isEditing ? EditUserProfile : toggleEditMode,
+                      child: Icon(isEditing ? Icons.save : Icons.edit),
                     ),
                     const SizedBox(height: 16.0),
                     Visibility(

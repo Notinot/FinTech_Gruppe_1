@@ -52,6 +52,7 @@ class _NotificationsState extends State<Notifications> {
   final Future<Map<String, dynamic>> user = ApiService.fetchUserProfile();
   int? user_id;
 
+  @override
   void initState() {
     super.initState();
 

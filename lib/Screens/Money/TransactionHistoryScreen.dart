@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Screens/Dashboard/appDrawer.dart';
-import 'package:flutter_application_1/Screens/Dashboard/dashBoardScreen.dart';
 import 'package:flutter_application_1/Screens/api_service.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
@@ -9,10 +8,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_search_bar/flutter_search_bar.dart' as search_bar;
 import 'RequestMoneyScreen.dart';
 import 'SendMoneyScreen.dart';
-import 'package:flutter_application_1/Screens/Money/quickMenuTransaction.dart';
 
-import 'package:flutter_application_1/Screens/Dashboard/quickActionsMenu.dart';
-import 'package:flutter_application_1/Screens/Money/TransactionHistoryScreen.dart';
 import 'package:flutter_application_1/Screens/Money/TransactionDetailsScreen.dart';
 
 // TransactionHistoryScreen is a StatefulWidget that displays a user's transaction history.
@@ -459,14 +455,14 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
               return Text('Error: ${snapshot.error}');
             } else {
               final Map<String, dynamic> user = snapshot.data!;
-              return Container(
+              return SizedBox(
                 height: 50,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     Icon(Icons.euro), // Display the user's balance
                     Text(
-                      '${NumberFormat("#,##0.00", "de_DE").format(user['balance'])}',
+                      NumberFormat("#,##0.00", "de_DE").format(user['balance']),
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 18,
@@ -798,21 +794,21 @@ class TransactionItem extends StatelessWidget {
                 ? isProcessed
                     ? isReceived
                         ? Text(
-                            '${transaction.senderUsername}',
+                            transaction.senderUsername,
                             style: TextStyle(color: textColor),
                           )
                         : Text(
-                            '${transaction.receiverUsername}',
+                            transaction.receiverUsername,
                             style: TextStyle(color: textColor),
                           )
                     : userIsSender
                         ? Text(
-                            '${transaction.receiverUsername}',
+                            transaction.receiverUsername,
                             //'To: ${transaction.receiverUsername}', // Display receiver's username if the user is the sender
                             style: TextStyle(color: textColor),
                           )
                         : Text(
-                            '${transaction.senderUsername}', // Display sender's username if the user is the receiver
+                            transaction.senderUsername, // Display sender's username if the user is the receiver
                             // 'From: ${transaction.senderUsername}',
                             style: TextStyle(color: textColor),
                           )
@@ -823,11 +819,11 @@ class TransactionItem extends StatelessWidget {
                       )
                     : isReceived
                         ? Text(
-                            '${transaction.senderUsername}',
+                            transaction.senderUsername,
                             style: TextStyle(color: textColor),
                           )
                         : Text(
-                            '${transaction.receiverUsername}',
+                            transaction.receiverUsername,
                             style: TextStyle(color: textColor),
                           ),
 
@@ -859,14 +855,14 @@ class TransactionItem extends StatelessWidget {
                     transaction.transactionType == 'Request'
                         ? isProcessed
                             ? isReceived
-                                ? '-${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}\€'
-                                : '+${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}\€'
+                                ? '-${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}€'
+                                : '+${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}€'
                             : isReceived
-                                ? '-${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}\€'
-                                : '+${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}\€'
+                                ? '-${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}€'
+                                : '+${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}€'
                         : isReceived
-                            ? '+${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}\€'
-                            : '-${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}\€',
+                            ? '+${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}€'
+                            : '-${NumberFormat("#,##0.00", "de_DE").format(transaction.amount)}€',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                     ),
@@ -879,7 +875,7 @@ class TransactionItem extends StatelessWidget {
                       Icon(Icons.event_rounded, size: 20),
                       SizedBox(width: 2),
                       Text(
-                        '${transaction.message}',
+                        transaction.message,
                       ),
                     ],
                   ),
@@ -887,7 +883,7 @@ class TransactionItem extends StatelessWidget {
                 if (transaction.message.isNotEmpty &&
                     transaction.eventId == null)
                   Text(
-                    '${transaction.message.length > 30 ? transaction.message.substring(0, 30) + '...' : transaction.message}',
+                    transaction.message.length > 30 ? '${transaction.message.substring(0, 30)}...' : transaction.message,
                     style: TextStyle(
                         color: textColor, fontStyle: FontStyle.italic),
                   ),

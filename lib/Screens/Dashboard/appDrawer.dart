@@ -3,14 +3,12 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 
 import 'package:flutter_application_1/Screens/Dashboard/dashBoardScreen.dart';
-import 'package:flutter_application_1/Screens/Events/CreateEventScreen.dart';
 
 import 'package:flutter_application_1/Screens/Friends/FriendsScreen.dart';
 import 'package:flutter_application_1/Screens/Money/AddMoneyScreen.dart';
 
 import 'package:flutter_application_1/Screens/Money/TransactionHistoryScreen.dart';
 import 'package:flutter_application_1/Screens/api_service.dart';
-import 'package:flutter_application_1/assets/color_schemes.g.dart';
 import 'package:flutter_application_1/Screens/Login%20&%20Register/LoginScreen.dart';
 
 import 'package:flutter_application_1/Screens/EditUser/EditUserScreen.dart';

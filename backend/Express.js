@@ -1039,8 +1039,8 @@ app.post('/send-money', authenticateToken, async (req, res) => {
     const senderUsername = senderData[0].username;
     const senderEmail = senderData[0].email;
 
-    // Fetch recipient ID based on the recipient username or email
-    const [recipientData] = await db.query('SELECT user_id, username, email FROM User WHERE username = ? OR email = ?', [recipient, recipient]);
+    // Fetch recipient ID based on the recipient username 
+    const [recipientData] = await db.query('SELECT user_id, username, email FROM User WHERE username = ? ', [recipient]);
 
     if (recipientData.length === 0) {
       return res.status(404).json({ message: 'Recipient not found' });
@@ -1108,8 +1108,8 @@ app.post('/send-money-checkBlocked', authenticateToken, async (req, res) => {
     const senderUsername = senderData[0].username;
     const senderEmail = senderData[0].email;
 
-    // Fetch recipient ID based on the recipient username or email
-    const [recipientData] = await db.query('SELECT user_id, username, email FROM User WHERE username = ? OR email = ?', [recipient, recipient]);
+    // Fetch recipient ID based on the recipient username 
+    const [recipientData] = await db.query('SELECT user_id, username, email FROM User WHERE username = ? ', [recipient]);
 
     if (recipientData.length === 0) {
       return res.status(404).json({ message: 'Recipient not found' });
@@ -1175,8 +1175,8 @@ app.post('/request-money', authenticateToken, async (req, res) => {
     }
     
  
-    // Fetch recipient ID based on the recipient username or email
-    const [recipientData] = await db.query('SELECT user_id, username, email FROM User WHERE username = ? OR email = ?', [recipient, recipient]);
+    // Fetch recipient ID based on the recipient username 
+    const [recipientData] = await db.query('SELECT user_id, username, email FROM User WHERE username = ? ', [recipient]);
 
     if (recipientData.length === 0) {
       return res.status(404).json({ message: 'Recipient not found' });

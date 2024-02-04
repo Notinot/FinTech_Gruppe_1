@@ -20,7 +20,8 @@ class ApiService {
     } else if (Platform.isMacOS) {
       // macOS emulator and physical device can use localhost directly
       print('macOS detected');
-      return 'http:/127.0.0.1:3000';
+      return 'http://localhost:3000';
+      // return 'http:/127.0.0.1:3000';
     } else {
       // Default URL
       return 'http://localhost:3000';
@@ -700,9 +701,7 @@ class ApiService {
   }
 
   static Future<int> deleteEvent(int eventId) async {
-
-    try{
-
+    try {
       const storage = FlutterSecureStorage();
       final token = await storage.read(key: 'token');
       if (token == null) {
@@ -710,25 +709,22 @@ class ApiService {
       }
 
       final response = await http.post(
-        Uri.parse(
-            '${ApiService.serverUrl}/delete-event?eventId=$eventId'),
+        Uri.parse('${ApiService.serverUrl}/delete-event?eventId=$eventId'),
         headers: {
           'Content-Type': 'application/json; charset=UTF-8',
           'Authorization': 'Bearer $token',
         },
       );
 
-      if(response.statusCode == 200){
+      if (response.statusCode == 200) {
         print("Event deleted successfully");
         return 200;
-      }
-      else if(response.statusCode == 401){
+      } else if (response.statusCode == 401) {
         return 401;
       }
 
       return 400;
-
-    }catch(err){
+    } catch (err) {
       print("Error in deleteEvent function: $err");
       return 400;
     }

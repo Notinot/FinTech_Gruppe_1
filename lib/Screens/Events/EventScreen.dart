@@ -658,7 +658,7 @@ class EventItem extends StatelessWidget {
                 ],
               ),
               trailing: Text(
-                '${DateFormat('dd/MM/yyyy').format(event.datetimeEvent)}\n${DateFormat('HH:mm').format(event.datetimeEvent.add(Duration(hours: 1)))}',
+                '${DateFormat('dd/MM/yyyy').format(event.datetimeEvent)}\n${DateFormat('HH:mm').format(event.datetimeEvent)}',
                 textAlign: TextAlign.right,
               ),
               onTap: () {
@@ -717,7 +717,7 @@ class EventTimeSection extends StatelessWidget {
             Icon(Icons.access_time_rounded),
             SizedBox(width: 8),
             Text(
-              DateFormat('HH:mm').format(event.datetimeEvent.add(Duration(hours: 1))),
+              DateFormat('HH:mm').format(event.datetimeEvent),
               style: TextStyle(fontSize: 18),
             ),
           ],

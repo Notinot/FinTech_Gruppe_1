@@ -870,7 +870,7 @@ app.post('/edit_user/verify', authenticateToken, async (req, res) => {
 //console.log("needed input:", code[0].verification_code);
 
   if (code[0].verification_code === verificationCode.trim()) {
-    res.json({ message: 'Verification succeeded' });
+    res.status(200).json({ message: 'Verification succeeded' });
   }
   else {
     res.status(411).json({ message: 'Wrong verification code' })
@@ -2047,6 +2047,49 @@ app.post('/cancel-event', authenticateToken, async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 });
+
+
+// Delete event from event screen
+app.post('/delete-event', authenticateToken, async (req, res) => {
+  try {
+
+    const senderId = req.user.userId;
+    const eventId = req.query.eventId;
+
+
+    if (!eventId) {
+        console.log('Invalid Event Id');
+        return res.status(400).json({ message: 'Invalid input' });
+    }
+
+    const [checkIfAlreadyDeleted] = await db.query(`
+        SELECT User_Event.status FROM User_Event WHERE event_id = ? AND user_id = ?
+        `,[eventId, senderId]);
+
+    if(checkIfAlreadyDeleted[0].status == 0){
+        return res.status(401).json({ message: 'Event was already deleted' });
+    }
+
+    const [deleteEvent] = await db.query(`
+                 UPDATE Event SET status = 0 WHERE id = ?;
+               `, [eventId]);
+
+    const [changeUserEventStatus] = await db.query(`
+    UPDATE User_Event SET status = 0 WHERE event_id = ? AND user_id = ?
+    `,[eventId, senderId]);
+
+
+
+    console.log('Event was successfully deleted');
+    return res.status(200).json({ message: 'Event was successfully deleted' });
+
+
+  } catch (error) {
+    console.error('Error deleting event:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 
 app.post('/kick-participant',  authenticateToken, async (req, res) => {
 

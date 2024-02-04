@@ -1803,7 +1803,6 @@ app.post('/invite-event', authenticateToken, async (req, res) => {
        return res.status(403).json({ message: 'Users have each other blocked' });
      } 
     const [inviteQuery] = await db.query('INSERT INTO User_Event (event_id, user_id, status) VALUES (?, ?, 2)', [eventId, recipientId]);
-//console.log(inviteQuery);
 
 
     const [eventData] = await db.query(

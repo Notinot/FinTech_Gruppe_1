@@ -206,7 +206,7 @@ class TransactionDetailsScreen extends StatelessWidget {
                                     return AlertDialog(
                                       title: const Text("Info"),
                                       content: const Text(
-                                          "This is the Transaction Details Screen. Here you can see the details of a transaction.\n\nYou can accept or deny a request, by clicking on the respective buttons\n\nsend or request money, or send a friend request by pressing the button in the bottom right corner."),
+                                          "This is the Transaction Details Screen. Here you can see the details of a transaction.\n\nYou can accept or deny a request, by clicking on the respective buttons\n\nsend or request money, or send a friend request by pressing the button in the bottom right corner.\n\nIcon colors:\nGreen: Received\nRed: Sent\nOrange: Pending\n\nYou can also view the event details if the transaction is associated with an event."),
                                       actions: [
                                         TextButton(
                                             onPressed: () {

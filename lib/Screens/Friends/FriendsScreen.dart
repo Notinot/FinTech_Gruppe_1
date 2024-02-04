@@ -15,18 +15,6 @@ import 'package:intl/intl.dart';
 import '../Money/TransactionDetailsScreen.dart';
 import '../api_service.dart';
 
-/* To-do:
-von FriendSearch auch money send/request können?
-
-schauen wo accept/decline submit/cancel überall ist (gleiche richtung, farbe usw)
-
-show transaction history of Friend and yourself
-
-
-  -dynamic spacing, width, heigth etc
-   MediaQuery.of(context).size.width *  0.07
-*/
-
 class FriendsScreen extends StatefulWidget {
   const FriendsScreen({super.key});
 
@@ -855,7 +843,7 @@ class FriendInfoScreen extends StatelessWidget {
                       'Transaction History: ',
                       style: TextStyle(fontSize: 30),
                     ),
-                    // show transaction history of friend with widget
+                    //show transaction history of friend with widget
                     Expanded(
                       child: TransactionListWidget(
                         userId: userId,
@@ -1201,9 +1189,6 @@ class FriendsSearchBar extends SearchDelegate {
       super.textInputAction,
       required this.callbackFunction}); //testing
 
-  //List of Friends here?
-  //dann suggestedFriendItem?
-
   //Leading Icon (back arrow)
   @override
   Widget? buildLeading(BuildContext context) => IconButton(
@@ -1232,11 +1217,11 @@ class FriendsSearchBar extends SearchDelegate {
   }
   //UserInfo mit Add Button?
 
-  @override //less than 3 or 4 characters show friends - more show suggested
+  @override
   Widget buildSuggestions(BuildContext context) {
     suggestedUsers = [];
 
-    if (query.length >= 4) {
+    if (query.length >= 4 && query.length <= 20) {
       return FutureBuilder(
         future: getSuggestions(query: query, token: token),
         builder: (context, snapshot) {

@@ -467,7 +467,7 @@ class EventInfoScreen extends StatelessWidget {
                 context: context,
                 builder: (BuildContext context) {
                   return AlertDialog(
-                    title: Text('Leave ${event.title}'),
+                    title: Text('Remove ${event.title}'),
                     content: Text(
                         'Are you sure you want to remove the Event "${event.title}"?'),
                     actions: <Widget>[
@@ -514,26 +514,101 @@ class EventInfoScreen extends StatelessWidget {
       }
     }
     if (event.isCreator) {
-      // Event is unactive && User = Creator
-      return ElevatedButton.icon(
-        style: ElevatedButton.styleFrom(
-            textStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => InviteToEventScreen(
-                  eventId: event.eventID,
-                  allowInvite: false,
-                  iAmParticipant: false),
+      // Event is inactive && User = Creator
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ElevatedButton.icon(
+            // Define your second button here
+            onPressed: () async {
+              if(await ApiService.deleteEvent(event.eventID) == 200){
+                Navigator.of(context).pop();
+                showSuccessSnackBar(
+                    context, 'Canceling event was successful!');
+              }
+              else if(await ApiService.deleteEvent(event.eventID) == 401){
+                Navigator.of(context).pop();
+                showErrorSnackBar(
+                    context, 'Event was already deleted!');
+              }
+              else{
+                showErrorSnackBar(
+                    context, 'Could not delete event!');
+              }
+            },
+            icon: Icon(Icons.delete_forever_rounded), // Replace with your desired icon
+            label: Text('Delete event'), // Replace with your desired label
+          ),
+          SizedBox(height: 8), // Adjust the spacing between buttons
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              textStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
             ),
-          );
-        },
-        icon: Icon(Icons.people_rounded),
-        label: Text('View participants'),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => InviteToEventScreen(
+                    eventId: event.eventID,
+                    allowInvite: false,
+                    iAmParticipant: false,
+                  ),
+                ),
+              );
+            },
+            icon: Icon(Icons.people_rounded),
+            label: Text('View participants'),
+          ),
+        ],
       );
-    } else {
-      return Container();
+    }
+    else {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ElevatedButton.icon(
+            // Define your second button here
+            onPressed: () async {
+              if(await ApiService.deleteEvent(event.eventID) == 200){
+                Navigator.of(context).pop();
+                showSuccessSnackBar(
+                    context, 'Canceling event was successful!');
+              }
+              else if(await ApiService.deleteEvent(event.eventID) == 401){
+                Navigator.of(context).pop();
+                showErrorSnackBar(
+                    context, 'Event was already deleted!');
+              }
+              else{
+                showErrorSnackBar(
+                    context, 'Could not delete event!');
+              }
+            },
+            icon: Icon(Icons.delete_forever_rounded), // Replace with your desired icon
+            label: Text('Delete event'), // Replace with your desired label
+          ),
+          SizedBox(height: 8), // Adjust the spacing between buttons
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              textStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+            ),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => InviteToEventScreen(
+                    eventId: event.eventID,
+                    allowInvite: false,
+                    iAmParticipant: false,
+                  ),
+                ),
+              );
+            },
+            icon: Icon(Icons.people_rounded),
+            label: Text('View participants'),
+          ),
+        ],
+      );
     }
   }
 

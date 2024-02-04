@@ -418,6 +418,14 @@ class _EditUserState extends State<EditUser> {
       } catch (error) {
         verificationSuccess = false;
       }
+      if (resp.statusCode == 200) {
+        verificationSuccess = true;
+      } else if (resp.statusCode == 411) {
+        verificationSuccess = false;
+        showSnackBar(isError: true, message: "Wrong verification code");
+      } else {
+        verificationSuccess = false;
+      }
     }
 //##############################################################################
     //print('Picture data: $profileImageBytes');
@@ -425,7 +433,7 @@ class _EditUserState extends State<EditUser> {
     final Map<String, dynamic> requestBody;
     // Create a JSON payload to send to the API
 
-    if (verificationSuccess || resp.body == 'null') {
+    if (verificationSuccess /*|| resp.body == 'null'*/) {
       if (profileImageBytes != null) {
         requestBody = {
           //'username': username,

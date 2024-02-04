@@ -694,6 +694,41 @@ class ApiService {
     }
   }
 
+  static Future<int> deleteEvent(int eventId) async {
+
+    try{
+
+      const storage = FlutterSecureStorage();
+      final token = await storage.read(key: 'token');
+      if (token == null) {
+        throw Exception('Token not found');
+      }
+
+      final response = await http.post(
+        Uri.parse(
+            '${ApiService.serverUrl}/delete-event?eventId=$eventId'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if(response.statusCode == 200){
+        print("Event deleted successfully");
+        return 200;
+      }
+      else if(response.statusCode == 401){
+        return 401;
+      }
+
+      return 400;
+
+    }catch(err){
+      print("Error in deleteEvent function: $err");
+      return 400;
+    }
+  }
+
   static Future<int> cancelEvent(int eventId) async {
     try {
       const storage = FlutterSecureStorage();

@@ -767,7 +767,7 @@ app.post('/edit_user/verify', authenticateToken, async (req, res) => {
   console.log("needed input:", code[0].verification_code);
 
   if (code[0].verification_code === verificationCode.trim()) {
-    res.json({ message: 'Verification succeeded' });
+    res.status(200).json({ message: 'Verification succeeded' });
   }
   else {
     res.status(411).json({ message: 'Wrong verification code' })

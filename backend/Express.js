@@ -36,6 +36,7 @@ const db = mysql.createPool({
   password: 'ER0nIAbQy5qyAeSd4ZCV',
   database: 'btxppofwkgo3xl10tfwy',*/
 
+
   host: '80.130.111.254',
   user: 'payfriendz',
   password: 'payfriendz',
@@ -145,9 +146,9 @@ app.post('/changepassword', async (req, res) => {
   }
 
   try {
+    await db.query('UPDATE User SET password_hash = ?, salt = ?, verification_code = NULL, wrong_password_attempts = 0, active = 1 WHERE email = ?', [hashedPassword, salt, email]);
 
-    await db.query('UPDATE User SET password_hash = ?, salt = ?, verification_code = NULL WHERE email = ?', [hashedPassword, salt, email]);
-    return res.json({ message: 'Account verified successfully' });
+    res.json({ message: 'Password changed successfully' });
 
   } catch {
 
@@ -668,18 +669,120 @@ app.post('/delete_user', authenticateToken, async (req, res) => {
   try {
     const [userInfo] = await db.query('SELECT username, email FROM User WHERE user_id = ?', [userid]);
     const { username, email } = userInfo[0];
+
+    const [participatedEvents] = await db.query(`
+                SELECT
+                Event.*,
+                User_Event.user_id,
+                User_Event.status AS user_event_status
+                FROM
+                Event
+                JOIN
+                User_Event ON User_Event.event_id = Event.id
+                WHERE
+                User_Event.status != 0
+                AND
+                User_Event.user_id = ?
+                AND
+                User_Event.user_id != creator_id;
+        `, [userid]);
+
+        const [createdEvents] = await db.query(`
+                SELECT
+                Event.*,
+                User_Event.user_id,
+                User_Event.status AS user_event_status
+                FROM
+                Event
+                JOIN
+                User_Event ON User_Event.event_id = Event.id
+                WHERE
+                User_Event.status != 0
+                AND
+                User_Event.user_id = ?
+                AND
+                User_Event.user_id = creator_id;
+        `, [userid]);
+
+
+        const participatedEventIds = [];
+
+        if(participatedEvents.length > 0){
+            for(let i = 0; i < participatedEvents.length; i++) {
+
+                participatedEventIds.push(participatedEvents[i].id);
+            }
+        }
+
+
+        for(let i = 0; i < participatedEventIds.length; i++){
+
+            const [leaveQuery] = await db.query('UPDATE User_Event SET status = 0 WHERE event_id = ? AND user_id = ?', [participatedEventIds[i], userid]);
+            console.log(leaveQuery);
+
+            const [decreaseParticipants] = await db.query('UPDATE Event SET participants = participants - 1 WHERE id = ?', [participatedEventIds[i]]);
+            console.log(decreaseParticipants);
+        }
+
+
+        // Cancel Events
+        const createdEventIds = [];
+
+        if(createdEvents.length > 0){
+            for(let i = 0; i < createdEvents.length; i++) {
+
+                    createdEventIds.push(createdEvents[i].id);
+            }
+        }
+
+        for(let i = 0; i < createdEventIds.length; i++){
+
+                    const [events] = await db.query('SELECT * FROM Event WHERE status != 0 AND id = ?', [createdEventIds[i]]);
+
+                    if(events.length > 0){
+                         const eventPrice = events[0].price;
+
+                         if(eventPrice > 0){
+                            return res.status(401).json({ message: 'You still have open events that has a price. Please cancel these to be able to delete your account' });
+                         }
+
+                         // DELETE EVENT WORKS
+                         const [deleteLocation] = await db.query('DELETE FROM Location WHERE event_id = ?',
+                         [
+                            createdEventIds[i]
+                         ]);
+
+                         const [deleteUser_Event] = await db.query('DELETE FROM User_Event WHERE event_id = ?',
+                         [
+                                createdEventIds[i]
+                         ]);
+
+                         const [deleteTransactions] = await db.query('DELETE FROM Transaction WHERE event_id = ?;',
+                         [
+                               createdEventIds[i]
+                         ]);
+
+                         const [deleteEvent] = await db.query('DELETE FROM Event WHERE id = ? AND creator_id = ?',
+                         [
+                               createdEventIds[i],
+                               userid
+                         ]);
+                    }
+        }
+
     sendDeletionEmail(email, username);
     await db.query('UPDATE User SET active = 0, username = null,email = null, Picture = null,password_hash = null WHERE user_id = ?', [userid]);
     await db.query('DELETE FROM Friendship WHERE (requester_id = ? ) OR (addressee_id = ?)'
       , [userid, userid]);
-      await db.query('DELETE FROM User_Event WHERE user_id = ? '
+      await db.query('DELETE FROM User_Event WHERE user_id = ?'
       , [userid]);
+
 
     res.json({ message: 'Account deleted' });
   }
   catch (error) {
     console.error('User deletion failed. Error:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    return res.status(500).json({ message: 'Internal server error' });
   }
 });
 
@@ -1287,7 +1390,62 @@ app.post('/event-service', async (req, res) => {
   }
 });
 
+app.get('/eventservice-status', async (req, res) => {
+  try {
 
+         // Status = 0 ==> Ready
+         // Status = 1 ==> Cooldown
+
+        const [checkStatus] = await db.query(`SELECT * FROM Service WHERE id = 1`);
+
+        const now = new Date();
+        const lastStart = checkStatus[0].lastStart;
+        const state = checkStatus[0].state;
+
+        /*
+        if(state == 1){
+            res.status(400).json({ message: 'Event Service is not ready' });
+        }
+        */
+
+
+        const difference = now - lastStart;
+        const oneMinute = 60 * 1000;
+        const waitTimeInMilliseconds = 3 * 1000;
+
+        console.log(difference);
+        console.log(oneMinute);
+
+        async function updateService() {
+          try {
+            const [interactedEvents] = await db.query(`
+              UPDATE Service
+              SET lastStart = NOW()
+              WHERE id = 1;
+            `);
+            console.log('Service updated successfully');
+          } catch (error) {
+            console.error('Error updating service:', error);
+          }
+        }
+
+
+        if (difference > oneMinute) {
+          setTimeout(async () => {
+            await updateService(); // Call the async function
+            console.log('Ready');
+            res.status(200).json({ message: 'Event Service is ready' });
+          }, waitTimeInMilliseconds);
+        } else {
+          console.log('Not ready yet');
+          res.status(400).json({ message: 'Event Service is not ready' });
+        }
+  }
+  catch (e) {
+    console.log(e);
+    res.status(500).json({ message: 'Event Service failed' });
+  }
+});
 
 //route to get the events the user is part of with JWT authentication
 app.get('/events', authenticateToken, async (req, res) => {
@@ -1889,6 +2047,49 @@ app.post('/cancel-event', authenticateToken, async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 });
+
+
+// Delete event from event screen
+app.post('/delete-event', authenticateToken, async (req, res) => {
+  try {
+
+    const senderId = req.user.userId;
+    const eventId = req.query.eventId;
+
+
+    if (!eventId) {
+        console.log('Invalid Event Id');
+        return res.status(400).json({ message: 'Invalid input' });
+    }
+
+    const [checkIfAlreadyDeleted] = await db.query(`
+        SELECT User_Event.status FROM User_Event WHERE event_id = ? AND user_id = ?
+        `,[eventId, senderId]);
+
+    if(checkIfAlreadyDeleted[0].status == 0){
+        return res.status(401).json({ message: 'Event was already deleted' });
+    }
+
+    const [deleteEvent] = await db.query(`
+                 UPDATE Event SET status = 0 WHERE id = ?;
+               `, [eventId]);
+
+    const [changeUserEventStatus] = await db.query(`
+    UPDATE User_Event SET status = 0 WHERE event_id = ? AND user_id = ?
+    `,[eventId, senderId]);
+
+
+
+    console.log('Event was successfully deleted');
+    return res.status(200).json({ message: 'Event was successfully deleted' });
+
+
+  } catch (error) {
+    console.error('Error deleting event:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 
 app.post('/kick-participant',  authenticateToken, async (req, res) => {
 

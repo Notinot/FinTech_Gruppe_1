@@ -1,11 +1,28 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  static const String serverUrl = 'http://10.0.2.2:3000';
+  static String get serverUrl {
+    if (kIsWeb) {
+      // Running on Web (like Chrome, Edge, etc.)
+      return 'http://localhost:3000';
+    } else if (Platform.isAndroid) {
+      // Android emulator typically uses 10.0.2.2 for localhost
+      return 'http://10.0.2.2:3000';
+    } else if (Platform.isIOS) {
+      // iOS emulator and physical device can use localhost directly
+      return 'http://localhost:3000';
+    } else {
+      // Default URL or add more checks for other platforms if needed
+      return 'http://localhost:3000';
+    }
+  }
+  // static const String serverUrl = 'http://10.0.2.2:3000';
   //static const String serverUrl = 'http://localhost:3000';
 
   //static const serverUrl = '192.168.56.1:3000';
@@ -584,16 +601,14 @@ class ApiService {
         print(
             'kickParticipant function: Participant successfully kicked from the event');
         return 200;
-      }
-      else if (kickParticipantResponse.statusCode == 401){
+      } else if (kickParticipantResponse.statusCode == 401) {
         print('User is already kicked from the event');
         return 401;
-      }
-      else if (kickParticipantResponse.statusCode == 402){
-        print('Event Creator does not have enough money to refund the event costs to the participant');
+      } else if (kickParticipantResponse.statusCode == 402) {
+        print(
+            'Event Creator does not have enough money to refund the event costs to the participant');
         return 402;
-      }
-      else {
+      } else {
         print('kickParticipant function: Kicking participant failed');
         return 400;
       }
@@ -672,6 +687,41 @@ class ApiService {
       print("Error fetching Participants");
       print(e);
       rethrow;
+    }
+  }
+
+  static Future<int> deleteEvent(int eventId) async {
+
+    try{
+
+      const storage = FlutterSecureStorage();
+      final token = await storage.read(key: 'token');
+      if (token == null) {
+        throw Exception('Token not found');
+      }
+
+      final response = await http.post(
+        Uri.parse(
+            '${ApiService.serverUrl}/delete-event?eventId=$eventId'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if(response.statusCode == 200){
+        print("Event deleted successfully");
+        return 200;
+      }
+      else if(response.statusCode == 401){
+        return 401;
+      }
+
+      return 400;
+
+    }catch(err){
+      print("Error in deleteEvent function: $err");
+      return 400;
     }
   }
 

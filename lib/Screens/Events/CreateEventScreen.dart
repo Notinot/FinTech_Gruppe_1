@@ -309,7 +309,8 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       'Sport',
       'Technology and Innovation',
       'Travel and Adventure',
-      'Professional'
+      'Professional',
+      'Other'
     ];
 
     return Scaffold(
@@ -337,6 +338,29 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       // ),
       appBar: AppBar(
         title: const Text('Create Event'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            onPressed: () {
+              showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: const Text("Info"),
+                      content: const Text(
+                          "To create an event, fill in the form with the event details and click on the 'Confirm' button.\n\nThe event will be created and you will be redirected to the event page where you can invite people to join."),
+                      actions: [
+                        TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            child: const Text("Close"))
+                      ],
+                    );
+                  });
+            },
+          )
+        ],
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -498,7 +522,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
               const Divider(height: 8, thickness: 2),
               const SizedBox(height: 16),
               Text(
-                'Price',
+                'Price (optional)',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16.0),
@@ -532,6 +556,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 },
               ),
               const SizedBox(height: 16),
+              /*
               const Divider(height: 8, thickness: 2),
               const SizedBox(height: 16),
               Text(
@@ -573,6 +598,8 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 },
                 title: const Text('Yearly'),
               ),
+
+               */
               const SizedBox(height: 40.0),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
@@ -589,6 +616,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                   ),
                 ),
               ),
+              const SizedBox(height: 8.0),
             ],
           ),
         ),

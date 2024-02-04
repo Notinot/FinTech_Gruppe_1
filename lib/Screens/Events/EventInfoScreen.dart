@@ -26,6 +26,29 @@ class EventInfoScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(event.title),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            onPressed: () {
+              showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: const Text("Info"),
+                      content: const Text(
+                          "This is the event information screen. Here you can see all the information about the selected event.\n\nYou can also edit or cancel the event if you are the creator of the event\n\nIf you are not the creator of the event, you can join the event if it is not full or leave the event if you are already joined."),
+                      actions: [
+                        TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            child: const Text("Close"))
+                      ],
+                    );
+                  });
+            },
+          ),
+        ],
       ),
       body: Hero(
         tag: 'event_${event.eventID}',
@@ -225,7 +248,7 @@ class EventInfoScreen extends StatelessWidget {
   }
 
   Widget showParticipantsButton(Event event, BuildContext context) {
-    if (event.status == 1 && event.user_event_status == 1 && !event.isCreator) {
+    if (event.status == 1 && event.user_event_status != 0 && !event.isCreator) {
       return Padding(
         padding: EdgeInsets.symmetric(horizontal: 16),
         child: Row(
@@ -248,6 +271,19 @@ class EventInfoScreen extends StatelessWidget {
               '  Participants: ${event.participants.toString()} / ${event.maxParticipants.toString()}',
               style: TextStyle(fontSize: 18),
             ),
+            const SizedBox(width: 40),
+            TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => InviteToEventScreen(
+                            eventId: event.eventID,
+                            allowInvite: false,
+                            iAmParticipant: true)),
+                  );
+                },
+                child: Text('View')),
           ],
         ),
       );
@@ -373,7 +409,9 @@ class EventInfoScreen extends StatelessWidget {
                 builder: (BuildContext context) {
                   return AlertDialog(
                     title: Text('Joining ${event.title}'),
-                    content: Text('Do you want to join "${event.title}"?'),
+                    content: Text(
+                        'Attention!\n No refund if you decide to leave the event at a later time!\n Do you want to join "${event.title}"?',
+                        style: TextStyle(fontSize: 16)),
                     actions: <Widget>[
                       TextButton(
                         onPressed: () {
@@ -429,9 +467,9 @@ class EventInfoScreen extends StatelessWidget {
                 context: context,
                 builder: (BuildContext context) {
                   return AlertDialog(
-                    title: Text('Leave ${event.title}'),
+                    title: Text('Remove ${event.title}'),
                     content: Text(
-                        'Are you sure you want to leave the Event "${event.title}"?'),
+                        'Are you sure you want to remove the Event "${event.title}"?'),
                     actions: <Widget>[
                       TextButton(
                         onPressed: () {
@@ -461,41 +499,116 @@ class EventInfoScreen extends StatelessWidget {
                                 context, 'Removing event was successful!');
                           }
                         },
-                        child: Text('Leave'),
+                        child: Text('Remove'),
                       )
                     ],
                   );
                 },
               );
             },
-            // label: Text('Remove'),
-            label: Text('Leave Event'),
+            label: Text('Remove'),
+            // label: Text('Leave Event'),
             icon: Icon(Icons.disabled_visible_rounded),
           );
         }
       }
     }
     if (event.isCreator) {
-      // Event is unactive && User = Creator
-      return ElevatedButton.icon(
-        style: ElevatedButton.styleFrom(
-            textStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => InviteToEventScreen(
-                  eventId: event.eventID,
-                  allowInvite: false,
-                  iAmParticipant: false),
+      // Event is inactive && User = Creator
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ElevatedButton.icon(
+            // Define your second button here
+            onPressed: () async {
+              if(await ApiService.deleteEvent(event.eventID) == 200){
+                Navigator.of(context).pop();
+                showSuccessSnackBar(
+                    context, 'Canceling event was successful!');
+              }
+              else if(await ApiService.deleteEvent(event.eventID) == 401){
+                Navigator.of(context).pop();
+                showErrorSnackBar(
+                    context, 'Event was already deleted!');
+              }
+              else{
+                showErrorSnackBar(
+                    context, 'Could not delete event!');
+              }
+            },
+            icon: Icon(Icons.delete_forever_rounded), // Replace with your desired icon
+            label: Text('Delete event'), // Replace with your desired label
+          ),
+          SizedBox(height: 8), // Adjust the spacing between buttons
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              textStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
             ),
-          );
-        },
-        icon: Icon(Icons.people_rounded),
-        label: Text('View participants'),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => InviteToEventScreen(
+                    eventId: event.eventID,
+                    allowInvite: false,
+                    iAmParticipant: false,
+                  ),
+                ),
+              );
+            },
+            icon: Icon(Icons.people_rounded),
+            label: Text('View participants'),
+          ),
+        ],
       );
-    } else {
-      return Container();
+    }
+    else {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ElevatedButton.icon(
+            // Define your second button here
+            onPressed: () async {
+              if(await ApiService.deleteEvent(event.eventID) == 200){
+                Navigator.of(context).pop();
+                showSuccessSnackBar(
+                    context, 'Canceling event was successful!');
+              }
+              else if(await ApiService.deleteEvent(event.eventID) == 401){
+                Navigator.of(context).pop();
+                showErrorSnackBar(
+                    context, 'Event was already deleted!');
+              }
+              else{
+                showErrorSnackBar(
+                    context, 'Could not delete event!');
+              }
+            },
+            icon: Icon(Icons.delete_forever_rounded), // Replace with your desired icon
+            label: Text('Delete event'), // Replace with your desired label
+          ),
+          SizedBox(height: 8), // Adjust the spacing between buttons
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              textStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+            ),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => InviteToEventScreen(
+                    eventId: event.eventID,
+                    allowInvite: false,
+                    iAmParticipant: false,
+                  ),
+                ),
+              );
+            },
+            icon: Icon(Icons.people_rounded),
+            label: Text('View participants'),
+          ),
+        ],
+      );
     }
   }
 

@@ -393,7 +393,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     return AlertDialog(
                       title: const Text("Info"),
                       content: const Text(
-                          "This is the Registration Screen. Here you can register with your name, username, email and password.\n\nIf you already have an account, please return to the previous screen to login."),
+                          "This is the Registration Screen. Here you can register with your first and lastname, username, email and password.\n\nNote that the password must be at least 12 characters long and contain at least one number and one special character.\n\nThe username can not be changed afterwards."),
                       actions: [
                         TextButton(
                             onPressed: () {

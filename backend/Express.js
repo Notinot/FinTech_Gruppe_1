@@ -67,9 +67,9 @@ app.get('/health', (req, res) => {
 // Start the server and handle graceful shutdown on SIGINT signal
 server = app.listen(port, () => {
   process.on('SIGINT', () => {
-    console.log('Shutting down the server...');
+console.log('Shutting down the server...');
     server.close(() => {
-      console.log('Server has been shut down.');
+console.log('Server has been shut down.');
       process.exit(0); // Exit the process gracefully
     });
   });
@@ -240,8 +240,8 @@ app.post('/login', async (req, res) => {
     const token = jwt.sign({ userId: user[0].user_id }, jwtSecret, jwtOptions);
     // Save user_id in a variable
     const user_id = user[0].user_id;
-    console.log('User object:', user);
-    console.log('User ID:', user[0].user_id);
+    // console.log('User object:', user);
+    // console.log('User ID:', user[0].user_id);
 
     // Fetch and include the user's data in the response
     const userData = user[0];
@@ -279,10 +279,10 @@ app.post('/login', async (req, res) => {
 // Route to fetch user profile with JWT authentication
 app.get('/user/profile', authenticateToken, async (req, res) => {
   try {
-    console.log('Token:', req.headers['authorization']);
+    //console.log('Token:', req.headers['authorization']);
     // Get the user ID from the authenticated token
     const userId = req.user.userId;
-    console.log('userId:', userId);
+    //console.log('userId:', userId);
     // Fetch the user's profile data from the database based on the user ID
     const [userData] = await db.query('SELECT * FROM User WHERE user_id = ?', [userId]);
 
@@ -302,10 +302,10 @@ app.get('/user/profile', authenticateToken, async (req, res) => {
 app.get('/profilePicture', authenticateToken, async (req, res) => {
   try {
     const user_id = req.query.userId;
-    console.log('user_id:', user_id);
+    //console.log('user_id:', user_id);
     const query = `SELECT picture FROM User WHERE user_id = ?`;
     const [picture] = await db.query(query, [user_id]);
-    console.log('picture:', picture);
+    //console.log('picture:', picture);
     res.json({ picture: picture[0].picture });
   } catch (error) {
     console.error('Error fetching profile picture:', error);
@@ -319,7 +319,7 @@ app.post('/friendName', authenticateToken, async (req, res) => {
   try {
     const query = 'SELECT username FROM User WHERE user_id = ?';
     const [friend] = await db.query(query, friendId);
-    console.log(friend[0].username);
+    //console.log(friend[0].username);
     res.json({ friendname: friend[0].username });
   } catch (error) {
     console.error('Error fetching profile:', error);
@@ -410,7 +410,7 @@ app.post('/friends/request/', authenticateToken, async (req, res) => {
      Set status = 'declined' 
      WHERE addressee_id = ? AND requester_id = ? ` ;
   }
-  console.log(query);
+  //console.log(query);
   const [friendRequest] = await db.query(query, [user_id, friendId]);
   res.json({ friendRequest });
 });
@@ -441,9 +441,9 @@ app.post('/friends/add',authenticateToken, async (req, res) => {
 
        //HIER DANN TESTEN OB status declined ist und wenn ja, Entry löschen bevor man einen neuen macht
       if(friends[0] !=null ){
-        console.log('entry found');
+        //console.log('entry found');
         if(friends[0]['status']=='declined'){
-          console.log('declined: deleting entry')
+          //console.log('declined: deleting entry')
             //Delete entry
             await db.query(`
             DELETE FROM Friendship
@@ -564,7 +564,7 @@ app.get('/friends/block',authenticateToken, async (req, res) => {
 app.post('/users/', authenticateToken, async (req, res) => {
   const user_id = req.user.userId;
   const searchQuery = req.body.query;
-  console.log('user_id: ', user_id, ' searchQuery: ', searchQuery);
+  //console.log('user_id: ', user_id, ' searchQuery: ', searchQuery);
 
   //get all users which match the query
   var query = `
@@ -582,15 +582,15 @@ app.post('/users/', authenticateToken, async (req, res) => {
 
   //var responseFinal = JSON.parse(JSON.stringify(matchingUsers)); //hard copy of matchingUsers
 
-  console.log('friendshipEntries', friendshipEntries);
-  console.log('matchingUsers', matchingUsers);
+  // console.log('friendshipEntries', friendshipEntries);
+   //console.log('matchingUsers', matchingUsers);
   //console.log('copy: ', responseFinal);
 
 
   const matchingUsersFinal = matchingUsers.map(mUser => {
     const matchingEntry = friendshipEntries.find(fEntry => fEntry['requester_id'] == mUser['user_id'] || fEntry['addressee_id'] == mUser['user_id']);
     if (matchingEntry) {
-      console.log('matchingEntry: ', matchingEntry);
+      //console.log('matchingEntry: ', matchingEntry);
       /* callerIsRequester = true
 
      pending - this user send the friend request -> show "pending" button /only other user can accept
@@ -623,17 +623,17 @@ app.post('/users/', authenticateToken, async (req, res) => {
             //nicht anzeigen? this user must accept/decline in pendingFriends Screen
           }
         default:
-          console.log('Entry status not known - ', entry);
+          //console.log('Entry status not known - ', entry);
       }
     } else {
-      console.log(mUser, ' is not in Entries');
+      //console.log(mUser, ' is not in Entries');
       return { user_id: mUser['user_id'],username : mUser['username'], status: 'user' };
     }
     //remove entries which are null or undefined
   }).filter(user => user != null && user != undefined);
 
 
-  console.log('matchingUsersFinal: ', matchingUsersFinal);
+  //console.log('matchingUsersFinal: ', matchingUsersFinal);
   //for each dies das
   //1 von 4 types zurückgeben
   //friends, pending (incomming), pending (outcomming), blocked, declined, no entry
@@ -718,10 +718,10 @@ app.post('/delete_user', authenticateToken, async (req, res) => {
         for(let i = 0; i < participatedEventIds.length; i++){
 
             const [leaveQuery] = await db.query('UPDATE User_Event SET status = 0 WHERE event_id = ? AND user_id = ?', [participatedEventIds[i], userid]);
-            console.log(leaveQuery);
+           // console.log(leaveQuery);
 
             const [decreaseParticipants] = await db.query('UPDATE Event SET participants = participants - 1 WHERE id = ?', [participatedEventIds[i]]);
-            console.log(decreaseParticipants);
+           // console.log(decreaseParticipants);
         }
 
 
@@ -799,7 +799,7 @@ app.post('/edit_user', authenticateToken, async (req, res) => {
 
   // Check if the user exists based on the provided user_id
   [existingUser] = await db.query('SELECT * FROM User WHERE user_id = ?', [userid]);
-  console.log(existingUser);
+ // console.log(existingUser);
 
   if (existingUser.length === 0) {
     return res.status(404).json({ message: 'User not found' });
@@ -829,8 +829,8 @@ app.post('/edit_user', authenticateToken, async (req, res) => {
     return res.status(406).json({ message: 'Your new password cannot be your old password' });
   }
 
-  console.log(new_password)
-  console.log(samePassword)
+  //console.log(new_password)
+  //console.log(samePassword)
 
   try {
     updateData = [email, firstname, lastname, pictureData, userid];
@@ -856,18 +856,18 @@ app.post('/edit_user', authenticateToken, async (req, res) => {
   catch (error) {
     console.error('Error updating profile:', error);
     res.status(500).json({ message: 'Internal server error', error: error.message });
-    console.log('Received data:', req.body);
+//console.log('Received data:', req.body);
   }
 });
 
 app.post('/edit_user/verify', authenticateToken, async (req, res) => {
   const { userid, verificationCode } = req.body;
-  console.log('Received userid:', userid);
-  console.log('Received verificationCode:', verificationCode);
+//console.log('Received userid:', userid);
+//console.log('Received verificationCode:', verificationCode);
 
 
   const [code] = await db.query('SELECT verification_code FROM User WHERE user_id = ?', [userid]);
-  console.log("needed input:", code[0].verification_code);
+//console.log("needed input:", code[0].verification_code);
 
   if (code[0].verification_code === verificationCode.trim()) {
     res.status(200).json({ message: 'Verification succeeded' });
@@ -886,7 +886,7 @@ app.post('/edit_user/send_code', authenticateToken, async (req, res) => {
   updateData = [code, userid];
   await db.query(query, updateData);
   sendVerificationEmail(email, code);
-  console.log(code);
+//console.log(code);
   res.json({ message: 'Email sent' });
 }
 );
@@ -894,8 +894,8 @@ app.post('/edit_user/send_code', authenticateToken, async (req, res) => {
 app.post('/verifyPassword', authenticateToken, async (req, res) => {
   try {
     const { userid, password } = req.body;
-    console.log(userid)
-    console.log(password)
+//console.log(userid)
+//console.log(password)
     // Check if the user with the provided email exists
     const [user] = await db.query('SELECT * FROM User WHERE user_id = ?', [userid]);
 
@@ -924,7 +924,7 @@ app.post('/verifyPasswort_Token', authenticateToken, async (req, res) => {
   try {
     // Get the user ID from the authenticated token
     const userId = req.user.userId;
-    console.log('userId:', userId);
+    //console.log('userId:', userId);
 
     // Extract the password from the request body
     const { password } = req.body;
@@ -957,7 +957,7 @@ app.get('/balance', authenticateToken, async (req, res) => {
   try {
     // Get the user ID from the authenticated token
     const userId = req.user.userId;
-    console.log('userId:', userId);
+    //console.log('userId:', userId);
 
     // Fetch the user's balance from the database based on the user ID
     const balance = await getBalance(userId);
@@ -973,10 +973,10 @@ app.get('/balance', authenticateToken, async (req, res) => {
 // Route to add money to the user's balance with JWT authentication
 app.post('/addMoney', authenticateToken, async (req, res) => {
   try {
-    console.log('addMoney request body:', req.body);
+//console.log('addMoney request body:', req.body);
     // Get the user ID from the authenticated token
     const userId = req.user.userId;
-    console.log('userId in /addmoney:', userId);
+//console.log('userId in /addmoney:', userId);
 
     // Extract the amount from the request body
     const { amount } = req.body;
@@ -995,7 +995,7 @@ app.post('/addMoney', authenticateToken, async (req, res) => {
     // Send true as the response
     res.json({ success: true });
 
-    console.log('Money added successfully');
+//console.log('Money added successfully');
   } catch (error) {
     console.error('Error adding money:', error);
     res.status(500).json({ message: 'Internal server error' });
@@ -1024,7 +1024,7 @@ app.post('/send-money', authenticateToken, async (req, res) => {
   try {
     // Extract the authenticated user ID from the request
     const senderId = req.user.userId;
-    console.log('senderId:', senderId);
+//console.log('senderId:', senderId);
 
     // Extract other information from the request body
     const { recipient, amount, message, event_id } = req.body;
@@ -1087,7 +1087,7 @@ app.post('/send-money-checkBlocked', authenticateToken, async (req, res) => {
   try {
     // Extract the authenticated user ID from the request
     const senderId = req.user.userId;
-    console.log('senderId:', senderId);
+//console.log('senderId:', senderId);
 
     // Extract other information from the request body
     const { recipient, amount, message, event_id } = req.body;
@@ -1155,7 +1155,7 @@ app.post('/request-money', authenticateToken, async (req, res) => {
   try {
     // Extract the authenticated user ID from the request
     const requesterId = req.user.userId;
-    console.log('requesterId:', requesterId);
+//console.log('requesterId:', requesterId);
 
 
     //Get onyl the users email and username
@@ -1163,8 +1163,8 @@ app.post('/request-money', authenticateToken, async (req, res) => {
     const requesterEmail = requesterData[0].email;
     const requesterUsername = requesterData[0].username;
 
-    console.log('requesterEmail:', requesterEmail);
-    console.log('requesterUsername:', requesterUsername);
+//console.log('requesterEmail:', requesterEmail);
+//console.log('requesterUsername:', requesterUsername);
 
     // Extract other information from the request body
     const { recipient, amount, message } = req.body;
@@ -1189,7 +1189,7 @@ app.post('/request-money', authenticateToken, async (req, res) => {
      //check if users have each other blocked
  const [blocked] = await db.query('SELECT * FROM Friendship WHERE (requester_id = ? AND addressee_id = ?) AND status = "blocked" OR (requester_id = ? AND addressee_id = ?) AND status = "blocked"', [requesterId, recipientId, recipientId, requesterId]);
  if (blocked.length > 0) {
-  console.log('Users have each other blocked');
+//console.log('Users have each other blocked');
    return res.status(400).json({ message: 'Users have each other blocked' });
  }
 
@@ -1219,7 +1219,7 @@ app.get('/transactions', authenticateToken, async (req, res) => {
   try {
     // Get the user ID from the authenticated token
     const userId = req.user.userId;
-    console.log('userId:', userId);
+    //console.log('userId:', userId);
 
     // Fetch the user's transaction history from the database based on the user ID
     const transactions = await db.query(`
@@ -1255,7 +1255,7 @@ app.get('/checkIfFriends', authenticateToken, async (req, res) => {
   const query = `SELECT * FROM Friendship WHERE (requester_id = ? AND addressee_id = ?) OR (requester_id = ? AND addressee_id = ?)`;
   const [friendship] = await db.query(query, [user_id, friendId, friendId, user_id]);
   const isFriend = friendship.length > 0 && friendship[0].status === 'accepted';
-  console.log('isFriend:', isFriend);
+//console.log('isFriend:', isFriend);
   res.json({ isFriend: isFriend });
 
 });
@@ -1265,13 +1265,13 @@ app.post('/transactions/:transactionId', authenticateToken, async (req, res) => 
   try {
     // Get the user ID from the authenticated token
     const userId = req.user.userId;
-    console.log('userId:', userId);
+    //userId:', userId);
     // Get the transaction ID from the request parameters
     const transactionId = req.params.transactionId;
-    console.log('transactionId YOUR ARE LOOKING FOR:', transactionId);
+//console.log('transactionId YOUR ARE LOOKING FOR:', transactionId);
     // Extract the action from the request body
     const { action } = req.body;
-    console.log('action:', action);
+//console.log('action:', action);
     // Validate input
     if (!action || (action !== 'accept' && action !== 'decline')) {
       return res.status(400).json({ message: 'Invalid input' });
@@ -1280,7 +1280,7 @@ app.post('/transactions/:transactionId', authenticateToken, async (req, res) => 
 
     // Fetch the transaction from the database based on the transaction ID
     const [transactionData] = await db.query('SELECT * FROM Transaction WHERE transaction_id = ?', [transactionId]);
-    console.log('transactionData:', transactionData);
+//console.log('transactionData:', transactionData);
     if (transactionData.length === 0) {
       return res.status(404).json({ message: 'Transaction not found' });
     }
@@ -1385,7 +1385,7 @@ app.post('/event-service', async (req, res) => {
     res.status(200).json({ message: 'Event Service successfully finished' });
   }
   catch (e) {
-    console.log(e);
+//console.log(e);
     res.status(500).json({ message: 'Event Service failed' });
   }
 });
@@ -1413,8 +1413,8 @@ app.get('/eventservice-status', async (req, res) => {
         const oneMinute = 60 * 1000;
         const waitTimeInMilliseconds = 3 * 1000;
 
-        console.log(difference);
-        console.log(oneMinute);
+//console.log(difference);
+//console.log(oneMinute);
 
         async function updateService() {
           try {
@@ -1423,7 +1423,7 @@ app.get('/eventservice-status', async (req, res) => {
               SET lastStart = NOW()
               WHERE id = 1;
             `);
-            console.log('Service updated successfully');
+//console.log('Service updated successfully');
           } catch (error) {
             console.error('Error updating service:', error);
           }
@@ -1433,16 +1433,16 @@ app.get('/eventservice-status', async (req, res) => {
         if (difference > oneMinute) {
           setTimeout(async () => {
             await updateService(); // Call the async function
-            console.log('Ready');
+//console.log('Ready');
             res.status(200).json({ message: 'Event Service is ready' });
           }, waitTimeInMilliseconds);
         } else {
-          console.log('Not ready yet');
+//console.log('Not ready yet');
           res.status(400).json({ message: 'Event Service is not ready' });
         }
   }
   catch (e) {
-    console.log(e);
+//console.log(e);
     res.status(500).json({ message: 'Event Service failed' });
   }
 });
@@ -1539,7 +1539,7 @@ app.get('/fetch-latest-created-event', authenticateToken, async(req, res) => {
                                   WHERE Event.id = (SELECT MAX(id) FROM Event);`
             );
 
-            console.log(latestEvent);
+//console.log(latestEvent);
             res.json(latestEvent);
         }
         catch(error){
@@ -1652,12 +1652,12 @@ app.post('/create-event', authenticateToken, async (req, res) => {
 
       if (response[0].extra.confidence < 5) {
 
-        console.log('Address does not exist');
+//console.log('Address does not exist');
         return res.status(401).json({ message: 'Address could not be validated' });
       }
 
-      console.log(response);
-      console.log('Address does exist');
+//console.log(response);
+//console.log('Address does exist');
     }
 
     // Create Event in Table
@@ -1673,7 +1673,7 @@ app.post('/create-event', authenticateToken, async (req, res) => {
       0
     ]);
 
-    console.log(eventQuery);
+//console.log(eventQuery);
 
     // Get Event ID
     const [eventIdQuery] = await db.query('SELECT * FROM Event WHERE creator_id = ? ORDER BY datetime_created DESC LIMIT 1', senderId);
@@ -1681,11 +1681,11 @@ app.post('/create-event', authenticateToken, async (req, res) => {
 
     // Link Event -> Location
     const locationQuery = await db.query('INSERT INTO Location (event_id, country, city, street, zipcode) VALUES (?, ?, ?, ?, ?)', [eventId, country, city, street, zipcode]);
-    console.log(locationQuery);
+//console.log(locationQuery);
 
     // Link Event -> User_Event
     const user_eventQuery = await db.query('INSERT INTO User_Event (event_id, user_id) VALUES (?, ?)', [eventId, senderId]);
-    console.log(user_eventQuery);
+//console.log(user_eventQuery);
 
     res.status(200).json({ message: 'Event created successfully' });
 
@@ -1727,12 +1727,12 @@ app.post('/edit-event', authenticateToken, async (req, res) => {
 
       if (response[0].extra.confidence < 5) {
 
-        console.log('Address does not exist');
+//console.log('Address does not exist');
         return res.status(401).json({ message: 'Address could not be validated' });
       }
 
-      console.log(response);
-      console.log('Address does exist');
+//console.log(response);
+//console.log('Address does exist');
     }
 
     // Create Event in Table
@@ -1748,11 +1748,11 @@ app.post('/edit-event', authenticateToken, async (req, res) => {
   eventID
 ]);
 
-    console.log(eventQuery);
+//console.log(eventQuery);
 
     // Link Event -> Location
     const locationQuery = await db.query('UPDATE Location SET country = ?, city = ?, street = ?, zipcode = ? WHERE event_id = ?', [country, city, street, zipcode, eventID]);
-    console.log(locationQuery);
+//console.log(locationQuery);
 
     // Link Event -> User_Event
     //const user_eventQuery = await db.query('INSERT INTO User_Event (event_id, user_id) VALUES (?, ?)', [eventId, senderId]);
@@ -1803,7 +1803,7 @@ app.post('/invite-event', authenticateToken, async (req, res) => {
        return res.status(403).json({ message: 'Users have each other blocked' });
      } 
     const [inviteQuery] = await db.query('INSERT INTO User_Event (event_id, user_id, status) VALUES (?, ?, 2)', [eventId, recipientId]);
-    console.log(inviteQuery);
+//console.log(inviteQuery);
 
 
     const [eventData] = await db.query(
@@ -1863,10 +1863,10 @@ app.post('/join-event', authenticateToken, async (req, res) => {
 
 
     const [joinQuery] = await db.query('UPDATE User_Event SET status = 1 WHERE event_id = ? AND user_id = ?', [eventId, senderId]);
-    console.log(joinQuery);
+//console.log(joinQuery);
 
     const [increaseParticipantsQuery] = await db.query('UPDATE Event SET participants = participants + 1 WHERE id = ?', [eventId]);
-    console.log(increaseParticipantsQuery);
+//console.log(increaseParticipantsQuery);
 
     res.status(200).json({ message: 'Event successfully joined' });
 
@@ -1884,7 +1884,7 @@ app.post('/leave-event', authenticateToken, async (req, res) => {
         const eventId = req.query.eventId;
 
         if (!eventId || !senderId) {
-            console.log('Invalid Event Id or Sender Id');
+//console.log('Invalid Event Id or Sender Id');
             return res.status(400).json({ message: 'Invalid input' });
         }
 
@@ -1900,10 +1900,10 @@ app.post('/leave-event', authenticateToken, async (req, res) => {
         }
 
         const [leaveQuery] = await db.query('UPDATE User_Event SET status = 0 WHERE event_id = ? AND user_id = ?', [eventId, senderId]);
-        console.log(leaveQuery);
+//console.log(leaveQuery);
 
         const [decreaseParticipants] = await db.query('UPDATE Event SET participants = participants - 1 WHERE id = ?', [eventId]);
-        console.log(decreaseParticipants);
+//console.log(decreaseParticipants);
 
         res.status(200).json({ message: 'Event successfully leaved' });
 
@@ -1922,7 +1922,7 @@ app.post('/cancel-event', authenticateToken, async (req, res) => {
     const { eventId, participants } = req.body;
 
     if (!eventId) {
-      console.log('Invalid Event Id');
+//console.log('Invalid Event Id');
       return res.status(400).json({ message: 'Invalid input' });
     }
 
@@ -1967,7 +1967,7 @@ app.post('/cancel-event', authenticateToken, async (req, res) => {
         senderId
       ]);
 
-    console.log(cancelQuery);
+//console.log(cancelQuery);
 
     // Send Email to participants
     const participantsUsername = [];
@@ -2003,12 +2003,12 @@ app.post('/cancel-event', authenticateToken, async (req, res) => {
         if(eventPrice > 0){
 
                     const senderBalance = await getBalance(senderId);
-                    console.log(senderBalance);
+//console.log(senderBalance);
 
                     /* // Case if User does not have enough money to apy all participants
                     if(senderBalance < eventPrice){
 
-                        console.log("User does not have enough money to refund the event costs")
+//console.log("User does not have enough money to refund the event costs")
                         return res.status(402).json({ message: ' User does not have enough money to refund the event costs  ' });
                     }
                     */
@@ -2100,7 +2100,7 @@ app.post('/kick-participant',  authenticateToken, async (req, res) => {
         const participantUsername = req.query.participantUsername;
 
         if (!eventId || !participantUsername) {
-            console.log('Invalid Event Id or participant Username');
+//console.log('Invalid Event Id or participant Username');
             return res.status(400).json({ message: 'Invalid input' });
         }
 
@@ -2151,11 +2151,11 @@ app.post('/kick-participant',  authenticateToken, async (req, res) => {
         if(eventPrice > 0){
 
             const senderBalance = await getBalance(senderId);
-            console.log(senderBalance);
+//console.log(senderBalance);
 
             if(senderBalance < eventPrice){
 
-                console.log("User does not have enough money to refund the event costs")
+//console.log("User does not have enough money to refund the event costs")
                 return res.status(402).json({ message: ' User does not have enough money to refund the event costs  ' });
             }
 
@@ -2178,9 +2178,9 @@ app.post('/kick-participant',  authenticateToken, async (req, res) => {
 
         // Decrease Participant number by one
         const [decreaseParticipants] = await db.query('UPDATE Event SET participants = participants - 1 WHERE id = ?', [eventId]);
-        console.log(decreaseParticipants);
+//console.log(decreaseParticipants);
 
-        console.log('Participant successfully kicked from the event');
+//console.log('Participant successfully kicked from the event');
 
         sendKickedFromEvent(participantEmail, participantUsername, eventInformation[0].creator_username, eventInformation[0].title);
 
@@ -2203,7 +2203,7 @@ app.get('/event-participants', authenticateToken, async (req, res) => {
     const type = req.query.type;
 
     if (!eventId || !type) {
-        console.log('Invalid Event Id');
+//console.log('Invalid Event Id');
         return res.status(400).json({ message: 'Invalid input' });
     }
 
@@ -2225,7 +2225,7 @@ app.get('/event-participants', authenticateToken, async (req, res) => {
                     User_Event.status = ?;
                `, [eventId, senderId, type]);
 
-    console.log('Participants:', joinedParticipants);
+//console.log('Participants:', joinedParticipants);
     res.json(joinedParticipants);
 
 
@@ -2242,10 +2242,10 @@ app.get('/event-participant-mails', authenticateToken, async (req, res) => {
     const eventId = req.query.eventId;
     const type = req.query.type;
 
-    console.log(type);
+//console.log(type);
 
     if (!eventId || !type) {
-        console.log('Invalid Event Id');
+//console.log('Invalid Event Id');
         return res.status(400).json({ message: 'Invalid input' });
     }
 
@@ -2268,7 +2268,7 @@ app.get('/event-participant-mails', authenticateToken, async (req, res) => {
            `, [eventId, senderId, type]);
 
 
-    console.log('Participants:', joinedParticipants);
+//console.log('Participants:', joinedParticipants);
     res.json(joinedParticipants);
 
   } catch (error) {
@@ -2308,7 +2308,7 @@ app.get('/pending-events', authenticateToken, async (req, res) => {
         `, [userId]);
 
 
-    console.log('events:', pendingEvents);
+//console.log('events:', pendingEvents);
     res.json(pendingEvents);
 
   } catch (error) {
@@ -2400,7 +2400,7 @@ function sendVerificationEmail(to, code) {
     if (error) {
       console.error('Error sending email:', error);
     } else {
-      console.log('Email sent:', info.response);
+//console.log('Email sent:', info.response);
     }
   });
 }
@@ -2494,7 +2494,7 @@ function sendDeletionEmail(to, username) {
     if (error) {
       console.error('Error sending email:', error);
     } else {
-      console.log('Email sent:', info.response);
+//console.log('Email sent:', info.response);
     }
   });
 }
@@ -2591,7 +2591,7 @@ function sendConfirmationEmail(senderEmail, username, receiver, requestType, amo
     if (error) {
       console.error('Error sending email:', error);
     } else {
-      console.log('Email sent:', info.response);
+//console.log('Email sent:', info.response);
     }
   });
 
@@ -2683,7 +2683,7 @@ function sendConfirmationEmail(senderEmail, username, receiver, requestType, amo
     if (error) {
       console.error('Error sending email:', error);
     } else {
-      console.log('Email sent:', info.response);
+//console.log('Email sent:', info.response);
     }
   });
 }
@@ -2777,7 +2777,7 @@ function sendRequestConfirmationEmail(senderEmail, username, receiver, requestTy
     if (error) {
       console.error('Error sending email:', error);
     } else {
-      console.log('Email sent:', info.response);
+//console.log('Email sent:', info.response);
     }
   });
 
@@ -2903,7 +2903,7 @@ function sendEventInvitationEmail(recipientEmail, recipientUsername, creatorUser
     if (error) {
       console.error('Error sending email:', error);
     } else {
-      console.log('Email sent:', info.response);
+//console.log('Email sent:', info.response);
     }
   });
 
@@ -3013,7 +3013,7 @@ function sendEventCanceledEmail(recipientEmail, recipientUsername, creatorUserna
     if (error) {
       console.error('Error sending email:', error);
     } else {
-      console.log('Email sent:', info.response);
+//console.log('Email sent:', info.response);
     }
   });
 
@@ -3123,7 +3123,7 @@ function sendKickedFromEvent(recipientEmail, recipientUsername, creatorUsername,
     if (error) {
       console.error('Error sending email:', error);
     } else {
-      console.log('Email sent:', info.response);
+//console.log('Email sent:', info.response);
     }
   });
 
@@ -3244,7 +3244,7 @@ function sendEventEditedEmail(recipientEmails, creatorUsername,OLD_eventTitle, e
     if (error) {
       console.error('Error sending email:', error);
     } else {
-      console.log('Email sent:', info.response);
+//console.log('Email sent:', info.response);
     }
   });
 
@@ -3274,12 +3274,12 @@ async function getBalance(userId) {
   try {
     // Fetch the user's balance
     const [userData] = await db.query('SELECT balance FROM User WHERE user_id = ?', [userId]);
-    console.log('getBalance:');
-    console.log('userId:', userId);
-    console.log('userData:', userData);
+    // console.log('getBalance:');
+    // console.log('userId:', userId);
+    // console.log('userData:', userData);
 
     if (userData.length === 0) {
-      console.log('User not found');
+//console.log('User not found');
       return 0; // Return 0 if user not found
     }
 
@@ -3302,7 +3302,7 @@ app.post('/addFriendId', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.userId;
     const friendId = req.body.friendId;
-    console.log("user_id: ", userId, "- friendId: ", friendId);
+//console.log("user_id: ", userId, "- friendId: ", friendId);
 
     //check if users are already friends
     const [friends] = await db.query(
@@ -3312,7 +3312,7 @@ app.post('/addFriendId', authenticateToken, async (req, res) => {
       [userId, friendId, friendId, userId]
     );
 
-    console.log(friends);
+//console.log(friends);
     //when they are not already friends
     if (friends[0] == null) {
       const query = `

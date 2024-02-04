@@ -1798,13 +1798,20 @@ app.post('/invite-event', authenticateToken, async (req, res) => {
       return res.status(401).json({ message: 'User already interacted with the Event' });
     }
      //check if users have each other blocked
-     const [blocked] = await db.query('SELECT * FROM Friendship WHERE (requester_id = ? AND addressee_id = ?)  AND status = "blocked" OR (requester_id = ? AND addressee_id = ?) AND status = "blocked"', [senderId, recipientId, recipientId, senderId]);
-     if (blocked.length > 0) {
-       return res.status(400).json({ message: 'Users have each other blocked' });
-     } 
-    const [inviteQuery] = await db.query('INSERT INTO User_Event (event_id, user_id, status) VALUES (?, ?, 2)', [eventId, recipientId]);
-//console.log(inviteQuery);
+     const [blocked] = await db.query(`
+     SELECT * FROM Friendship
+     WHERE (requester_id = ? AND addressee_id = ?)
+     AND status = "blocked"
+     OR
+     (requester_id = ? AND addressee_id = ?)
+     AND status = "blocked"
+     `, [senderId, recipientId, recipientId, senderId]);
 
+     if (blocked.length > 0) {
+       return res.status(403).json({ message: 'Users have each other blocked' });
+     }
+
+    const [inviteQuery] = await db.query('INSERT INTO User_Event (event_id, user_id, status) VALUES (?, ?, 2)', [eventId, recipientId]);
 
     const [eventData] = await db.query(
                 `SELECT

@@ -17,8 +17,12 @@ class ApiService {
     } else if (Platform.isIOS) {
       // iOS emulator and physical device can use localhost directly
       return 'http://localhost:3000';
+    } else if (Platform.isMacOS) {
+      // macOS emulator and physical device can use localhost directly
+      print('macOS detected');
+      return 'http:/127.0.0.1:3000';
     } else {
-      // Default URL or add more checks for other platforms if needed
+      // Default URL
       return 'http://localhost:3000';
     }
   }

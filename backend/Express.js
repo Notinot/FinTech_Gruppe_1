@@ -1781,7 +1781,7 @@ app.post('/invite-event', authenticateToken, async (req, res) => {
       return res.status(400).json({ message: 'Invalid Event Id or Recipient' });
     }
     
-    const [recipientData] = await db.query('SELECT user_id, username, email FROM User WHERE username = ? OR email = ?', [recipient, recipient]);
+    const [recipientData] = await db.query('SELECT user_id, username, email FROM User WHERE username = ?', [recipient]);
 
     if (recipientData.length === 0){
 

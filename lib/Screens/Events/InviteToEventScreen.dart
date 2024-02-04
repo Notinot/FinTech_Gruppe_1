@@ -201,7 +201,7 @@ class _InviteToEventScreenState extends State<InviteToEventScreen> {
           TextFormField(
             controller: recipientController,
             decoration: InputDecoration(
-              hintText: 'Enter recipient name or email',
+              hintText: 'Enter username',
               border: OutlineInputBorder(),
               prefixIcon: const Icon(Icons.person),
             ),

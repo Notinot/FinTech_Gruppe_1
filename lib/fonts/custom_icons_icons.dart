@@ -5,13 +5,21 @@
 /// To use this font, place it in your fonts/ directory and include the
 /// following in your pubspec.yaml
 ///
-
+/// flutter:
+///   fonts:
+///    - family:  MyFlutterApp
+///      fonts:
+///       - asset: fonts/MyFlutterApp.ttf
 ///
 ///
 /// * Iconic, Copyright (C) 2012 by P.J. Onori
 ///         Author:    P.J. Onori
 ///         License:   SIL (http://scripts.sil.org/OFL)
 ///         Homepage:  http://somerandomdude.com/work/iconic/
+/// * Font Awesome 4, Copyright (C) 2016 by Dave Gandy
+///         Author:    Dave Gandy
+///         License:   SIL ()
+///         Homepage:  http://fortawesome.github.com/Font-Awesome/
 ///
 import 'package:flutter/widgets.dart';
 
@@ -23,4 +31,6 @@ class MyFlutterApp {
 
   static const IconData exchange =
       IconData(0xe800, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+  static const IconData euro =
+      IconData(0xf153, fontFamily: _kFontFam, fontPackage: _kFontPkg);
 }

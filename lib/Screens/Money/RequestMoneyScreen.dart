@@ -47,7 +47,7 @@ class _RequestMoneyScreenState extends State<RequestMoneyScreen> {
                     return AlertDialog(
                       title: const Text("Info"),
                       content: const Text(
-                          "This feature allows you to request money from other users. You can enter the recipient's name or email, the amount you want to request and an optional message. The recipient will receive a notification and can accept or decline your request."),
+                          "This feature allows you to request money from other users. You need to enter the recipient's username and the amount you want to request. The message is optional. The recipient will receive a notification and can accept or decline your request."),
                       actions: [
                         TextButton(
                             onPressed: () {
@@ -74,7 +74,7 @@ class _RequestMoneyScreenState extends State<RequestMoneyScreen> {
             TextFormField(
               controller: requesterController,
               decoration: InputDecoration(
-                hintText: 'Enter name or email',
+                hintText: 'Enter username',
                 border: OutlineInputBorder(),
                 prefixIcon: const Icon(Icons.person),
               ),

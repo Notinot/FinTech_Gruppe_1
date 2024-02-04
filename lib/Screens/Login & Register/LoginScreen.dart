@@ -26,6 +26,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool requiresVerification = false;
   bool accountLocked = false;
 
+  // Check if the user is active, requires verification, or is locked
   Future<void> checkUserActiveStatus(String email) async {
     final response = await http.post(
       // Uri.parse('http://192.168.178.28:3000/check-active'),
@@ -248,13 +249,13 @@ class _LoginScreenState extends State<LoginScreen> {
                   ElevatedButton(
                     onPressed: handleLogin,
                     style: ElevatedButton.styleFrom(
-                      primary: Colors.blueAccent,
+                      // primary: Colors.blueAccent,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 40, vertical: 16),
                     ),
                     child: const Text(
                       'Login',
-                      style: TextStyle(fontSize: 18.0, color: Colors.white),
+                      style: TextStyle(fontSize: 18.0), //color: Colors.white),
                     ),
                   ),
                   SizedBox(height: 50.0),
@@ -281,7 +282,7 @@ class _LoginScreenState extends State<LoginScreen> {
         prefixIcon: Icon(icon),
         labelText: label,
         border: OutlineInputBorder(),
-        fillColor: Colors.blueGrey[50],
+        //  fillColor: Colors.blueGrey[50],
         filled: true,
         errorStyle: const TextStyle(color: Colors.red),
       ),
@@ -299,7 +300,7 @@ class _LoginScreenState extends State<LoginScreen> {
         prefixIcon: Icon(icon),
         labelText: label,
         border: OutlineInputBorder(),
-        fillColor: Colors.blueGrey[50],
+        //   fillColor: Colors.blueGrey[50],
         filled: true,
       ),
     );
@@ -309,20 +310,37 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildRichText(
       String normalText, String clickableText, Widget destination) {
     return RichText(
-      text: TextSpan(
-        style: const TextStyle(color: Colors.black, fontSize: 16.0),
-        children: [
-          TextSpan(text: normalText),
-          TextSpan(
-            text: clickableText,
-            style: const TextStyle(
-                color: Colors.blueAccent, fontWeight: FontWeight.bold),
-            recognizer: TapGestureRecognizer()
-              ..onTap = () => Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => destination)),
-          ),
-        ],
-      ),
+      text: Theme.of(context).brightness == Brightness.dark
+          ? TextSpan(
+              //  style: const TextStyle(color: Colors.black, fontSize: 16.0),
+              // style: const TextStyle(fontSize: 16.0),
+              children: [
+                TextSpan(text: normalText),
+                TextSpan(
+                  text: clickableText,
+                  style: const TextStyle(
+                      color: Colors.blueAccent, fontWeight: FontWeight.bold),
+                  recognizer: TapGestureRecognizer()
+                    ..onTap = () => Navigator.push(context,
+                        MaterialPageRoute(builder: (context) => destination)),
+                ),
+              ],
+            )
+          : TextSpan(
+              style: const TextStyle(color: Colors.black, fontSize: 16.0),
+              // style: const TextStyle(fontSize: 16.0),
+              children: [
+                TextSpan(text: normalText),
+                TextSpan(
+                  text: clickableText,
+                  style: const TextStyle(
+                      color: Colors.blueAccent, fontWeight: FontWeight.bold),
+                  recognizer: TapGestureRecognizer()
+                    ..onTap = () => Navigator.push(context,
+                        MaterialPageRoute(builder: (context) => destination)),
+                ),
+              ],
+            ),
     );
   }
 }

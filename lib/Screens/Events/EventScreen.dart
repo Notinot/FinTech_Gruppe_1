@@ -480,6 +480,7 @@ class _EventScreenState extends State<EventScreen> {
           }
         },
       ),
+      /*
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           setState(() {
@@ -490,9 +491,11 @@ class _EventScreenState extends State<EventScreen> {
         },
         child: const Icon(Icons.refresh),
       ),
+       */
       //button to get to CreateEventScreen
       persistentFooterButtons: [
         FloatingActionButton(
+          heroTag: "CreateButton",
           onPressed: () {
             Navigator.push(
               context,
@@ -504,6 +507,7 @@ class _EventScreenState extends State<EventScreen> {
           child: const Icon(Icons.add),
         ),
         FloatingActionButton(
+          heroTag: "RefreshButton",
           onPressed: () {
             setState(() {
               currentSortOrder = 'All events';

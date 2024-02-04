@@ -661,6 +661,39 @@ class ApiService {
     }
   }
 
+  static Future<int> declineEvent(int eventId) async {
+    try {
+      const storage = FlutterSecureStorage();
+      final token = await storage.read(key: 'token');
+      if (token == null) {
+        throw Exception('Token not found');
+      }
+
+      final declineEventResponse = await http.post(
+          Uri.parse('${ApiService.serverUrl}/decline-event?eventId=$eventId'),
+          headers: {
+            'Content-Type': 'application/json; charset=UTF-8',
+            'Authorization': 'Bearer $token',
+          });
+
+      if (declineEventResponse.statusCode == 200) {
+        print('declineEvent function: Leaving Event was successful');
+        return 1;
+      }
+
+      if (declineEventResponse.statusCode == 401) {
+        print('declineEvent function: Event was already canceled');
+        return 401;
+      }
+
+      print('leaveEvent function: Error leaving Event');
+      return 0;
+    } catch (e) {
+      print('leaveEvent function: Error leaving Event');
+      return 0;
+    }
+  }
+
   static Future<List<String>> fetchParticipants(int eventId, int type) async {
     try {
       const storage = FlutterSecureStorage();

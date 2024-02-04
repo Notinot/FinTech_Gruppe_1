@@ -399,62 +399,117 @@ class EventInfoScreen extends StatelessWidget {
       } else if (event.user_event_status == 2) {
         if (event.maxParticipants > event.participants) {
           // User is not joined
-          return ElevatedButton(
-            style: ElevatedButton.styleFrom(
-                textStyle:
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                    textStyle:
                     TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return AlertDialog(
-                    title: Text('Joining ${event.title}'),
-                    content: Text(
-                        'Attention!\n No refund if you decide to leave the event at a later time!\n Do you want to join "${event.title}"?',
-                        style: TextStyle(fontSize: 16)),
-                    actions: <Widget>[
-                      TextButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                        child: Text('Back'),
-                      ),
-                      TextButton(
-                        onPressed: () async {
-                          int result = await ApiService.joinEvent(
-                              event.creatorUsername,
-                              event.price,
-                              event.title,
-                              event.eventID);
-                          if (result == 400) {
-                            Navigator.of(context).pop();
-                            showErrorSnackBar(context, 'Joining event failed');
-                          } else if (result == 401) {
-                            Navigator.of(context).pop();
-                            showErrorSnackBar(
-                                context, 'You already joined the event');
-                          } else if (result == 402) {
-                            Navigator.of(context).pop();
-                            showErrorSnackBar(context,
-                                'You do not have enough money to join the event.');
-                          } else if (result == 200) {
-                            Navigator.of(context).pop();
-                            showSuccessSnackBar(
-                                context, 'Joining event was successful');
-                          }
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => EventScreen()));
-                        },
-                        child: Text('Yes'),
-                      )
-                    ],
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: Text('Decline ${event.title}'),
+                        content: Text(
+                            'Are you sure you want to decline the Event "${event.title}"?'),
+                        actions: <Widget>[
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            child: Text('Cancel'),
+                          ),
+                          ElevatedButton(
+                            onPressed: () async {
+                              int result =
+                              await ApiService.declineEvent(event.eventID);
+                              if (result == 401) {
+                                Navigator.of(context).pop();
+                                showErrorSnackBar(
+                                    context, 'Event was already declined!');
+                              } else if (result == 0) {
+                                Navigator.of(context).pop();
+                                showErrorSnackBar(
+                                    context, 'Declining event failed!');
+                              } else if (result == 1) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => EventScreen()),
+                                );
+                                showSuccessSnackBar(
+                                    context, 'Declining event was successful!');
+                              }
+                            },
+                            child: Text('Decline'),
+                          )
+                        ],
+                      );
+                    },
                   );
                 },
-              );
-            },
-            child: Text('Join'),
+                child: Text('Decline'),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                    textStyle:
+                    TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: Text('Joining ${event.title}'),
+                        content: Text(
+                            'Attention!\n No refund if you decide to leave the event at a later time!\n Do you want to join "${event.title}"?',
+                            style: TextStyle(fontSize: 16)),
+                        actions: <Widget>[
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            child: Text('Back'),
+                          ),
+                          TextButton(
+                            onPressed: () async {
+                              int result = await ApiService.joinEvent(
+                                  event.creatorUsername,
+                                  event.price,
+                                  event.title,
+                                  event.eventID);
+                              if (result == 400) {
+                                Navigator.of(context).pop();
+                                showErrorSnackBar(context, 'Joining event failed');
+                              } else if (result == 401) {
+                                Navigator.of(context).pop();
+                                showErrorSnackBar(
+                                    context, 'You already joined the event');
+                              } else if (result == 402) {
+                                Navigator.of(context).pop();
+                                showErrorSnackBar(context,
+                                    'You do not have enough money to join the event.');
+                              } else if (result == 200) {
+                                Navigator.of(context).pop();
+                                showSuccessSnackBar(
+                                    context, 'Joining event was successful');
+                              }
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => EventScreen()));
+                            },
+                            child: Text('Yes'),
+                          )
+                        ],
+                      );
+                    },
+                  );
+                },
+                child: Text('Join'),
+              )
+            ],
           );
         } else {
           // User is not joined but event is full

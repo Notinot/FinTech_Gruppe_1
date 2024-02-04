@@ -1736,13 +1736,12 @@ app.post('/edit-event', authenticateToken, async (req, res) => {
     }
 
     // Create Event in Table
-    const [eventQuery] = await db.query('UPDATE Event SET category = ?, title = ?, description = ?, max_participants = ?, datetime_created = NOW(), datetime_event = ?, price = ?, creator_id = ?, recurrence_interval = 0, recurrence_type = ? WHERE id = ?', [
+    const [eventQuery] = await db.query('UPDATE Event SET category = ?, title = ?, description = ?, max_participants = ?, datetime_created = NOW(), datetime_event = ?,  creator_id = ?, recurrence_interval = 0, recurrence_type = ? WHERE id = ?', [
   category,
   title,
   description,
   max_participants,
   datetime_event,
-  price,
   senderId,
   recurrence_type,
   eventID

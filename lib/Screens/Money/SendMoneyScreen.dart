@@ -52,7 +52,7 @@ class _SendMoneyScreenState extends State<SendMoneyScreen> {
                     return AlertDialog(
                       title: const Text("Info"),
                       content: const Text(
-                          "This is the send money screen. Here you can send money to other users.\nPlease enter the recipient's name or email, the amount and an optional message.\nAfter clicking the 'Send Money' button, you will be asked to confirm the transaction."),
+                          "This is the send money screen. Here you can send money to other users.\nPlease enter the recipient's username, the amount and an optional message.\nAfter clicking the 'Send Money' button, you will be asked to confirm the transaction."),
                       actions: [
                         TextButton(
                             onPressed: () {
@@ -79,7 +79,7 @@ class _SendMoneyScreenState extends State<SendMoneyScreen> {
             TextFormField(
               controller: recipientController,
               decoration: InputDecoration(
-                hintText: 'Enter name or email',
+                hintText: 'Enter username',
                 border: OutlineInputBorder(),
                 prefixIcon: const Icon(Icons.person),
               ),

@@ -90,7 +90,7 @@ class _RequestMoneyScreenState extends State<RequestMoneyScreen> {
               decoration: const InputDecoration(
                 hintText: '0,00 €', // Initial value
                 border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.monetization_on),
+                prefixIcon: Icon(Icons.euro),
               ),
               keyboardType: const TextInputType.numberWithOptions(
                   decimal: true), // Allow decimals

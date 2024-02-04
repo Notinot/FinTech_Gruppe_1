@@ -88,7 +88,7 @@ class TransactionDetailsScreen extends StatelessWidget {
           ? Icons.request_page_outlined
           : isDeposit
               ? Icons.add
-              : Icons.monetization_on_rounded,
+              : Icons.euro_rounded,
       color: iconColor,
     );
 
@@ -725,7 +725,7 @@ class TransactionDetailsScreen extends StatelessWidget {
                   },
                 ),
               ListTile(
-                leading: Icon(Icons.monetization_on_rounded),
+                leading: Icon(Icons.euro_rounded),
                 title: Text('Send Money'),
                 onTap: () {
                   Navigator.pop(context);

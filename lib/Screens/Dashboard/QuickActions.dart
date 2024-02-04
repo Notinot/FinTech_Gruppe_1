@@ -12,7 +12,7 @@ class QuickActions extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: <Widget>[
         QuickActionButton(
-          icon: Icons.attach_money,
+          icon: Icons.euro,
           label: 'Send Money',
           onTap: () {
             Navigator.push(

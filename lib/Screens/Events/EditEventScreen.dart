@@ -585,7 +585,7 @@ class _EditEventScreenState extends State<EditEventScreen> {
                 decoration: InputDecoration(
                     hintText: '0,00 €', // Initial value
                     border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.monetization_on),
+                    prefixIcon: Icon(Icons.euro),
                     errorText: priceError),
                 keyboardType: const TextInputType.numberWithOptions(
                     decimal: true), // Allow decimals

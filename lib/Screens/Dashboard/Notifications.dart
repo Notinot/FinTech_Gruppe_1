@@ -237,14 +237,14 @@ class _NotificationsState extends State<Notifications> {
       return Icon(Icons.request_page, color: Colors.black);
     } else if (transaction.transactionType == 'Payment' &&
         transaction.receiverId == user_id) {
-      return Icon(Icons.attach_money, color: Colors.green);
+      return Icon(Icons.euro, color: Colors.green);
     } else if (transaction.transactionType == 'Request' &&
         transaction.receiverId == user_id &&
         transaction.processed == 2) {
       return Icon(Icons.request_page, color: Colors.black);
     } else if (transaction.transactionType == 'Payment' &&
         transaction.senderId == user_id) {
-      return Icon(Icons.attach_money, color: Colors.red);
+      return Icon(Icons.euro, color: Colors.red);
     } else {
       return Icon(Icons.info_sharp);
     }

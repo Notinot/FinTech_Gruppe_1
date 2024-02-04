@@ -262,7 +262,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                         return AlertDialog(
                           title: const Text("Info"),
                           content: const Text(
-                              "This is your transaction history.\n\nYou can search and sort transactions by username, message, type or event details\n\nClick on a transaction to view more details.\n\nRefresh the transaction history by clicking the refresh button at the bottom right.\n\nYou can also send and request money using the buttons at the bottom of the screen."),
+                              "This is your transaction history.\n\nYou can search and sort transactions by username, message, type or event details\n\nClick on a transaction to view more details.\n\nRefresh the transaction history by clicking the refresh button at the bottom right.\n\nYou can also send and request money using the buttons at the bottom of the screen.\n\nIcons:\n- Money: Payment\n- Money with arrow: Request\n- Plus: Deposit\n- Event: Transaction associated with an event\n\nColors:\n- Green: Received\n- Red: Sent\n- Orange: Pending or unprocessed request\n- Blue: Processed request\n- Grey: Denied request\n\nYou can also use the search and sort options to filter transactions."),
                           actions: [
                             TextButton(
                                 onPressed: () {

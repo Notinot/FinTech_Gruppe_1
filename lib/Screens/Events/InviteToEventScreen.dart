@@ -72,40 +72,46 @@ class _InviteToEventScreenState extends State<InviteToEventScreen> {
                         itemBuilder: (context, index) {
                           return ListTile(
                             title: Text(snapshot.data![index]),
-                            trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  ElevatedButton(
-                                      onPressed: () async {
-                                        if(await ApiService.kickParticipant(widget.eventId ,snapshot.data![index]) == 200){
-                                          Navigator.of(context).pop();
-                                          showSuccessSnackBar(
-                                              context, 'Kicking ${snapshot.data![index]} was successful');
-                                          Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) => InviteToEventScreen(
-                                                  eventId: widget.eventId,
-                                                  allowInvite: true,
-                                                  iAmParticipant: false,
-                                                ),
-                                              ),
-                                          );
-                                        }
-                                        else if(await ApiService.kickParticipant(widget.eventId ,snapshot.data![index]) == 401){
-                                          showErrorSnackBar(context,
+                            trailing:
+                                Row(mainAxisSize: MainAxisSize.min, children: [
+                              ElevatedButton(
+                                  onPressed: () async {
+                                    if (await ApiService.kickParticipant(
+                                            widget.eventId,
+                                            snapshot.data![index]) ==
+                                        200) {
+                                      Navigator.of(context).pop();
+                                      showSuccessSnackBar(context,
+                                          'Kicking ${snapshot.data![index]} was successful');
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              InviteToEventScreen(
+                                            eventId: widget.eventId,
+                                            allowInvite: true,
+                                            iAmParticipant: false,
+                                          ),
+                                        ),
+                                      );
+                                    } else if (await ApiService.kickParticipant(
+                                            widget.eventId,
+                                            snapshot.data![index]) ==
+                                        401) {
+                                      showErrorSnackBar(context,
                                           '${snapshot.data![index]} was already kicked from the event');
-                                        }
-                                        else if(await ApiService.kickParticipant(widget.eventId ,snapshot.data![index]) == 402){
-                                          showErrorSnackBar(context,
-                                              'You do not have enough money to refund ${snapshot.data![index]} the event costs');
-                                        }
-                                        else{
-                                          showErrorSnackBar(context,
-                                              'Something went wrong trying to kick ${snapshot.data![index]}');
-                                        }
+                                    } else if (await ApiService.kickParticipant(
+                                            widget.eventId,
+                                            snapshot.data![index]) ==
+                                        402) {
+                                      showErrorSnackBar(context,
+                                          'You do not have enough money to refund ${snapshot.data![index]} the event costs');
+                                    } else {
+                                      showErrorSnackBar(context,
+                                          'Something went wrong trying to kick ${snapshot.data![index]}');
+                                    }
                                   },
-                                    child: Text("Kick")),
+                                  child: Text("Kick")),
                             ]),
                           );
                         },
@@ -227,6 +233,7 @@ class _InviteToEventScreenState extends State<InviteToEventScreen> {
                 final Map<String, dynamic> user =
                     await ApiService.fetchUserProfile();
 
+                // Check if recipient is the same as the user
                 if (recipient == user['username'] ||
                     recipient == user['email']) {
                   showErrorSnackBar(

@@ -1039,8 +1039,8 @@ app.post('/send-money', authenticateToken, async (req, res) => {
     const senderUsername = senderData[0].username;
     const senderEmail = senderData[0].email;
 
-    // Fetch recipient ID based on the recipient username or email
-    const [recipientData] = await db.query('SELECT user_id, username, email FROM User WHERE username = ? OR email = ?', [recipient, recipient]);
+    // Fetch recipient ID based on the recipient username 
+    const [recipientData] = await db.query('SELECT user_id, username, email FROM User WHERE username = ? ', [recipient]);
 
     if (recipientData.length === 0) {
       return res.status(404).json({ message: 'Recipient not found' });
@@ -1108,8 +1108,8 @@ app.post('/send-money-checkBlocked', authenticateToken, async (req, res) => {
     const senderUsername = senderData[0].username;
     const senderEmail = senderData[0].email;
 
-    // Fetch recipient ID based on the recipient username or email
-    const [recipientData] = await db.query('SELECT user_id, username, email FROM User WHERE username = ? OR email = ?', [recipient, recipient]);
+    // Fetch recipient ID based on the recipient username 
+    const [recipientData] = await db.query('SELECT user_id, username, email FROM User WHERE username = ? ', [recipient]);
 
     if (recipientData.length === 0) {
       return res.status(404).json({ message: 'Recipient not found' });
@@ -1175,8 +1175,8 @@ app.post('/request-money', authenticateToken, async (req, res) => {
     }
     
  
-    // Fetch recipient ID based on the recipient username or email
-    const [recipientData] = await db.query('SELECT user_id, username, email FROM User WHERE username = ? OR email = ?', [recipient, recipient]);
+    // Fetch recipient ID based on the recipient username 
+    const [recipientData] = await db.query('SELECT user_id, username, email FROM User WHERE username = ? ', [recipient]);
 
     if (recipientData.length === 0) {
       return res.status(404).json({ message: 'Recipient not found' });
@@ -1798,7 +1798,7 @@ app.post('/invite-event', authenticateToken, async (req, res) => {
       return res.status(401).json({ message: 'User already interacted with the Event' });
     }
      //check if users have each other blocked
-     const [blocked] = await db.query('SELECT * FROM Friendship WHERE (requester_id = ? AND addressee_id = ?) OR (requester_id = ? AND addressee_id = ?) AND status = "blocked"', [senderId, recipientId, recipientId, senderId]);
+     const [blocked] = await db.query('SELECT * FROM Friendship WHERE (requester_id = ? AND addressee_id = ?)  AND status = "blocked" OR (requester_id = ? AND addressee_id = ?) AND status = "blocked"', [senderId, recipientId, recipientId, senderId]);
      if (blocked.length > 0) {
        return res.status(400).json({ message: 'Users have each other blocked' });
      } 

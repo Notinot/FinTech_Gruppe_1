@@ -246,7 +246,11 @@ class _InviteToEventScreenState extends State<InviteToEventScreen> {
                       context, '$recipient already interacted with the Event');
                 } else if (res == 402) {
                   showErrorSnackBar(context, '$recipient does not exist');
-                } else if (res == 400 || res == 500) {
+                }
+                else if (res == 403){
+                  showErrorSnackBar(context, 'You and $recipient have each other blocked');
+                }
+                else if (res == 400 || res == 500) {
                   showErrorSnackBar(
                       context, 'Failed to send invite to $recipient');
                 }

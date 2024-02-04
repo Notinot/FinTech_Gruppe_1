@@ -415,6 +415,11 @@ class ApiService {
         return 402;
       }
 
+      if(inviteEventResponse.statusCode == 403){
+        print('Users have blocked each other');
+        return 403;
+      }
+
       print('inviteEvent function: Error inviting to Event');
       print('StatusCode: ${inviteEventResponse.statusCode}');
       return 400;

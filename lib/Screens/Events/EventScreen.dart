@@ -335,7 +335,7 @@ class _EventScreenState extends State<EventScreen> {
                         return AlertDialog(
                           title: const Text("Info"),
                           content: const Text(
-                              "This is the event screen. Here you can see all events, join them, create new events and invite other users to your events.\n\nYou can also filter the events by category and sort them by different criteria.\n\nRefresh the event list by tapping the refresh button on the bottom right."),
+                              "This is the event screen. Here you can see all events, join them, create new events and invite other users to your events.\n\nYou can also filter the events by category and sort them by different criteria.\n\nRefresh the event list by tapping the refresh button on the bottom right.\n\nIcons:\n- Red: Canceled\n- Orange: Pending\n- Green: Joined\n- Blue: Created\n\nYou can also search for events by tapping the search button on the top right."),
                           actions: [
                             TextButton(
                                 onPressed: () {

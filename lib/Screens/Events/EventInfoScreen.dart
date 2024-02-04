@@ -402,7 +402,7 @@ class EventInfoScreen extends StatelessWidget {
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                     textStyle:
-                    TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                        TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
                 onPressed: () {
                   showDialog(
                     context: context,
@@ -421,7 +421,7 @@ class EventInfoScreen extends StatelessWidget {
                           ElevatedButton(
                             onPressed: () async {
                               int result =
-                              await ApiService.declineEvent(event.eventID);
+                                  await ApiService.declineEvent(event.eventID);
                               if (result == 401) {
                                 Navigator.of(context).pop();
                                 showErrorSnackBar(
@@ -452,7 +452,7 @@ class EventInfoScreen extends StatelessWidget {
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                     textStyle:
-                    TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                        TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
                 onPressed: () {
                   showDialog(
                     context: context,
@@ -478,7 +478,8 @@ class EventInfoScreen extends StatelessWidget {
                                   event.eventID);
                               if (result == 400) {
                                 Navigator.of(context).pop();
-                                showErrorSnackBar(context, 'Joining event failed');
+                                showErrorSnackBar(
+                                    context, 'Joining event failed');
                               } else if (result == 401) {
                                 Navigator.of(context).pop();
                                 showErrorSnackBar(
@@ -573,22 +574,18 @@ class EventInfoScreen extends StatelessWidget {
           ElevatedButton.icon(
             // Define your second button here
             onPressed: () async {
-              if(await ApiService.deleteEvent(event.eventID) == 200){
+              if (await ApiService.deleteEvent(event.eventID) == 200) {
                 Navigator.of(context).pop();
-                showSuccessSnackBar(
-                    context, 'Canceling event was successful!');
-              }
-              else if(await ApiService.deleteEvent(event.eventID) == 401){
+                showSuccessSnackBar(context, 'Deleting event was successful!');
+              } else if (await ApiService.deleteEvent(event.eventID) == 401) {
                 Navigator.of(context).pop();
-                showErrorSnackBar(
-                    context, 'Event was already deleted!');
-              }
-              else{
-                showErrorSnackBar(
-                    context, 'Could not delete event!');
+                showErrorSnackBar(context, 'Event was already deleted!');
+              } else {
+                showErrorSnackBar(context, 'Could not delete event!');
               }
             },
-            icon: Icon(Icons.delete_forever_rounded), // Replace with your desired icon
+            icon: Icon(
+                Icons.delete_forever_rounded), // Replace with your desired icon
             label: Text('Delete event'), // Replace with your desired label
           ),
           SizedBox(height: 8), // Adjust the spacing between buttons
@@ -613,30 +610,25 @@ class EventInfoScreen extends StatelessWidget {
           ),
         ],
       );
-    }
-    else {
+    } else {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ElevatedButton.icon(
             // Define your second button here
             onPressed: () async {
-              if(await ApiService.deleteEvent(event.eventID) == 200){
+              if (await ApiService.deleteEvent(event.eventID) == 200) {
                 Navigator.of(context).pop();
-                showSuccessSnackBar(
-                    context, 'Canceling event was successful!');
-              }
-              else if(await ApiService.deleteEvent(event.eventID) == 401){
+                showSuccessSnackBar(context, 'Deleting event was successful!');
+              } else if (await ApiService.deleteEvent(event.eventID) == 401) {
                 Navigator.of(context).pop();
-                showErrorSnackBar(
-                    context, 'Event was already deleted!');
-              }
-              else{
-                showErrorSnackBar(
-                    context, 'Could not delete event!');
+                showErrorSnackBar(context, 'Event was already deleted!');
+              } else {
+                showErrorSnackBar(context, 'Could not delete event!');
               }
             },
-            icon: Icon(Icons.delete_forever_rounded), // Replace with your desired icon
+            icon: Icon(
+                Icons.delete_forever_rounded), // Replace with your desired icon
             label: Text('Delete event'), // Replace with your desired label
           ),
           SizedBox(height: 8), // Adjust the spacing between buttons

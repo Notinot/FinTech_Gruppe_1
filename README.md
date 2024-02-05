@@ -4,9 +4,11 @@
     npm install
 
 navigate to \backend
+
+## install dependencies
     npm install
 
-## Start Client
+## Start Client 
     flutter run 
 
 ## Start Server
@@ -16,19 +18,8 @@ navigate to \backend
 # ------------------- #
 
 
-# flutter_application_1
+# flutter_application_1 "Payfriendz"
 
-A new Flutter project.
+Die Payfriendz-App ist eine mobile Anwendung, die es Benutzern ermöglicht, bequem per Handy Geld zu überweisen und zu empfangen und Geld einzufordern. Die App bietet auch Funktionen zur Kontakteinladung und -verwaltung sowie eine Transaktionshistorie. Darüber hinaus unterstützt die App die Erstellung und Verwaltung privater Events.
 
-## Getting Started
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.

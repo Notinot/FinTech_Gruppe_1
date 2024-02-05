@@ -483,7 +483,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                           ),
                         );
                       },
-                      icon: Icon(Icons.euro),
+                      icon: Icon(Icons.monetization_on),
                       label: Text('Send'),
                     ),
                     ElevatedButton.icon(
@@ -608,7 +608,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                           ),
                         );
                       },
-                      icon: Icon(Icons.euro),
+                      icon: Icon(Icons.monetization_on),
                       label: Text('Send'),
                     ),
                     // Button to navigate to the request money screen with icon on left and text "Request" on right
@@ -781,11 +781,11 @@ class TransactionItem extends StatelessWidget {
                       )
                     : isReceived
                         ? Icon(
-                            Icons.euro_rounded,
+                            Icons.monetization_on_rounded,
                             color: iconColor,
                           )
                         : Icon(
-                            Icons.euro_rounded,
+                            Icons.monetization_on_rounded,
                             color: iconColor,
                           ),
 

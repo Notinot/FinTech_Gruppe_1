@@ -88,7 +88,7 @@ class _RequestMoneyScreenState extends State<RequestMoneyScreen> {
               decoration: const InputDecoration(
                 hintText: '0,00 €', // Initial value
                 border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.euro),
+                prefixIcon: Icon(Icons.monetization_on),
               ),
               keyboardType: const TextInputType.numberWithOptions(
                   decimal: true), // Allow decimals

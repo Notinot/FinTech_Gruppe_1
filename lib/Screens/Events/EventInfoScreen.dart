@@ -190,7 +190,7 @@ class EventInfoScreen extends StatelessWidget {
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 children: [
-                                  Icon(Icons.euro_rounded),
+                                  Icon(Icons.money_off_csred_rounded),
                                   SizedBox(width: 8),
                                   Text(
                                     'Free',
@@ -204,7 +204,7 @@ class EventInfoScreen extends StatelessWidget {
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 children: [
-                                  Icon(Icons.euro_rounded),
+                                  Icon(Icons.attach_money_rounded),
                                   SizedBox(width: 8),
                                   Text(
                                     formatAmount(),

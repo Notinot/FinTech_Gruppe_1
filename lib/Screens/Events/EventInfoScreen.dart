@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Screens/Events/InviteToEventScreen.dart';
 import 'package:flutter_application_1/Screens/api_service.dart'; // Assumed path
@@ -190,7 +189,7 @@ class EventInfoScreen extends StatelessWidget {
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 children: [
-                                  Icon(Icons.money_off_csred_rounded),
+                                  Icon(Icons.euro),
                                   SizedBox(width: 8),
                                   Text(
                                     'Free',
@@ -204,7 +203,7 @@ class EventInfoScreen extends StatelessWidget {
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 children: [
-                                  Icon(Icons.attach_money_rounded),
+                                  Icon(Icons.euro),
                                   SizedBox(width: 8),
                                   Text(
                                     formatAmount(),

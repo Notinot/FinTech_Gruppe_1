@@ -200,8 +200,7 @@ class _RequestMoneyScreenState extends State<RequestMoneyScreen> {
                   final Map<String, dynamic> user =
                       await ApiService.fetchUserProfile();
 
-                  if (recipient == user['username'] ||
-                      recipient == user['email']) {
+                  if (recipient == user['username']) {
                     showErrorSnackBar(
                         context, 'You cannot request money from yourself');
                     return;

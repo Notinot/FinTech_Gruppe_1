@@ -2,14 +2,12 @@ import 'dart:convert';
 import 'package:country_picker/country_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/Screens/Dashboard/appDrawer.dart';
 import 'package:flutter_application_1/Screens/Dashboard/dashBoardScreen.dart';
 import 'package:flutter_application_1/Screens/Events/Event.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
 import 'package:numberpicker/numberpicker.dart';
 import 'package:http/http.dart' as http;
-import 'package:path/path.dart';
 import '../api_service.dart';
 
 /*
@@ -154,7 +152,7 @@ class _EditEventScreenState extends State<EditEventScreen> {
 
       selectedTime == null;
       selectedTimestamp = DateTime(selectedDate.year, selectedDate.month,
-          selectedDate.day, selectedTime!.hour, selectedTime.minute);
+          selectedDate.day, selectedTime.hour, selectedTime.minute);
 
       unixTimestamp = selectedTimestamp.toString();
       unixTimestamp = DateTime.parse(unixTimestamp).millisecondsSinceEpoch;
@@ -166,6 +164,7 @@ class _EditEventScreenState extends State<EditEventScreen> {
           : DateTime(selectedDate.year, selectedDate.month, selectedDate.day,
               selectedTime.hour, selectedTime.minute);
     }
+    return null;
   }
 
   Future<void> handleEditEvent() async {
@@ -194,7 +193,7 @@ class _EditEventScreenState extends State<EditEventScreen> {
           datetimeButton = Colors.red;
         });
 
-        showErrorSnackBar(this.context, 'Please pick date and time');
+        showErrorSnackBar(context, 'Please pick date and time');
         return;
       }
 
@@ -205,7 +204,7 @@ class _EditEventScreenState extends State<EditEventScreen> {
         });
 
         showErrorSnackBar(
-            this.context, 'The time the event starts cannot be in the past');
+            context, 'The time the event starts cannot be in the past');
 
         return;
       } else {
@@ -235,7 +234,7 @@ class _EditEventScreenState extends State<EditEventScreen> {
       showSnackBar(
           isError: true,
           message: 'Event title cannot be empty',
-          context: this.context);
+          context: context);
       return;
     }
 
@@ -246,7 +245,7 @@ class _EditEventScreenState extends State<EditEventScreen> {
       showSnackBar(
           isError: true,
           message: 'Please enter a brief description',
-          context: this.context);
+          context: context);
       return;
     }
 
@@ -255,7 +254,7 @@ class _EditEventScreenState extends State<EditEventScreen> {
         maxParticipantsError =
             'The number of participants cannot be less than the number of participants already registered';
       });
-      showErrorSnackBar(this.context,
+      showErrorSnackBar(context,
           'The number of participants cannot be less than the number of participants already registered');
       return;
     }
@@ -298,7 +297,7 @@ class _EditEventScreenState extends State<EditEventScreen> {
         widget.event.street == street &&
         widget.event.zipcode == zipcode) {
       Navigator.push(
-        this.context,
+        context,
         MaterialPageRoute(builder: (context) => const DashboardScreen()),
       );
     } else {
@@ -345,7 +344,7 @@ class _EditEventScreenState extends State<EditEventScreen> {
         print(selectedTimestamp);
 
         Navigator.push(
-          this.context,
+          context,
           MaterialPageRoute(builder: (context) => const DashboardScreen()),
         );
       } else if (editEventResponse.statusCode == 401) {
@@ -695,7 +694,7 @@ void showSnackBar(
     {bool isError = false,
     required String message,
     required BuildContext context}) {
-  ScaffoldMessenger.of(context as BuildContext).showSnackBar(
+  ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
       content: Text(message),
       backgroundColor: isError ? Colors.red : Colors.green,

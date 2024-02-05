@@ -1,19 +1,14 @@
 //import 'dart:html';
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/Screens/Dashboard/appDrawer.dart';
 import 'package:flutter_application_1/Screens/Dashboard/themeNotifier.dart';
-import 'package:flutter_application_1/Screens/Events/Event.dart';
 import 'package:flutter_application_1/assets/color_schemes.g.dart';
 import 'package:provider/provider.dart';
 import 'Screens/Login & Register/LoginScreen.dart';
 import 'package:http/http.dart' as http;
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'Screens/Dashboard/dashBoardScreen.dart';
 import 'Screens/api_service.dart';
-import 'package:flutter_application_1/assets/color_schemes.g.dart';
 
 void main() {
   runApp(

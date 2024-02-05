@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:developer';
 import 'package:flutter_application_1/Screens/api_service.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/material.dart';
@@ -178,7 +177,7 @@ class Event {
             case 1:
               event.datetimeEvent =
                   event.datetimeEvent.add(Duration(days: 7));
-              event.recurrenceInterval = (event.recurrenceInterval + 1)!;
+              event.recurrenceInterval = (event.recurrenceInterval + 1);
               if(event.price == 0 && !restartingEventsWithoutMoney.contains(event)){
                 restartingEventsWithoutMoney.add(event);
               } else if(event.price > 0 && !restartingEventsWithMoney.contains(event)){
@@ -188,7 +187,7 @@ class Event {
             // Needs to be improved
               event.datetimeEvent =
                   event.datetimeEvent.add(Duration(days: 30));
-              event.recurrenceInterval = (event.recurrenceInterval + 1)!;
+              event.recurrenceInterval = (event.recurrenceInterval + 1);
               if(event.price == 0 && !restartingEventsWithoutMoney.contains(event)){
                 restartingEventsWithoutMoney.add(event);
               } else if(event.price > 0 && !restartingEventsWithMoney.contains(event)){
@@ -197,7 +196,7 @@ class Event {
             case 3:
               event.datetimeEvent =
                   event.datetimeEvent.add(Duration(days: 365));
-              event.recurrenceInterval = (event.recurrenceInterval + 1)!;
+              event.recurrenceInterval = (event.recurrenceInterval + 1);
               if(event.price == 0 && !restartingEventsWithoutMoney.contains(event)){
                 restartingEventsWithoutMoney.add(event);
               } else if(event.price > 0 && !restartingEventsWithMoney.contains(event)){
@@ -209,7 +208,7 @@ class Event {
 
 
       // Send Request without money
-      if(restartingEventsWithoutMoney.length > 0){
+      if(restartingEventsWithoutMoney.isNotEmpty){
 
         List<Map<String, dynamic>> eventsJson =
         restartingEventsWithoutMoney.map((i) => i.toJson()).toList();
@@ -219,7 +218,7 @@ class Event {
       }
 
       // Send Request with money
-      if(restartingEventsWithMoney.length > 0){
+      if(restartingEventsWithMoney.isNotEmpty){
 
         List<Map<String, dynamic>> eventsJson =
         restartingEventsWithMoney.map((i) => i.toJson()).toList();
@@ -272,11 +271,11 @@ class Event {
 
   Map<String, dynamic> toJson() {
     return {
-      'event_id': this.eventID,
-      'datetime_event': this.datetimeEvent.toString().substring(
-          0, this.datetimeEvent.toString().length - 5), // U
+      'event_id': eventID,
+      'datetime_event': datetimeEvent.toString().substring(
+          0, datetimeEvent.toString().length - 5), // U
       // set UTC time
-      'recurrence_interval': this.recurrenceInterval,
+      'recurrence_interval': recurrenceInterval,
     };
   }
 }

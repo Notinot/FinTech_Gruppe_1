@@ -126,7 +126,7 @@ class _LoginScreenState extends State<LoginScreen> {
         await storage.write(key: 'token', value: token);
         //save the user id
         await storage.write(key: 'user_id', value: userID.toString());
-        print("LoginScreen: user id = " + userID.toString());
+        print("LoginScreen: user id = $userID");
 
         // Navigate to the dashboard with the obtained token
         Navigator.pushReplacement(

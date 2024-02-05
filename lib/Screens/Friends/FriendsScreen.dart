@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_application_1/Screens/Dashboard/appDrawer.dart';
-import 'package:flutter_application_1/Screens/Dashboard/dashBoardScreen.dart';
 import 'package:flutter_application_1/Screens/Money/TransactionHistoryScreen.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
@@ -10,9 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Screens/Money/RequestMoneyScreen.dart';
 import 'package:flutter_application_1/Screens/Money/SendMoneyScreen.dart';
 import 'package:flutter_application_1/fonts/custom_icons_icons.dart';
-import 'package:intl/intl.dart';
 
-import '../Money/TransactionDetailsScreen.dart';
 import '../api_service.dart';
 
 class FriendsScreen extends StatefulWidget {
@@ -1492,7 +1489,7 @@ class ShowProfilePicture extends StatelessWidget {
         // Colors.grey,
         child: image == null
             ? Text(
-                '${initial.toUpperCase()}',
+                initial.toUpperCase(),
                 style: TextStyle(fontSize: size * 0.8),
               )
             : null,

@@ -1,10 +1,6 @@
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Screens/Dashboard/dashBoardScreen.dart';
-import 'package:flutter_application_1/Screens/Events/EventScreen.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:http/http.dart' as http;
 import 'package:flutter_application_1/Screens/api_service.dart';
 
 class InviteToEventScreen extends StatefulWidget {

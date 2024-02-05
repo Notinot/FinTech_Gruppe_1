@@ -1,10 +1,7 @@
 import 'dart:convert';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Screens/Dashboard/appDrawer.dart';
-import 'package:flutter_application_1/Screens/Dashboard/dashBoardScreen.dart';
 import 'package:flutter_application_1/Screens/Events/CreateEventScreen.dart';
-import 'package:flutter_application_1/Screens/Events/InviteToEventScreen.dart';
 import 'package:flutter_application_1/Screens/api_service.dart'; // Assumed path
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
@@ -12,7 +9,6 @@ import 'package:intl/intl.dart';
 import 'package:flutter_search_bar/flutter_search_bar.dart' as search_bar;
 import 'package:flutter_application_1/Screens/Events/Event.dart';
 import 'package:flutter_application_1/Screens/Events/EventInfoScreen.dart';
-import 'package:path/path.dart';
 
 /*
 Status Overview
@@ -86,23 +82,19 @@ class _EventScreenState extends State<EventScreen> {
         break;
       case 'My events':
         allEvents.removeWhere((event) => event.creatorId != currentUserId);
-        break;
       case 'Invites':
         allEvents.removeWhere(
             (event) => event.user_event_status != 2 || event.status != 1);
-        break;
       case 'Active':
         allEvents.removeWhere((event) =>
             event.status != 1 ||
             event.datetimeEvent.millisecondsSinceEpoch <
                 DateTime.now().millisecondsSinceEpoch);
-        break;
       case 'Inactive':
         allEvents.removeWhere((event) =>
             event.status == 1 &&
             event.datetimeEvent.millisecondsSinceEpoch >
                 DateTime.now().millisecondsSinceEpoch);
-        break;
     }
     // Update the Future to reflect the new sorted list
     setState(() {
@@ -649,7 +641,7 @@ class EventItem extends StatelessWidget {
                           ? Text('Free',
                               style: TextStyle(fontWeight: FontWeight.bold))
                           : Text(
-                              '${NumberFormat("#,##0.00", "de_DE").format(event.price)}\€',
+                              '${NumberFormat("#,##0.00", "de_DE").format(event.price)}€',
                             )),
                   Container(
                     padding: EdgeInsets.all(2),

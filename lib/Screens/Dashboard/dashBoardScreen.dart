@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Screens/Dashboard/appDrawer.dart';
 import 'package:flutter_application_1/Screens/Dashboard/Notifications.dart';
@@ -9,16 +8,13 @@ import 'package:flutter_application_1/Screens/Events/EventScreen.dart';
 import 'package:flutter_application_1/Screens/Events/Event.dart';
 import 'package:flutter_application_1/Screens/Events/EventInfoScreen.dart';
 import 'package:flutter_application_1/Screens/Friends/FriendsScreen.dart';
-import 'package:flutter_application_1/Screens/Dashboard/Notifications.dart';
 import 'package:flutter_application_1/Screens/Money/TransactionHistoryScreen.dart';
 import 'package:flutter_application_1/Screens/api_service.dart';
 import 'package:flutter_application_1/Screens/Dashboard/quickActionsMenu.dart';
 import 'package:flutter_application_1/Screens/Dashboard/userProfileSection.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:flutter_application_1/Screens/Friends/FriendsScreen.dart';
 import 'package:http/http.dart' as http;
 import 'package:badges/badges.dart' as Badge;
-import 'package:intl/intl.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({Key? key}) : super(key: key);

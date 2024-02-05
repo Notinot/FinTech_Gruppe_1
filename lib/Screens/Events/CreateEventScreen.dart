@@ -2,13 +2,11 @@ import 'dart:convert';
 import 'package:country_picker/country_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/Screens/Dashboard/appDrawer.dart';
 import 'package:flutter_application_1/Screens/Dashboard/dashBoardScreen.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
 import 'package:numberpicker/numberpicker.dart';
 import 'package:http/http.dart' as http;
-import 'package:path/path.dart';
 import '../api_service.dart';
 import 'package:flutter_application_1/Screens/Events/Event.dart';
 import 'package:flutter_application_1/Screens/Events/InviteToEventScreen.dart';
@@ -146,7 +144,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         });
 
         showErrorSnackBar(
-            this.context, 'Please pick date and time of the event');
+            context, 'Please pick date and time of the event');
 
         return;
       }
@@ -158,7 +156,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         });
 
         showErrorSnackBar(
-            this.context, 'The time the event starts cannot be in the past');
+            context, 'The time the event starts cannot be in the past');
 
         return;
       } else {
@@ -189,7 +187,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       showSnackBar(
           isError: true,
           message: 'The price cannot exceed 50.000,00 €',
-          context: this.context);
+          context: context);
       return;
     }
 
@@ -200,7 +198,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       showSnackBar(
           isError: true,
           message: 'Event title cannot be empty',
-          context: this.context);
+          context: context);
       return;
     }
 
@@ -211,7 +209,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       showSnackBar(
           isError: true,
           message: 'Please enter a brief description',
-          context: this.context);
+          context: context);
       return;
     }
 
@@ -285,7 +283,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         Event event = events[0];
 
         Navigator.push(
-          this.context,
+          context,
           MaterialPageRoute(
             builder: (context) => InviteToEventScreen(
                 eventId: event.eventID,
@@ -295,7 +293,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         );
       } else {
         Navigator.push(
-          this.context,
+          context,
           MaterialPageRoute(builder: (context) => const DashboardScreen()),
         );
       }
@@ -514,7 +512,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
               const SizedBox(height: 16.0),
               if (selectedCountry != '')
                 Text(
-                  '$selectedCountry',
+                  selectedCountry,
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.normal),
                 ),
               const SizedBox(height: 24.0),
@@ -670,7 +668,7 @@ void showSnackBar(
     {bool isError = false,
     required String message,
     required BuildContext context}) {
-  ScaffoldMessenger.of(context as BuildContext).showSnackBar(
+  ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
       content: Text(message),
       backgroundColor: isError ? Colors.red : Colors.green,

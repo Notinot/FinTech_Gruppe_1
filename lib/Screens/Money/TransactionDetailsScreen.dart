@@ -405,12 +405,12 @@ class TransactionDetailsScreen extends StatelessWidget {
                                       children: [
                                         ElevatedButton(
                                           style: ElevatedButton.styleFrom(
-                                              backgroundColor:
-                                                  Colors.green[300],
+                                              // backgroundColor:
+                                              //     Colors.green[300],
                                               textStyle: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 15,
-                                              )),
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 15,
+                                          )),
                                           onPressed: () =>
                                               acceptRequest(context),
                                           child: Text('Accept'),
@@ -418,12 +418,12 @@ class TransactionDetailsScreen extends StatelessWidget {
                                         SizedBox(width: 20),
                                         ElevatedButton(
                                             style: ElevatedButton.styleFrom(
-                                                backgroundColor:
-                                                    Colors.red[300],
+                                                // backgroundColor:
+                                                //     Colors.red[300],
                                                 textStyle: TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 15,
-                                                )),
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 15,
+                                            )),
                                             onPressed: () =>
                                                 denyRequest(context),
                                             child: Text('Deny')),

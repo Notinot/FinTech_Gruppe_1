@@ -271,7 +271,8 @@ class TransactionDetailsScreen extends StatelessWidget {
                                       Icon(Icons.calendar_today_rounded),
                                       SizedBox(width: 10),
                                       Text(
-                                        DateFormat('dd.MM.yyyy').format(transaction.createdAt),
+                                        DateFormat('dd.MM.yyyy')
+                                            .format(transaction.createdAt),
                                         style: TextStyle(fontSize: 20),
                                       ),
                                     ],
@@ -284,7 +285,9 @@ class TransactionDetailsScreen extends StatelessWidget {
                                       Icon(Icons.access_time_rounded),
                                       SizedBox(width: 10),
                                       Text(
-                                        DateFormat('HH:mm').format(transaction.createdAt.add(Duration(hours: 1))),
+                                        DateFormat('HH:mm').format(transaction
+                                            .createdAt
+                                            .add(Duration(hours: 1))),
                                         style: TextStyle(fontSize: 20),
                                       ),
                                     ],
@@ -402,26 +405,28 @@ class TransactionDetailsScreen extends StatelessWidget {
                                       children: [
                                         ElevatedButton(
                                           style: ElevatedButton.styleFrom(
-                                              backgroundColor: Colors.green[300],
+                                              backgroundColor:
+                                                  Colors.green[300],
                                               textStyle: TextStyle(
                                                 fontWeight: FontWeight.bold,
                                                 fontSize: 15,
                                               )),
                                           onPressed: () =>
                                               acceptRequest(context),
-                                          child: Text('Accept Request'),
+                                          child: Text('Accept'),
                                         ),
                                         SizedBox(width: 20),
                                         ElevatedButton(
                                             style: ElevatedButton.styleFrom(
-                                                backgroundColor: Colors.red[300],
+                                                backgroundColor:
+                                                    Colors.red[300],
                                                 textStyle: TextStyle(
                                                   fontWeight: FontWeight.bold,
                                                   fontSize: 15,
                                                 )),
                                             onPressed: () =>
                                                 denyRequest(context),
-                                            child: Text('Deny Request')),
+                                            child: Text('Deny')),
                                       ],
                                     ),
                                   // Add a link to the event details screen if the transaction is associated with an event and the event is not null (Go to dashboard while event details screen is not implemented)

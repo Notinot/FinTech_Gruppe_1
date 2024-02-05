@@ -230,8 +230,7 @@ class _SendMoneyScreenState extends State<SendMoneyScreen> {
                   final Map<String, dynamic> user =
                       await ApiService.fetchUserProfile();
 
-                  if (recipient == user['username'] ||
-                      recipient == user['email']) {
+                  if (recipient == user['username']) {
                     showErrorSnackBar(
                         context, 'You cannot send money to yourself');
                     return;

@@ -78,31 +78,35 @@ class _DashboardScreenState extends State<DashboardScreen> {
     await fetchPendingFriends();
     await fetchPendingEventRequests().then((List<Event>? events) {
       if (events != null) {
-        EventRequests = events.map((Event event) {
-          return {
-            'event_id': event.eventID,
-            'title': event.title,
-            'category': event.category,
-            'description': event.description,
-            'participants': event.participants,
-            'max_participants': event.maxParticipants,
-            'datetime_event': event.datetimeEvent,
-            'datetime_created': event.datetimeCreated,
-            'price': event.price,
-            'status': event.status,
-            'creator_username': event.creatorUsername,
-            'creator_id': event.creatorId,
-            'recurrence_type': event.recurrenceType,
-            'recurrence_interval': event.recurrenceInterval,
-            'country': event.country,
-            'city': event.city,
-            'street': event.street,
-            'zipcode': event.zipcode,
-            'user_event_status': event.user_event_status
-          };
-        }).toList();
+        setState(() {
+          EventRequests = events.map((Event event) {
+            return {
+              'event_id': event.eventID,
+              'title': event.title,
+              'category': event.category,
+              'description': event.description,
+              'participants': event.participants,
+              'max_participants': event.maxParticipants,
+              'datetime_event': event.datetimeEvent,
+              'datetime_created': event.datetimeCreated,
+              'price': event.price,
+              'status': event.status,
+              'creator_username': event.creatorUsername,
+              'creator_id': event.creatorId,
+              'recurrence_type': event.recurrenceType,
+              'recurrence_interval': event.recurrenceInterval,
+              'country': event.country,
+              'city': event.city,
+              'street': event.street,
+              'zipcode': event.zipcode,
+              'user_event_status': event.user_event_status
+            };
+          }).toList();
+        });
       } else {
-        EventRequests = [];
+        setState(() {
+          EventRequests = [];
+        });
       }
     });
     await Notifications.fetchTransactions()

@@ -727,26 +727,32 @@ class _EditUserState extends State<EditUser> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text('Enter verification code'),
-          content: OtpTextField(
-            numberOfFields: 6,
-            //       borderColor: Color(0xFF512DA8),
-            showFieldAsBox: true,
-            keyboardType: TextInputType.number,
-            //       focusedBorderColor: Colors.blue,
-            autoFocus: true,
-            onSubmit: (String verificationCode) {
-              if (double.tryParse(verificationCode) == null) {
-                showSnackBar(
-                  isError: true,
-                  message: 'Verification code needs to consist of digits',
-                );
-                return;
-              }
-              Navigator.of(context).pop(); // Close the AlertDialog
-              completer
-                  .complete(verificationCode); // Complete with entered code
-            },
+          content: SizedBox(
+            width: MediaQuery.of(context).size.width,
+            child: OtpTextField(
+              numberOfFields: 6,
+              //borderWidth: 2.0,
+              //fieldWidth: MediaQuery.of(context).size.width * 0.08,
+              //       borderColor: Color(0xFF512DA8),
+              showFieldAsBox: true,
+              keyboardType: TextInputType.number,
+              //       focusedBorderColor: Colors.blue,
+              autoFocus: true,
+              onSubmit: (String verificationCode) {
+                if (double.tryParse(verificationCode) == null) {
+                  showSnackBar(
+                    isError: true,
+                    message: 'Verification code needs to consist of digits',
+                  );
+                  return;
+                }
+                Navigator.of(context).pop(); // Close the AlertDialog
+                completer
+                    .complete(verificationCode); // Complete with entered code
+              },
+            ),
           ),
+          insetPadding: const EdgeInsets.all(15),
           actions: <Widget>[
             TextButton(
               onPressed: () {

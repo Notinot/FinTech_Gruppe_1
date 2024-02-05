@@ -1,14 +1,17 @@
 # ------------------- #
+## install dependencies
+    flutter pub get
+    npm install
+
+navigate to \backend
+    npm install
+
 ## Start Client
-lib -> main.dart
+    flutter run 
 
 ## Start Server
-Terminal: navigate to \FinTech_Gruppe_1\registration-backend\
-Enter the command: node express.js
-
-or
-Terminal: navigate to \FinTech_Gruppe_1\registration-backend\
-Enter the command: npm start
+navigate to \backend
+    npm start
 
 # ------------------- #
 

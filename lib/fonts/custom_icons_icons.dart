@@ -31,6 +31,8 @@ class MyFlutterApp {
 
   static const IconData exchange =
       IconData(0xe800, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+  static const IconData requestMoney =
+      IconData(0xe801, fontFamily: _kFontFam, fontPackage: _kFontPkg);
   static const IconData euro =
       IconData(0xf153, fontFamily: _kFontFam, fontPackage: _kFontPkg);
 }
